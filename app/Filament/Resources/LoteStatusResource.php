@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\LoteStatusResource\Pages;
 use App\Filament\Resources\LoteStatusResource\RelationManagers;
-use App\Models\LoteStatus;
+use App\Models\loteStatus;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
