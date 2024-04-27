@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class LoteStatusResource extends Resource
 {
-    protected static ?string $model = LoteStatus::class;
+    protected static ?string $model = loteStatus::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 

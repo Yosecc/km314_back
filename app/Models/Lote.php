@@ -22,12 +22,12 @@ class Lote extends Model
     ];
     public function loteStatus()
     {
-        return $this->belongsTo(LoteStatus::class);
+        return $this->belongsTo(loteStatus::class);
     }
 
     public function loteType()
     {
-        return $this->belongsTo(LoteType::class);
+        return $this->belongsTo(loteType::class);
     }
 
     public function sector()
