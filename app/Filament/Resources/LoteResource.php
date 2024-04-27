@@ -46,7 +46,6 @@ class LoteResource extends Resource
                     ->required()
                     ->relationship(name: 'loteStatus', titleAttribute: 'name'),
                 Forms\Components\Select::make('owner_id')
-                    ->required()
                     ->relationship(name: 'owner', titleAttribute: 'last_name'),
                 Forms\Components\Textarea::make('ubication')
                     ->columnSpanFull(),

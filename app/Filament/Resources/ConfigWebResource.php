@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ConfigWebResource\Pages;
 use App\Filament\Resources\ConfigWebResource\RelationManagers;
-use App\Models\ConfigWeb;
+use App\Models\configWeb;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ConfigWebResource extends Resource
 {
-    protected static ?string $model = ConfigWeb::class;
+    protected static ?string $model = configWeb::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-8-tooth';
 
