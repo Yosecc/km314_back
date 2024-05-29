@@ -1,11 +1,13 @@
 {
-    "name": "laravel/laravel",
+    "name": "laravel/km314",
     "type": "project",
-    "description": "The Laravel Framework.",
+    "description": "Km314a admin.",
     "keywords": ["framework", "laravel"],
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "aymanalhattami/filament-page-with-sidebar": "^2.5",
+        "bezhansalleh/filament-shield": "^3.2",
         "filament/filament": "^3.2",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.0",

@@ -19,6 +19,15 @@ class InterestedResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationLabel = 'Interesados';
+    protected static ?string $label = 'interesado';
+    protected static ?string $navigationGroup = 'Ventas';
+
+    // public static function getPluralModelLabel(): string
+    // {
+    //     return 'formularios';
+    // }
+
     public static function form(Form $form): Form
     {
         return $form

@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('owners', function (Blueprint $table) {
             $table->id();
+            $table->bigInteger('dni')->nullable();
             $table->string('first_name'); // Campo para el nombre
             $table->string('last_name'); // Campo para el apellido
             $table->string('email')->unique(); // Campo para el correo electrónico
-            $table->integer('phone')->nullable(); // Campo para el número de teléfono
+            $table->bigInteger('phone')->nullable(); // Campo para el número de teléfono
             $table->string('address')->nullable(); // Campo para la dirección
             $table->string('city')->nullable(); // Campo para la ciudad
             $table->string('state')->nullable(); // Campo para el estado
@@ -25,6 +26,7 @@ return new class extends Migration
             $table->date('birthdate')->nullable(); // Campo para la fecha de nacimiento
             $table->string('gender')->nullable(); // Campo para el género
             $table->string('profile_picture')->nullable(); // Campo para la foto de perfil
+            $table->foreignId('user_id')->constrained('users');
             
             $table->timestamps();
         });

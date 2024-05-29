@@ -18,7 +18,15 @@ class PropertyTypeResource extends Resource
     protected static ?string $model = PropertyType::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Settings';
+    
+    protected static ?string $navigationLabel = 'Tipo de Propiedades';
+    protected static ?string $label = 'tipo de propiedad';
+    protected static ?string $navigationGroup = 'Configuración';
+
+    public static function getPluralModelLabel(): string
+    {
+        return 'tipos de propiedades';
+    }
 
     public static function form(Form $form): Form
     {

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('ubication')->nullable();
             $table->foreignId('lote_type_id')->constrained();
             $table->foreignId('lote_status_id')->constrained();
-            $table->foreignId('owner_id')->constrained()->nullable();
+            $table->foreignId('owner_id')->nullable()->constrained();
 
             $table->timestamps();
         });

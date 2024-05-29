@@ -19,14 +19,19 @@ class LoteTypeResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Settings';
+    protected static ?string $navigationLabel = 'Tipo de Lotes';
+    protected static ?string $label = 'tipo';
+    protected static ?string $navigationGroup = 'Configuración';
 
+   
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
+                ->label(__("general.Name"))
+
                     ->required()
                     ->maxLength(255),
             ]);
@@ -37,6 +42,7 @@ class LoteTypeResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                ->label(__("general.Name"))
                     ->searchable(),
             ])
             ->filters([

@@ -21,10 +21,15 @@ class ConfigWebResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationLabel = 'Configurations';
-    protected static ?string $label = 'Configuration';
+
+    protected static ?string $navigationLabel = 'Configuración';
+    protected static ?string $label = 'configuración';
     protected static ?string $navigationGroup = 'Web';
 
+    public static function getPluralModelLabel(): string
+    {
+        return 'configuraciones';
+    }
 
     public static function form(Form $form): Form
     {

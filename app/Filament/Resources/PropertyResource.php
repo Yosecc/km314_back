@@ -19,25 +19,34 @@ class PropertyResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationLabel = 'Propiedades';
+    protected static ?string $label = 'propiedad';
+    
+    public static function getPluralModelLabel(): string
+    {
+        return 'propiedades';
+    }
+    
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                 Forms\Components\TextInput::make('width')
+                 Forms\Components\TextInput::make('width')->label(__("general.Width"))
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('height')
+                Forms\Components\TextInput::make('height')->label(__("general.Height"))
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('m2')
+                Forms\Components\TextInput::make('m2')->label(__("general.M2"))
                     ->required()
                     ->maxLength(255),
 
-                Forms\Components\Select::make('property_type_id')
+                Forms\Components\Select::make('property_type_id')->label(__("general.PropertyType"))
                     ->required()
                     ->relationship(name: 'propertyType', titleAttribute: 'name'),
                 
-                Forms\Components\Select::make('owner_id')
+                Forms\Components\Select::make('owner_id')->label(__("general.Owner"))
                     ->required()
                     ->relationship(name: 'owner', titleAttribute: 'last_name'),
                
