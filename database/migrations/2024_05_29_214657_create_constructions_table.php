@@ -11,14 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('properties', function (Blueprint $table) {
+        Schema::create('constructions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('property_type_id')->constrained();
+            $table->foreignId('construction_type_id')->constrained();
+            $table->foreignId('construction_companie_id')->constrained();
+            $table->foreignId('construction_status_id')->constrained();
+            $table->foreignId('lote_id')->constrained();
             $table->foreignId('owner_id')->constrained();
             $table->string('width')->nullable();
-            $table->string('identificador')->nullable();
             $table->string('height')->nullable();
             $table->string('m2')->nullable();
+            $table->string('observations')->nullable();
+            $table->softDeletes($column = 'deleted_at', $precision = 0);
             $table->timestamps();
         });
     }
@@ -28,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('properties');
+        Schema::dropIfExists('constructions');
     }
 };

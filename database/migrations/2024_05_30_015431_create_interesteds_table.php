@@ -23,6 +23,10 @@ return new class extends Migration
             $table->string('state')->nullable(); // Campo para el estado
             $table->string('zip_code')->nullable(); // Campo para el código postal
             $table->string('country')->nullable(); // Campo para el país
+            $table->foreignId('interested_origins_id')->constrained();
+            $table->foreignId('lote_id')->nullable()->constrained();
+            $table->foreignId('propertie_id')->nullable()->constrained();
+            $table->softDeletes($column = 'deleted_at', $precision = 0);
             $table->timestamps();
         });
     }

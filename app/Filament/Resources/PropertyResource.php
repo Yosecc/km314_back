@@ -2,16 +2,17 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PropertyResource\Pages;
-use App\Filament\Resources\PropertyResource\RelationManagers;
-use App\Models\Property;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Models\Owner;
+use App\Models\Property;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\PropertyResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\PropertyResource\RelationManagers;
 
 class PropertyResource extends Resource
 {
@@ -32,7 +33,11 @@ class PropertyResource extends Resource
     {
         return $form
             ->schema([
-                 Forms\Components\TextInput::make('width')->label(__("general.Width"))
+                
+                Forms\Components\TextInput::make('identificador')->label(__("general.identificador"))
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('width')->label(__("general.Width"))
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('height')->label(__("general.Height"))
@@ -48,7 +53,8 @@ class PropertyResource extends Resource
                 
                 Forms\Components\Select::make('owner_id')->label(__("general.Owner"))
                     ->required()
-                    ->relationship(name: 'owner', titleAttribute: 'last_name'),
+                    ->relationship(name: 'owner')
+                    ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}"),
                
             ]);
     }
@@ -57,20 +63,29 @@ class PropertyResource extends Resource
     {
         return $table
             ->columns([
-                 Tables\Columns\TextColumn::make('propertyType.name')
-                    ->numeric()
+
+                Tables\Columns\TextColumn::make('identificador')
+                    ->label(__("general.identificador"))
+                    ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('owner.last_name')
-                    ->numeric()
+                 Tables\Columns\TextColumn::make('propertyType.name')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('owner')
+                    ->formatStateUsing(fn (Owner $state) => "{$state->first_name} {$state->last_name}" )
+                    
                     ->sortable(),
                 
-                Tables\Columns\TextColumn::make('width')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('height')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('m2')
-                    ->searchable(),
+                // Tables\Columns\TextColumn::make('width')
+                    // ->label(__("general.Width"))
+                    // ->searchable(),
+                // Tables\Columns\TextColumn::make('height')
+                    // ->label(__("general.Height"))
+                    // ->searchable(),
+                // Tables\Columns\TextColumn::make('m2')
+                    // ->label(__("general.M2"))
+                    // ->searchable(),
             ])
             ->filters([
                 //
