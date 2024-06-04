@@ -7,8 +7,8 @@ return [
     'Activities' => 'Actividades',
     'Work' => 'Empleo',
     'DNI' => 'DNI',
-    'FirstName' => 'Primer nombre',
-    'LastName' => 'Segundo Nombre',
+    'FirstName' => 'Nombre',
+    'LastName' => 'Apellido',
     'Phone' =>  'Teléfono',
     'Marca' => 'Marca',
     'Modelo' => 'Modelo',
@@ -79,5 +79,6 @@ return [
     'interested_type_operation' => 'Tipo de operación',
     'date_end' => 'Fecha fin',
     'operation_detail' => 'Detalle de la operación',
-    'amount' => 'Monto'
+    'amount' => 'Monto',
+    'Acompanante' => 'Acompañante'
 ];

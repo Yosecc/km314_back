@@ -8,6 +8,7 @@ use App\Models\Lote;
 use App\Models\User;
 use Filament\Tables;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\FormControl;
@@ -89,7 +90,9 @@ class FormControlResource extends Resource
                 Forms\Components\Fieldset::make('range')->label('Rango de fecha de estancia')
                     ->schema([
                         Forms\Components\DatePicker::make('start_date_range')->label(__('general.start_date_range'))
-                            ->minDate(Carbon::now()->format('Y-m-d'))
+                            ->minDate(function($context){
+                                return $context == 'edit' ? '' : Carbon::now()->format('Y-m-d');
+                            })
                             ->required()
                             ->live(),
                         Forms\Components\TimePicker::make('start_time_range')->label(__('general.start_time_range'))
@@ -127,7 +130,7 @@ class FormControlResource extends Resource
                             ->tel()
                             ->numeric(),
                         Forms\Components\Toggle::make('is_responsable')->label(__("general.Responsable")),
-                        Forms\Components\Toggle::make('is_cliente')->label(__("general.Customer")),
+                        Forms\Components\Toggle::make('is_acompanante')->label(__("general.Acompanante")),
                         Forms\Components\Toggle::make('is_menor')->label(__("general.Minor")),
                     ])
                     ->columns(4)->columnSpanFull(),
@@ -154,19 +157,7 @@ class FormControlResource extends Resource
                     ->columnSpanFull()
                     ,
                 
-                // Forms\Components\Repeater::make('photos')
-                //     ->label(__("general.Photos"))
-                //     ->relationship()
-                //     ->schema([
-                //         Forms\Components\FileUpload::make('image'),
-                //     ])
-                //     ->columns(1)
-                //     ->defaultItems(0)
-                //     ->columnSpanFull(),
-                
-                // ->columnSpanFull()
 
-                // Forms\Components\Toggle::make('is_moroso')->label('Moroso'),
                 Forms\Components\Textarea::make('observations')
                     ->columnSpanFull()
                     ->label(__('general.Observations')),
@@ -175,14 +166,19 @@ class FormControlResource extends Resource
                     ->label(__("general.Status"))
                     ->options(['Pending' => 'Pendiente','Authorized' => 'Autorizado', 'Denied' => 'Denegado'])
                     ->default('Pending')
-                    // ->visible()
-                    ,
+                    ->afterStateUpdated(function (Set $set) {
+                        $set('authorized_user_id', Auth::user()->id);
+                    })
+                    ->live()
+                    ->visible(Auth::user()->hasAnyRole([1])),
 
-                Forms\Components\Select::make('authorized_user_id')
+                Forms\Components\Hidden::make('authorized_user_id')
                     // ->default(Auth::user()->id)
                     ->label(__("general.AuthorizedPer"))
-                    ->disabled()
-                    ->options(User::all()->pluck('name', 'id')),
+                    ->live()
+                    // ->readOnly()
+                    // ->options(User::all()->pluck('name', 'id'))
+                    ,
                 
                 Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
             ]);
@@ -191,6 +187,7 @@ class FormControlResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->orderBy('created_at','desc'))
             ->columns([
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
@@ -240,7 +237,7 @@ class FormControlResource extends Resource
                 // Tables\Columns\TextColumn::make('end_time_range'),
                 
                 
-                Tables\Columns\TextColumn::make('authorized_user_id')
+                Tables\Columns\TextColumn::make('authorizedUser.name')
                     ->numeric()
                     ->sortable()
                     ->label(__('general.authorized_user_id'))
@@ -264,6 +261,7 @@ class FormControlResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

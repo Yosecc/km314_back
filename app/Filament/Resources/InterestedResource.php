@@ -82,7 +82,10 @@ class InterestedResource extends Resource
                 Forms\Components\Select::make('propertie_id')
                     ->label(__("general.Propertie"))
                     ->searchable()
-                    ->relationship(name: 'propertie', titleAttribute: 'identificador')
+                    ->relationship(name: 'propertie', titleAttribute: 'identificador'),
+                Forms\Components\Textarea::make('observations')
+                    ->columnSpanFull()
+                    ->label(__('general.Observations')),
                     // ->getOptionLabelFromRecordUsing(fn (Property $record) => "{$record->propertyType->name} - {$record->owner->first_name} {$record->owner->last_name}"),
             ]);
     }

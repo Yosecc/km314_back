@@ -12,4 +12,9 @@ class ActivitiesPeople extends Model
     // protected $table = 'activities_activities_people';
 
     protected $fillable = ['activities_id','model','model_id'];
+
+    public function activitie()
+    {
+        return $this->belongsTo(Activities::class,'activities_id');
+    }
 }

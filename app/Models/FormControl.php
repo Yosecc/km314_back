@@ -24,7 +24,7 @@ class FormControl extends Model
 
     public function authorizedUser()
     {
-        return $this->hasOne(User::class);
+        return $this->belongsTo(User::class,'authorized_user_id');
     }
 
     public function peoples()

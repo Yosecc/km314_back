@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('last_name'); // Campo para el apellido
             $table->bigInteger('phone')->nullable(); // Campo para el número de teléfono
             $table->boolean('is_responsable')->default(false);
-            $table->boolean('is_cliente')->default(false);
+            $table->boolean('is_acompanante')->default(false);
             $table->boolean('is_menor')->default(false);
             $table->timestamps();
         });

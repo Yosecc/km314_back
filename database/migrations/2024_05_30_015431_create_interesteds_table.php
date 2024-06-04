@@ -27,6 +27,8 @@ return new class extends Migration
             $table->foreignId('lote_id')->nullable()->constrained();
             $table->foreignId('propertie_id')->nullable()->constrained();
             $table->softDeletes($column = 'deleted_at', $precision = 0);
+            $table->string('observations')->nullable();
+
             $table->timestamps();
         });
     }
