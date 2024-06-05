@@ -16,4 +16,9 @@ class FormControlPeople extends Model
         return $this->belongsTo(FormControl::class);
     
     }
+
+    public function activitiePeople()
+    {
+        return $this->hasOne(ActivitiesPeople::class,'model_id')->where('model','FormControl')->latest();
+    }
 }

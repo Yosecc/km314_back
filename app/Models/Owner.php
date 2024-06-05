@@ -14,4 +14,9 @@ class Owner extends Model
     {
         return $this->hasMany(Auto::class,'model_id')->where('model','Owner');
     }
+
+    public function activitiePeople()
+    {
+        return $this->hasOne(ActivitiesPeople::class,'model_id')->where('model','Owner')->latest();
+    }
 }

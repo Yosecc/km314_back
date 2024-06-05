@@ -5,12 +5,20 @@ namespace App\Filament\Widgets;
 use Carbon\Carbon;
 use App\Models\Activities;
 use App\Models\ActivitiesPeople;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Illuminate\Support\Facades\DB;
+
 class Personas extends BaseWidget
 {
+    use HasWidgetShield;
+    protected static ?int $sort = -10;
+
+    protected static ?string $heading = 'Personas en el barrio (contadores)';
+    
+
     // protected static ?string $pollingInterval = '30s';
     protected function getStats(): array
     {
@@ -20,9 +28,8 @@ class Personas extends BaseWidget
             Stat::make('Visitantes', $this->getEntradasFormVisitantesGenerales())->description('Entrada general - Club playa - Club House'),
             Stat::make('Inquilinos', $this->getEntradasFormInquilinosLotes())->description('Lotes'),
             Stat::make('Trabajadores', $this->getEntradasFormTrabajadoresLotes())->description('Lotes'),
-            Stat::make('Visitas', $this->getEntradasFormVisitaLotes())->description('Lotes'),
-
-            
+            Stat::make('Visitas', $this->getEntradasFormVisitaLotes())->description('Lotes')
+            ,
 
         ];
     }
@@ -39,6 +46,7 @@ class Personas extends BaseWidget
             // dd($peopleInside);
         return $peopleInside;
     }
+    
     public function getEntradasEmployee()
     {
         $peopleInside = ActivitiesPeople::select('model_id')

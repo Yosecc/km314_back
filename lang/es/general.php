@@ -80,5 +80,6 @@ return [
     'date_end' => 'Fecha fin',
     'operation_detail' => 'Detalle de la operación',
     'amount' => 'Monto',
-    'Acompanante' => 'Acompañante'
+    'Acompanante' => 'Acompañante',
+    'ultimaEntrada' => 'Última entrada'
 ];

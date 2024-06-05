@@ -19,4 +19,9 @@ class Employee extends Model
     {
         return $this->hasMany(Auto::class,'model_id')->where('model','Employee');
     }
+
+    public function activitiePeople()
+    {
+        return $this->hasOne(ActivitiesPeople::class,'model_id')->where('model','Employee')->latest();
+    }
 }

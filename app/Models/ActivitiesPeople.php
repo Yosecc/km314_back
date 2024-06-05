@@ -17,4 +17,6 @@ class ActivitiesPeople extends Model
     {
         return $this->belongsTo(Activities::class,'activities_id');
     }
+
+    
 }

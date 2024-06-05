@@ -5,16 +5,20 @@ namespace App\Filament\Resources\ActivitiesResource\Widgets;
 use Filament\Tables;
 use App\Models\Activities;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Filament\Widgets\TableWidget as BaseWidget;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 class UltimasActividades extends BaseWidget
 {
     protected int | string | array $columnSpan = 'full';
+    use HasWidgetShield;
+    protected static ?string $heading = 'Últimas actividades';
 
     public function table(Table $table): Table
     {
         return $table
-            ->heading('Últimas actividades')
+            ->heading(self::$heading)
             ->paginated([5, 10, 15, 'all'])
             ->defaultPaginationPageOption(5)
             ->query(

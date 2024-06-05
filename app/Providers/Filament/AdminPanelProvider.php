@@ -6,10 +6,15 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use App\Filament\Widgets\Entry;
 use App\Filament\Widgets\Personas;
 use Filament\Support\Colors\Color;
 use Filament\Http\Middleware\Authenticate;
+use App\Filament\Widgets\EmpleadosEnElBarrio;
+use App\Filament\Widgets\InquilinosEnElBarrio;
 use Illuminate\Session\Middleware\StartSession;
+use App\Filament\Widgets\PropietariosEnElBarrio;
+use App\Filament\Widgets\TrabajadoresEnElBarrio;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
@@ -49,9 +54,13 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 // Widgets\AccountWidget::class,
                 // Widgets\FilamentInfoWidget::class,
-                \App\Filament\Widgets\Entry::class,
+                // Entry::class,
                 UltimasActividades::class,
-                Personas::class,
+                // Personas::class,
+                // PropietariosEnElBarrio::class,
+                // EmpleadosEnElBarrio::class,
+                // TrabajadoresEnElBarrio::class,
+                // InquilinosEnElBarrio::class,
                 // \App\Filament\Resources\ActivitiesResource\Widgets\ActivitiesWidget::class,
             ])
             ->middleware([
