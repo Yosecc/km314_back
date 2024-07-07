@@ -13,7 +13,7 @@ class FormControl extends Controller
 {
     public function index(Request $request)
     {
-        $formControl = FormControlDB::where('owner_id', $request->user()->id)->with(['peoples','autos'])->get();
+        $formControl = FormControlDB::where('owner_id', $request->user()->owner->id)->with(['peoples','autos'])->get();
 
         return response()->json([
             'misForms' => $formControl,
