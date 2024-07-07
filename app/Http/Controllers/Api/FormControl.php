@@ -11,6 +11,16 @@ use App\Models\FormControl as FormControlDB;
 
 class FormControl extends Controller
 {
+    public function index(Request $request)
+    {
+        $formControl = FormControlDB::where('owner_id', $request->user()->id)->with(['peoples','autos'])->get();
+
+        return response()->json([
+            'misForms' => $formControl,
+            'historicoForms' => $formControl,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

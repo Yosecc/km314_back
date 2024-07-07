@@ -17,7 +17,7 @@ class Authentication extends Controller
             'email' => 'required|email',
             'password' => 'required',
             'device_name' => 'required',
-        ]);
+        ],[],['password' => 'Contraseña']);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
@@ -27,7 +27,7 @@ class Authentication extends Controller
  
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                'email' => ['The provided credentials are incorrect.'],
+                'email' => ['Las credenciales proporcionadas son incorrectas.'],
             ], 422);
             
         }

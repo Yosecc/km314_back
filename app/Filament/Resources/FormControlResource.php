@@ -7,6 +7,7 @@ use Filament\Forms;
 use App\Models\Lote;
 use App\Models\User;
 use Filament\Tables;
+use App\Models\Owner;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
@@ -39,8 +40,11 @@ class FormControlResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Fieldset::make('')
-                    ->schema([
+                
+                        Forms\Components\Fieldset::make('')
+                            ->schema([
+                                
+
                         Forms\Components\CheckboxList::make('access_type')->label(__("general.TypeActivitie"))
                             ->options(['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club hause', 'lote' => 'Lote', ])
                             ->live()
@@ -181,6 +185,12 @@ class FormControlResource extends Resource
                     ,
                 
                 Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+                
+                Forms\Components\Select::make('owner_id')
+                    ->required()
+                    ->relationship(name: 'owner')
+                    ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                    ->label(__("general.Owner")),
             ]);
     }
 
