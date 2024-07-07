@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
 
     Route::post('store',[FormControl::class,'store']);
+    Route::post('index',[FormControl::class,'index']);
 
 
 });
