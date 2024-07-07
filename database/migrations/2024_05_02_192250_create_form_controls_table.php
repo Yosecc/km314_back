@@ -23,7 +23,7 @@ return new class extends Migration
             $table->boolean('date_unilimited')->default(false);
             $table->time('end_time_range', $precision = 0)->nullable();
             $table->enum('status', ['Authorized', 'Denied','Pending']);
-            $table->foreignId('owner_id')->constrained();
+            $table->foreignId('owner_id')->nullable()->constrained();
             // $table->enum('category', ['Owner', 'Tenant', 'Restaurant', 'Frequent works', 'Occasional works']);
             $table->foreignId('authorized_user_id')->nullable()->constrained('users');
             $table->foreignId('user_id')->constrained('users');

@@ -30,6 +30,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'owner_id'
     ];
 
     /**
@@ -50,4 +51,8 @@ class User extends Authenticatable implements FilamentUser
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    public function owner()
+    {
+        return $this->belongsTo(Owner::class);
+    }
 }
