@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Auto;
+use App\Models\Lote;
 use Illuminate\Http\Request;
 use App\Models\FormControlPeople;
 use App\Http\Controllers\Controller;
@@ -13,11 +14,17 @@ class FormControl extends Controller
 {
     public function index(Request $request)
     {
-        $formControl = FormControlDB::where('owner_id', $request->user()->owner->id)->with(['peoples','autos'])->get();
+        $formControl = FormControlDB::where('owner_id', $request->user()->owner->id)->with(['peoples','autos'])->orderBy('created_at','desc')->get();
 
+        $misLotes = Lote::where('owner_id', $request->user()->owner->id)->get();
+        
         return response()->json([
             'misForms' => $formControl,
             'historicoForms' => $formControl,
+            'misLotes' => $misLotes->map(function($lote){
+                $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
+                return $lote;
+            })->pluck('lote_name', 'lote_name')->toArray()
         ]);
     }
 
