@@ -16,7 +16,7 @@ class FormControl extends Controller
     {
         $formControl = FormControlDB::where('owner_id', $request->user()->owner->id)->with(['peoples','autos'])->orderBy('created_at','desc')->get();
 
-        $misLotes = Lote::where('owner_id', $request->user()->owner->id)->get();
+        $misLotes = Lote::where('owner_id', $request->user()->owner->id)->with(['sector','loteStatus','loteType'])->get();
         
         return response()->json([
             'misForms' => $formControl,
