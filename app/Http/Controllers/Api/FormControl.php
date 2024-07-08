@@ -21,10 +21,7 @@ class FormControl extends Controller
         return response()->json([
             'misForms' => $formControl,
             'historicoForms' => $formControl,
-            'misLotes' => $misLotes->map(function($lote){
-                $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
-                return $lote;
-            })->pluck('lote_name', 'lote_name')->toArray()
+            'misLotes' => $misLotes
         ]);
     }
 
