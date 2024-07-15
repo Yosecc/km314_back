@@ -72,9 +72,8 @@ class FormControl extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-    
-        // Insertar el formulario principal
-        $idForm = FormControlDB::insertGetId([
+
+        $data = [
             'is_moroso'         => 0,
             'lote_ids'          => $request->lote_ids,
             'access_type'       => $request->access_type,
@@ -86,14 +85,25 @@ class FormControl extends Controller
             'end_time_range'    => $request->end_time_range,
             'status'            => 'Pending',
             'user_id'           => $request->user()->id,
+            'owner_id'          => $request->user()->id,
             'observations'      => $request->observations,
             'created_at'        => now(),
             'updated_at'        => now(),
-        ]);
+        ];
+
+        if($request->id){
+            FormControlDB::where('id', $request->id)->update($data);
+            $idForm = $request->id;
+        }else{
+            // Insertar el formulario principal
+            $idForm = FormControlDB::insertGetId($data);
+        }
+    
     
         // Insertar los datos de las personas
         $peoplesData = collect($request->peoples)->map(function($people) use ($idForm){
-            return [
+
+            $data = [
                 'form_control_id' => $idForm,
                 'dni'             => $people['dni'],
                 'first_name'      => $people['first_name'],
@@ -102,16 +112,37 @@ class FormControl extends Controller
                 'is_responsable'  => filter_var($people['is_responsable'], FILTER_VALIDATE_BOOLEAN),
                 'is_acompanante'  => filter_var($people['is_acompanante'], FILTER_VALIDATE_BOOLEAN),
                 'is_menor'        => filter_var($people['is_menor'], FILTER_VALIDATE_BOOLEAN),
-                'created_at'      => now(),
+                // 'created_at'      => now(),
                 'updated_at'      => now(),
             ];
+
+            if(!isset($people['id'])){
+                // $data['updated_at'] = now();
+                $data['created_at'] = now();
+            }
+
+            FormControlPeople::updateOrInsert( [ 'id' => isset($people['id']) ? $people['id'] : null ] , $data );
+
+            return $people;
+            // return [
+            //     'form_control_id' => $idForm,
+            //     'dni'             => $people['dni'],
+            //     'first_name'      => $people['first_name'],
+            //     'last_name'       => $people['last_name'],
+            //     'phone'           => $people['phone'],
+            //     'is_responsable'  => filter_var($people['is_responsable'], FILTER_VALIDATE_BOOLEAN),
+            //     'is_acompanante'  => filter_var($people['is_acompanante'], FILTER_VALIDATE_BOOLEAN),
+            //     'is_menor'        => filter_var($people['is_menor'], FILTER_VALIDATE_BOOLEAN),
+            //     'created_at'      => now(),
+            //     'updated_at'      => now(),
+            // ];
         });
 
-        FormControlPeople::insert($peoplesData->toArray());
+        // FormControlPeople::insert($peoplesData->toArray());
         
         // Insertar los datos de los autos
         $autosData = collect($request->autos)->map(function($auto) use ($idForm, $request){
-            return [
+            $data = [
                 'marca'      => $auto['marca'],
                 'patente'    => $auto['patente'],
                 'modelo'     => $auto['modelo'],
@@ -120,11 +151,20 @@ class FormControl extends Controller
                 'model'      => 'FormControl',
                 'model_id'   => $idForm,
                 'created_at' => now(),
-                'updated_at' => now(),
+                // 'updated_at' => now(),
             ];
+
+            if(!isset($auto['id'])){
+                // $data['updated_at'] = now();
+                $data['created_at'] = now();
+            }
+
+            Auto::updateOrInsert( [ 'id' => isset($auto['id']) ? $auto['id'] : null ] , $data );
+
+            return $auto;
         });
         
-        Auto::insert($autosData->toArray());
+        // Auto::insert($autosData->toArray());
     
         $formControl = FormControlDB::where('id', $idForm)->with(['peoples','autos'])->first();
 
