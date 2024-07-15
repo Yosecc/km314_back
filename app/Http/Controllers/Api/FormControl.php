@@ -47,7 +47,7 @@ class FormControl extends Controller
             'peoples.*.is_responsable' => 'required',
             'peoples.*.is_acompanante' => 'required',
             'peoples.*.is_menor' => 'required',
-            'autos' => 'array:marca,modelo,patente,color',
+            'autos' => 'array',
             'autos.*.marca' => 'required',
             'autos.*.modelo' => 'required',
             'autos.*.patente' => 'required',
