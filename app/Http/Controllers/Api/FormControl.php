@@ -7,6 +7,7 @@ use App\Models\Lote;
 use Illuminate\Http\Request;
 use App\Models\FormControlPeople;
 use App\Http\Controllers\Controller;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Validator;
 use App\Models\FormControl as FormControlDB;
 
@@ -173,6 +174,9 @@ class FormControl extends Controller
     
         $formControl = FormControlDB::where('id', $idForm)->with(['peoples','autos'])->first();
 
+        Notification::make()
+        ->title('Nuevo Formulario')
+        ->getDatabaseMessage();
         
         return response()->json($formControl);
 
