@@ -83,18 +83,23 @@ class FormControl extends Controller
             'end_date_range'    => $request->end_date_range,
             'date_unilimited'   => filter_var($request->date_unilimited, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
             'end_time_range'    => $request->end_time_range,
-            'status'            => 'Pending',
-            'user_id'           => $request->user()->id,
-            'owner_id'          => $request->user()->id,
+            // 'status'            => 'Pending',
+            // 'user_id'           => $request->user()->id,
+            // 'owner_id'          => $request->user()->id,
             'observations'      => $request->observations,
-            'created_at'        => now(),
+            // 'created_at'        => now(),
             'updated_at'        => now(),
         ];
 
         if($request->id){
+
             FormControlDB::where('id', $request->id)->update($data);
             $idForm = $request->id;
         }else{
+            $data['user_id'] = $request->user()->id;
+            $data['owner_id'] = $request->user()->id;
+            $data['created_at'] = now();
+            $data['status'] = 'Pending';
             // Insertar el formulario principal
             $idForm = FormControlDB::insertGetId($data);
         }
