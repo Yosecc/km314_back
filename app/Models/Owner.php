@@ -10,6 +10,8 @@ class Owner extends Model
     use HasFactory;
     protected $fillable = ['first_name', 'last_name', 'email', 'phone', 'address', 'city', 'state', 'zip_code', 'country', 'birthdate', 'gender', 'profile_picture','dni','user_id'];
 
+    protected $with = ['autos'];
+    
     public function autos()
     {
         return $this->hasMany(Auto::class,'model_id')->where('model','Owner');
