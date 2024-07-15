@@ -51,6 +51,9 @@ class User extends Authenticatable implements FilamentUser
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    protected $with = ['owner'];
+
     public function owner()
     {
         return $this->belongsTo(Owner::class);
