@@ -27,7 +27,7 @@ class FormControl extends Controller
 
     public function store(Request $request)
     {
-        return $request->all();
+        // return $request->all();
         // dd();
         $validator = Validator::make($request->all(), [
             'lote_ids' => 'nullable',
@@ -39,7 +39,7 @@ class FormControl extends Controller
             'end_time_range' => 'nullable|date_format:H:i',
             'date_unilimited' => 'nullable',
             'observations' => 'nullable|string',
-            'peoples.*' => 'array:dni,first_name,last_name,phone,is_responsable,is_acompanante,is_menor',
+            'peoples' => 'array:dni,first_name,last_name,phone,is_responsable,is_acompanante,is_menor',
             'peoples.*.dni' => 'required',
             'peoples.*.first_name' => 'required',
             'peoples.*.last_name' => 'required',
@@ -47,7 +47,7 @@ class FormControl extends Controller
             'peoples.*.is_responsable' => 'required',
             'peoples.*.is_acompanante' => 'required',
             'peoples.*.is_menor' => 'required',
-            'autos.*' => 'array:marca,modelo,patente,color',
+            'autos' => 'array:marca,modelo,patente,color',
             'autos.*.marca' => 'required',
             'autos.*.modelo' => 'required',
             'autos.*.patente' => 'required',
