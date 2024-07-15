@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Auto;
 use App\Models\Lote;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\FormControlPeople;
 use App\Http\Controllers\Controller;
@@ -29,7 +30,7 @@ class FormControl extends Controller
     public function store(Request $request)
     {
         // return $request->all();
-        // dd();
+
         $validator = Validator::make($request->all(), [
             'lote_ids' => 'nullable',
             'access_type' => 'required|string',
@@ -174,10 +175,15 @@ class FormControl extends Controller
     
         $formControl = FormControlDB::where('id', $idForm)->with(['peoples','autos'])->first();
 
-        Notification::make()
-        ->title('Nuevo Formulario')
-        ->getDatabaseMessage();
-        
+        if(!$request->id){
+
+            $recipient = User::find(1);
+            
+            Notification::make()
+                ->title('Nuevo formulario #FORM_'.$idForm)
+                ->sendToDatabase($recipient);
+        }
+
         return response()->json($formControl);
 
     }
