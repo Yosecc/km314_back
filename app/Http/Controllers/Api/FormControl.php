@@ -97,7 +97,7 @@ class FormControl extends Controller
             $idForm = $request->id;
         }else{
             $data['user_id'] = $request->user()->id;
-            $data['owner_id'] = $request->user()->id;
+            $data['owner_id'] = $request->user()->owner->id;
             $data['created_at'] = now();
             $data['status'] = 'Pending';
             // Insertar el formulario principal
