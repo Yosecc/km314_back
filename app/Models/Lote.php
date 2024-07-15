@@ -20,6 +20,8 @@ class Lote extends Model
         'lote_status_id',
         'owner_id'
     ];
+    protected $with = ['sector','loteStatus','loteType'];
+
     public function loteStatus()
     {
         return $this->belongsTo(loteStatus::class);
