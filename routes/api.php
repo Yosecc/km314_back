@@ -20,7 +20,7 @@ use App\Http\Controllers\Api\Authentication;
 Route::post('/sanctum/login',[Authentication::class,'login']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    return $request->user()->with(['owner']);
 });
 
 // middleware(['token_validate'])->
