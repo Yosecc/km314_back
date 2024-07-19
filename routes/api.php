@@ -1,8 +1,12 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Api\Lotes;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Expensas;
+use App\Http\Controllers\Api\Servicios;
 use App\Http\Controllers\Api\FormControl;
+use App\Http\Controllers\Api\Solicitudes;
 use App\Http\Controllers\Api\Authentication;
 /*
 |--------------------------------------------------------------------------
@@ -25,9 +29,26 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // middleware(['token_validate'])->
 Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
-
     Route::post('store',[FormControl::class,'store']);
     Route::post('index',[FormControl::class,'index']);
+});
 
+Route::middleware('auth:sanctum')->prefix('solicitudes')->group(function () {
+    Route::post('store',[Solicitudes::class,'store']);
+    Route::get('index',[Solicitudes::class,'index']);
+});
 
+Route::middleware('auth:sanctum')->prefix('expensas')->group(function () {
+    // Route::post('store',[Expensas::class,'store']);
+    Route::get('index',[Expensas::class,'index']);
+});
+
+Route::middleware('auth:sanctum')->prefix('lotes')->group(function () {
+    // Route::post('store',[Expensas::class,'store']);
+    Route::get('index',[Lotes::class,'index']);
+});
+
+Route::middleware('auth:sanctum')->prefix('servicios')->group(function () {
+    // Route::post('store',[Expensas::class,'store']);
+    Route::get('index',[Servicios::class,'index']);
 });
