@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('service_type_id')->constrained();
             $table->string('name');
             $table->string('amount')->nullable();
+            $table->string('color')->nullable();
             $table->timestamps();
         });
     }

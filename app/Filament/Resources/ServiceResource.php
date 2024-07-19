@@ -41,8 +41,8 @@ class ServiceResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('color')->type('color'),
                 Forms\Components\TextInput::make('amount')
-                    // ->required()
                     ->maxLength(255),
             ]);
     }
@@ -51,6 +51,7 @@ class ServiceResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ColorColumn::make('color'),
                 Tables\Columns\TextColumn::make('serviceType.name')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('name')
