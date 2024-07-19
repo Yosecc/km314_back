@@ -124,8 +124,8 @@ class CalendarWidget extends FullCalendarWidget
                     'id' => $event->id,
                     'start' => $event->starts_at,
                     'end' => $event->ends_at,
-                    'backgroundColor' => $event->serviceRequestStatus->color,
-                    'borderColor' => $event->serviceRequestStatus->color,
+                    'backgroundColor' => $event->service->color,
+                    'borderColor' => $event->service->color,
                     // 'url' => EventResource::getUrl(name: 'view', parameters: ['record' => $event]),
                     // 'shouldOpenUrlInNewTab' => true
                 ]
