@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('services', function (Blueprint $table) {
+        Schema::create('service_request_files', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_type_id')->constrained();
-            $table->string('name');
-            $table->string('amount')->nullable();
-            $table->string('color')->nullable();
-            $table->string('model')->nullable();
+            $table->foreignId('service_request_id')->constrained();
+            $table->foreignId('user_id')->constrained();
+            $table->string('file');
+            $table->string('description')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('services');
+        Schema::dropIfExists('service_request_files');
     }
 };

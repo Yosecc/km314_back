@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('services', function (Blueprint $table) {
+        Schema::create('service_request_responsible_peoples', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_type_id')->constrained();
-            $table->string('name');
-            $table->string('amount')->nullable();
-            $table->string('color')->nullable();
-            $table->string('model')->nullable();
+            $table->bigInteger('dni');
+            $table->string('first_name'); // Campo para el nombre
+            $table->string('last_name'); // Campo para el apellido
+            $table->bigInteger('phone')->nullable(); // Campo para el número de teléfono
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('services');
+        Schema::dropIfExists('service_request_responsible_people');
     }
 };

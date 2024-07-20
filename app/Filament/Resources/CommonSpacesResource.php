@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ExpenseConceptResource\Pages;
-use App\Filament\Resources\ExpenseConceptResource\RelationManagers;
-use App\Models\ExpenseConcept;
+use App\Filament\Resources\CommonSpacesResource\Pages;
+use App\Filament\Resources\CommonSpacesResource\RelationManagers;
+use App\Models\CommonSpaces;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,20 +13,20 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class ExpenseConceptResource extends Resource
+class CommonSpacesResource extends Resource
 {
-    protected static ?string $model = ExpenseConcept::class;
+    protected static ?string $model = CommonSpaces::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Conceptos de expensas';
-    protected static ?string $label = 'concepto de expensa';
-    protected static ?string $navigationGroup = 'Administracion Contable';
+    protected static ?string $navigationLabel = 'Espacios Comunes';
+    protected static ?string $label = 'espacio común';
+    protected static ?string $navigationGroup = 'Servicios - Configuración';
 
     
     public static function getPluralModelLabel(): string
     {
-        return 'Conceptos de expensas';
+        return 'Espacios Comunes';
     }
 
     public static function form(Form $form): Form
@@ -36,9 +36,8 @@ class ExpenseConceptResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('amount')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\TextInput::make('color')
+                    ->type('color'),
                 Forms\Components\Toggle::make('status')
                     ->required(),
             ]);
@@ -48,9 +47,8 @@ class ExpenseConceptResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ColorColumn::make('color')->label(''),
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('amount')
                     ->searchable(),
                 Tables\Columns\IconColumn::make('status')
                     ->boolean(),
@@ -80,7 +78,7 @@ class ExpenseConceptResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManageExpenseConcepts::route('/'),
+            'index' => Pages\ManageCommonSpaces::route('/'),
         ];
     }
 }

@@ -21,7 +21,7 @@ class ExpenseStatusResource extends Resource
 
     protected static ?string $navigationLabel = 'Estatus de expensas';
     protected static ?string $label = 'estatus de expensa';
-    protected static ?string $navigationGroup = 'Configuracion - Administracion Contable';
+    protected static ?string $navigationGroup = 'Administracion Contable';
 
     
     public static function getPluralModelLabel(): string
@@ -47,10 +47,8 @@ class ExpenseStatusResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ColorColumn::make('color')->label(''),
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('color')
-                
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

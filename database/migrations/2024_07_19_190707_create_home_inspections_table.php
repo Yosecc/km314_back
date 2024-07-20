@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('services', function (Blueprint $table) {
+        Schema::create('home_inspections', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_type_id')->constrained();
             $table->string('name');
+            $table->boolean('status')->default(false);
             $table->string('amount')->nullable();
-            $table->string('color')->nullable();
-            $table->string('model')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('services');
+        Schema::dropIfExists('home_inspections');
     }
 };

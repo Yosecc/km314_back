@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ExpenseConceptResource\Pages;
-use App\Filament\Resources\ExpenseConceptResource\RelationManagers;
-use App\Models\ExpenseConcept;
+use App\Filament\Resources\RentalAttentionResource\Pages;
+use App\Filament\Resources\RentalAttentionResource\RelationManagers;
+use App\Models\RentalAttention;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,20 +13,20 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class ExpenseConceptResource extends Resource
+class RentalAttentionResource extends Resource
 {
-    protected static ?string $model = ExpenseConcept::class;
+    protected static ?string $model = RentalAttention::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Conceptos de expensas';
-    protected static ?string $label = 'concepto de expensa';
-    protected static ?string $navigationGroup = 'Administracion Contable';
+    protected static ?string $navigationLabel = 'Atención alquileres';
+    protected static ?string $label = 'atención alquiler';
+    protected static ?string $navigationGroup = 'Servicios - Configuración';
 
     
     public static function getPluralModelLabel(): string
     {
-        return 'Conceptos de expensas';
+        return 'Atención alquileres';
     }
 
     public static function form(Form $form): Form
@@ -36,11 +36,10 @@ class ExpenseConceptResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('amount')
-                    ->required()
-                    ->maxLength(255),
                 Forms\Components\Toggle::make('status')
                     ->required(),
+                Forms\Components\TextInput::make('color')
+                    ->type('color'),
             ]);
     }
 
@@ -48,9 +47,8 @@ class ExpenseConceptResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ColorColumn::make('color')->label(''),
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('amount')
                     ->searchable(),
                 Tables\Columns\IconColumn::make('status')
                     ->boolean(),
@@ -80,7 +78,7 @@ class ExpenseConceptResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManageExpenseConcepts::route('/'),
+            'index' => Pages\ManageRentalAttentions::route('/'),
         ];
     }
 }

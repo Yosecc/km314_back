@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ExpenseConceptResource\Pages;
-use App\Filament\Resources\ExpenseConceptResource\RelationManagers;
-use App\Models\ExpenseConcept;
+use App\Filament\Resources\StartUpResource\Pages;
+use App\Filament\Resources\StartUpResource\RelationManagers;
+use App\Models\StartUp;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,20 +13,20 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class ExpenseConceptResource extends Resource
+class StartUpResource extends Resource
 {
-    protected static ?string $model = ExpenseConcept::class;
+    protected static ?string $model = StartUp::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Conceptos de expensas';
-    protected static ?string $label = 'concepto de expensa';
-    protected static ?string $navigationGroup = 'Administracion Contable';
+    protected static ?string $navigationLabel = 'Puesta en marcha';
+    protected static ?string $label = 'puesta en marcha';
+    protected static ?string $navigationGroup = 'Servicios - Configuración';
 
     
     public static function getPluralModelLabel(): string
     {
-        return 'Conceptos de expensas';
+        return 'Puesta en marcha';
     }
 
     public static function form(Form $form): Form
@@ -36,11 +36,10 @@ class ExpenseConceptResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('amount')
-                    ->required()
-                    ->maxLength(255),
                 Forms\Components\Toggle::make('status')
                     ->required(),
+                Forms\Components\TextInput::make('color')->type('color'),
+                Forms\Components\TextInput::make('amount'),
             ]);
     }
 
@@ -48,12 +47,13 @@ class ExpenseConceptResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ColorColumn::make('color')->label(''),
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('amount')
                     ->searchable(),
                 Tables\Columns\IconColumn::make('status')
                     ->boolean(),
+                Tables\Columns\TextColumn::make('amount')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -80,7 +80,7 @@ class ExpenseConceptResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManageExpenseConcepts::route('/'),
+            'index' => Pages\ManageStartUps::route('/'),
         ];
     }
 }

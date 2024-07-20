@@ -49,9 +49,9 @@ class Solicitudes extends Controller
         }
 
         $id = ServiceRequest::insertGetId($request->all());
-
+        
         $solicitud = ServiceRequest::where('id',$id)
-                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','propertie'])
+                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','propertie','responsible','serviceRequestNote','serviceRequestFile'])
                             ->first();
 
         return response()->json($solicitud);

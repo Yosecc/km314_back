@@ -6,11 +6,31 @@ use Filament\Forms;
 use App\Models\Lote;
 use Filament\Tables;
 use App\Models\Owner;
+use App\Models\Service;
+use App\Models\StartUp;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use App\Models\Property;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
+use App\Models\CommonSpaces;
+use App\Models\StartUpOption;
+use App\Models\HomeInspection;
 use App\Models\ServiceRequest;
+use App\Models\RentalAttention;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Grid;
+use App\Models\ServiceRequestStatus;
+use App\Models\WorksAndInstallation;
+use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Wizard;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ServiceRequestResource\Pages;
@@ -26,6 +46,7 @@ class ServiceRequestResource extends Resource
     protected static ?string $label = 'solicitud';
     protected static ?string $navigationGroup = 'Solicitudes';
 
+    public static $service = null;
     
     public static function getPluralModelLabel(): string
     {
@@ -36,45 +57,169 @@ class ServiceRequestResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('service_request_status_id')
-                    // ->label(__("general.LoteStatus"))
-                    ->required()
-                    ->relationship(name: 'serviceRequestStatus', titleAttribute: 'name'),
 
-                Forms\Components\Select::make('service_request_type_id')
-                    // ->label(__("general.LoteStatus"))
-                    ->required()
-                    ->relationship(name: 'serviceRequestType', titleAttribute: 'name'),
+                Wizard::make([
+                    Wizard\Step::make('Service')
+                        ->schema([
+                            Grid::make()
+                            ->schema([
 
-                Forms\Components\Select::make('service_id')
-                    // ->label(__("general.LoteStatus"))
-                    ->required()
-                    ->relationship(name: 'service', titleAttribute: 'name'),
+                                Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
 
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\DateTimePicker::make('starts_at')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('ends_at')
-                    ->required(),
+                                Forms\Components\Select::make('service_request_type_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->relationship(name: 'serviceRequestType', titleAttribute: 'name'),
 
-                Forms\Components\Select::make('owner_id')->label(__("general.Owner"))    
-                    ->relationship(name: 'owner')
-                    ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}"),
+                                Forms\Components\Select::make('service_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->relationship(name: 'service', titleAttribute: 'name')
+                                    ->live()
+                                    ->afterStateUpdated(function (?string $state, Set $set) {
+                                        self::$service = Service::find($state);
+                                        $set('name',self::$service->name);
+                                        $set('model',self::$service->model);
+                                    }),
 
-                Forms\Components\Select::make('lote_id')
-                    ->label(__("general.Lotes"))
-                    ->options(Lote::get()->map(function($lote){
-                        $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
-                        return $lote;
-                    })
-                    ->pluck('lote_name', 'id')->toArray()),
+                                Forms\Components\TextInput::make('name')
+                                    ->required()
+                                    ->live()
+                                    ->maxLength(255)->columnSpan(2),
 
-                Forms\Components\Select::make('propertie_id')
-                    ->label(__("general.Propertie"))
-                    ->options(Property::get()->pluck('identificador', 'id')->toArray()),
-            ]);
+                                Forms\Components\Hidden::make('model'),
+
+                                Forms\Components\Select::make('model_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->options(RentalAttention::get()->pluck('name','id')->toArray())
+                                    ->disabled( fn (Get $get) => $get('model') != 'RentalAttention' )
+                                    ->visible( fn (Get $get) => $get('model') == 'RentalAttention' ),
+
+                                Forms\Components\Select::make('model_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->options(HomeInspection::get()->pluck('name','id')->toArray())
+                                    ->disabled( fn (Get $get) => $get('model') != 'HomeInspection' )
+                                    ->visible( fn (Get $get) => $get('model') == 'HomeInspection' ),
+
+                                Forms\Components\Select::make('model_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->options(WorksAndInstallation::get()->pluck('name','id')->toArray())
+                                    ->disabled( fn (Get $get) => $get('model') != 'WorksAndInstallation' )
+                                    ->visible( fn (Get $get) => $get('model') == 'WorksAndInstallation' ),
+                                
+                                Forms\Components\Select::make('model_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->options(CommonSpaces::get()->pluck('name','id')->toArray())
+                                    ->disabled( fn (Get $get) => $get('model') != 'CommonSpaces' )
+                                    ->visible( fn (Get $get) => $get('model') == 'CommonSpaces' ),
+                                
+                                Forms\Components\Select::make('model_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->options(StartUp::get()->pluck('name','id')->toArray())
+                                    ->disabled( fn (Get $get) => $get('model') != 'StartUp' )
+                                    ->visible( fn (Get $get) => $get('model') == 'StartUp' ),
+
+                                Select::make('options')
+                                    ->multiple()
+                                    ->searchable()
+                                    ->options(StartUpOption::get()->pluck('name','id')->toArray())
+                                    ->disabled( fn (Get $get) => $get('model') != 'StartUp' )
+                                    ->visible( fn (Get $get) => $get('model') == 'StartUp' ),
+                                    
+                                    
+                            ])->columns(2), 
+                            Textarea::make('observation'),
+                            Fieldset::make('responsible')
+                                ->label('Responsable')
+                                ->relationship('responsible')
+                                ->schema([
+                                    Forms\Components\TextInput::make('dni')
+                                        ->label(__("general.DNI"))
+                                        ->required()
+                                        ->numeric(),
+                                    Forms\Components\TextInput::make('first_name')
+                                        ->label(__("general.FirstName"))
+                                        ->required()
+                                        ->maxLength(255),
+                                    Forms\Components\TextInput::make('last_name')
+                                        ->label(__("general.LastName"))
+                                        ->required()
+                                        ->maxLength(255),
+                                    Forms\Components\TextInput::make('phone')
+                                        ->label(__("general.Phone"))
+                                        ->tel()
+                                        ->numeric(),
+                                ])
+                                ->disabled( fn (Get $get) => $get('model') != 'CommonSpaces' )
+                                ->visible( fn (Get $get) => $get('model') == 'CommonSpaces' ),
+                        ]),
+                    Wizard\Step::make('Date')
+                        ->schema([
+
+                            Forms\Components\DateTimePicker::make('starts_at')
+                                ->required(),
+
+                            Forms\Components\DateTimePicker::make('ends_at')
+                                ->required(),
+                        ]),
+                    Wizard\Step::make('Info')
+                        ->schema([
+
+                            Forms\Components\Select::make('owner_id')->label(__("general.Owner"))    
+                                ->relationship(name: 'owner')
+                                ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}"),
+
+                            Forms\Components\Select::make('lote_id')
+                                ->label(__("general.Lotes"))
+                                ->options(Lote::get()->map(function($lote){
+                                    $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
+                                    return $lote;
+                                })
+                                ->pluck('lote_name', 'id')->toArray()),
+
+                            Forms\Components\Select::make('propertie_id')
+                                ->label(__("general.Propertie"))
+                                ->options(Property::get()->pluck('identificador', 'id')->toArray()),
+
+                            Forms\Components\Select::make('service_request_status_id')
+                                // ->label(__("general.LoteStatus"))
+                                ->relationship(name: 'serviceRequestStatus', titleAttribute: 'name')
+                                // ->options(ServiceRequestStatus::get()->pluck('name','id')->toArray())
+                                ->required(),
+
+                            Repeater::make('serviceRequestNote')
+                                ->relationship()
+                                ->label('Nota')
+                                ->schema([
+
+                                    Hidden::make('user_id')->default(Auth::user()->id),
+                                    Textarea::make('description'),
+
+                                ])
+                                ->columns(1),
+
+                            Repeater::make('serviceRequestFile')
+                                ->relationship()
+                                ->label('Archivo')
+                                ->schema([
+
+                                    Hidden::make('user_id')->default(Auth::user()->id),
+                                    Textarea::make('description'),
+                                    Forms\Components\FileUpload::make('file')
+                                ])
+                                ->columns(1)
+
+
+                        ])->columns(2),
+                ]),
+
+                
+            ])->columns(1);
     }
 
     public static function table(Table $table): Table

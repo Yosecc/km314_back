@@ -42,8 +42,8 @@ class ServiceResource extends Resource
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('color')->type('color'),
-                Forms\Components\TextInput::make('amount')
-                    ->maxLength(255),
+                Forms\Components\TextInput::make('amount')->maxLength(255),
+                Forms\Components\TextInput::make('model')->maxLength(255),
             ]);
     }
 
