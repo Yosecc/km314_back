@@ -12,6 +12,12 @@ class Servicios extends Controller
     {
         $services = Service::with(['serviceType'])->get();
         
-        return response()->json($services->groupBy('service_type_id')->all());
+        return response()->json($services->groupBy('service_type_id')->map(function($grupo){
+            return [
+                'id' => $grupo[0]->service_type_id,
+                'name' => $grupo[0]->service_type->name,
+                'items' => $grupo,
+            ];
+        })->values()->all());
     }
 }
