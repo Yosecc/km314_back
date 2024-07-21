@@ -12,7 +12,7 @@ class Solicitudes extends Controller
     public function index(Request $request)
     {
         $solicitudes = ServiceRequest::where('owner_id',$request->user()->owner->id)
-                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','propertie'])
+                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','propertie','serviceRequestFile','serviceRequestNote'])
                             ->orderBy('starts_at','desc')
                             ->get();
         return response()->json($solicitudes);
@@ -20,24 +20,28 @@ class Solicitudes extends Controller
 
     public function store(Request $request)
     {
-
+        
         $validator = Validator::make($request->all(), [
             "service_request_status_id" => 'nullable',
+            "service_request_responsible_people_id" => 'nullable',
             "lote_id" => 'nullable',
             "propertie_id" => 'nullable',
             "service_request_type_id" => 'required',
             "service_id" => 'required',
-            "owner_id" => 'required',
+            "model" => 'nullable',
+            "model_id" => 'nullable',
+            "options" => 'nullable',
             "name" => 'required',
             "starts_at" => 'required',
             "ends_at" => 'required',
+            "observations" => 'nullable'
         ], [], [
             // Atributos personalizados
             'lote_id' => 'ID de lote',
             'propertie_id' => 'propiedad',
             'service_request_type_id' => 'tipo',
             'service_id' => 'servicio',
-            'owner_id' => 'propietario',
+            'model' => 'propietario',
             'starts_at' => 'fecha de inicio',
             'ends_at' => 'fecha de fin',
             'name' => 'nombre',

@@ -49,6 +49,6 @@ Route::middleware('auth:sanctum')->prefix('lotes')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->prefix('servicios')->group(function () {
-    // Route::post('store',[Expensas::class,'store']);
+    Route::get('combox',[Servicios::class,'combox']);
     Route::get('index',[Servicios::class,'index']);
 });
