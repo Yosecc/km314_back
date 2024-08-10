@@ -19,14 +19,14 @@ class ExpenseStatusResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Estatus de expensas';
-    protected static ?string $label = 'estatus de expensa';
+    protected static ?string $navigationLabel = 'Estatus de gastos';
+    protected static ?string $label = 'estatus de gasto';
     protected static ?string $navigationGroup = 'Administracion Contable';
 
     
     public static function getPluralModelLabel(): string
     {
-        return 'Estatus de expensas';
+        return 'Estatus de gastos';
     }
 
     public static function form(Form $form): Form

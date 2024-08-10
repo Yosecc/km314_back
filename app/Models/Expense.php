@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Expense extends Model
 {
     use HasFactory;
-    protected $fillable = ['lote_id','propertie_id','owner_id','expense_status_id','date_prox_payment'];
+    protected $fillable = ['propertie_id','owner_id','expense_status_id','date_prox_payment'];
 
 
     public function expenseStatus()

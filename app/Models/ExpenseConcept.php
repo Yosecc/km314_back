@@ -9,5 +9,10 @@ class ExpenseConcept extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['name','amount','status'];
+    protected $fillable = ['name','status'];
+
+    public function expenseConceptLoteType()
+    {
+        return $this->hasMany(ExpenseConceptLoteType::class);
+    }
 }

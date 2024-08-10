@@ -2,16 +2,18 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ExpenseConceptResource\Pages;
-use App\Filament\Resources\ExpenseConceptResource\RelationManagers;
-use App\Models\ExpenseConcept;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\ExpenseConcept;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Repeater;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\ExpenseConceptResource\Pages;
+use App\Filament\Resources\ExpenseConceptResource\RelationManagers;
+use App\Models\loteType;
 
 class ExpenseConceptResource extends Resource
 {
@@ -19,14 +21,14 @@ class ExpenseConceptResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Conceptos de expensas';
-    protected static ?string $label = 'concepto de expensa';
+    protected static ?string $navigationLabel = 'Conceptos de gastos de mantenimiento';
+    protected static ?string $label = 'concepto de gasto de mantenimiento';
     protected static ?string $navigationGroup = 'Administracion Contable';
 
     
     public static function getPluralModelLabel(): string
     {
-        return 'Conceptos de expensas';
+        return 'Conceptos de gastos de mantenimiento';
     }
 
     public static function form(Form $form): Form
@@ -36,12 +38,21 @@ class ExpenseConceptResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('amount')
-                    ->required()
-                    ->maxLength(255),
+                Repeater::make('expenseConceptLoteType')
+                    ->relationship()
+                    ->schema([
+                        Forms\Components\Select::make('lote_type_id')
+                            ->options(loteType::get()->pluck('name','id')->toArray())
+                            ->required(),
+                        Forms\Components\TextInput::make('amount')
+                            ->required()
+                            ->maxLength(255),
+                    ])
+                    ->columns(2),
+                
                 Forms\Components\Toggle::make('status')
                     ->required(),
-            ]);
+            ]) ->columns(1);
     }
 
     public static function table(Table $table): Table
@@ -50,8 +61,8 @@ class ExpenseConceptResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('amount')
-                    ->searchable(),
+                // Tables\Columns\TextColumn::make('amount')
+                //     ->searchable(),
                 Tables\Columns\IconColumn::make('status')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')

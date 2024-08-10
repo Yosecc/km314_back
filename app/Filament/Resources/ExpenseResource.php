@@ -7,6 +7,7 @@ use App\Models\Lote;
 use Filament\Tables;
 use App\Models\Owner;
 use App\Models\Expense;
+use Filament\Forms\Get;
 use App\Models\Property;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -26,14 +27,14 @@ class ExpenseResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Expensas';
-    protected static ?string $label = 'expensa';
+    protected static ?string $navigationLabel = 'Gastos de mantenimiento';
+    protected static ?string $label = 'gasto';
     protected static ?string $navigationGroup = 'Administracion Contable';
 
     
     public static function getPluralModelLabel(): string
     {
-        return 'Expensas';
+        return 'Gastos de mantenimiento';
     }
 
     
@@ -43,23 +44,19 @@ class ExpenseResource extends Resource
         return $form
             ->schema([
                 
-
-                Forms\Components\Select::make('lote_id')
-                    ->label(__("general.Lotes"))
-                    ->options(Lote::get()->map(function($lote){
-                        $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
-                        return $lote;
-                    })
-                    ->pluck('lote_name', 'id')->toArray()),
-
-                Forms\Components\Select::make('propertie_id')
-                    ->label(__("general.Propertie"))
-                    ->options(Property::get()->pluck('identificador', 'id')->toArray()),
-                
                 Forms\Components\Select::make('owner_id')
                     ->relationship(name: 'owner')
                     ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
-                    ->label(__("general.Owner")),
+                    ->label(__("general.Owner"))
+                    ->live(),
+
+                
+
+                // Forms\Components\Select::make('propertie_id')
+                //     ->label(__("general.Propertie"))
+                //     ->options(Property::get()->pluck('identificador', 'id')->toArray()),
+                
+                
                     
 
                 Forms\Components\Select::make('expense_status_id')
@@ -105,15 +102,16 @@ class ExpenseResource extends Resource
                 Tables\Columns\ColorColumn::make('expenseStatus.color')->label(''),
                 Tables\Columns\TextColumn::make('expenseStatus.name')->label('Estatus')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('concepts.expenseConcept.name')
-                    ->badge()
-,
-                Tables\Columns\TextColumn::make('lote')
-                    ->formatStateUsing(fn ($state) => $state->sector->name.$state->lote_id )
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('propertie.identificador')
-                    // ->numeric()
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('concepts.expenseConcept.name')
+                //     ->badge(),
+                // Tables\Columns\TextColumn::make('concepts.lote_id')->badge()
+                //     ->formatStateUsing(function($state){
+                //         $lote = Lote::where('id', $state)->first();
+                //         return $lote->sector->name.$lote->lote_id;
+                //     }),
+                // Tables\Columns\TextColumn::make('propertie.identificador')
+                //     // ->numeric()
+                //     ->sortable(),
                 Tables\Columns\TextColumn::make('owner')
                     ->formatStateUsing(fn ($state) => $state->first_name.' '.$state->last_name )
                     ->sortable(),

@@ -9,8 +9,8 @@ class ExpensesConcepts extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['expense_concept_id','expense_id','amount','description'];
-
+    protected $fillable = ['expense_concept_id','expense_id','amount','description','lote_id','is_metro_cuadrado','xmetro'];
+    
     public function expenseConcept()
     {
         return $this->belongsTo(ExpenseConcept::class);

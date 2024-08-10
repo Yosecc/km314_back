@@ -30,8 +30,7 @@ class LoteTypeResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                ->label(__("general.Name"))
-
+                    ->label(__("general.Name"))
                     ->required()
                     ->maxLength(255),
             ]);

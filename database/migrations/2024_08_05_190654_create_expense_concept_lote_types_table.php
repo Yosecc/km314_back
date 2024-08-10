@@ -11,17 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('expenses_concepts', function (Blueprint $table) {
+        Schema::create('expense_concept_lote_types', function (Blueprint $table) {
             $table->id();
-            
             $table->foreignId('expense_concept_id')->constrained();
-            $table->foreignId('expense_id')->constrained();
-            $table->foreignId('lote_id')->constrained();
-            // $table->string('amount');
-            $table->string('description')->nullable();
-            $table->string('is_metro_cuadrado')->nullable();
-            $table->string('xmetro')->nullable();
-
+            $table->foreignId('lote_type_id')->constrained();
+            $table->string('amount');
             $table->timestamps();
         });
     }
@@ -31,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('expenses_concepts');
+        Schema::dropIfExists('expense_concept_lote_types');
     }
 };

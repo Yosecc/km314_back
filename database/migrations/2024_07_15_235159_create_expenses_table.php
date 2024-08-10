@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
 
             // $table->foreignId('expense_concept_id')->constrained();
-            $table->foreignId('lote_id')->nullable()->constrained();
-            $table->foreignId('propertie_id')->nullable()->constrained();
+            // $table->foreignId('lote_id')->nullable()->constrained();
+            // $table->foreignId('propertie_id')->nullable()->constrained();
             $table->foreignId('owner_id')->nullable()->constrained();
             $table->foreignId('expense_status_id')->constrained();
 
