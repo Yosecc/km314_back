@@ -94,7 +94,6 @@ class ConceptsRelationManager extends RelationManager
                                 ->live(),
                             
                             Forms\Components\TextInput::make('m2')
-                                ->required()
                                 ->numeric()
                                 ->disabled(),
                             
