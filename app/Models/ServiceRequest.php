@@ -9,7 +9,7 @@ class ServiceRequest extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name','user_id','starts_at','ends_at','service_request_responsible_people_id','service_request_status_id','service_request_type_id','service_id','lote_id','propertie_id','owner_id','model','model_id','options','observations'];
+    protected $fillable = ['alias','name','user_id','starts_at','ends_at','service_request_responsible_people_id','service_request_status_id','service_request_type_id','service_id','lote_id','propertie_id','owner_id','model','model_id','options','observations'];
     
     protected $casts = [
         'options' => 'array',

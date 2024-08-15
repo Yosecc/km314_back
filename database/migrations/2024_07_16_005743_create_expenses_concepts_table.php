@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('expense_concept_id')->constrained();
             $table->foreignId('expense_id')->constrained();
             $table->foreignId('lote_id')->constrained();
-            // $table->string('amount');
+            $table->string('amount');
             $table->string('description')->nullable();
             $table->string('is_metro_cuadrado')->nullable();
             $table->string('xmetro')->nullable();

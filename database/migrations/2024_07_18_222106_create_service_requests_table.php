@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('model_id')->nullable();
             $table->string('options')->nullable();
             $table->string('observations')->nullable();
+            $table->string('alias')->nullable();
 
             $table->string('starts_at');
             $table->string('ends_at');
