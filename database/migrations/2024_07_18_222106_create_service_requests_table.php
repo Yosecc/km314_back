@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('service_id')->constrained();
 
             $table->foreignId('lote_id')->nullable()->constrained();
-            $table->foreignId('propertie_id')->nullable()->constrained();
+            // $table->foreignId('propertie_id')->nullable()->constrained();
             $table->foreignId('owner_id')->nullable()->constrained();
             $table->foreignId('user_id')->nullable()->constrained();
             
