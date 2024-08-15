@@ -133,7 +133,7 @@ class ServiceRequestResource extends Resource
                                     
                                     
                             ])->columns(2), 
-                            Textarea::make('observation'),
+                            Textarea::make('observations'),
                             Fieldset::make('responsible')
                                 ->label('Responsable')
                                 ->relationship('responsible')
