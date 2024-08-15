@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\ServiceRequest;
 use App\Http\Controllers\Controller;
@@ -53,6 +54,8 @@ class Solicitudes extends Controller
 
         $data = $request->all();
         $data['owner_id'] = $request->user()->owner->id;
+        $data['created_at'] = Carbon::now();
+        $data['updated_at'] = Carbon::now();
         $id = ServiceRequest::insertGetId($data);
         
         $solicitud = ServiceRequest::where('id',$id)
