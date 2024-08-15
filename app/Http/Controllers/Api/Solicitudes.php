@@ -25,7 +25,6 @@ class Solicitudes extends Controller
             "service_request_status_id" => 'nullable',
             "service_request_responsible_people_id" => 'nullable',
             "lote_id" => 'nullable',
-            "propertie_id" => 'nullable',
             "service_request_type_id" => 'required',
             "service_id" => 'required',
             "model" => 'nullable',
@@ -52,7 +51,9 @@ class Solicitudes extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $id = ServiceRequest::insertGetId($request->all());
+        $data = $request->all();
+        $data['owner_id'] = $request->user()->owner->id;
+        $id = ServiceRequest::insertGetId($data);
         
         $solicitud = ServiceRequest::where('id',$id)
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','propertie','responsible','serviceRequestNote','serviceRequestFile'])
