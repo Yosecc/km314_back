@@ -68,30 +68,45 @@ class Solicitudes extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        $datos = function($request){
+            return [
+                'alias' => $request['alias'],
+                'name' => $request['name'],
+                'user_id' => $request['user_id'],
+                'starts_at' => $request['starts_at'],
+                'ends_at' => $request['ends_at'],
+                'service_request_responsible_people_id' => $request['service_request_responsible_people_id'],
+                'service_request_status_id' => $request['service_request_status_id'],
+                'service_request_type_id' => $request['service_request_type_id'],
+                'service_id' => $request['service_id'],
+                'lote_id' => $request['lote_id'],
+                'owner_id' => $request['owner_id'],
+                'model' => $request['model'],
+                'model_id' => $request['model_id'],
+                'options' => $request['options'],
+                'observations' => $request['observations']
+            ];
+        };
+
         $data = $request->all();
 
         if(isset($data['id'])){
             $id = $data['id'];
 
-            $data['updated_at'] = Carbon::now();
-            $solicitud = ServiceRequest::where('id',$id)->update(collect([$data])->map(function($item){
-                unset($item['responsible']);
-                unset($item['service_request_file']);
-                return $item;
-            })->collapse()->toArray());
+            $d = $datos($data);
+            $d['updated_at'] = Carbon::now();
+
+            $solicitud = ServiceRequest::where('id', $id)->update($d);
             
 
         }else{
 
-            $data['owner_id'] = $request->user()->owner->id;
-            $data['created_at'] = Carbon::now();
-            $data['updated_at'] = Carbon::now();
+            $d = $datos($data);
+            $d['owner_id'] = $request->user()->owner->id;
+            $d['created_at'] = Carbon::now();
+            $d['updated_at'] = Carbon::now();
             
-            $id = ServiceRequest::insertGetId(collect([$data])->map(function($item){
-                unset($item['responsible']);
-                unset($item['service_request_file']);
-                return $item;
-            })->collapse()->toArray());
+            $id = ServiceRequest::insertGetId($d);
         }
         
         $solicitud = ServiceRequest::find($id);
