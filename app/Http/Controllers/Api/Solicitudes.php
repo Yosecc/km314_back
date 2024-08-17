@@ -113,11 +113,11 @@ class Solicitudes extends Controller
 
         if(isset($data['responsible'])){
             if(isset($data['responsible']['id'])){
-                $data['responsible']['updated_at'] = Carbon::now();
+                $data['responsible']['updated_at'] = Carbon::now()->format('Y-m-d H:mm:ss');
                 ServiceRequestResponsiblePeople::where('id',$data['responsible']['id'])->update($data['responsible']);
             }else{
-                $data['responsible']['created_at'] = Carbon::now();
-                $data['responsible']['updated_at'] = Carbon::now();
+                $data['responsible']['created_at'] = Carbon::now()->format('Y-m-d H:mm:ss');
+                $data['responsible']['updated_at'] = Carbon::now()->format('Y-m-d H:mm:ss');
                 $responsible = ServiceRequestResponsiblePeople::insertGetId($data['responsible']);
                 $responsible = ServiceRequestResponsiblePeople::find($responsible);
                 $solicitud->responsible()->associate($responsible);
