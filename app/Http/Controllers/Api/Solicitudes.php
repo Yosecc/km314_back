@@ -74,7 +74,7 @@ class Solicitudes extends Controller
                 'name' => $request['name'], 
                 'starts_at' => $request['starts_at'],
                 'ends_at' => $request['ends_at'],
-                'service_request_responsible_people_id' => $request['service_request_responsible_people_id'],
+                'service_request_responsible_people_id' => $request['service_request_responsible_people_id'] || null,
                 'service_request_status_id' => $request['service_request_status_id'],
                 'service_request_type_id' => $request['service_request_type_id'],
                 'service_id' => $request['service_id'],
