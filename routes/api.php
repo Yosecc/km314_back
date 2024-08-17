@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
 
 Route::middleware('auth:sanctum')->prefix('solicitudes')->group(function () {
     Route::post('store',[Solicitudes::class,'store']);
+    Route::post('file',[Solicitudes::class,'file']);
     Route::get('index',[Solicitudes::class,'index']);
 });
 

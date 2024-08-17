@@ -92,20 +92,11 @@ class Solicitudes extends Controller
         }
         
         // dd($data);
-        if(isset($data['service_request_file']) && isset($data['service_request_file']['file']) ){
+        // if(isset($data['service_request_file']) && isset($data['service_request_file']['file']) ){
         
-            $data['service_request_file']['created_at'] = Carbon::now();
-            $data['service_request_file']['updated_at'] = Carbon::now();
-
-            $path = Storage::putFile('service_request_files', new File($data['service_request_file']['file']));
-            
-            $data['service_request_file']['file'] = $path;
-            $data['service_request_file']['user_id'] = $request->user()->id;
-
-            $solicitud->serviceRequestFile()->create($data['service_request_file']);
-            $solicitud->save();
-            // ServiceRequestFile::insert($data['service_request_file']);
-        }
+       
+        //     // ServiceRequestFile::insert($data['service_request_file']);
+        // }
         
         $solicitud = ServiceRequest::where('id',$id)
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
@@ -115,5 +106,44 @@ class Solicitudes extends Controller
 
         return response()->json($solicitud);
 
+    }
+
+    public function file(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            "id" => 'required',
+            "file" => 'required',
+            "observations" => 'nullable'
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+    
+        $solicitud = ServiceRequest::where('id',$request->id)->first();
+
+        if($solicitud){
+            $data = [];
+            $data['created_at'] = Carbon::now();
+            $data['updated_at'] = Carbon::now();
+
+            $path = Storage::putFile('service_request_files', new File($request->file));
+            
+            $data['file'] = $path;
+            $data["observations"] = $request->observations;
+            $data['user_id'] = $request->user()->id;
+
+            $solicitud->serviceRequestFile()->create($data);
+            $solicitud->save();
+        }
+
+        $solicitud = ServiceRequest::where('id',$request->id)
+                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
+                            ->first();
+
+        
+
+        return response()->json($solicitud);
     }
 }
