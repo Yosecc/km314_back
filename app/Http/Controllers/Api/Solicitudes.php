@@ -26,7 +26,7 @@ class Solicitudes extends Controller
         $solicitudes = $solicitudes->map(function($solicitud){
             $solicitud->serviceRequestFile->map(function($archivo){
             //  dd(storage_path($archivo['file']));
-                $archivo['file'] = config('app.url').Storage::url($archivo['file']);
+                $archivo['file'] = asset(Storage::url($archivo['file']));
                 return $archivo;
             });
             
@@ -62,7 +62,6 @@ class Solicitudes extends Controller
             'starts_at' => 'fecha de inicio',
             'ends_at' => 'fecha de fin',
             'name' => 'nombre',
-
         ]);
     
         if ($validator->fails()) {
@@ -70,39 +69,50 @@ class Solicitudes extends Controller
         }
 
         $data = $request->all();
-        $data['owner_id'] = $request->user()->owner->id;
-        $data['created_at'] = Carbon::now();
-        $data['updated_at'] = Carbon::now();
 
-        $id = ServiceRequest::insertGetId(collect([$data])->map(function($item){
-            unset($item['responsible']);
-            unset($item['service_request_file']);
-            return $item;
-        })->collapse()->toArray());
+        if(isset($data['id'])){
+            $id = $data['id'];
+
+            $data['updated_at'] = Carbon::now();
+            $solicitud = ServiceRequest::where('id',$id)->update(collect([$data])->map(function($item){
+                unset($item['responsible']);
+                unset($item['service_request_file']);
+                return $item;
+            })->collapse()->toArray());
+            
+
+        }else{
+
+            $data['owner_id'] = $request->user()->owner->id;
+            $data['created_at'] = Carbon::now();
+            $data['updated_at'] = Carbon::now();
+            
+            $id = ServiceRequest::insertGetId(collect([$data])->map(function($item){
+                unset($item['responsible']);
+                unset($item['service_request_file']);
+                return $item;
+            })->collapse()->toArray());
+        }
         
         $solicitud = ServiceRequest::find($id);
 
         if(isset($data['responsible'])){
-            $data['responsible']['created_at'] = Carbon::now();
-            $data['responsible']['updated_at'] = Carbon::now();
-            $responsible = ServiceRequestResponsiblePeople::insertGetId($data['responsible']);
-            $responsible = ServiceRequestResponsiblePeople::find($responsible);
-            $solicitud->responsible()->associate($responsible);
-            $solicitud->save();
+            if(isset($data['responsible']['id'])){
+                $data['responsible']['updated_at'] = Carbon::now();
+                ServiceRequestResponsiblePeople::where('id',$data['responsible']['id'])->update($data['responsible']);
+            }else{
+                $data['responsible']['created_at'] = Carbon::now();
+                $data['responsible']['updated_at'] = Carbon::now();
+                $responsible = ServiceRequestResponsiblePeople::insertGetId($data['responsible']);
+                $responsible = ServiceRequestResponsiblePeople::find($responsible);
+                $solicitud->responsible()->associate($responsible);
+                $solicitud->save();
+            }
         }
-        
-        // dd($data);
-        // if(isset($data['service_request_file']) && isset($data['service_request_file']['file']) ){
-        
-       
-        //     // ServiceRequestFile::insert($data['service_request_file']);
-        // }
         
         $solicitud = ServiceRequest::where('id',$id)
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
                             ->first();
-
-        
 
         return response()->json($solicitud);
 
@@ -113,22 +123,23 @@ class Solicitudes extends Controller
         $validator = Validator::make($request->all(), [
             "id" => 'required',
             "file" => 'required',
-            "observations" => 'nullable'
+            "observations" => 'nullable',
+            "file_id" => 'nullable'
         ]);
     
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-    
         $solicitud = ServiceRequest::where('id',$request->id)->first();
 
-        if($solicitud){
+        if($solicitud && !isset($request->file_id)){
             $data = [];
+
             $data['created_at'] = Carbon::now();
             $data['updated_at'] = Carbon::now();
 
-            $path = Storage::putFile('service_request_files', new File($request->file));
+            $path = Storage::putFile('service_request_files', new File($request->file),'public');
             
             $data['file'] = $path;
             $data["observations"] = $request->observations;
@@ -142,7 +153,30 @@ class Solicitudes extends Controller
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
                             ->first();
 
+        return response()->json($solicitud);
+    }
+
+    public function deleteFile(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            "id" => 'required',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $file = ServiceRequestFile::where('id', $request->id);
+
+        if(Storage::disk('public')->exists($file->file)){
+            Storage::disk('public')->delete($file->file);
+        }
         
+        $file->delete();
+
+        $solicitud = ServiceRequest::where('id',$request->id)
+                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
+                            ->first();
 
         return response()->json($solicitud);
     }
