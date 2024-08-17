@@ -182,9 +182,9 @@ class ServiceRequestResource extends Resource
                                 })
                                 ->pluck('lote_name', 'id')->toArray()),
 
-                            Forms\Components\Select::make('propertie_id')
-                                ->label(__("general.Propertie"))
-                                ->options(Property::get()->pluck('identificador', 'id')->toArray()),
+                            // Forms\Components\Select::make('propertie_id')
+                            //     ->label(__("general.Propertie"))
+                            //     ->options(Property::get()->pluck('identificador', 'id')->toArray()),
 
                             Forms\Components\Select::make('service_request_status_id')
                                 // ->label(__("general.LoteStatus"))

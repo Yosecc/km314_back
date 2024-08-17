@@ -3,19 +3,36 @@
 namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
+use Illuminate\Http\File;
 use Illuminate\Http\Request;
 use App\Models\ServiceRequest;
+use App\Models\ServiceRequestFile;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Models\ServiceRequestResponsiblePeople;
+
+use function Livewire\store;
 
 class Solicitudes extends Controller
 {
     public function index(Request $request)
     {
         $solicitudes = ServiceRequest::where('owner_id',$request->user()->owner->id)
-                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','propertie','serviceRequestFile','serviceRequestNote'])
-                            ->orderBy('starts_at','desc')
+                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestFile','serviceRequestNote'])
+                            ->orderBy('created_at','desc')
                             ->get();
+
+        $solicitudes = $solicitudes->map(function($solicitud){
+            $solicitud->serviceRequestFile->map(function($archivo){
+            //  dd(storage_path($archivo['file']));
+                $archivo['file'] = config('app.url').Storage::url($archivo['file']);
+                return $archivo;
+            });
+            
+            return $solicitud;
+        });
+
         return response()->json($solicitudes);
     }
 
@@ -56,11 +73,45 @@ class Solicitudes extends Controller
         $data['owner_id'] = $request->user()->owner->id;
         $data['created_at'] = Carbon::now();
         $data['updated_at'] = Carbon::now();
-        $id = ServiceRequest::insertGetId($data);
+
+        $id = ServiceRequest::insertGetId(collect([$data])->map(function($item){
+            unset($item['responsible']);
+            unset($item['service_request_file']);
+            return $item;
+        })->collapse()->toArray());
+        
+        $solicitud = ServiceRequest::find($id);
+
+        if(isset($data['responsible'])){
+            $data['responsible']['created_at'] = Carbon::now();
+            $data['responsible']['updated_at'] = Carbon::now();
+            $responsible = ServiceRequestResponsiblePeople::insertGetId($data['responsible']);
+            $responsible = ServiceRequestResponsiblePeople::find($responsible);
+            $solicitud->responsible()->associate($responsible);
+            $solicitud->save();
+        }
+        
+        // dd($data);
+        if(isset($data['service_request_file']) && isset($data['service_request_file']['file']) ){
+        
+            $data['service_request_file']['created_at'] = Carbon::now();
+            $data['service_request_file']['updated_at'] = Carbon::now();
+
+            $path = Storage::putFile('service_request_files', new File($data['service_request_file']['file']));
+            
+            $data['service_request_file']['file'] = $path;
+            $data['service_request_file']['user_id'] = $request->user()->id;
+
+            $solicitud->serviceRequestFile()->create($data['service_request_file']);
+            $solicitud->save();
+            // ServiceRequestFile::insert($data['service_request_file']);
+        }
         
         $solicitud = ServiceRequest::where('id',$id)
-                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','propertie','responsible','serviceRequestNote','serviceRequestFile'])
+                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
                             ->first();
+
+        
 
         return response()->json($solicitud);
 

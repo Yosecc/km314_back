@@ -55,8 +55,5 @@ class ServiceRequest extends Model
         return $this->belongsTo(Owner::class);
     }
     
-    public function propertie()
-    {
-        return $this->belongsTo(Property::class);
-    }
+    
 }
