@@ -71,8 +71,7 @@ class Solicitudes extends Controller
         $datos = function($request){
             return [
                 'alias' => $request['alias'],
-                'name' => $request['name'],
-                'user_id' => $request['user_id'],
+                'name' => $request['name'], 
                 'starts_at' => $request['starts_at'],
                 'ends_at' => $request['ends_at'],
                 'service_request_responsible_people_id' => $request['service_request_responsible_people_id'],
@@ -94,6 +93,7 @@ class Solicitudes extends Controller
             $id = $data['id'];
 
             $d = $datos($data);
+            $d['user_id'] = $request->user()->id;
             $d['updated_at'] = Carbon::now();
 
             $solicitud = ServiceRequest::where('id', $id)->update($d);
@@ -103,6 +103,7 @@ class Solicitudes extends Controller
 
             $d = $datos($data);
             $d['owner_id'] = $request->user()->owner->id;
+            $d['user_id'] = $request->user()->id;
             $d['created_at'] = Carbon::now();
             $d['updated_at'] = Carbon::now();
             
@@ -116,8 +117,8 @@ class Solicitudes extends Controller
                 $data['responsible']['updated_at'] = Carbon::now()->format('Y-m-d H:mm:ss');
                 ServiceRequestResponsiblePeople::where('id',$data['responsible']['id'])->update($data['responsible']);
             }else{
-                // $data['responsible']['created_at'] = Carbon::now()->format('Y-m-d H:mm:ss');
-                // $data['responsible']['updated_at'] = Carbon::now()->format('Y-m-d H:mm:ss');
+                $data['responsible']['created_at'] = Carbon::now()->format('Y-m-d H:mm:ss');
+                $data['responsible']['updated_at'] = Carbon::now()->format('Y-m-d H:mm:ss');
                 $responsible = ServiceRequestResponsiblePeople::insertGetId($data['responsible']);
                 $responsible = ServiceRequestResponsiblePeople::find($responsible);
                 $solicitud->responsible()->associate($responsible);
