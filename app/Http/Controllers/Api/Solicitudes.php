@@ -97,7 +97,6 @@ class Solicitudes extends Controller
             $d['updated_at'] = Carbon::now();
 
             $solicitud = ServiceRequest::where('id', $id)->update($d);
-            
 
         }else{
 
@@ -139,7 +138,7 @@ class Solicitudes extends Controller
         $validator = Validator::make($request->all(), [
             "id" => 'required',
             "file" => 'required',
-            "observations" => 'nullable',
+            "description" => 'nullable',
             "file_id" => 'nullable'
         ]);
     
@@ -149,20 +148,31 @@ class Solicitudes extends Controller
 
         $solicitud = ServiceRequest::where('id',$request->id)->first();
 
-        if($solicitud && !isset($request->file_id)){
-            $data = [];
+        if (!$solicitud) {
+            return response()->json(['No existe la socitud'], 422);
+        }
+        
+        if(isset($request->file_id) && $request->file_id){
+            $file = ServiceRequestFile::where('id',$request->file_id)->update([
+                'description' => $request->description,
+                'updated_at' => Carbon::now()
+            ]);
+        }else{
+            if($solicitud){
+                $data = [];
 
-            $data['created_at'] = Carbon::now();
-            $data['updated_at'] = Carbon::now();
+                $data['created_at'] = Carbon::now();
+                $data['updated_at'] = Carbon::now();
 
-            $path = Storage::putFile('service_request_files', new File($request->file),'public');
-            
-            $data['file'] = $path;
-            $data["observations"] = $request->observations;
-            $data['user_id'] = $request->user()->id;
+                $path = Storage::putFile('service_request_files', new File($request->file),'public');
+                
+                $data['file'] = $path;
+                $data["description"] = $request->observations;
+                $data['user_id'] = $request->user()->id;
 
-            $solicitud->serviceRequestFile()->create($data);
-            $solicitud->save();
+                $solicitud->serviceRequestFile()->create($data);
+                $solicitud->save();
+            }
         }
 
         $solicitud = ServiceRequest::where('id',$request->id)
@@ -182,7 +192,11 @@ class Solicitudes extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $file = ServiceRequestFile::where('id', $request->id);
+        $file = ServiceRequestFile::where('id', $request->id)->first();
+
+        if(!$file){
+            return response()->json(['No existe archivo'], 422);
+        }
 
         if(Storage::disk('public')->exists($file->file)){
             Storage::disk('public')->delete($file->file);
@@ -190,10 +204,6 @@ class Solicitudes extends Controller
         
         $file->delete();
 
-        $solicitud = ServiceRequest::where('id',$request->id)
-                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
-                            ->first();
-
-        return response()->json($solicitud);
+        return response()->json(true);
     }
 }
