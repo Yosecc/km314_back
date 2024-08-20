@@ -168,7 +168,7 @@ class Solicitudes extends Controller
                 $path = Storage::putFile('service_request_files', new File($request->file),'public');
                 
                 $data['file'] = $path;
-                $data["description"] = $request->observations;
+                $data["description"] = $request->description;
                 $data['user_id'] = $request->user()->id;
 
                 $solicitud->serviceRequestFile()->create($data);
