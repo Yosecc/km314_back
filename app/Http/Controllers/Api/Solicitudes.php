@@ -24,6 +24,7 @@ class Solicitudes extends Controller
                             ->get();
 
         $solicitudes = $solicitudes->map(function($solicitud){
+            $solicitud->responsible->makeHidden(['created_at','updated_at']);
             $solicitud->serviceRequestFile->map(function($archivo){
             //  dd(storage_path($archivo['file']));
                 $archivo['file'] = asset(Storage::url($archivo['file']));
