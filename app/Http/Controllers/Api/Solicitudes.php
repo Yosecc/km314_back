@@ -24,12 +24,17 @@ class Solicitudes extends Controller
                             ->get();
 
         $solicitudes = $solicitudes->map(function($solicitud){
-            $solicitud->responsible->makeHidden(['created_at','updated_at']);
-            $solicitud->serviceRequestFile->map(function($archivo){
-            //  dd(storage_path($archivo['file']));
-                $archivo['file'] = asset(Storage::url($archivo['file']));
-                return $archivo;
-            });
+            if($solicitud->responsible){
+                $solicitud->responsible->makeHidden(['created_at','updated_at']);
+            }
+            if($solicitud->serviceRequestFile){
+
+                $solicitud->serviceRequestFile->map(function($archivo){
+                    //  dd(storage_path($archivo['file']));
+                    $archivo['file'] = asset(Storage::url($archivo['file']));
+                    return $archivo;
+                });
+            }
             
             return $solicitud;
         });
@@ -92,8 +97,8 @@ class Solicitudes extends Controller
 
         if(isset($data['id'])){
             $id = $data['id'];
-
             $d = $datos($data);
+
             $d['user_id'] = $request->user()->id;
             $d['updated_at'] = Carbon::now();
 
