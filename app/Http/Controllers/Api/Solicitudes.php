@@ -88,7 +88,7 @@ class Solicitudes extends Controller
                 'owner_id' => $request['owner_id'],
                 'model' => $request['model'],
                 'model_id' => $request['model_id'],
-                'options' => $request['options'],
+                'options' => json_encode($request['options']),
                 'observations' => $request['observations']
             ];
         };
