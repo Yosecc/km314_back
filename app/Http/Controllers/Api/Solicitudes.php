@@ -56,7 +56,7 @@ class Solicitudes extends Controller
             "options" => 'nullable',
             "name" => 'required',
             "starts_at" => 'required',
-            "ends_at" => 'required',
+            "ends_at" => 'nullable',
             "observations" => 'nullable'
         ], [], [
             // Atributos personalizados
