@@ -67,20 +67,30 @@ class Solicitudes extends Controller
             // Convert 'starts_at' to a Carbon instance
             $item->starts_at_date = Carbon::createFromFormat('Y/m/d H:i:s', $item->starts_at);
 
+            // Check if 'ends_at' is null and handle accordingly
             if ($item->ends_at === null) {
-                $item->ends_at_date = $item->starts_at; // Asignar 'starts_at' a 'ends_at' si es null
+                $item->ends_at_date = $item->starts_at_date; // Use 'starts_at' date if 'ends_at' is null
             } else {
                 $item->ends_at_date = Carbon::createFromFormat('Y/m/d H:i:s', $item->ends_at);
             }
 
-            // Determinar si está activa
+            // Determine if the item is active
             $item->is_active = $now->between($item->starts_at_date, $item->ends_at_date);
 
-              // Calcular tiempo restante o tiempo vencido
+            // Determine if the item is future
+            $item->is_future = $item->starts_at_date->isFuture();
+
+            // Calculate time left or time passed
             if ($item->is_active) {
-                $item->time_left = $now->diffForHumans($item->ends_at_date, true); // Tiempo restante hasta que venza
+                $item->time_left = $now->diffForHumans($item->ends_at_date, true); // Time left until it expires
+            } elseif ($item->is_future) {
+                $item->time_left = $now->diffForHumans($item->starts_at_date, true); // Time left until it starts
             } else {
-                $item->time_left = $item->ends_at_date->diffForHumans($now, true); // Tiempo pasado desde que venció
+                $item->time_left = $item->ends_at_date->diffForHumans($now, true); // Time since it expired
+            }
+
+            if($item->is_future){
+                $item->is_active = true;
             }
 
             return $item;
