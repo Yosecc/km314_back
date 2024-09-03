@@ -52,9 +52,46 @@ class Solicitudes extends Controller
         return response()->json($solicitudes);
     }
 
-    public function getProximasSolicitudes()
+    public function getProximasSolicitudes(Request $request)
     {
+        $solicitudes = ServiceRequest::where('owner_id',$request->user()->owner->id)
+        ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestFile','serviceRequestNote'])
+        ->orderBy('created_at','desc')
+        ->get();
 
+        $solicitudes = $this->_getSolicitudes($solicitudes);
+
+        $now = Carbon::now(); // Obtiene la fecha y hora actual
+
+        $solicitudes = $solicitudes->map(function ($item) use ($now) {
+            // Convert 'starts_at' to a Carbon instance
+            $item->starts_at_date = Carbon::createFromFormat('Y/m/d H:i:s', $item->starts_at);
+
+            if ($item->ends_at === null) {
+                $item->ends_at_date = $item->starts_at; // Asignar 'starts_at' a 'ends_at' si es null
+            } else {
+                $item->ends_at_date = Carbon::createFromFormat('Y/m/d H:i:s', $item->ends_at);
+            }
+
+            // Determinar si está activa
+            $item->is_active = $now->between($item->starts_at_date, $item->ends_at_date);
+
+              // Calcular tiempo restante o tiempo vencido
+            if ($item->is_active) {
+                $item->time_left = $now->diffForHumans($item->ends_at_date, true); // Tiempo restante hasta que venza
+            } else {
+                $item->time_left = $item->ends_at_date->diffForHumans($now, true); // Tiempo pasado desde que venció
+            }
+
+            return $item;
+        })->sortBy(function ($item) {
+            // Sort by the 'starts_at' date
+            return $item->starts_at_date;
+        })->values(); // Reindex the collection
+
+        
+
+        return response()->json($solicitudes);
     }
 
     public function store(Request $request)
@@ -93,7 +130,7 @@ class Solicitudes extends Controller
         $datos = function($request){
 
             $service = Service::find($request['service_id']);
-            
+
             return [
                 'alias' => $request['alias'],
                 'name' => $request['name'], 

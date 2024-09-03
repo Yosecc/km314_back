@@ -69,7 +69,8 @@ class ServiceRequestResource extends Resource
                                 Forms\Components\Select::make('service_request_type_id')
                                     // ->label(__("general.LoteStatus"))
                                     ->required()
-                                    ->relationship(name: 'serviceRequestType', titleAttribute: 'name'),
+                                    ->relationship(name: 'serviceRequestType', titleAttribute: 'name')
+                                    ->live(),
 
                                 Forms\Components\Select::make('service_id')
                                     // ->label(__("general.LoteStatus"))
@@ -80,6 +81,7 @@ class ServiceRequestResource extends Resource
                                         self::$service = Service::find($state);
                                         $set('name',self::$service->name);
                                         $set('model',self::$service->model);
+                                        $set('service_request_type_id',self::$service->service_request_type_id);
                                     }),
 
                                 Forms\Components\TextInput::make('name')
@@ -201,17 +203,18 @@ class ServiceRequestResource extends Resource
                                     Textarea::make('description'),
 
                                 ])
+                                ->defaultItems(0)
                                 ->columns(1),
 
                             Repeater::make('serviceRequestFile')
                                 ->relationship()
                                 ->label('Archivo')
                                 ->schema([
-
                                     Hidden::make('user_id')->default(Auth::user()->id),
                                     Textarea::make('description'),
                                     Forms\Components\FileUpload::make('file')
                                 ])
+                                ->defaultItems(0)
                                 ->columns(1)
 
 

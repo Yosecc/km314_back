@@ -38,6 +38,8 @@ Route::middleware('auth:sanctum')->prefix('solicitudes')->group(function () {
     Route::post('file',[Solicitudes::class,'file']);
     Route::post('file/delete',[Solicitudes::class,'deleteFile']);
     Route::get('index',[Solicitudes::class,'index']);
+    Route::get('prox_solicitudes',[Solicitudes::class,'getProximasSolicitudes']);
+    
 });
 
 Route::middleware('auth:sanctum')->prefix('expensas')->group(function () {
