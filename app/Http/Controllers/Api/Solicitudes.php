@@ -3,34 +3,32 @@
 namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
+use App\Models\Service;
 use Illuminate\Http\File;
+use function Livewire\store;
 use Illuminate\Http\Request;
 use App\Models\ServiceRequest;
 use App\Models\ServiceRequestFile;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+
 use Illuminate\Support\Facades\Validator;
 use App\Models\ServiceRequestResponsiblePeople;
 
-use function Livewire\store;
-
 class Solicitudes extends Controller
 {
-    public function index(Request $request)
-    {
-        $solicitudes = ServiceRequest::where('owner_id',$request->user()->owner->id)
-                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestFile','serviceRequestNote'])
-                            ->orderBy('created_at','desc')
-                            ->get();
 
+    private function _getSolicitudes($solicitudes)
+    {
         $solicitudes = $solicitudes->map(function($solicitud){
+            $solicitud['starts_at'] = Carbon::parse($solicitud['starts_at'])->format('Y/m/d H:m:s');
+            $solicitud['ends_at'] = Carbon::parse($solicitud['ends_at'])->format('Y/m/d H:m:s');
+            
             if($solicitud->responsible){
                 $solicitud->responsible->makeHidden(['created_at','updated_at']);
             }
             if($solicitud->serviceRequestFile){
-
                 $solicitud->serviceRequestFile->map(function($archivo){
-                    //  dd(storage_path($archivo['file']));
                     $archivo['file'] = asset(Storage::url($archivo['file']));
                     return $archivo;
                 });
@@ -39,7 +37,24 @@ class Solicitudes extends Controller
             return $solicitud;
         });
 
+        return $solicitudes;
+    }
+
+    public function index(Request $request)
+    {
+        $solicitudes = ServiceRequest::where('owner_id',$request->user()->owner->id)
+                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestFile','serviceRequestNote'])
+                            ->orderBy('created_at','desc')
+                            ->get();
+
+        $solicitudes = $this->_getSolicitudes($solicitudes);
+
         return response()->json($solicitudes);
+    }
+
+    public function getProximasSolicitudes()
+    {
+
     }
 
     public function store(Request $request)
@@ -74,15 +89,19 @@ class Solicitudes extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+
         $datos = function($request){
+
+            $service = Service::find($request['service_id']);
+            
             return [
                 'alias' => $request['alias'],
                 'name' => $request['name'], 
-                'starts_at' => $request['starts_at'],
-                'ends_at' => $request['ends_at'],
+                'starts_at' => Carbon::parse($request['starts_at'])->format('Y-m-d H:m:s'),
+                'ends_at' => $request['ends_at'] ? Carbon::parse($request['ends_at'])->format('Y-m-d H:m:s') : null,
                 'service_request_responsible_people_id' => isset($request['service_request_responsible_people_id']) ? $request['service_request_responsible_people_id'] : null,
                 'service_request_status_id' => $request['service_request_status_id'],
-                'service_request_type_id' => $request['service_request_type_id'],
+                'service_request_type_id' => $service ? $service->service_request_type_id : $request['service_request_type_id'],
                 'service_id' => $request['service_id'],
                 'lote_id' => $request['lote_id'],
                 'owner_id' => $request['owner_id'],
@@ -133,9 +152,12 @@ class Solicitudes extends Controller
         
         $solicitud = ServiceRequest::where('id',$id)
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
-                            ->first();
+                            ->get();
 
-        return response()->json($solicitud);
+        $solicitud = $this->_getSolicitudes($solicitud);
+
+
+        return response()->json($solicitud->first());
 
     }
 
@@ -185,7 +207,10 @@ class Solicitudes extends Controller
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
                             ->first();
 
-        return response()->json($solicitud);
+        $solicitud = $this->_getSolicitudes($solicitud);
+
+
+        return response()->json($solicitud->first());
     }
 
     public function deleteFile(Request $request)

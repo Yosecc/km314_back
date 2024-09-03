@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('alias')->nullable();
 
             $table->string('starts_at');
-            $table->string('ends_at');
+            $table->string('ends_at')->nullable();
             $table->timestamps();
         });
     }

@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('services', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_type_id')->constrained();
+            $table->foreignId('service_request_type_id')->constrained()->nullable();
+
             $table->string('name');
             $table->string('amount')->nullable();
             $table->string('color')->nullable();
