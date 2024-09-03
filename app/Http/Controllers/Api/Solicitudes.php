@@ -87,9 +87,9 @@ class Solicitudes extends Controller
         })->sortBy(function ($item) {
             // Sort by the 'starts_at' date
             return $item->starts_at_date;
-        })->values(); // Reindex the collection
+        })->where('is_active',true)->values(); // Reindex the collection
 
-        
+
 
         return response()->json($solicitudes);
     }
