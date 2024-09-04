@@ -58,50 +58,52 @@ class Solicitudes extends Controller
         $solicitudes = ServiceRequest::where('owner_id', $request->user()->owner->id)
         ->with(['serviceRequestStatus', 'serviceRequestType', 'service', 'lote', 'responsible', 'serviceRequestFile', 'serviceRequestNote'])
         ->orderBy('created_at', 'desc')
+        ->orderBy('ends_at', 'desc')
         ->get();
     
-    $solicitudes = $this->_getSolicitudes($solicitudes);
-    
-    $now = Carbon::now();
-    $tiposSolicitudes = ServiceRequestType::all();
-    
-    $solicitudes = $solicitudes->map(function ($item) use ($now) {
-        $item->starts_at_date = Carbon::createFromFormat('Y/m/d H:i:s', $item->starts_at);
-    
-        $item->ends_at_date = $item->ends_at ? Carbon::createFromFormat('Y/m/d H:i:s', $item->ends_at) : $item->starts_at_date;
-    
-        $item->is_active = $now->between($item->starts_at_date, $item->ends_at_date);
-        $item->is_future = $item->starts_at_date->isFuture();
-    
-        $item->time_left = $item->is_active
-            ? $now->diffForHumans($item->ends_at_date, true)
-            : ($item->is_future
-                ? $now->diffForHumans($item->starts_at_date, true)
-                : $item->ends_at_date->diffForHumans($now, true)
-            );
-    
-        if ($item->is_future) {
-            $item->is_active = true;
-        }
-    
-        return $item;
-    })
-    ->where('is_active', true)
-    ->where('service_request_status_id', 2)
-    ->sortBy(function ($item) {
-        return $item->starts_at_date->getTimestamp(); // Ordenar por fecha
-    })
-    ->groupBy('service_request_type_id')
-    ->map(function ($grupo) {
-        return $grupo->sortBy(function ($item) {
-            return $item->starts_at_date->getTimestamp(); // Ordenar por fecha dentro del grupo
-        });
-    })
-    ->mapWithKeys(function ($value, $key) use ($tiposSolicitudes) {
-        $tipo = $tiposSolicitudes->where('id', $key)->first();
-        return $tipo ? [$tipo->name => $value] : [$key => $value];
-    })
-    ->toArray();
+        $solicitudes = $this->_getSolicitudes($solicitudes);
+        
+        $now = Carbon::now();
+        $tiposSolicitudes = ServiceRequestType::all();
+        
+        $solicitudes = $solicitudes->map(function ($item) use ($now) {
+            $item->starts_at_date = Carbon::createFromFormat('Y/m/d H:i:s', $item->starts_at);
+        
+            $item->ends_at_date = $item->ends_at ? Carbon::createFromFormat('Y/m/d H:i:s', $item->ends_at) : $item->starts_at_date;
+        
+            $item->is_active = $now->between($item->starts_at_date, $item->ends_at_date);
+            $item->is_future = $item->starts_at_date->isFuture();
+        
+            $item->time_left = $item->is_active
+                ? $now->diffForHumans($item->ends_at_date, true)
+                : ($item->is_future
+                    ? $now->diffForHumans($item->starts_at_date, true)
+                    : $item->ends_at_date->diffForHumans($now, true)
+                );
+        
+            if ($item->is_future) {
+                $item->is_active = true;
+            }
+        
+            return $item;
+        })
+        ->where('is_active', true)
+        ->where('service_request_status_id', 2)
+        // ->sortBy(function ($item) {
+        //     return $item->starts_at_date->getTimestamp(); // Ordenar por fecha
+        // })
+        ->groupBy('service_request_type_id')
+        // ->map(function ($grupo) {
+        //     return $grupo->sortBy(function ($item) {
+        //         return $item->starts_at_date->getTimestamp(); // Ordenar por fecha dentro del grupo
+        //     });
+        // })
+        ->mapWithKeys(function ($value, $key) use ($tiposSolicitudes) {
+            $tipo = $tiposSolicitudes->where('id', $key)->first();
+            return $tipo ? [$tipo->name => $value] : [$key => $value];
+        })
+        // ->toArray()
+        ;
 
 
 
