@@ -166,8 +166,7 @@ class ServiceRequestResource extends Resource
                             Forms\Components\DateTimePicker::make('starts_at')
                                 ->required(),
 
-                            Forms\Components\DateTimePicker::make('ends_at')
-                                ->required(),
+                            Forms\Components\DateTimePicker::make('ends_at'),
                         ]),
                     Wizard\Step::make('Info')
                         ->schema([
