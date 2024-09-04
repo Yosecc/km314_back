@@ -83,14 +83,12 @@ class Solicitudes extends Controller
             // Determine if the item is future
             $item->is_future = $item->starts_at_date->isFuture();
 
-            // Calculate time left or time passed
-            if ($item->is_active) {
-                $item->time_left = $now->diffForHumans($item->ends_at_date, true); // Time left until it expires
-            } elseif ($item->is_future) {
-                $item->time_left = $now->diffForHumans($item->starts_at_date, true); // Time left until it starts
-            } else {
-                $item->time_left = $item->ends_at_date->diffForHumans($now, true); // Time since it expired
-            }
+            $item->time_left = $item->is_active
+                ? $now->diffForHumans($item->ends_at_date, true)
+                : ($item->is_future
+                    ? $now->diffForHumans($item->starts_at_date, true)
+                    : $item->ends_at_date->diffForHumans($now, true)
+                );
 
             if($item->is_future){
                 $item->is_active = true;
@@ -99,23 +97,19 @@ class Solicitudes extends Controller
             return $item;
         })
         ->where('is_active',true)
+        ->where('service_request_status_id', 2)
         ->sortBy(function ($item) {
-            // Sort by the 'starts_at' date
-            return $item->starts_at_date;
+            return $item->starts_at_date->getTimestamp(); // Ordenar por fecha
         })
         ->groupBy('service_request_type_id')
         ->map(function($grupo){
             return $grupo->sortBy(function ($item) {
-                // Sort by the 'starts_at' date
-                return $item->starts_at_date;
+                return $item->starts_at_date->getTimestamp(); // Ordenar por fecha dentro del grupo
             });
         })
         ->mapWithKeys(function($value, $key) use($tiposSolicitudes){
-            $tipo = $tiposSolicitudes->where('id',$key)->first();
-            if($tipo){
-                return [ $tipo->name => $value ];
-            }
-            return [$key => $value];
+            $tipo = $tiposSolicitudes->where('id', $key)->first();
+            return $tipo ? [$tipo->name => $value] : [$key => $value];
         })->toArray(); // Reindex the collection
 
 
