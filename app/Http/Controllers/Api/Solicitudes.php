@@ -9,9 +9,10 @@ use function Livewire\store;
 use Illuminate\Http\Request;
 use App\Models\ServiceRequest;
 use App\Models\ServiceRequestFile;
+use App\Models\ServiceRequestType;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Models\ServiceRequestResponsiblePeople;
 
@@ -63,6 +64,8 @@ class Solicitudes extends Controller
 
         $now = Carbon::now(); // Obtiene la fecha y hora actual
 
+        $tiposSolicitudes = ServiceRequestType::all();
+
         $solicitudes = $solicitudes->map(function ($item) use ($now) {
             // Convert 'starts_at' to a Carbon instance
             $item->starts_at_date = Carbon::createFromFormat('Y/m/d H:i:s', $item->starts_at);
@@ -97,7 +100,16 @@ class Solicitudes extends Controller
         })->sortBy(function ($item) {
             // Sort by the 'starts_at' date
             return $item->starts_at_date;
-        })->where('is_active',true)->groupBy('service_request_type_id'); // Reindex the collection
+        })
+        ->where('is_active',true)
+        ->groupBy('service_request_type_id')
+        ->mapWithKeys(function($value, $key) use($tiposSolicitudes){
+            $tipo = $tiposSolicitudes->where('id',$key)->first();
+            if($tipo){
+                return [ $tipo->name => $value ];
+            }
+            return [$key => $value];
+        })->toArray(); // Reindex the collection
 
 
 
