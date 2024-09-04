@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Api\Main;
 use App\Http\Controllers\Api\Lotes;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Expensas;
@@ -26,6 +27,8 @@ Route::post('/sanctum/login',[Authentication::class,'login']);
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::middleware('auth:sanctum')->get('/sliders', [Main::class,'sliders']);
 
 // middleware(['token_validate'])->
 Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
