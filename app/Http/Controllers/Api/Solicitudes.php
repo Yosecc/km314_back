@@ -97,7 +97,7 @@ class Solicitudes extends Controller
         })->sortBy(function ($item) {
             // Sort by the 'starts_at' date
             return $item->starts_at_date;
-        })->where('is_active',true)->groupBy('service_request_type.name'); // Reindex the collection
+        })->where('is_active',true)->groupBy('service_request_type_id'); // Reindex the collection
 
 
 
