@@ -97,12 +97,19 @@ class Solicitudes extends Controller
             }
 
             return $item;
-        })->sortBy(function ($item) {
+        })
+        ->where('is_active',true)
+        ->sortBy(function ($item) {
             // Sort by the 'starts_at' date
             return $item->starts_at_date;
         })
-        ->where('is_active',true)
         ->groupBy('service_request_type_id')
+        ->map(function($grupo){
+            return $grupo->sortBy(function ($item) {
+                // Sort by the 'starts_at' date
+                return $item->starts_at_date;
+            });
+        })
         ->mapWithKeys(function($value, $key) use($tiposSolicitudes){
             $tipo = $tiposSolicitudes->where('id',$key)->first();
             if($tipo){
