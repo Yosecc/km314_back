@@ -13,7 +13,8 @@ class Main extends Controller
     {
         
         return [
-            'https://kilometro314.com/images/casas/4.jpg',
+            'https://kilometro314.com/images/casas/30.jpg',
+            'https://kilometro314.com/images/architect/home.jpg',
             'https://kilometro314.com/images/casas/5.jpg',
             'https://kilometro314.com/images/casas/6.jpg',
             'https://kilometro314.com/images/casas/7.jpg',
