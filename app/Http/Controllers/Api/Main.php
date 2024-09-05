@@ -18,7 +18,7 @@ class Main extends Controller
             'https://kilometro314.com/images/casas/5.jpg',
             'https://kilometro314.com/images/casas/6.jpg',
             'https://kilometro314.com/images/casas/7.jpg',
-            'https://kilometro314.com/images/casas/8.jpg',
+            
         ];
         return Slider::where('status',1)->get()->map(function($slide){
             
