@@ -26,7 +26,8 @@ return new class extends Migration
             $table->date('birthdate')->nullable(); // Campo para la fecha de nacimiento
             $table->string('gender')->nullable(); // Campo para el género
             $table->string('profile_picture')->nullable(); // Campo para la foto de perfil
-            $table->foreignId('user_id')->constrained('users');
+            $table->string('user_id'); // Campo para la foto de perfil
+            // $table->foreignId('user_id')->constrained('users');
             
             $table->timestamps();
         });
