@@ -41,13 +41,42 @@ class FormControl extends Model
     public function statusComputed():string
     {
         $status = $this->status;
+        
+        $today = Carbon::now();
+
+        $fechaStart = Carbon::parse($this->start_date_range);
+        // Extraer la hora del campo start_time_range
+        $horaStart = Carbon::parse($this->start_time_range)->format('H');
+        $minutoStart = Carbon::parse($this->start_time_range)->format('i');
+        
+        // Asignar la hora y minuto a la fecha
+        $fechaStart->setTime($horaStart, $minutoStart);
 
         if(!$this->date_unilimited){
-            $fecha = Carbon::parse($this->end_date_range);
-            $today = Carbon::now();
+           
+            if ($fechaStart->lessThan($today)){ #Si ya paso la fecha
+                if($status == 'Pending'){
+                    $status = 'Vencido';
+                }
+            }
 
-            if ($fecha->lessThan($today)){
-                $status = 'Vencido';
+            $fechaEnd = Carbon::parse($this->end_date_range);
+            $horaEnd = Carbon::parse($this->end_time_range)->format('H');
+            $minutoEnd = Carbon::parse($this->end_time_range)->format('i');
+            $fechaEnd->setTime($horaEnd, $minutoEnd);
+
+            if ($fechaEnd->lessThan($today)){
+                if($status == 'Pending' || $status == 'Vencido'){
+                    $status = 'Expirado';
+                }
+            }
+
+        }else{
+            // dd($today,$fechaStart);
+            if ($fechaStart->lessThan($today)){ #Si ya paso la fecha
+                if($status == 'Pending'){
+                    $status = 'Vencido';
+                }
             }
         }
 
@@ -66,12 +95,17 @@ class FormControl extends Model
 
     public function isDenied()
     {
-        return $this->status == 'Denied' ? true : false;
+        return $this->statusComputed() == 'Denied' ? true : false;
     }
 
     public function isPending()
     {
-        return $this->status == 'Pending' ? true : false;
+        return $this->statusComputed() == 'Pending' ? true : false;
+    }
+
+    public function isExpirado()
+    {
+        return $this->statusComputed() == 'Expirado' ? true : false;
     }
 
     public function lotes()

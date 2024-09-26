@@ -21,8 +21,14 @@ class FormControl extends Controller
         $misLotes = Lote::where('owner_id', $request->user()->owner->id)->with(['sector','loteStatus','loteType'])->get();
         
         return response()->json([
-            'misForms' => $formControl,
-            'historicoForms' => $formControl,
+            'misForms' => $formControl->map(function($form){
+                $form->status = $form->statusComputed();
+                return $form;
+            }),
+            'historicoForms' => $formControl->map(function($form){
+                $form->status = $form->statusComputed();
+                return $form;
+            }),
             'misLotes' => $misLotes
         ]);
     }

@@ -214,16 +214,26 @@ class FormControlResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->label(__("general.Status"))
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'Pending' => 'Pendiente',
-                        'Authorized' => 'Autorizado',
-                        'Denied' => 'Denegado',
+                    ->formatStateUsing(function($state, FormControl $record){
+                        return $record->statusComputed();
                     })
-                    ->color(fn (string $state): string => match ($state) {
-                        'Pending' => 'warning',
-                        'Authorized' => 'success',
-                        'Denied' => 'danger'
+                    // ->formatStateUsing(fn (string $state): string => match ($state) {
+                    //     'Pending' => 'Pendiente',
+                    //     'Authorized' => 'Autorizado',
+                    //     'Denied' => 'Denegado',
+                    // })
+                    ->color(function($state, FormControl $record){
+                        $state = $record->statusComputed();
+                        $claves = [
+                            'Pending' => 'warning',
+                            'Authorized' => 'success',
+                            'Denied' => 'danger',
+                            'Vencido' => 'info',
+                            'Expirado' => 'gray'
+                        ];
+                        return $claves[$state];
                     }),
+                    // ->color(fn (string $state): string => match ($state) ),
                     
                 Tables\Columns\TextColumn::make('access_type')
                     ->badge()
@@ -385,7 +395,7 @@ class FormControlResource extends Resource
                     ->color('success')
                     ->label('Aprobar')
                     ->hidden(function(FormControl $record){
-                        return $record->isActive() ? true : false;
+                        return $record->isActive() || $record->isExpirado() || $record->isVencido() ? true : false;
                     }),
                 Action::make('rechazar')
                     ->action(function(FormControl $record){
@@ -401,7 +411,7 @@ class FormControlResource extends Resource
                     ->color('danger')
                     ->label('Rechazar')
                     ->hidden(function(FormControl $record){
-                        return $record->isDenied() ? true : false;
+                        return $record->isDenied() || $record->isExpirado() || $record->isVencido() ? true : false;
                     }),
                 Tables\Actions\EditAction::make(),
             ])
