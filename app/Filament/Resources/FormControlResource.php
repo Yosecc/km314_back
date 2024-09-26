@@ -262,6 +262,7 @@ class FormControlResource extends Resource
                 // 
                 Tables\Columns\TextColumn::make('start_date_range')
                     ->formatStateUsing(function (FormControl $record){
+                        // return '↗ '.$record->getFechasFormat()['start'].' - <br> ↘ '.$record->getFechasFormat()['end'];
                         return Carbon::parse("{$record->start_date_range} {$record->start_time_range}")->toDayDateTimeString();
                     })
                     ->searchable()
@@ -269,6 +270,8 @@ class FormControlResource extends Resource
 
                 Tables\Columns\TextColumn::make('end_date_range')
                     ->formatStateUsing(function (FormControl $record){
+                        // return $record->getFechasFormat()['end'];
+
                         return Carbon::parse("{$record->end_date_range} {$record->end_time_range}")->toDayDateTimeString();
                     })
                     ->searchable()

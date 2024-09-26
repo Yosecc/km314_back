@@ -109,6 +109,27 @@ class FormControl extends Model
         return $this->statusComputed() == 'Expirado' ? true : false;
     }
 
+    public function getFechasFormat()
+    {
+
+        Carbon::setLocale('es');
+        
+        $fechaStart = Carbon::parse($this->start_date_range);
+        $horaStart = Carbon::parse($this->start_time_range)->format('H');
+        $minutoStart = Carbon::parse($this->start_time_range)->format('i');
+        $fechaStart->setTime($horaStart, $minutoStart);
+
+        $fechaend = Carbon::parse($this->end_date_range);
+        $horaend = Carbon::parse($this->end_time_range)->format('H');
+        $minutoend = Carbon::parse($this->end_time_range)->format('i');
+        $fechaend->setTime($horaend, $minutoend);
+
+        return [
+            'start' => $fechaStart->translatedFormat('l, F d, Y h:i A'),
+            'end' =>  $fechaend->translatedFormat('l, F d, Y h:i A'),
+        ];
+    }
+
     public function lotes()
     {
         return $this->hasMany(FormControlLote::class);
@@ -123,8 +144,6 @@ class FormControl extends Model
     {
         return $this->belongsTo(User::class,'denied_user_id');
     }
-
-    
 
     public function peoples()
     {

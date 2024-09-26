@@ -292,6 +292,8 @@ class ActivitiesResource extends Resource
                                             $formInfo = 'Form: '.$form['id'].' -- ';
 
                                             $form['texto'] = $formInfo.$income.$accesType.$lotes;
+                                            $form['status'] = $form->statusComputed();
+
 
                                             return $form;
                                         };
@@ -303,7 +305,9 @@ class ActivitiesResource extends Resource
                                         $num = $get('num_search');
                                         return FormControl::whereHas('peoples', function ($query) use($num){
                                             $query->where('dni','like','%'.$num.'%');
-                                        })->get()->map($mapeo)->pluck('texto','id')->toArray();
+                                        })->orderBy('id','desc')->get()->map($mapeo)
+                                        // ->whereNotIn('status',['Vencido','Expirado'])
+                                        ->pluck('texto','id')->toArray();
                                     })
                                     ->descriptions(function(Get $get, Set $set, $context){
                                         if(!$get('num_search') && !$get('form_control_id')){
@@ -311,11 +315,16 @@ class ActivitiesResource extends Resource
                                         }
 
                                         $mapeo = function($form){   
-                                            $limite =  $form['date_unilimited'] ?  'Sin fecha límite de salida': $form['end_date_range'] ;
+
+                                            $fechas = $form->getFechasFormat();
+
+                                            $limite =  $form['date_unilimited'] ?  'Sin fecha límite de salida': $fechas['end'];
 
                                             $observacion = $form['observations'] ? ' ( Observaciones: '. $form['observations'] .' )' : '';
 
-                                            $form['texto'] = $form->statusComputed().' - '.$form['start_date_range'].' / '. $limite . $observacion;
+                                            $form['status'] = $form->statusComputed();
+
+                                            $form['texto'] = __('general.'.$form->statusComputed()).' - '.$fechas['start'].' / '. $limite . $observacion;
                                             return $form;
                                         };
 
@@ -326,7 +335,9 @@ class ActivitiesResource extends Resource
                                         $num = $get('num_search');
                                         return FormControl::whereHas('peoples', function ($query) use($num){
                                             $query->where('dni','like','%'.$num.'%');
-                                        })->get()->map($mapeo)->pluck('texto','id')->toArray();
+                                        })->orderBy('id','desc')->get()->map($mapeo)
+                                        // ->whereNotIn('status',['Vencido','Expirado'])
+                                        ->pluck('texto','id')->toArray();
 
                                     })
                                     ->disableOptionWhen(function ( $value){

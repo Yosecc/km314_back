@@ -81,5 +81,10 @@ return [
     'operation_detail' => 'Detalle de la operación',
     'amount' => 'Monto',
     'Acompanante' => 'Acompañante',
-    'ultimaEntrada' => 'Última entrada'
+    'ultimaEntrada' => 'Última entrada',
+    'Pending' => 'Pendiente',
+    'Authorized' => 'Autorizado',
+    'Denied' => 'Rechazada',
+    'Vencido' => 'Vencido',
+    'Expirado' => 'Expirado'
 ];
