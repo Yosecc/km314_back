@@ -26,6 +26,8 @@ return new class extends Migration
             $table->foreignId('owner_id')->nullable()->constrained();
             // $table->enum('category', ['Owner', 'Tenant', 'Restaurant', 'Frequent works', 'Occasional works']);
             $table->foreignId('authorized_user_id')->nullable()->constrained('users');
+            $table->foreignId('denied_user_id')->nullable()->constrained('users');
+             
             $table->foreignId('user_id')->constrained('users');
             $table->string('observations')->nullable();
 

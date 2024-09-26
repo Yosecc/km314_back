@@ -313,20 +313,9 @@ class ActivitiesResource extends Resource
                                         $mapeo = function($form){   
                                             $limite =  $form['date_unilimited'] ?  'Sin fecha límite de salida': $form['end_date_range'] ;
 
-                                            $status = $form['status'];
-
-                                            if(!$form['date_unilimited'] ){
-                                                $fecha = Carbon::parse($form['end_date_range']);
-                                                $today = Carbon::now();
-
-                                                if ($fecha->lessThan($today)){
-                                                    $status = 'Vencido';
-                                                }
-                                            }
-
                                             $observacion = $form['observations'] ? ' ( Observaciones: '. $form['observations'] .' )' : '';
 
-                                            $form['texto'] = $status.' - '.$form['start_date_range'].' / '. $limite . $observacion;
+                                            $form['texto'] = $form->statusComputed().' - '.$form['start_date_range'].' / '. $limite . $observacion;
                                             return $form;
                                         };
 
@@ -339,6 +328,10 @@ class ActivitiesResource extends Resource
                                             $query->where('dni','like','%'.$num.'%');
                                         })->get()->map($mapeo)->pluck('texto','id')->toArray();
 
+                                    })
+                                    ->disableOptionWhen(function ( $value){
+                                        $form = FormControl::find($value);
+                                        return !$form->isActive();
                                     })
                                     ->live(),
                         

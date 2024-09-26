@@ -15,8 +15,16 @@ use Filament\Tables\Table;
 use App\Models\FormControl;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Tabs;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Section;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\FormControlResource\Pages;
 use App\Filament\Resources\FormControlResource\RelationManagers;
@@ -166,13 +174,14 @@ class FormControlResource extends Resource
                     ->columnSpanFull()
                     ->label(__('general.Observations')),
 
-                Forms\Components\Select::make('status')
+                Forms\Components\Hidden::make('status')
                     ->label(__("general.Status"))
-                    ->options(['Pending' => 'Pendiente','Authorized' => 'Autorizado', 'Denied' => 'Denegado'])
+                    // ->options(['Pending' => 'Pendiente','Authorized' => 'Autorizado', 'Denied' => 'Denegado'])
                     ->default('Pending')
                     ->afterStateUpdated(function (Set $set) {
                         $set('authorized_user_id', Auth::user()->id);
                     })
+                    // ->readonly()
                     ->live()
                     ->visible(Auth::user()->hasAnyRole([1])),
 
@@ -187,7 +196,7 @@ class FormControlResource extends Resource
                 Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
                 
                 Forms\Components\Select::make('owner_id')
-                    ->required()
+                    // ->required()
                     ->relationship(name: 'owner')
                     ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
                     ->label(__("general.Owner")),
@@ -197,8 +206,11 @@ class FormControlResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->orderBy('created_at','desc'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->orderBy('status','desc')->orderBy('created_at','desc'))
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                ->sortable()
+                ->searchable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->label(__("general.Status"))
@@ -216,6 +228,7 @@ class FormControlResource extends Resource
                 Tables\Columns\TextColumn::make('access_type')
                     ->badge()
                     ->label(__("general.TypeActivitie"))
+                    ->searchable()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'general' => 'Entrada general',
                         'playa' => 'Clud playa',
@@ -228,29 +241,39 @@ class FormControlResource extends Resource
                         'hause' => 'gray',
                         'lote' => 'gray',
                     }),
-                Tables\Columns\TextColumn::make('lote_ids')->label(__('general.Lote')),
+                // Tables\Columns\TextColumn::make('lote_ids')->label(__('general.Lote')),
                 Tables\Columns\TextColumn::make('peoples_count')->counts('peoples')->label(__('general.Peoples')),
-                Tables\Columns\TextColumn::make('peopleResponsible.phone')            
-                    ->copyable()
-                    ->label(__('general.peopleResponsiblePhone'))
-                    ->copyMessage('Phone copied')
-                    ->copyMessageDuration(1500),
+                // Tables\Columns\TextColumn::make('peopleResponsible.phone')            
+                //     ->copyable()
+                //     ->label(__('general.peopleResponsiblePhone'))
+                //     ->copyMessage('Phone copied')
+                //     ->copyMessageDuration(1500),
                 // Tables\Columns\TextColumn::make('autos_count')->counts('autos')->label('Autos'),
-                
+                // 
                 Tables\Columns\TextColumn::make('start_date_range')
-                    ->date()
+                    ->formatStateUsing(function (FormControl $record){
+                        return Carbon::parse("{$record->start_date_range} {$record->start_time_range}")->toDayDateTimeString();
+                    })
+                    ->searchable()
                     ->sortable()->label(__('general.start_date_range')),
-                // Tables\Columns\TextColumn::make('start_time_range'),
+
                 Tables\Columns\TextColumn::make('end_date_range')
-                    ->date()
+                    ->formatStateUsing(function (FormControl $record){
+                        return Carbon::parse("{$record->end_date_range} {$record->end_time_range}")->toDayDateTimeString();
+                    })
+                    ->searchable()
                     ->sortable()->label(__('general.end_date_range')),
-                // Tables\Columns\TextColumn::make('end_time_range'),
-                
-                
+
                 Tables\Columns\TextColumn::make('authorizedUser.name')
                     ->numeric()
                     ->sortable()
                     ->label(__('general.authorized_user_id'))
+                    ->toggleable(isToggledHiddenByDefault: true),
+                
+                Tables\Columns\TextColumn::make('deniedUser.name')
+                    ->numeric()
+                    ->sortable()
+                    ->label(__('general.denied_user_id'))
                     ->toggleable(isToggledHiddenByDefault: true),
                 // Tables\Columns\IconColumn::make('is_moroso')
                 //     ->boolean()
@@ -260,6 +283,7 @@ class FormControlResource extends Resource
                     ->label(__('general.created_at'))
                     ->dateTime()
                     ->sortable()
+                    ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 // Tables\Columns\TextColumn::make('updated_at')
                 //     ->dateTime()
@@ -267,16 +291,148 @@ class FormControlResource extends Resource
                 //     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Filter::make('start_date_range')
+                    ->label(__('general.start_date_range'))
+                    ->form([
+                        Section::make(__('general.start_date_range'))
+                        ->schema([
+                            DatePicker::make('created_from_'),
+                            DatePicker::make('created_until_'),
+                        ])
+                    ])
+                    ->columns([
+                        'sm' => 2,
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from_'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('start_date_range', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until_'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('start_date_range', '<=', $date),
+                            );
+                    }),
+                Filter::make('end_date_range')
+                    ->label(__('general.end_date_range'))
+                    ->form([
+                        Section::make(__('general.end_date_range'))
+                        ->schema([
+                            DatePicker::make('created_from'),
+                            DatePicker::make('created_until'),
+                        ])
+                    ])
+                    ->columns([
+                        'sm' => 2,
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('end_date_range', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('end_date_range', '<=', $date),
+                            );
+                    }),
+                
+                Filter::make('created_at')
+                    ->label(__('general.created_at'))
+                    ->form([
+                        Section::make(__('general.created_at'))
+                        ->schema([
+                            DatePicker::make('created_from'),
+                                            DatePicker::make('created_until'),
+                        ])
+                    ])
+                    ->columns([
+                        'sm' => 2,
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    }),
+                SelectFilter::make('status')
+                    ->options([
+                        'Authorized' => 'Authorized',
+                        'Denied' => 'Denied',
+                        'Pending' => 'Pending',
+                    ]),
+                        
             ])
+            ->filtersFormColumns(3)
             ->actions([
+                Action::make('aprobar')
+                    ->action(function(FormControl $record){
+                        $record->aprobar();
+                        Notification::make() 
+                            ->title('Formulario aprobado')
+                            ->success()
+                            ->send();
+                    })
+                    ->button()
+                    ->requiresConfirmation()
+                    ->icon('heroicon-m-hand-thumb-up')
+                    ->color('success')
+                    ->label('Aprobar')
+                    ->hidden(function(FormControl $record){
+                        return $record->isActive() ? true : false;
+                    }),
+                Action::make('rechazar')
+                    ->action(function(FormControl $record){
+                        $record->rechazar();
+                        Notification::make() 
+                            ->title('Formulario rechzado')
+                            ->success()
+                            ->send();
+                    })
+                    ->button()
+                    ->requiresConfirmation()
+                    ->icon('heroicon-m-hand-thumb-down')
+                    ->color('danger')
+                    ->label('Rechazar')
+                    ->hidden(function(FormControl $record){
+                        return $record->isDenied() ? true : false;
+                    }),
                 Tables\Actions\EditAction::make(),
-
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+                BulkAction::make('aprobar')
+                    ->label('Aprobar')
+                    ->color('success')
+                    ->icon('heroicon-m-hand-thumb-up')
+                    ->requiresConfirmation()
+                    ->action(function (Collection $records){
+                        $records->each->aprobar();
+                        Notification::make() 
+                            ->title('Formularios aprobados')
+                            ->success()
+                            ->send();
+                    }),
+                BulkAction::make('rechazar')
+                    ->label('Rechazar')
+                    ->color('danger')
+                    ->icon('heroicon-m-hand-thumb-down')
+                    ->requiresConfirmation()
+                    ->action(function (Collection $records){
+                        $records->each->rechazar();
+                        Notification::make() 
+                            ->title('Formularios aprobados')
+                            ->success()
+                            ->send();
+                    })
             ]);
     }
 

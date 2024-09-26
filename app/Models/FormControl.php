@@ -2,20 +2,77 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class FormControl extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['owner_id','access_type','income_type','is_moroso', 'lote_ids','start_date_range', 'start_time_range', 'end_date_range', 'end_time_range', 'status', 'category', 'authorized_user_id','user_id','date_unilimited','observations'];
+    protected $fillable = ['owner_id','access_type','income_type','is_moroso', 'lote_ids','start_date_range', 'start_time_range', 'end_date_range', 'end_time_range', 'status', 'category', 'authorized_user_id','denied_user_id','user_id','date_unilimited','observations'];
 
     protected $casts = [
         'lote_ids' => 'array',
         'access_type' => 'array',
         'income_type' => 'array'
     ];
+
+    public function aprobar()
+    {
+        if($this->status != 'Authorized'){   
+            $this->status = 'Authorized';
+            $this->authorized_user_id = Auth::user()->id;
+            $this->save();
+        }
+
+    }
+
+    public function rechazar()
+    {
+        if($this->status != 'Denied'){   
+            $this->status = 'Denied';
+            $this->denied_user_id = Auth::user()->id;
+            $this->save();
+        }
+    }
+
+    public function statusComputed():string
+    {
+        $status = $this->status;
+
+        if(!$this->date_unilimited){
+            $fecha = Carbon::parse($this->end_date_range);
+            $today = Carbon::now();
+
+            if ($fecha->lessThan($today)){
+                $status = 'Vencido';
+            }
+        }
+
+        return $status;
+    }
+
+    public function isVencido() :bool
+    {
+        return $this->statusComputed() === 'Vencido' ? true : false;
+    }
+
+    public function isActive()
+    {
+        return $this->statusComputed() == 'Authorized' ? true : false;
+    }
+
+    public function isDenied()
+    {
+        return $this->status == 'Denied' ? true : false;
+    }
+
+    public function isPending()
+    {
+        return $this->status == 'Pending' ? true : false;
+    }
 
     public function lotes()
     {
@@ -26,6 +83,13 @@ class FormControl extends Model
     {
         return $this->belongsTo(User::class,'authorized_user_id');
     }
+
+    public function deniedUser()
+    {
+        return $this->belongsTo(User::class,'denied_user_id');
+    }
+
+    
 
     public function peoples()
     {
