@@ -42,8 +42,9 @@ class FormControl extends Model
     {
         $status = $this->status;
         
-        $today = Carbon::now();
+        $today = Carbon::now('America/Argentina/Buenos_Aires');
 
+        
         $fechaStart = Carbon::parse($this->start_date_range);
         // Extraer la hora del campo start_time_range
         $horaStart = Carbon::parse($this->start_time_range)->format('H');
