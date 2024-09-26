@@ -24,11 +24,11 @@ class FormControl extends Controller
             'misForms' => $formControl->map(function($form){
                 $form->status = $form->statusComputed();
                 return $form;
-            }),
+            })->where('status','Pending'),
             'historicoForms' => $formControl->map(function($form){
                 $form->status = $form->statusComputed();
                 return $form;
-            }),
+            })->where('status','!=','Pending'),
             'misLotes' => $misLotes
         ]);
     }
