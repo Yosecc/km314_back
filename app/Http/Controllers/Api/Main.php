@@ -44,16 +44,16 @@ class Main extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json( ['status' => false, 'errors' => $validator->errors() ], 422);
         }
 
         try {
             Mail::to(config('app.mail_recibe_mensaje'))->send(new Contact($request->all()));
         } catch (\Throwable $th) {
-            return response()->json($th->getMessage(), 422);
+            return response()->json( [ 'status' => false, 'message' => $th->getMessage() ], 422);
         }
 
-        return response()->json('Mensaje enviado');
+        return response()->json(['status' => true, 'message' => 'Mensaje enviado' ]);
     }
 
     public function newsletter(Request $request)
@@ -63,7 +63,7 @@ class Main extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json( ['status' => false, 'errors' => $validator->errors() ], 422);
         }
 
         try {
@@ -76,6 +76,6 @@ class Main extends Controller
             return response()->json($th->getMessage(), 422);
         }
 
-        return response()->json('Email guardado');
+        return response()->json(['status' => true, 'message' => 'Email guardado' ]);
     }
 }
