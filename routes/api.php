@@ -23,6 +23,8 @@ use App\Http\Controllers\Api\Authentication;
 
  
 Route::post('/sanctum/login',[Authentication::class,'login']);
+Route::post('/contact',[Main::class,'contact']);
+Route::post('/newsletter',[Main::class,'newsletter']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

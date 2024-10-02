@@ -16,6 +16,7 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+    'mail_recibe_mensaje' => env('MAIL_RECIBE_MENSAJE', 'info@kilometro314.com'),
 
     /*
     |--------------------------------------------------------------------------

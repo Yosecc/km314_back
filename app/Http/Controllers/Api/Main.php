@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Mail\Contact;
 use App\Models\Slider;
+use App\Models\Newsletter;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class Main extends Controller
 {
@@ -28,5 +32,50 @@ class Main extends Controller
 
         })->pluck('img');
 
+    }
+
+    public function contact(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name'  => 'required|max:255',
+            'email' => 'required|email:rfc,dns',
+            'phone' => 'required|numeric',
+            'body'  => 'required|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        try {
+            Mail::to(config('app.mail_recibe_mensaje'))->send(new Contact($request->all()));
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 422);
+        }
+
+        return response()->json('Mensaje enviado');
+    }
+
+    public function newsletter(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email:rfc,dns',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        try {
+            Newsletter::insert([
+                'email'=> $request->email,
+                'created_at'=> now(),
+                'updated_at'=> now(),
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json($th->getMessage(), 422);
+        }
+
+        return response()->json('Email guardado');
     }
 }
