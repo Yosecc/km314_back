@@ -59,7 +59,7 @@ class Main extends Controller
     public function newsletter(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email:rfc,dns',
+            'email' => 'required|email:rfc,dns|unique:newsletter',
         ]);
 
         if ($validator->fails()) {
