@@ -73,7 +73,7 @@ class Main extends Controller
                 'updated_at'=> now(),
             ]);
         } catch (\Throwable $th) {
-            return response()->json($th->getMessage(), 422);
+            return response()->json( [ 'status' => false, 'message' => $th->getMessage() ], 422);
         }
 
         return response()->json(['status' => true, 'message' => 'Email guardado' ]);
