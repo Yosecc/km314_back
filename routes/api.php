@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\Servicios;
 use App\Http\Controllers\Api\FormControl;
 use App\Http\Controllers\Api\Solicitudes;
 use App\Http\Controllers\Api\Authentication;
+
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -25,6 +27,7 @@ use App\Http\Controllers\Api\Authentication;
 Route::post('/sanctum/login',[Authentication::class,'login']);
 Route::post('/contact',[Main::class,'contact']);
 Route::post('/newsletter',[Main::class,'newsletter']);
+Route::get('/messenger',[Main::class,'messenger']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -61,3 +64,5 @@ Route::middleware('auth:sanctum')->prefix('servicios')->group(function () {
     Route::get('combox',[Servicios::class,'combox']);
     Route::get('index',[Servicios::class,'index']);
 });
+
+

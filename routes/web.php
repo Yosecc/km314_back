@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Route;
 // Route::get('/', function () {
 //     return view('welcome');
 // });
+
+Route::group(['prefix' => 'auth/facebook', 'middleware' => 'auth'], function () {
+    Route::get('/', [\App\Http\Controllers\SocialController::class, 'redirectToProvider']);
+    Route::get('/callback', [\App\Http\Controllers\SocialController::class, 'handleProviderCallback']);
+});

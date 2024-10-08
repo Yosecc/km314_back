@@ -7,9 +7,12 @@ use App\Models\Slider;
 use App\Models\Newsletter;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\SocialMessages;
 use Illuminate\Support\Facades\Validator;
+
 
 class Main extends Controller
 {
@@ -77,5 +80,51 @@ class Main extends Controller
         }
 
         return response()->json(['status' => true, 'message' => 'Email guardado' ]);
+    }
+
+    public function messenger(Request $request)
+    {
+    
+        $socialMessages = new SocialMessages();
+
+        $conversations = $socialMessages->getConversations();
+
+        dd($conversations);
+        
+        // $urltoken = "https://graph.facebook.com/oauth/access_token?client_id=1135220454605588&client_secret=85d5e99eca4a924916356a1e4cce4dee&grant_type=client_credentials&scope=pages_show_list";
+
+        // $auth = Http::get($urltoken);
+
+        // $auth = $auth->collect();
+
+        
+
+        // $urlaccount = "https://graph.facebook.com/1135220454605588/accounts?access_token=".$auth['access_token'];
+
+        // $account = Http::get($urlaccount);
+
+        // dd($account->body());
+        
+        // dd($auth);
+        // $accesToken = "EAAQIehvwQxQBOz0ZBiyrMlny8HxTs43Kt4v5jk3ZA9Un71ruNsU9AUXgD6GiRqeQbi2M9nsVgfr2vC2ZCtAdJC6UZCDX5oPzULy6xtaG34LH2LYIeJwjYPH0O7xSrdTl7lOSyxueCqx1mM2oILYbC9UOf5v0RpBQ2TRuWS9rvoK5IM5iHhxR2NugVDyKnZAOQUtJlDpFkKbE9ZBEUUXSuo";
+        
+        // $url = "https://graph.facebook.com/v21.0/me/conversations?access_token=".$accesToken; //TODAS LAS CONVERSACIONES
+        // $url = "https://graph.facebook.com/v17.0/1135220454605588/conversations?access_token=".$auth['access_token'];
+
+        // $messages = Http::get($url); 
+
+        // dd($messages->collect());
+
+        // $urlMessage = "https://graph.facebook.com/v21.0/t_10231717396494502?fields=messages&access_token=".$accesToken;
+
+        // $message = Http::get($urlMessage); // UNA SOLA CONVERSACION
+
+        // dd($message->collect());
+
+        // $URLmE = "https://graph.facebook.com/v21.0/m_-ZZS2yRxZhgxWJAXYTQlq48XvQE0W5KZt2yhhzJ67aXFSrw1q2McHlXjHHSG9s_bfTZHoyeu6O5FpETgjIY9Qw?fields=id,created_time,from,to,message&access_token=".$accesToken;
+
+        // $emessage = Http::get($URLmE); //UN MENSAJE
+
+        // dd($emessage->collect());
     }
 }
