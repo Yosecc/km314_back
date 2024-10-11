@@ -1,4 +1,5 @@
 <?php
+namespace App\Logic\Providers;
 
 use Facebook\PersistentData\PersistentDataInterface;
 

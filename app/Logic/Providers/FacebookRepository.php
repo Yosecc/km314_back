@@ -4,7 +4,7 @@ namespace App\Logic\Providers;
 
 use Facebook\Facebook;
 use Illuminate\Support\Facades\Log;
-use MyLaravelPersistentDataHandler;
+use App\Logic\Providers\MyLaravelPersistentDataHandler;
 use Mockery\CountValidator\Exception;
 if (!session_id()) {
     session_start();
