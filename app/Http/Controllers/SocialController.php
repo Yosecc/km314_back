@@ -22,8 +22,11 @@ class SocialController extends Controller
 
     public function handleProviderCallback()
     {
+
+        dd('pasa');
+        
         if (request('error') == 'access_denied') 
-            //handle error
+            //handle error  
 
         $accessToken = $this->facebook->handleCallback(); 
         

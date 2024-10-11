@@ -57,7 +57,7 @@ class FacebookRepository
             $helper->getPersistentDataHandler()->set('state', request('state'));
         }
 
-        dd($helper->getAccessToken());
+        // dd($helper->getAccessToken());
         try {
             $accessToken = $helper->getAccessToken();
         } catch(FacebookResponseException $e) {
