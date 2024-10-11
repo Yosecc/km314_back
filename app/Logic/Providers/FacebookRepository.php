@@ -2,13 +2,10 @@
 
 namespace App\Logic\Providers;
 
+use App\Logic\Providers\MyLaravelPersistentDataHandler;
 use Facebook\Facebook;
 use Illuminate\Support\Facades\Log;
-use App\Logic\Providers\MyLaravelPersistentDataHandler;
 use Mockery\CountValidator\Exception;
-if (!session_id()) {
-    session_start();
-}
 use Facebook\Exceptions\FacebookSDKException;
 use Facebook\Exceptions\FacebookResponseException;
 
