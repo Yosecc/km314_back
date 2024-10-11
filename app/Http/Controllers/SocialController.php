@@ -27,6 +27,7 @@ class SocialController extends Controller
 
         $accessToken = $this->facebook->handleCallback(); 
         
+        return $accessToken;
         //use token to get facebook pages
     }
 
