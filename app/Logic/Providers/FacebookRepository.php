@@ -6,6 +6,9 @@ use Facebook\Exceptions\FacebookResponseException;
 use Facebook\Exceptions\FacebookSDKException;
 use Mockery\CountValidator\Exception;
 use Illuminate\Support\Facades\Log;
+if (!session_id()) {
+    session_start();
+}
 use Facebook\Facebook;
 
 class FacebookRepository
@@ -14,15 +17,13 @@ class FacebookRepository
 
     public function __construct()
     {
-        if (!session_id()) {
-            session_start();
-        }
+        
         
         $this->facebook = new Facebook([
             'app_id' => config('providers.facebook.app_id'),
             'app_secret' => config('providers.facebook.app_secret'),
             'default_graph_version' => 'v21.0',
-             'persistent_data_handler'=>'session'
+            //  'persistent_data_handler'=>'session'
         ]);
     }
 
