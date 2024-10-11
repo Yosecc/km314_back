@@ -51,12 +51,12 @@ class FacebookRepository
 
     public function handleCallback()
     {
-        dd($this->facebook);
+        // dd($this->facebook);
         $helper = $this->facebook->getRedirectLoginHelper();
         
-        if (request('state')) {
-            $helper->getPersistentDataHandler()->set('state', request('state'));
-        }
+        // if (request('state')) {
+        //     $helper->getPersistentDataHandler()->set('state', request('state'));
+        // }
 
         // 
         try {
@@ -66,6 +66,20 @@ class FacebookRepository
         } catch(FacebookSDKException $e) {
             throw new Exception("Facebook SDK returned an error: {$e->getMessage()}");
         }
+
+        if (!isset($accessToken)) {
+            if ($helper->getError()) {
+              header('HTTP/1.0 401 Unauthorized');
+              echo "Error: " . $helper->getError() . "\n";
+              echo "Error Code: " . $helper->getErrorCode() . "\n";
+              echo "Error Reason: " . $helper->getErrorReason() . "\n";
+              echo "Error Description: " . $helper->getErrorDescription() . "\n";
+            } else {
+              header('HTTP/1.0 400 Bad Request');
+              echo 'Bad request';
+            }
+            exit;
+          }
 
         if (!isset($accessToken)) {
             throw new Exception('Access token error');
