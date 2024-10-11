@@ -1,9 +1,5 @@
 <?php
     namespace App\Logic\Providers;
-    
-if (!session_id()) {
-    session_start();
-}
 
 
 use App\Logic\Providers\MyLaravelPersistentDataHandler;
@@ -25,7 +21,8 @@ class FacebookRepository
             'app_id' => config('providers.facebook.app_id'),
             'app_secret' => config('providers.facebook.app_secret'),
             'default_graph_version' => 'v21.0',
-             'persistent_data_handler'=> new MyLaravelPersistentDataHandler()
+             'persistent_data_handler'=> new MyLaravelPersistentDataHandler(),
+             'default_access_token' => config('providers.facebook.app_id') . "|" . config('providers.facebook.app_secret')
         ]);
     }
 
@@ -65,10 +62,11 @@ class FacebookRepository
     {
         // dd($this->facebook);
         $helper = $this->facebook->getRedirectLoginHelper();
-        $_SESSION['FBRLH_state']=$_GET['state'];
+        
         
         if (isset($_GET['state'])) {
             $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
+            $_SESSION['FBRLH_state']=$_GET['state'];
         }
 
         try {
