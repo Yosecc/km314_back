@@ -15,8 +15,6 @@ class FacebookRepository
 
     public function __construct()
     {
-        
-        
         $this->facebook = new Facebook([
             'app_id' => config('providers.facebook.app_id'),
             'app_secret' => config('providers.facebook.app_secret'),

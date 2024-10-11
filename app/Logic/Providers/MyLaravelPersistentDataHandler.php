@@ -1,6 +1,7 @@
 <?php
 namespace App\Logic\Providers;
 
+use Illuminate\Support\Facades\Session;
 use Facebook\PersistentData\PersistentDataInterface;
 
 class MyLaravelPersistentDataHandler implements PersistentDataInterface
@@ -15,7 +16,7 @@ class MyLaravelPersistentDataHandler implements PersistentDataInterface
    */
   public function get($key)
   {
-    return \Session::get($this->sessionPrefix . $key);
+    return Session::get($this->sessionPrefix . $key);
   }
 
   /**
@@ -23,6 +24,6 @@ class MyLaravelPersistentDataHandler implements PersistentDataInterface
    */
   public function set($key, $value)
   {
-    \Session::put($this->sessionPrefix . $key, $value);
+    Session::put($this->sessionPrefix . $key, $value);
   }
 }
