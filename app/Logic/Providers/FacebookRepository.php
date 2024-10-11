@@ -7,7 +7,7 @@ use Facebook\Exceptions\FacebookSDKException;
 use Mockery\CountValidator\Exception;
 use Illuminate\Support\Facades\Log;
 use Facebook\Facebook;
-
+session_start();
 class FacebookRepository
 {
     protected $facebook;
