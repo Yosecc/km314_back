@@ -62,8 +62,10 @@ class FacebookRepository
         try {
             $accessToken = $helper->getAccessToken();
         } catch(FacebookResponseException $e) {
+            dd($e->getMessage());
             throw new Exception("Graph returned an error: {$e->getMessage()}");
         } catch(FacebookSDKException $e) {
+            dd($e->getMessage());
             throw new Exception("Facebook SDK returned an error: {$e->getMessage()}");
         }
 
