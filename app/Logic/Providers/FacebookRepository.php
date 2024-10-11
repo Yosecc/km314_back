@@ -7,13 +7,17 @@ use Facebook\Exceptions\FacebookSDKException;
 use Mockery\CountValidator\Exception;
 use Illuminate\Support\Facades\Log;
 use Facebook\Facebook;
-session_start();
+
 class FacebookRepository
 {
     protected $facebook;
 
     public function __construct()
     {
+        if (!session_id()) {
+            session_start();
+        }
+        
         $this->facebook = new Facebook([
             'app_id' => config('providers.facebook.app_id'),
             'app_secret' => config('providers.facebook.app_secret'),
