@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Logic\SocialNetworks\Providers;
+namespace App\Logic\Providers;
 
 use Facebook\Exceptions\FacebookResponseException;
 use Facebook\Exceptions\FacebookSDKException;

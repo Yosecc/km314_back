@@ -39,7 +39,32 @@ class SocialMessages extends Controller
 
     public function auth()
     {
-       
+        // $url = $this->urlBase . $this->version . $this->urlaccounts . "?access_token=" . $this->token;
+
+        $url = "https://graph.facebook.com/oauth/access_token?client_id=1135220454605588&client_secret=85d5e99eca4a924916356a1e4cce4dee&grant_type=client_credentials";
+        // $url = "https://graph.facebook.com/oauth?access_token=1135220454605588|85d5e99eca4a924916356a1e4cce4dee";
+        
+        $response = Http::get($url); 
+
+        $response = $response->json();
+
+        // $url = "https://graph.facebook.com/accounts?access_token=1135220454605588|".$response['access_token'];
+        // $response = Http::get($url); 
+        // $response = $response->json();
+        dd($response);
+
+
+        // $appsecret_proof= hash_hmac('sha256', $response['access_token'].'|'.time(), "85d5e99eca4a924916356a1e4cce4dee"); 
+        // dd($response, $appsecret_proof);
+        //84858e85298a19ed947a3d316ecbc552
+        // $urlPage = "https://graph.facebook.com/me?access_token=1135220454605588|84858e85298a19ed947a3d316ecbc552" ;
+        $urlPage = "https://graph.facebook.com/1135220454605588/accounts?access_token=".$response['access_token'] ;
+
+        $response = Http::get($urlPage); 
+
+        $response = $response->json();
+
+        dd($response);
 
     }
 

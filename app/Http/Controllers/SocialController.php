@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Logic\SocialNetworks\Providers\FacebookRepository;
+use App\Logic\Providers\FacebookRepository;
 
 class SocialController extends Controller
 {
