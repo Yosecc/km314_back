@@ -51,13 +51,14 @@ class FacebookRepository
 
     public function handleCallback()
     {
+        dd($this->facebook);
         $helper = $this->facebook->getRedirectLoginHelper();
-
+        
         if (request('state')) {
             $helper->getPersistentDataHandler()->set('state', request('state'));
         }
 
-        // dd($helper->getAccessToken());
+        // 
         try {
             $accessToken = $helper->getAccessToken();
         } catch(FacebookResponseException $e) {
