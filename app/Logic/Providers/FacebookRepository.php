@@ -27,21 +27,21 @@ class FacebookRepository
 
         $permissions = [
             // 'email',
-            'public_profile'
-            // 'pages_manage_posts',
-            // 'pages_read_engagement',
-            // 'read_insights',
-            // 'pages_show_list',
-            // 'read_page_mailboxes',
-            // 'business_management',
-            // 'pages_messaging',
-            // 'pages_messaging_subscriptions',
-            // 'instagram_basic',
-            // 'instagram_manage_messages',
-            // 'pages_read_engagement',
-            // 'pages_manage_metadata',
-            // 'pages_read_user_content',
-            // 'pages_manage_posts',
+            // 'public_profile'
+            'pages_manage_posts',
+            'pages_read_engagement',
+            'read_insights',
+            'pages_show_list',
+            'read_page_mailboxes',
+            'business_management',
+            'pages_messaging',
+            'pages_messaging_subscriptions',
+            'instagram_basic',
+            'instagram_manage_messages',
+            'pages_read_engagement',
+            'pages_manage_metadata',
+            'pages_read_user_content',
+            'pages_manage_posts',
         ];
 
         $redirectUri = config('app.url') . '/auth/facebook/callback';
@@ -57,7 +57,7 @@ class FacebookRepository
             $helper->getPersistentDataHandler()->set('state', request('state'));
         }
 
-        dd($helper->getAccessToken());
+        // dd($helper->getAccessToken());
         try {
             $accessToken = $helper->getAccessToken();
         } catch(FacebookResponseException $e) {
