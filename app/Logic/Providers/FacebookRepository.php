@@ -52,7 +52,9 @@ class FacebookRepository
 
 
 
-        $redirectUri = config('app.url') . '/auth/facebook/callback';
+        // $redirectUri = config('app.url') . '/auth/facebook/callback';
+
+        $redirectUri = "https://".$_SERVER['SERVER_NAME'].'/auth/facebook/callback';
 
         return $helper->getLoginUrl($redirectUri, $permissions);
     }
