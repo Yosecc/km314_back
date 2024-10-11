@@ -2,14 +2,15 @@
 
 namespace App\Logic\Providers;
 
-use Facebook\Exceptions\FacebookResponseException;
-use Facebook\Exceptions\FacebookSDKException;
-use Mockery\CountValidator\Exception;
+use Facebook\Facebook;
 use Illuminate\Support\Facades\Log;
+use MyLaravelPersistentDataHandler;
+use Mockery\CountValidator\Exception;
 if (!session_id()) {
     session_start();
 }
-use Facebook\Facebook;
+use Facebook\Exceptions\FacebookSDKException;
+use Facebook\Exceptions\FacebookResponseException;
 
 class FacebookRepository
 {
@@ -23,7 +24,7 @@ class FacebookRepository
             'app_id' => config('providers.facebook.app_id'),
             'app_secret' => config('providers.facebook.app_secret'),
             'default_graph_version' => 'v21.0',
-            //  'persistent_data_handler'=>'session'
+             'persistent_data_handler'=> new MyLaravelPersistentDataHandler()
         ]);
     }
 
@@ -52,9 +53,9 @@ class FacebookRepository
 
 
 
-        // $redirectUri = config('app.url') . '/auth/facebook/callback';
+        $redirectUri = config('app.url') . '/auth/facebook/callback';
 
-        $redirectUri = "https://".$_SERVER['SERVER_NAME'].'/auth/facebook/callback';
+        // $redirectUri = "https://".$_SERVER['SERVER_NAME'].'/auth/facebook/callback';
 
         return $helper->getLoginUrl($redirectUri, $permissions);
     }
@@ -63,12 +64,12 @@ class FacebookRepository
     {
         // dd($this->facebook);
         $helper = $this->facebook->getRedirectLoginHelper();
+        $_SESSION['FBRLH_state']=$_GET['state'];
         
         if (isset($_GET['state'])) {
             $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
         }
 
-        // 
         try {
             $accessToken = $helper->getAccessToken();
         } catch(FacebookResponseException $e) {
