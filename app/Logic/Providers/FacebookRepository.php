@@ -1,9 +1,10 @@
 <?php
+    namespace App\Logic\Providers;
+    
 if (!session_id()) {
     session_start();
 }
 
-namespace App\Logic\Providers;
 
 use App\Logic\Providers\MyLaravelPersistentDataHandler;
 use Facebook\Facebook;
