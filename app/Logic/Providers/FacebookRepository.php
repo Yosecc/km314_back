@@ -44,6 +44,8 @@ class FacebookRepository
             'pages_manage_posts',
         ];
 
+
+
         $redirectUri = config('app.url') . '/auth/facebook/callback';
 
         return $helper->getLoginUrl($redirectUri, $permissions);
@@ -54,9 +56,9 @@ class FacebookRepository
         // dd($this->facebook);
         $helper = $this->facebook->getRedirectLoginHelper();
         
-        // if (request('state')) {
-        //     $helper->getPersistentDataHandler()->set('state', request('state'));
-        // }
+        if (isset($_GET['state'])) {
+            $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
+        }
 
         // 
         try {
