@@ -26,8 +26,22 @@ class FacebookRepository
         $helper = $this->facebook->getRedirectLoginHelper();
 
         $permissions = [
-            'pages_manage_posts',
-            'pages_read_engagement'
+            'email',
+            'public_profile'
+            // 'pages_manage_posts',
+            // 'pages_read_engagement',
+            // 'read_insights',
+            // 'pages_show_list',
+            // 'read_page_mailboxes',
+            // 'business_management',
+            // 'pages_messaging',
+            // 'pages_messaging_subscriptions',
+            // 'instagram_basic',
+            // 'instagram_manage_messages',
+            // 'pages_read_engagement',
+            // 'pages_manage_metadata',
+            // 'pages_read_user_content',
+            // 'pages_manage_posts',
         ];
 
         $redirectUri = config('app.url') . '/auth/facebook/callback';
