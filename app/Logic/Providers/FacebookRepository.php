@@ -26,7 +26,7 @@ class FacebookRepository
         $helper = $this->facebook->getRedirectLoginHelper();
 
         $permissions = [
-            'email',
+            // 'email',
             'public_profile'
             // 'pages_manage_posts',
             // 'pages_read_engagement',
