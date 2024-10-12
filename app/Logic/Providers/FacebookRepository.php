@@ -61,10 +61,11 @@ class FacebookRepository
         $helper = $this->facebook->getRedirectLoginHelper();
         
         
-        // if (isset($_GET['state'])) {
-        //     $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
-        //     // $_SESSION['FBRLH_state']=$_GET['state'];
-        // }
+        if (isset($_GET['state'])) {
+            dd($_GET['state']);
+            // $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
+            // $_SESSION['FBRLH_state']=$_GET['state'];
+        }
 
         try {
             $accessToken = $helper->getAccessToken();
