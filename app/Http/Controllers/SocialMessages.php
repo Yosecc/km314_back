@@ -55,7 +55,7 @@ class SocialMessages extends Controller
 
         $this->token = $response['access_token'];
 
-         $u = "https://graph.facebook.com/me/&access_token=".$this->token;
+         $u = "https://graph.facebook.com/v21.0/me?access_token=".$this->token;
 
          $response = Http::get($u); 
          $response = $response->json();
