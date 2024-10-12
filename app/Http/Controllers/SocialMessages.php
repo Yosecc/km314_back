@@ -39,10 +39,16 @@ class SocialMessages extends Controller
         // $this->getAccounts(); 
     }
 
+    public function debugToken()
+    {
+        $url = $this->urlBase . "/oauth/access_token?client_id=".config('providers.facebook.app_id')."&redirect_uri='".$this->redirectUri."'&client_secret=".config('providers.facebook.app_secret')."&code=".$code;
+
+    }
+
     public function setTokenApp($code)
     {
         
-        $url = $this->urlBase . $this->version . "/oauth/access_token?client_id=".config('providers.facebook.app_id')."&redirect_uri=".$this->redirectUri."&client_secret=".config('providers.facebook.app_secret')."&code=".$code;
+        $url = $this->urlBase . $this->version . "/oauth/access_token?client_id=".config('providers.facebook.app_id')."&grant_type=client_credentials&client_secret=".config('providers.facebook.app_secret')."&code=".$code;
 
         $response = Http::get($url); 
         $response = $response->json();
@@ -53,7 +59,8 @@ class SocialMessages extends Controller
 
          $response = Http::get($u); 
          $response = $response->json();
-dd($this->token, $response);
+        
+         dd($this->token, $response);
     }
 
     public function setTokenPage()
