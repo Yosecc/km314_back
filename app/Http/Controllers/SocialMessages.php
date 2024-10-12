@@ -26,15 +26,27 @@ class SocialMessages extends Controller
 
     public $conversations = [];
 
+    public $redirectUri = '';
+
     public function __construct()
     {
         // Construir la query token con la propiedad de instancia $token
         $this->queryConversations = "?fields=participants,messages{id,message}&access_token=" . $this->token;
-
+        $this->redirectUri = config('app.url') . '/auth/facebook/callback';
         // $this->conversations = Cache::has('conversations') ? Cache::get('conversations') : [];
         $this->auth();
         
         $this->getAccounts(); 
+    }
+
+    public function oauthIntercambio($code)
+    {
+        
+        $url = $this->urlBase . $this->version . "/oauth/access_token?client_id=".config('providers.facebook.app_id')."&redirect_uri=".$this->redirectUri."&client_secret=".config('providers.facebook.app_secret')."&code=".$code;
+
+        $response = Http::get($url); 
+        $response = $response->json();
+        dd($response);
     }
 
     public function auth()

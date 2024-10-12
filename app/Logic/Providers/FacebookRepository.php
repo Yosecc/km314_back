@@ -65,7 +65,7 @@ class FacebookRepository
             $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
         }
 
-        
+       
 
         // try {
         //     $accessToken = $helper->getAccessToken();

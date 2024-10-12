@@ -23,14 +23,14 @@ class SocialController extends Controller
     public function handleProviderCallback(Request $request)
     {
         // $value = $request->session()->all();
-        // dd($_SESSION ['FBRLH_state'] );
         
         //if (request('error') == 'access_denied') 
             //handle error  
 
-            dd($request->code);
+        $s = new SocialMessages();
+        $s->oauthIntercambio($request->code);
 
-        $accessToken = $this->facebook->handleCallback(); 
+        // $accessToken = $this->facebook->handleCallback(); 
         dd($accessToken);
         // return $accessToken;
         //use token to get facebook pages
