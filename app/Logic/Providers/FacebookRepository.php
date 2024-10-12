@@ -19,7 +19,7 @@ class FacebookRepository
             'app_id' => config('providers.facebook.app_id'),
             'app_secret' => config('providers.facebook.app_secret'),
             'default_graph_version' => 'v21.0',
-            'persistent_data_handler'=> new MyLaravelPersistentDataHandler(),
+            // 'persistent_data_handler'=> new MyLaravelPersistentDataHandler(),
         ]);
     }
 
