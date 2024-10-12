@@ -28,6 +28,8 @@ class SocialController extends Controller
         //if (request('error') == 'access_denied') 
             //handle error  
 
+            dd($request->code);
+
         $accessToken = $this->facebook->handleCallback(); 
         dd($accessToken);
         // return $accessToken;

@@ -29,7 +29,7 @@ class FacebookRepository
 
         $permissions = [
             // 'email',
-            // 'public_profile'
+            'public_profile',
             'pages_manage_posts',
             'pages_read_engagement',
             // 'read_insights',
@@ -62,49 +62,49 @@ class FacebookRepository
         
         
         if (isset($_GET['state'])) {
-            // dd($_GET['state']);
             $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
-            // $_SESSION['FBRLH_state']=$_GET['state'];
         }
 
-        try {
-            $accessToken = $helper->getAccessToken();
-        } catch(FacebookResponseException $e) {
-            // dd($e->getMessage());
-            throw new \Exception("Graph returned an error: {$e->getMessage()}");
-        } catch(FacebookSDKException $e) {
-            // dd($e->getMessage());
-            throw new \Exception("Facebook SDK returned an error: {$e->getMessage()}");
-        }
+        
 
-        if (!isset($accessToken)) {
-            if ($helper->getError()) {
-              header('HTTP/1.0 401 Unauthorized');
-              echo "Error: " . $helper->getError() . "\n";
-              echo "Error Code: " . $helper->getErrorCode() . "\n";
-              echo "Error Reason: " . $helper->getErrorReason() . "\n";
-              echo "Error Description: " . $helper->getErrorDescription() . "\n";
-            } else {
-              header('HTTP/1.0 400 Bad Request');
-              echo 'Bad request';
-            }
-            exit;
-          }
+        // try {
+        //     $accessToken = $helper->getAccessToken();
+        // } catch(FacebookResponseException $e) {
+        //     // dd($e->getMessage());
+        //     throw new \Exception("Graph returned an error: {$e->getMessage()}");
+        // } catch(FacebookSDKException $e) {
+        //     // dd($e->getMessage());
+        //     throw new \Exception("Facebook SDK returned an error: {$e->getMessage()}");
+        // }
 
-        if (!isset($accessToken)) {
-            throw new Exception('Access token error');
-        }
+        // if (!isset($accessToken)) {
+        //     if ($helper->getError()) {
+        //       header('HTTP/1.0 401 Unauthorized');
+        //       echo "Error: " . $helper->getError() . "\n";
+        //       echo "Error Code: " . $helper->getErrorCode() . "\n";
+        //       echo "Error Reason: " . $helper->getErrorReason() . "\n";
+        //       echo "Error Description: " . $helper->getErrorDescription() . "\n";
+        //     } else {
+        //       header('HTTP/1.0 400 Bad Request');
+        //       echo 'Bad request';
+        //     }
+        //     exit;
+        //   }
 
-        if (!$accessToken->isLongLived()) {
-            try {
-                $oAuth2Client = $this->facebook->getOAuth2Client();
-                $accessToken = $oAuth2Client->getLongLivedAccessToken($accessToken);
-            } catch (FacebookSDKException $e) {
-                throw new Exception("Error getting a long-lived access token: {$e->getMessage()}");
-            }
-        }
+        // if (!isset($accessToken)) {
+        //     throw new Exception('Access token error');
+        // }
 
-        return $accessToken->getValue();
+        // if (!$accessToken->isLongLived()) {
+        //     try {
+        //         $oAuth2Client = $this->facebook->getOAuth2Client();
+        //         $accessToken = $oAuth2Client->getLongLivedAccessToken($accessToken);
+        //     } catch (FacebookSDKException $e) {
+        //         throw new Exception("Error getting a long-lived access token: {$e->getMessage()}");
+        //     }
+        // }
+
+        // return $accessToken->getValue();
         
         //store acceess token in databese and use it to get pages
     }
