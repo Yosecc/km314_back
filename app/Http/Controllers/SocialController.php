@@ -20,10 +20,10 @@ class SocialController extends Controller
         return redirect($this->facebook->redirectTo());
     }
 
-    public function handleProviderCallback()
+    public function handleProviderCallback(Request $request)
     {
-
-        // dd('pasa');
+        $value = $request->session()->get('state');
+        dd($value );
         
         //if (request('error') == 'access_denied') 
             //handle error  

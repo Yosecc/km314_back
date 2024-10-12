@@ -24,7 +24,7 @@ class MyLaravelPersistentDataHandler implements PersistentDataInterface
    */
   public function set($key, $value)
   {
-    dd($key,$value);
+    // dd($key,$value);
     Session::put($this->sessionPrefix . $key, $value);
   }
 }
