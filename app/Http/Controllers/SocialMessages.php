@@ -34,9 +34,9 @@ class SocialMessages extends Controller
         $this->queryConversations = "?fields=participants,messages{id,message}&access_token=" . $this->token;
         $this->redirectUri = config('app.url') . '/auth/facebook/callback';
         // $this->conversations = Cache::has('conversations') ? Cache::get('conversations') : [];
-        $this->auth();
+        // $this->auth();
         
-        $this->getAccounts(); 
+        // $this->getAccounts(); 
     }
 
     public function setTokenApp($code)

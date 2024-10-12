@@ -30,6 +30,7 @@ class SocialController extends Controller
         $s = new SocialMessages();
         $s->setTokenApp($request->code);
         // $a = $s->getAccounts();
+        // dd('sjksks');
         dd($a);
 
         // $accessToken = $this->facebook->handleCallback(); 
