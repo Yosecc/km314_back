@@ -19,8 +19,7 @@ class FacebookRepository
             'app_id' => config('providers.facebook.app_id'),
             'app_secret' => config('providers.facebook.app_secret'),
             'default_graph_version' => 'v21.0',
-             'persistent_data_handler'=> new MyLaravelPersistentDataHandler(),
-             'default_access_token' => config('providers.facebook.app_id') . "|" . config('providers.facebook.app_secret')
+            'persistent_data_handler'=> new MyLaravelPersistentDataHandler(),
         ]);
     }
 
@@ -64,16 +63,16 @@ class FacebookRepository
         
         if (isset($_GET['state'])) {
             $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
-            $_SESSION['FBRLH_state']=$_GET['state'];
+            // $_SESSION['FBRLH_state']=$_GET['state'];
         }
 
         try {
             $accessToken = $helper->getAccessToken();
         } catch(FacebookResponseException $e) {
-            dd($e->getMessage());
+            // dd($e->getMessage());
             throw new Exception("Graph returned an error: {$e->getMessage()}");
         } catch(FacebookSDKException $e) {
-            dd($e->getMessage());
+            // dd($e->getMessage());
             throw new Exception("Facebook SDK returned an error: {$e->getMessage()}");
         }
 
