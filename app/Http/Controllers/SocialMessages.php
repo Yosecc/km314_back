@@ -53,7 +53,7 @@ class SocialMessages extends Controller
 
          $response = Http::get($u); 
          $response = $response->json();
-dd($response);
+dd($this->token, $response);
     }
 
     public function setTokenPage()
