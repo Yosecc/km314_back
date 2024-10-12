@@ -28,8 +28,8 @@ class SocialController extends Controller
             //handle error  
 
         $s = new SocialMessages();
-        $s->oauthIntercambio($request->code);
-        $a = $s->getAccounts();
+        $s->setTokenApp($request->code);
+        // $a = $s->getAccounts();
         dd($a);
 
         // $accessToken = $this->facebook->handleCallback(); 
