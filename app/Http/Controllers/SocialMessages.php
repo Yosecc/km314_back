@@ -46,7 +46,7 @@ class SocialMessages extends Controller
 
         $response = Http::get($url); 
         $response = $response->json();
-        dd($response);
+        $this->token = $response['access_token'];
     }
 
     public function auth()

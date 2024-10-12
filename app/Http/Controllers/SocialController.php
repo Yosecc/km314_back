@@ -29,9 +29,11 @@ class SocialController extends Controller
 
         $s = new SocialMessages();
         $s->oauthIntercambio($request->code);
+        $a = $s->getAccounts();
+        dd($a);
 
         // $accessToken = $this->facebook->handleCallback(); 
-        dd($accessToken);
+        // dd($accessToken);
         // return $accessToken;
         //use token to get facebook pages
     }
