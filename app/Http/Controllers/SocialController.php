@@ -22,8 +22,8 @@ class SocialController extends Controller
 
     public function handleProviderCallback(Request $request)
     {
-        $value = $request->session()->all();
-        dd($_SESSION['FBRLH_state'] );
+        // $value = $request->session()->all();
+        // dd($_SESSION ['FBRLH_state'] );
         
         //if (request('error') == 'access_denied') 
             //handle error  
