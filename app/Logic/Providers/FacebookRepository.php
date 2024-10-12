@@ -32,18 +32,18 @@ class FacebookRepository
             // 'public_profile'
             'pages_manage_posts',
             'pages_read_engagement',
-            'read_insights',
-            'pages_show_list',
-            'read_page_mailboxes',
-            'business_management',
-            'pages_messaging',
-            'pages_messaging_subscriptions',
-            'instagram_basic',
-            'instagram_manage_messages',
-            'pages_read_engagement',
-            'pages_manage_metadata',
-            'pages_read_user_content',
-            'pages_manage_posts',
+            // 'read_insights',
+            // 'pages_show_list',
+            // 'read_page_mailboxes',
+            // 'business_management',
+            // 'pages_messaging',
+            // 'pages_messaging_subscriptions',
+            // 'instagram_basic',
+            // 'instagram_manage_messages',
+            // 'pages_read_engagement',
+            // 'pages_manage_metadata',
+            // 'pages_read_user_content',
+            // 'pages_manage_posts',
         ];
 
 
@@ -61,10 +61,10 @@ class FacebookRepository
         $helper = $this->facebook->getRedirectLoginHelper();
         
         
-        if (isset($_GET['state'])) {
-            $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
-            // $_SESSION['FBRLH_state']=$_GET['state'];
-        }
+        // if (isset($_GET['state'])) {
+        //     $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
+        //     // $_SESSION['FBRLH_state']=$_GET['state'];
+        // }
 
         try {
             $accessToken = $helper->getAccessToken();
