@@ -184,7 +184,7 @@ class SocialMessages extends Controller
 
         $messages = collect($response['data']);
         $messages = $messages->map(function($message){
-            $url = $this->urlBase . $this->version . "/" . $message['id'] . "?fields=id,created_time,from,to,message&access_token=" . $this->pageAccessToken;
+            $url = $this->urlBase . $this->version . "/" . $message['id'] . "?fields=id,created_time,from,to,message,reactions,shares,attachments&access_token=" . $this->pageAccessToken;
             return $url;
         });
 
