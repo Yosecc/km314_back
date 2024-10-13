@@ -50,7 +50,7 @@ class FacebookRepository
         ];
 
         if (isset($_GET['state'])) {
-            $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
+            $helper->getPersistentDataHandler()->set('state', $_GET['state']);
         }
 
 
