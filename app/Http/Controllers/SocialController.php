@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Logic\Providers\FacebookRepository;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
+use App\Logic\Providers\FacebookRepository;
 
 class SocialController extends Controller
 {
@@ -23,21 +24,11 @@ class SocialController extends Controller
 
     public function handleProviderCallback(Request $request)
     {
-        // $value = $request->session()->all();
-        
-        //if (request('error') == 'access_denied') 
-            //handle error  
+        $accessToken = $this->facebook->handleCallback();
 
-        // $s = new SocialMessages();
-        // $s->setTokenApp($request->code);
-        // $a = $s->getAccounts();
-        // dd('sjksks');
-        // dd($a);
-
-        $accessToken = $this->facebook->handleCallback(); 
-        // return $accessToken;
-        //use token to get facebook pages
-        return $this->facebook->getPages($accessToken);
+        $value = Cache::store('file')->put('access_token', $accessToken);
+       
+        return redirect()->route('filament.admin.pages.messages');
     }
 
 }
