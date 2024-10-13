@@ -36,7 +36,8 @@ class Chat extends Component
     }
 
     public function pageNext(){
-        $conversacion = $this->socialMessages->nextPage($this->urlNext);
+        $socialMessages = new SocialMessages();
+        $conversacion = $socialMessages->nextPage($this->urlNext);
         
         dd($conversacion);
         // $this->messages = $conversacion['mensajes'];
