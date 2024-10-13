@@ -33,10 +33,18 @@ class SocialMessages extends Controller
         // Construir la query token con la propiedad de instancia $token
         $this->queryConversations = "?fields=participants,messages{id,message}&access_token=" . $this->token;
         $this->redirectUri = config('app.url') . '/auth/facebook/callback';
+
+        if(Cache::store('file')->has('access_token')){
+
+            $this->token = Cache::store('file')->get('access_token');
+        }else{
+            dd('No hay token');
+        }
+
         // $this->conversations = Cache::has('conversations') ? Cache::get('conversations') : [];
         // $this->auth();
-        
-        // $this->getAccounts(); 
+        $r = $this->getAccounts(); 
+        dd($r);
     }
 
     public function debugToken()
@@ -48,14 +56,14 @@ class SocialMessages extends Controller
     public function setTokenApp($code)
     {
         
-        $url = $this->urlBase . $this->version . "/oauth/access_token?client_id=".config('providers.facebook.app_id')."&grant_type=client_credentials&client_secret=".config('providers.facebook.app_secret')."&code=".$code;
+        // $url = $this->urlBase . $this->version . "/oauth/access_token?client_id=".config('providers.facebook.app_id')."&grant_type=client_credentials&client_secret=".config('providers.facebook.app_secret')."&code=".$code;
 
-        $response = Http::get($url); 
-        $response = $response->json();
+        // $response = Http::get($url); 
+        // $response = $response->json();
 
         // dd($response);
 
-        $this->token = $response['access_token'];
+        // $this->token = $response['access_token'];
 
          $u = "https://graph.facebook.com/v21.0/me?fields=id,name&access_token=".$this->token;
 
