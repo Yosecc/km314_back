@@ -36,8 +36,8 @@ class SocialController extends Controller
     {
         \Log::debug($request->all());
         $mode = $request->hub_mode;
-        $token = $request->hub_challenge;
-        $challenge = $request->hub_verify_token; 
+        $challenge = $request->hub_challenge;
+        $token = $request->hub_verify_token; 
 
         if($mode && $token){
             if($mode == 'subscribe' && $token == config('providers.facebook.webhook_token')){
