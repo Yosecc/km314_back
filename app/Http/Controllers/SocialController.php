@@ -32,4 +32,9 @@ class SocialController extends Controller
         return redirect()->route('filament.admin.pages.messages');
     }
 
+    public function facebook_webhook(Request $request)
+    {
+        \Log::debug($request->all());
+    }
+
 }
