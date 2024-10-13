@@ -75,8 +75,8 @@ class FacebookRepository
             // dd($helper, $this->facebook);
             $accessToken = $helper->getAccessToken();
 
-            $response = $this->facebook->get('/me?fields=id,name', $accessToken);
-            dd($response);
+            // $response = $this->facebook->get('/me?fields=id,name', $accessToken);
+            // dd($response);
         } catch(FacebookResponseException $e) {
             // dd($e->getMessage());
             throw new \Exception("Graph returned an error: {$e->getMessage()}");
