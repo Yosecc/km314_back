@@ -31,7 +31,7 @@ class SocialMessages extends Controller
     public function __construct()
     {
         // Construir la query token con la propiedad de instancia $token
-        $this->queryConversations = "?fields=participants,messages{id,message}&access_token=" . $this->token;
+       
         $this->redirectUri = config('app.url') . '/auth/facebook/callback';
 
         if(Cache::store('file')->has('access_token')){
@@ -41,9 +41,12 @@ class SocialMessages extends Controller
             dd('No hay token');
         }
 
+        $this->getAccounts(); 
+        
+        $this->queryConversations = "?fields=participants,messages{id,message}&access_token=" . $this->account[''];
         // $this->conversations = Cache::has('conversations') ? Cache::get('conversations') : [];
         // $this->auth();
-        $this->getAccounts(); 
+       
         // dd($r);
     }
 
@@ -128,7 +131,7 @@ class SocialMessages extends Controller
         }
 
         $this->account = $response['data'][0];
-
+dd($this->account);
         return $response;
 
     }
