@@ -18,14 +18,21 @@ class Chat extends Component
 
     protected $listeners = ['messageSent' => 'updateMessages'];
 
+    public $socialMessages;
+
     public function mount($record)
     {
         $this->conversation = $record;
 
-        $socialMessages = new SocialMessages();
-        $this->userId = $socialMessages->account['id'];
-        $this->messages = $socialMessages->getConversation($this->conversation->id);
-// dd($this->userId,$this->messages);
+        $this->socialMessages = new SocialMessages();
+        $this->userId = $this->socialMessages->account['id'];
+        $this->messages = $this->socialMessages->getConversation($this->conversation->id);
+        // dd($this->userId,$this->messages);
+    }
+
+    public function pageNext(){
+        $mensajes = $this->socialMessages->nextPage();
+        dd($mensajes);
     }
 
     public function updateMessages()

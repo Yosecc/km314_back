@@ -18,6 +18,8 @@ class SocialMessages extends Controller
 
     private $urlmessages = "/me/messages";
 
+    public $urlNext = '';
+
     private $token = "";
 
     private $pageAccessToken;
@@ -170,6 +172,36 @@ class SocialMessages extends Controller
         }
     }
 
+    public function nextPage()
+    {
+        
+        $response = Http::get($this->urlNext); 
+
+        $response = $response->collect();
+        
+        if(isset($response['error'])){
+            dd('Error',$response['error']);
+            return;
+        }
+
+        $this->urlNext = $response['messages']['paging']['next'];
+
+        $messages = collect($response['messages']['data']);
+        $messages = $messages->map(function($message){
+            $url = $this->urlBase . $this->version . "/" . $message['id'] . "?fields=id,created_time,from,to,message&access_token=" . $this->pageAccessToken;
+            return $url;
+        });
+
+        $mensajes = Http::pool(fn (Pool $pool) => $messages->map(function($c) use ($pool){
+            return $pool->get($c);
+        }));
+
+        $mensajes = collect($mensajes)->map(fn($response) => $response->collect());
+
+        return $mensajes;
+
+    }
+
     public function getConversation($conversation_id)
     {
         try {
@@ -184,7 +216,8 @@ class SocialMessages extends Controller
                 return;
             }
 
-            dd($response);
+            $this->urlNext = $response['messages']['paging']['next'];
+
             $messages = collect($response['messages']['data']);
             $messages = $messages->map(function($message){
                 $url = $this->urlBase . $this->version . "/" . $message['id'] . "?fields=id,created_time,from,to,message&access_token=" . $this->pageAccessToken;
