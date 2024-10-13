@@ -39,8 +39,7 @@ class Chat extends Component
         $socialMessages = new SocialMessages();
         $conversacion = $socialMessages->nextPage($this->urlNext);
         
-        dd($conversacion);
-        // $this->messages = $conversacion['mensajes'];
+        $this->messages->merge($conversacion['mensajes']);
         $this->urlNext = $conversacion['url_next'];
     }
 
