@@ -41,13 +41,13 @@ class SocialController extends Controller
         $challenge = $request['hub_challenge'];
         $token = $request['hub_verify_token']; 
 
-        if($mode && $token){
-            if($mode == 'subscribe' && $token == 'TOKENWEBHOOK'){
+        // if($mode && $token){
+            // if($mode == 'subscribe' && $token == 'TOKENWEBHOOK'){
                 return response()->json($challenge,200);
-            }else{
-                return response()->json('Invalid token',403);
-            }
-        }
+        //     }else{
+        //         return response()->json('Invalid token',403);
+        //     }
+        // }
     }
 
 }
