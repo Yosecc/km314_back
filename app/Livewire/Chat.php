@@ -27,7 +27,7 @@ class Chat extends Component
         $this->conversation = $record;
 
         $socialMessages = new SocialMessages();
-        // $this->userId = $socialMessages->account['id'];
+        $this->userId = $socialMessages->account['id'];
         $conversacion = $socialMessages->getConversation($this->conversation->id);
 
         $this->messages = $conversacion['mensajes'];
@@ -39,6 +39,7 @@ class Chat extends Component
         $socialMessages = new SocialMessages();
         $conversacion = $socialMessages->nextPage($this->urlNext);
         
+        dd($conversacion['mensajes'],$this->messages);
         $this->messages->merge($conversacion['mensajes']);
         $this->urlNext = $conversacion['url_next'];
     }
