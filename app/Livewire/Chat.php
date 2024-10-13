@@ -20,19 +20,27 @@ class Chat extends Component
 
     public $socialMessages;
 
+    public $urlNext = '';
+
     public function mount($record)
     {
         $this->conversation = $record;
 
-        $this->socialMessages = new SocialMessages();
-        $this->userId = $this->socialMessages->account['id'];
-        $this->messages = $this->socialMessages->getConversation($this->conversation->id);
+        $socialMessages = new SocialMessages();
+        // $this->userId = $socialMessages->account['id'];
+        $conversacion = $socialMessages->getConversation($this->conversation->id);
+
+        $this->messages = $conversacion['mensajes'];
+        $this->urlNext = $conversacion['url_next'];
         // dd($this->userId,$this->messages);
     }
 
     public function pageNext(){
-        $mensajes = $this->socialMessages->nextPage();
-        dd($mensajes);
+        $conversacion = $this->socialMessages->nextPage($this->urlNext);
+        
+        dd($conversacion);
+        // $this->messages = $conversacion['mensajes'];
+        $this->urlNext = $conversacion['url_next'];
     }
 
     public function updateMessages()

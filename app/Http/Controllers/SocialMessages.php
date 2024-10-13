@@ -18,8 +18,6 @@ class SocialMessages extends Controller
 
     private $urlmessages = "/me/messages";
 
-    public $urlNext = '';
-
     private $token = "";
 
     private $pageAccessToken;
@@ -172,10 +170,10 @@ class SocialMessages extends Controller
         }
     }
 
-    public function nextPage()
+    public function nextPage($urlNext)
     {
         
-        $response = Http::get($this->urlNext); 
+        $response = Http::get($urlNext); 
 
         $response = $response->collect();
         
@@ -183,8 +181,6 @@ class SocialMessages extends Controller
             dd('Error',$response['error']);
             return;
         }
-
-        $this->urlNext = $response['messages']['paging']['next'];
 
         $messages = collect($response['messages']['data']);
         $messages = $messages->map(function($message){
@@ -198,7 +194,10 @@ class SocialMessages extends Controller
 
         $mensajes = collect($mensajes)->map(fn($response) => $response->collect());
 
-        return $mensajes;
+        return [
+            'url_next' => isset($response['messages']['paging']['next']) ? $response['messages']['paging']['next'] : '',
+            'mensajes' => $mensajes
+        ] ;
 
     }
 
@@ -216,8 +215,6 @@ class SocialMessages extends Controller
                 return;
             }
 
-            $this->urlNext = $response['messages']['paging']['next'];
-
             $messages = collect($response['messages']['data']);
             $messages = $messages->map(function($message){
                 $url = $this->urlBase . $this->version . "/" . $message['id'] . "?fields=id,created_time,from,to,message&access_token=" . $this->pageAccessToken;
@@ -230,7 +227,10 @@ class SocialMessages extends Controller
 
             $mensajes = collect($mensajes)->map(fn($response) => $response->collect());
 
-            return $mensajes;
+            return [
+                'url_next' => isset($response['messages']['paging']['next']) ? $response['messages']['paging']['next'] : '',
+                'mensajes' => $mensajes
+            ] ;
         } catch (\Throwable $th) {
             //throw $th;
             dd($th->getMessage());
