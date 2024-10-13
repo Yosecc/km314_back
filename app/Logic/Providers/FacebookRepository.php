@@ -106,7 +106,7 @@ class FacebookRepository
 
         return $accessToken->getValue();
         
-        store acceess token in databese and use it to get pages
+        // store acceess token in databese and use it to get pages
     }
 
     private function getPages($accessToken)
