@@ -35,9 +35,11 @@ class SocialController extends Controller
     public function facebook_webhook(Request $request)
     {
         \Log::debug($request->all());
-        $mode = $request->hub_mode;
-        $challenge = $request->hub_challenge;
-        $token = $request->hub_verify_token; 
+        $request = $request->all();
+
+        $mode = $request['hub_mode'];
+        $challenge = $request['hub_challenge'];
+        $token = $request['hub_verify_token']; 
 
         if($mode && $token){
             if($mode == 'subscribe' && $token == 'TOKENWEBHOOK'){

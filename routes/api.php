@@ -28,6 +28,7 @@ Route::post('/sanctum/login',[Authentication::class,'login']);
 Route::post('/contact',[Main::class,'contact']);
 Route::post('/newsletter',[Main::class,'newsletter']);
 Route::get('/messenger',[Main::class,'messenger']);
+Route::get('/facebook_webhook', [\App\Http\Controllers\SocialController::class, 'facebook_webhook']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
