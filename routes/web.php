@@ -22,3 +22,4 @@ Route::group(['prefix' => 'auth/facebook', 'middleware' => 'auth'], function () 
     Route::get('/callback', [\App\Http\Controllers\SocialController::class, 'handleProviderCallback']);
 });
 Route::get('webhook/facebook_webhook', [\App\Http\Controllers\SocialController::class, 'facebook_webhook']);
+Route::post('webhook/facebook_webhook', [\App\Http\Controllers\SocialController::class, 'facebook_webhook_post']);

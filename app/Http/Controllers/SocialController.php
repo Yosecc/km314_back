@@ -43,11 +43,20 @@ class SocialController extends Controller
 
         // if($mode && $token){
             // if($mode == 'subscribe' && $token == 'TOKENWEBHOOK'){
-                return response()->json($challenge,200);
+                return response($challenge,200);
         //     }else{
         //         return response()->json('Invalid token',403);
         //     }
         // }
+    }
+
+    public function facebook_webhook_post(Request $request)
+    {
+        \Log::debug($request->all());
+        if ($request->body['object'] === "page") {
+            // Returns a '200 OK' response to all requests
+            return response("EVENT_RECEIVED", 200);
+        }
     }
 
 }
