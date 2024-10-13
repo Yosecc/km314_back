@@ -43,8 +43,8 @@ class SocialMessages extends Controller
 
         // $this->conversations = Cache::has('conversations') ? Cache::get('conversations') : [];
         // $this->auth();
-        $r = $this->getAccounts(); 
-        dd($r);
+        $this->getAccounts(); 
+        // dd($r);
     }
 
     public function debugToken()
@@ -127,7 +127,7 @@ class SocialMessages extends Controller
             return;
         }
 
-        $this->account = $response;
+        $this->account = $response['data'][0];
 
         return $response;
 
