@@ -20,6 +20,8 @@ class SocialMessages extends Controller
 
     private $token = "";
 
+    private $pageAccessToken;
+
     private $queryConversations;
 
     public $account;//PAGE ID
@@ -43,7 +45,8 @@ class SocialMessages extends Controller
 
         $this->getAccounts(); 
         
-        $this->queryConversations = "?fields=participants,messages{id,message}&access_token=" . $this->account['access_token'];
+        $this->pageAccessToken = $this->account['access_token'];
+        $this->queryConversations = "?fields=participants,messages{id,message}&access_token=" . $this->pageAccessToken ;
         // $this->conversations = Cache::has('conversations') ? Cache::get('conversations') : [];
         // $this->auth();
        
@@ -164,7 +167,7 @@ class SocialMessages extends Controller
     public function getConversation($conversation_id)
     {
         try {
-            $url = $this->urlBase . $this->version . "/" . $conversation_id . "?fields=messages{id,message}&access_token=" . $this->token;
+            $url = $this->urlBase . $this->version . "/" . $conversation_id . "?fields=messages{id,message}&access_token=" . $this->pageAccessToken;
        
             $response = Http::get($url); 
 
@@ -177,7 +180,7 @@ class SocialMessages extends Controller
 
             $messages = collect($response['messages']['data']);
             $messages = $messages->map(function($message){
-                $url = $this->urlBase . $this->version . "/" . $message['id'] . "?fields=id,created_time,from,to,message&access_token=" . $this->token;
+                $url = $this->urlBase . $this->version . "/" . $message['id'] . "?fields=id,created_time,from,to,message&access_token=" . $this->pageAccessToken;
                 return $url;
             });
 
@@ -198,7 +201,7 @@ class SocialMessages extends Controller
     {
         try {
 
-            $url = $this->urlBase . $this->version . $this->urlmessages . "?access_token=" . $this->token;
+            $url = $this->urlBase . $this->version . $this->urlmessages . "?access_token=" . $this->pageAccessToken;
 
             $response = Http::post($url,[
                 'recipient' => "{id:".$data['from_id']."}",
