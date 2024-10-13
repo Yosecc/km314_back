@@ -40,7 +40,9 @@ class SocialMessages extends Controller
 
             $this->token = Cache::store('file')->get('access_token');
         }else{
-            dd('No hay token');
+            // dd('No hay token');
+            $redirectUri = config('app.url') . '/auth/facebook';
+            header('Location: '.$redirectUri);
             return redirect()->route('auth.facebook');
         }
 
