@@ -32,6 +32,18 @@ class Messages extends Page implements HasForms, HasTable
 
     public $newMessage;
 
+    public function mount()
+    {
+        dd('ssd');
+        // if(Cache::store('file')->has('access_token')){
+
+        //     $this->token = Cache::store('file')->get('access_token');
+        // }else{
+        //     dd('No hay token');
+        //     return redirect()->route('auth.facebook');
+        // }
+    }
+
 
     public function table(Table $table): Table
     {
