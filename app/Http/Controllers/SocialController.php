@@ -35,9 +35,9 @@ class SocialController extends Controller
         // dd($a);
 
         $accessToken = $this->facebook->handleCallback(); 
-        dd($accessToken);
         // return $accessToken;
         //use token to get facebook pages
+        return $this->facebook->getPages($accessToken);
     }
 
 }

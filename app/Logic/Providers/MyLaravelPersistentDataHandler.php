@@ -17,9 +17,6 @@ class MyLaravelPersistentDataHandler implements PersistentDataInterface
   public function get($key)
   {
     $sessionKey = Session::get($this->sessionPrefix . $key);
-    \Log::info("======GET========");
-    \Log::debug($sessionKey);
-    \Log::info("=======ENDGET=======");
 
     return $sessionKey;
   }
@@ -30,9 +27,6 @@ class MyLaravelPersistentDataHandler implements PersistentDataInterface
   public function set($key, $value)
   {
     // dd($key,$value);
-    \Log::info("======SET========");
-    \Log::debug($value);
-    \Log::info("=======ENDSET=======");
     Session::put($this->sessionPrefix . $key, $value);
   }
 }
