@@ -43,7 +43,7 @@ class SocialMessages extends Controller
 
         $this->getAccounts(); 
         
-        $this->queryConversations = "?fields=participants,messages{id,message}&access_token=" . $this->account[''];
+        $this->queryConversations = "?fields=participants,messages{id,message}&access_token=" . $this->account['access_token'];
         // $this->conversations = Cache::has('conversations') ? Cache::get('conversations') : [];
         // $this->auth();
        
@@ -131,7 +131,7 @@ class SocialMessages extends Controller
         }
 
         $this->account = $response['data'][0];
-dd($this->account);
+// dd($this->account);
         return $response;
 
     }
