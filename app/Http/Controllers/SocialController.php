@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Logic\Providers\FacebookRepository;
+use Illuminate\Support\Facades\Session;
 
 class SocialController extends Controller
 {

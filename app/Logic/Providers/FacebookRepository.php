@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Mockery\CountValidator\Exception;
 use Facebook\Exceptions\FacebookSDKException;
 use Facebook\Exceptions\FacebookResponseException;
+use Illuminate\Support\Facades\Session;
 
 class FacebookRepository
 {
@@ -21,6 +22,8 @@ class FacebookRepository
             'default_graph_version' => 'v21.0',
             'persistent_data_handler'=> new MyLaravelPersistentDataHandler(),
         ]);
+
+        
     }
 
     public function redirectTo()
@@ -46,11 +49,14 @@ class FacebookRepository
             'pages_manage_posts',
         ];
 
+        if (isset($_GET['state'])) {
+            $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
+        }
 
 
-        // $redirectUri = config('app.url') . '/auth/facebook/callback';
+        $redirectUri = config('app.url') . '/auth/facebook/callback';
 
-        $redirectUri = "https://".$_SERVER['SERVER_NAME'].'/auth/facebook/callback';
+        // $redirectUri = "https://".$_SERVER['SERVER_NAME'].'/auth/facebook/callback';
 
         return $helper->getLoginUrl($redirectUri, $permissions);
     }
@@ -64,8 +70,6 @@ class FacebookRepository
         if (isset($_GET['state'])) {
             $helper->getPersistentDataHandler()->set('state', isset($_GET['state']));
         }
-
-       
 
         try {
             $accessToken = $helper->getAccessToken();
