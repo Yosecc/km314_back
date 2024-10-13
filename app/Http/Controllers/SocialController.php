@@ -27,14 +27,14 @@ class SocialController extends Controller
         //if (request('error') == 'access_denied') 
             //handle error  
 
-        $s = new SocialMessages();
-        $s->setTokenApp($request->code);
+        // $s = new SocialMessages();
+        // $s->setTokenApp($request->code);
         // $a = $s->getAccounts();
         // dd('sjksks');
-        dd($a);
+        // dd($a);
 
-        // $accessToken = $this->facebook->handleCallback(); 
-        // dd($accessToken);
+        $accessToken = $this->facebook->handleCallback(); 
+        dd($accessToken);
         // return $accessToken;
         //use token to get facebook pages
     }
