@@ -182,9 +182,7 @@ class SocialMessages extends Controller
             return;
         }
 
-        dd($urlNext,$response);
-
-        $messages = collect($response['messages']['data']);
+        $messages = collect($response['data']);
         $messages = $messages->map(function($message){
             $url = $this->urlBase . $this->version . "/" . $message['id'] . "?fields=id,created_time,from,to,message&access_token=" . $this->pageAccessToken;
             return $url;
@@ -197,7 +195,7 @@ class SocialMessages extends Controller
         $mensajes = collect($mensajes)->map(fn($response) => $response->collect());
 
         return [
-            'url_next' => isset($response['messages']['paging']['next']) ? $response['messages']['paging']['next'] : '',
+            'url_next' => isset($response['paging']['next']) ? $response['paging']['next'] : '',
             'mensajes' => $mensajes
         ] ;
 
