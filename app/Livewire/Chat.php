@@ -42,6 +42,7 @@ class Chat extends Component
         
         $this->messages = $this->messages->merge($conversacion['mensajes']);
         $this->urlNext = $conversacion['url_next'];
+        dd($this->messages);
     }
 
     public function updateMessages()
