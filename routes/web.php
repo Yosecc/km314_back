@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::group(['prefix' => 'auth/facebook', 'middleware' => 'auth'], function () {
-    Route::get('/', [\App\Http\Controllers\SocialController::class, 'redirectToProvider']);
+    Route::get('/', [\App\Http\Controllers\SocialController::class, 'redirectToProvider'])->name('auth.facebook');
     Route::get('/callback', [\App\Http\Controllers\SocialController::class, 'handleProviderCallback']);
 });
 Route::get('/facebook_webhook', [\App\Http\Controllers\SocialController::class, 'facebook_webhook']);
