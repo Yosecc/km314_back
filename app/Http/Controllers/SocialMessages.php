@@ -14,7 +14,7 @@ class SocialMessages extends Controller
 
     private $urlconversations = "/me/conversations";
     
-    private $urlaccounts = "/accounts";
+    private $urlaccounts = "/me/accounts";
 
     private $urlmessages = "/me/messages";
 

@@ -27,6 +27,7 @@ class SocialController extends Controller
         $accessToken = $this->facebook->handleCallback();
 
         $value = Cache::store('file')->put('access_token', $accessToken);
+        // $this->facebook->getPages($accessToken);
        
         return redirect()->route('filament.admin.pages.messages');
     }
