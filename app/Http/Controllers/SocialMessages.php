@@ -138,7 +138,7 @@ class SocialMessages extends Controller
         }
 
         $this->account = $response['data'][0];
-// dd($this->account);
+
         return $response;
 
     }
@@ -146,6 +146,7 @@ class SocialMessages extends Controller
     public function getConversations()
     {
         try {
+
             $url = $this->urlBase . $this->version . $this->urlconversations . $this->queryConversations;
 
             $response = Http::get($url); 
@@ -162,6 +163,7 @@ class SocialMessages extends Controller
             Cache::put('conversations', $this->conversations);
 
             return $this->conversations;
+
         } catch (\Throwable $th) {
             //throw $th;
             dd($th->getMessage());
@@ -182,6 +184,7 @@ class SocialMessages extends Controller
                 return;
             }
 
+            dd($response);
             $messages = collect($response['messages']['data']);
             $messages = $messages->map(function($message){
                 $url = $this->urlBase . $this->version . "/" . $message['id'] . "?fields=id,created_time,from,to,message&access_token=" . $this->pageAccessToken;
