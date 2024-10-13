@@ -45,6 +45,7 @@ class Messages extends Page implements HasForms, HasTable
             // dd('llega');
             $redirectUri = config('app.url') . '/auth/facebook';
             header('Location: '.$redirectUri);
+            die(); 
             return redirect()->route('auth.facebook');   
         }
     }

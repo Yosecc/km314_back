@@ -43,6 +43,7 @@ class SocialMessages extends Controller
             // dd('No hay token');
             $redirectUri = config('app.url') . '/auth/facebook';
             header('Location: '.$redirectUri);
+            die();
             return redirect()->route('auth.facebook');
         }
 
