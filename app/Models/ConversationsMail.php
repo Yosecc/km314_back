@@ -32,6 +32,10 @@ class ConversationsMail extends Model
     public function getRows()
     {
         $messages = Cache::get('messagesMail');
+
+        if(!isset($messages)){
+            return [];
+        }
         return $messages->toArray();
     }
 }
