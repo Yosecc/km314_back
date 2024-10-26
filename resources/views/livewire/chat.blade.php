@@ -61,7 +61,6 @@
 
         .input-box {
             display: flex;
-zcio superior para el campo de entrada */
         }
     </style>
 
