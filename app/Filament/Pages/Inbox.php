@@ -25,7 +25,7 @@ class Inbox extends Page implements HasForms, HasTable
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static string $view = 'filament.pages.inbox';
 
-    public string $activeTab = '';
+    public string $activeTab = 'tablaMail';
 
     // Método para renderizar la tabla de correos
     public function tableMail(): Table
@@ -35,15 +35,15 @@ class Inbox extends Page implements HasForms, HasTable
             ->columns($this->camposTableMail())
             ->actions([
                 Action::make('Mensajes')
-                ->modalHeading(fn (ConversationsMail $record) => $record['subject'] )
-                ->modalContent(fn (ConversationsMail $record): View => view(
-                    'filament.pages.actions.messagesMail',
-                    ['record' => $record],
-                ))
-                ->stickyModalFooter()
-                ->stickyModalHeader()
-                ->modalSubmitAction(false)
-                ->slideOver()
+                    ->modalHeading(fn (ConversationsMail $record) => $record['subject'] )
+                    ->modalContent(fn (ConversationsMail $record): View => view(
+                        'filament.pages.actions.messagesMail',
+                        ['record' => $record],
+                    ))
+                    ->stickyModalFooter()
+                    ->stickyModalHeader()
+                    ->modalSubmitAction(false)
+                    ->slideOver()
             ]);
     }
 

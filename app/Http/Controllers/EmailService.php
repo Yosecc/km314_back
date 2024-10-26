@@ -24,6 +24,8 @@ class EmailService extends Controller
 
         $messages = collect($messages);
 
+        $client->disconnect();
+
         $messages = $messages->map(function($message){
             $attribute = $message->getAttributes();            
             $from = isset($message->getFrom()[0]) ? $message->getFrom()[0]->mail : '';

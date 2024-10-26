@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Sushi\Sushi;
+use Illuminate\Support\Facades\Cache;
 use App\Http\Controllers\EmailService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,10 +31,7 @@ class ConversationsMail extends Model
 
     public function getRows()
     {
-        $service = new EmailService();
-        $messages = $service->getInboxEmails();
-
+        $messages = Cache::get('messagesMail');
         return $messages->toArray();
-        
     }
 }
