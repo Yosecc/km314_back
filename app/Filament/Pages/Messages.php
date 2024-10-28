@@ -67,27 +67,11 @@ class Messages extends Page implements HasForms, HasTable
                         'filament.pages.actions.chat',
                         ['record' => $record],
                     ))
-                    // ->registerModalActions([
-                    //     Action::make('send')
-                    //         ->action( function (Conversations $record){
-                    //             // Lógica para enviar el mensaje
-                    //             $record->sendMessage($this->newMessage);
-
-                    //             // Limpiar el campo de entrada
-                    //             $this->newMessage = null;
-
-                    //         }), 
-                    // ])
-                    // ->modalContentFooter(fn (Action $action): View => view(
-                    //     'filament.pages.actions.sendmessage',
-                    //     ['action' => $action],
-                    // ))
                     ->stickyModalFooter()
                     ->stickyModalHeader()
                     ->modalSubmitAction(false)
                     ->slideOver()
-            ])
-            ;
+            ]);
     }
 
 

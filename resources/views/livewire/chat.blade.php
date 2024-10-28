@@ -62,6 +62,12 @@
         .input-box {
             display: flex;
         }
+        .fi-modal-content > div{
+            height: 100%;
+        }
+        #messageInput{
+            padding-left: 10px;
+        }
     </style>
 
 

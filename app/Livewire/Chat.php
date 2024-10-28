@@ -54,6 +54,9 @@ class Chat extends Component
 
     public function sendMessage()
     {
+        if($this->newMessage == ''){
+            return;
+        }
         
         $socialMessages = new SocialMessages();
 

@@ -6,6 +6,7 @@ use Filament\Pages\Page;
 
 use App\Models\Activities;
 use Filament\Tables\Table;
+use App\Models\Conversations;
 use App\Models\ConversationsMail;
 use Filament\Tables\Actions\Action;
 use Illuminate\Contracts\View\View;
@@ -51,8 +52,20 @@ class Inbox extends Page implements HasForms, HasTable
     public function tableFacebook(): Table
     {
         return Table::make($this)
-            ->query(Activities::query()->orderBy('id', 'desc'))
-            ->columns($this->camposTableFacebook());
+            ->query(Conversations::query()->orderBy('last_message_created_time','desc'))
+            ->columns($this->camposTableFacebook())
+            ->actions([
+                Action::make('Mensajes')
+                    ->modalHeading(fn (Conversations $record) => $record['from_name'] )
+                    ->modalContent(fn (Conversations $record): View => view(
+                        'filament.pages.actions.chat',
+                        ['record' => $record],
+                    ))
+                    ->stickyModalFooter()
+                    ->stickyModalHeader()
+                    ->modalSubmitAction(false)
+                    ->slideOver()
+            ]);
     }
 
     // Columnas para tablaMail
@@ -79,6 +92,8 @@ class Inbox extends Page implements HasForms, HasTable
     {
         return [
             TextColumn::make('id'),
+            TextColumn::make('from_name'),
+            TextColumn::make('last_message_created_time')->dateTime()
         ];
     }
 
