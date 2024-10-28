@@ -22,25 +22,30 @@ class EmailService extends Controller
 
     private function perpareMessages( $messages)
     {
-        $messages = collect($messages);
+        try {
+            $messages = collect($messages);
 
-        $messages = $messages->map(function($message){
-            $attribute = $message->getAttributes();  
-           
-            $from = isset($message->getFrom()[0]) ? $message->getFrom()[0]->mail : '';
-            $subject = isset($message->getSubject()[0]) ? $message->getSubject()[0] : '';
-            $date = isset($message->getDate()[0]) ? $message->getDate()[0]->format('Y-m-d H:m:s') : '';
-            return [
-                'id' => $attribute['uid'],
-                'subject' => $subject,
-                'from' => $from,
-                'date' => $date,
-                'body' => $message->getHTMLBody() != "" ? $message->getHTMLBody() : $message->getTextBody(),
-                'leido' => $message->getFlags()->contains('Seen'),
-                'references' => isset($attribute['references']) ? $attribute['references'][0] : '',
-                'message_id' => isset($attribute['message_id']) ? $attribute['message_id'][0] : '',
-            ];
-        })->sortByDesc('date')->values();
+            $messages = $messages->map(function($message){
+                $attribute = $message->getAttributes();  
+            
+                $from = isset($message->getFrom()[0]) ? $message->getFrom()[0]->mail : '';
+                $subject = isset($message->getSubject()[0]) ? $message->getSubject()[0] : '';
+                $date = isset($message->getDate()[0]) ? $message->getDate()[0]->format('Y-m-d H:m:s') : '';
+                return [
+                    'id' => $attribute['uid'],
+                    'subject' => $subject,
+                    'from' => $from,
+                    'date' => $date,
+                    'body' => $message->getHTMLBody() != "" ? $message->getHTMLBody() : $message->getTextBody(),
+                    'leido' => $message->getFlags()->contains('Seen'),
+                    'references' => isset($attribute['references']) ? $attribute['references'][0] : '',
+                    'message_id' => isset($attribute['message_id']) ? $attribute['message_id'][0] : '',
+                ];
+            })->sortByDesc('date')->values();
+
+        } catch (\Throwable $th) {
+            \Log::inf($th->getMessage());
+        }
 
         return $messages;
     }
