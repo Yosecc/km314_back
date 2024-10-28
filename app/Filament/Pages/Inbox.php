@@ -35,7 +35,7 @@ class Inbox extends Page implements HasForms, HasTable
             ->columns($this->camposTableMail())
             ->actions([
                 Action::make('Mensajes')
-                    ->modalHeading(fn (ConversationsMail $record) => $record['subject'] )
+                    ->modalHeading(fn (ConversationsMail $record) => $record['subject'] . " (".$record['from'].")" )
                     ->modalContent(fn (ConversationsMail $record): View => view(
                         'filament.pages.actions.messagesMail',
                         ['record' => $record],

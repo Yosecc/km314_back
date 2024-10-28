@@ -14,7 +14,7 @@ class ConversationsMail extends Model
 
     public $timestamps = false;
 
-    protected $fillable = ['id','subject','from','date','body','leido'];
+    protected $fillable = ['id','subject','from','date','body','leido','references','message_id'];
 
     public $incrementing = false;
 
@@ -26,11 +26,18 @@ class ConversationsMail extends Model
         'from' => 'string',
         'date' => 'string',
         'body' => 'string',
-        'leido' => 'boolean'
+        'leido' => 'boolean',
+        'references' => 'string',
+        'message_id' => 'string'
     ];
 
     public function getRows()
     {
+
+//         $service = new EmailService();
+//         $messages = $service->getInboxEmails();
+// // dd($messages);
+
         $messages = Cache::get('messagesMail');
 
         if(!isset($messages)){

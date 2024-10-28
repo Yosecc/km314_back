@@ -4,30 +4,29 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Webklex\IMAP\Facades\Client;
+use Webklex\PHPIMAP\Message;
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 class EmailService extends Controller
 {
-    
-    public function getInboxEmails()
+    private $client;
+
+    public function __construct()
     {
         // Conectar al cliente
-        $client = Client::account('default');
-        $client->connect();
+        $this->client = Client::account('default');
+        $this->client->connect();
+    }
 
-        // $status = $client->isConnected();
-
-        // $folders = $client->getFolders($hierarchical = true);
-
-        // Obtener la bandeja de entrada
-        $folder = $client->getFolder('INBOX');
-        $messages = $folder->messages()->all()->get();
-
+    private function perpareMessages( $messages)
+    {
         $messages = collect($messages);
 
-        $client->disconnect();
-
         $messages = $messages->map(function($message){
-            $attribute = $message->getAttributes();            
+            $attribute = $message->getAttributes();  
+           
             $from = isset($message->getFrom()[0]) ? $message->getFrom()[0]->mail : '';
             $subject = isset($message->getSubject()[0]) ? $message->getSubject()[0] : '';
             $date = isset($message->getDate()[0]) ? $message->getDate()[0]->format('Y-m-d H:m:s') : '';
@@ -36,12 +35,115 @@ class EmailService extends Controller
                 'subject' => $subject,
                 'from' => $from,
                 'date' => $date,
-                'body' => $message->getHTMLBody(),
-                'leido' => $message->getFlags()->contains('Seen')
+                'body' => $message->getHTMLBody() != "" ? $message->getHTMLBody() : $message->getTextBody(),
+                'leido' => $message->getFlags()->contains('Seen'),
+                'references' => isset($attribute['references']) ? $attribute['references'][0] : '',
+                'message_id' => isset($attribute['message_id']) ? $attribute['message_id'][0] : '',
             ];
         })->sortByDesc('date')->values();
 
         return $messages;
     }
+
+    public function getInboxEmails()
+    {
+        // Obtener la bandeja de entrada
+        $folder = $this->client->getFolder('INBOX');
+
+        // Obtener todos los mensajes
+        $messages = $folder->messages()->all()->get();
+
+        $this->client->disconnect();
+
+        return $this->perpareMessages($messages);
+    }
+
+    public function getHilo($message_id)
+    {
+        // $client = Client::account('default');
+        // $client->connect();
+
+        $folder = $this->client->getFolder('INBOX');
+
+        // Recuperar un mensaje 
+        $message = $folder->query()->getMessageByUid($message_id);
+
+        // dd($message->getAttributes());
+        
+        
+        $messages = $message->thread($this->client->getFolderByPath('INBOX.Sent'));
+
+        // dd( $messages);
+        $this->client->disconnect();
+        // dd($this->perpareMessages($messages));
+
+        return $this->perpareMessages($messages);
+
+    }
+
+    public function newMessage($data)
+    {
+
+        $mail = new PHPMailer(true);
+    
+        try {
+            // Definir configuración básica
+            $mail->CharSet = 'UTF-8';
+            $mail->Encoding = 'base64';
+            $mail->setFrom(config('mail.mailers.smtp.username'), config('mail.mailers.smtp.host'));
+            $mail->addAddress($data['record']['from']);
+            $mail->isHTML(true);
+            $mail->Subject = $data['record']['subject'];
+            $mail->Body = $data['message'];
+    
+            // Generar el mensaje completo en formato MIME
+            $rawMessage = "From: ".config('mail.mailers.smtp.username')." <" . config('mail.mailers.smtp.username') . ">\r\n";
+            $rawMessage .= "To: " . $data['record']['from'] . "\r\n";
+            $rawMessage .= "Subject: " . $data['record']['subject'] . "\r\n";
+            $rawMessage .= "MIME-Version: 1.0\r\n";
+            $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n";
+
+            $rawMessage .= "Content-Transfer-Encoding: base64\r\n";
+
+            $messageIdToReply = isset($data['record']['message_id']) && $data['record']['message_id'] != '' ? $data['record']['message_id'] : null;
+
+            if ($messageIdToReply) {
+                $rawMessage .= "In-Reply-To: <$messageIdToReply>\r\n";
+                $rawMessage .= "References: <$messageIdToReply>\r\n";
+            }
+
+            $rawMessage .= "Message-ID: <" . uniqid() . "@" . config('mail.mailers.smtp.host') . ">\r\n";
+
+            $rawMessage .= "\r\n"; // Espacio entre encabezados y cuerpo
+            $rawMessage .= chunk_split(base64_encode($data['message']));
+    
+            // 3. Guardar en "Enviados" usando IMAP
+            $imapHost = '{'.config('imap.accounts.default.host').':'.config('imap.accounts.default.port').'/imap/'.config('imap.accounts.default.encryption').'}';
+            // dd($imapHost);
+            $imapUsername = config('imap.accounts.default.username');
+            $imapPassword = config('imap.accounts.default.password');
+            $sentFolder = 'INBOX.Sent';
+    
+            // Abrir conexión IMAP
+            $imapStream = imap_open($imapHost, $imapUsername, $imapPassword);
+    
+            if ($imapStream) {
+                $appendResult = imap_append($imapStream, $imapHost . $sentFolder, $rawMessage, "\\Seen");
+                imap_close($imapStream);
+                // Verificamos si se guardó correctamente
+                \Log::info($appendResult ? 'Mensaje guardado en Enviados con encabezados y contenido completos' : 'Error al guardar en Enviados');
+            } else {
+                \Log::info('No se pudo conectar a IMAP para guardar en Enviados');
+            }
+        } catch (Exception $e) {
+            \Log::info("Error al construir el mensaje o guardarlo en Enviados: {$e->getMessage()}");
+        }
+    }
+
+    // $status = $client->isConnected();
+
+    // $folders = $client->getFolders($hierarchical = true);
+
+    // dd($message->thread($client->getFolder('INBOX')));
 
 }
