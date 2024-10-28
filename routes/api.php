@@ -30,6 +30,9 @@ Route::post('/newsletter',[Main::class,'newsletter']);
 Route::get('/messenger',[Main::class,'messenger']);
 Route::get('/facebook_webhook', [\App\Http\Controllers\SocialController::class, 'facebook_webhook']);
 
+Route::get('/recover_messages_mail', [\App\Http\Controllers\EmailService::class, 'getInboxEmails']);
+
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
