@@ -54,7 +54,7 @@ class Messages extends Page implements HasForms, HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(Conversations::query())
+            ->query(Conversations::query()->orderBy('last_message_created_time','desc'))
             ->columns([
                 TextColumn::make('id'),
                 TextColumn::make('from_name'),
