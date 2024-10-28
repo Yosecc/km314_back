@@ -3,8 +3,10 @@
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\Main;
 use App\Http\Controllers\Api\Lotes;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Expensas;
+use App\Http\Controllers\EmailService;
 use App\Http\Controllers\Api\Servicios;
 use App\Http\Controllers\Api\FormControl;
 use App\Http\Controllers\Api\Solicitudes;
@@ -30,7 +32,19 @@ Route::post('/newsletter',[Main::class,'newsletter']);
 Route::get('/messenger',[Main::class,'messenger']);
 Route::get('/facebook_webhook', [\App\Http\Controllers\SocialController::class, 'facebook_webhook']);
 
-Route::get('/recover_messages_mail', [\App\Http\Controllers\EmailService::class, 'getInboxEmails']);
+Route::get('/recover_messages_mail', function () {
+    $service = new EmailService();
+    $messages = $service->getInboxEmails();
+
+    // Almacenar los mensajes en caché por 35 minutos
+    Cache::put('messagesMail', $messages, now()->addMinutes(35));
+    
+    // Loguear el mensaje de información
+    \Log::info('mensajes de email recuperados desde la ruta');
+
+    // Retornar una respuesta
+    return response()->json($messages); // O la estructura que necesites
+});
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
