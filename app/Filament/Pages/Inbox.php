@@ -68,6 +68,20 @@ class Inbox extends Page implements HasForms, HasTable
             ]);
     }
 
+    public function tableInstagram(): Table
+    {
+        return Table::make($this)
+            ->query(Activities::query())
+            ->columns($this->camposTableInstagram());
+    }
+
+    public function camposTableInstagram()
+    {
+        return [
+            TextColumn::make('id')
+        ];
+    }
+
     // Columnas para tablaMail
     public function camposTableMail()
     {
@@ -91,7 +105,7 @@ class Inbox extends Page implements HasForms, HasTable
     public function camposTableFacebook()
     {
         return [
-            TextColumn::make('id'),
+            // TextColumn::make('id'),
             TextColumn::make('from_name'),
             TextColumn::make('last_message_created_time')->dateTime()
         ];
@@ -100,6 +114,17 @@ class Inbox extends Page implements HasForms, HasTable
     // Obtener la tabla correcta según la pestaña activa
     public function getTable(): Table
     {
-        return $this->activeTab === 'tablaMail' ? $this->tableMail() : $this->tableFacebook();
+        switch ($this->activeTab) {
+            case 'tablaMail':
+                return $this->tableMail();
+                break;
+            case 'tablaFacebook':
+                return $this->tableFacebook();
+            case 'tablaInstagram':
+                return $this->tableInstagram();
+            default:
+                return $this->tableMail();
+                break;
+        }
     }
 }
