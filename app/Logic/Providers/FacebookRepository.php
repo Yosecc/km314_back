@@ -47,6 +47,7 @@ class FacebookRepository
             'pages_manage_metadata',
             'pages_read_user_content',
             'pages_manage_posts',
+            'pages_showlist'
         ];
 
         if (isset($_GET['state'])) {
