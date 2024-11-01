@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Mail\Contact;
 use App\Models\Slider;
+use App\Models\Landing;
 use App\Models\Newsletter;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -126,5 +127,10 @@ class Main extends Controller
         // $emessage = Http::get($URLmE); //UN MENSAJE
 
         // dd($emessage->collect());
+    }
+
+    public function landing($id)
+    {
+        return response()->json(Landing::with(['imagenes','campos'])->where('id',$id)->get());
     }
 }
