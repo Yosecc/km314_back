@@ -133,4 +133,11 @@ class Main extends Controller
     {
         return response()->json(Landing::with(['imagenes','campos'])->where('id',$id)->first());
     }
+
+    public function landingsend(Request $request)
+    {
+        \Log::info($request->all());
+
+        return response()->json(['status', true]);
+    }
 }
