@@ -147,7 +147,7 @@ class Main extends Controller
             LandingData::insert([
                 'data' => json_encode($request->all()),
                 'landing_id' => $request->landing_id
-            ])
+            ]);
 
         } catch (\Throwable $th) {
            return response()->json(['status'=> false, 'message'=> $th->getMessage() ], 422);
