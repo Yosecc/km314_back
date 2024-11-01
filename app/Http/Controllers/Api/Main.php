@@ -131,6 +131,6 @@ class Main extends Controller
 
     public function landing($id)
     {
-        return response()->json(Landing::with(['imagenes','campos'])->where('id',$id)->get());
+        return response()->json(Landing::with(['imagenes','campos'])->where('id',$id)->first());
     }
 }
