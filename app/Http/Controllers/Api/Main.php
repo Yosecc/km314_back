@@ -138,6 +138,19 @@ class Main extends Controller
     {
         \Log::info($request->all());
 
-        return response()->json(['status', true]);
+        try {
+            //code...
+        
+
+            LandingData::insert([
+                'data' => json_encode($request->all()),
+                'landing_id' => $request->landing_id
+            ])
+
+        } catch (\Throwable $th) {
+           return response()->json(['status'=> false, 'message'=> $th->getMessage() ], 422);
+        }
+
+        return response()->json(['status'=> true,'message'=>'Registro almacenado']);
     }
 }
