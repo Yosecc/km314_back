@@ -39,7 +39,7 @@ class LandingResource extends Resource
                     Repeater::make('imagenes')
                     ->relationship()
                         ->schema([
-                            TextInput::make('img')
+                            Forms\Components\TextInput::make('img')
                         ])
                         ->columns(2),
                     Repeater::make('campos')
