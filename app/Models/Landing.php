@@ -9,7 +9,7 @@ class Landing extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title','subtitle','btnactioname','btnactiomessage','status'];
+    protected $fillable = ['title','subtitle','btnactioname','btnactiomessage','status','content'];
 
     public function imagenes()
     {

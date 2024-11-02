@@ -142,8 +142,6 @@ class Main extends Controller
 
         try {
             //code...
-        
-
             LandingData::insert([
                 'data' => json_encode($request->all()),
                 'landing_id' => $request->landing_id

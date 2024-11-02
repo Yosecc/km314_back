@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
 
 class LandingResource extends Resource
 {
@@ -35,6 +36,7 @@ class LandingResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Toggle::make('status')
                     ->required(),
+                RichEditor::make('content'),
 
                     Repeater::make('imagenes')
                     ->relationship()
