@@ -32,7 +32,7 @@ class sendMailLanding extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Interesados'.$this->landing->title,
+            subject: 'Interesados '.$this->landing->title,
         );
     }
 
