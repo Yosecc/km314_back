@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Mail\Contact;
 use App\Models\Slider;
 use App\Models\Landing;
-use App\Models\LandingData;
-
 use App\Models\Newsletter;
+
+use App\Models\LandingData;
 use Illuminate\Http\Request;
+use App\Mail\sendMailLanding;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -61,6 +62,8 @@ class Main extends Controller
 
         return response()->json(['status' => true, 'message' => 'Mensaje enviado' ]);
     }
+
+   
 
     public function newsletter(Request $request)
     {
@@ -140,6 +143,7 @@ class Main extends Controller
     {
         \Log::info($request->all());
 
+       
         try {
             //code...
             LandingData::insert([
@@ -147,10 +151,27 @@ class Main extends Controller
                 'landing_id' => $request->landing_id
             ]);
 
+            $this->sendMailLanding([
+                'data' => $request->all(),
+                'landing' => Landing::with(['imagenes','campos'])->where('id',$request->landing_id)->first()
+            ]);
+
         } catch (\Throwable $th) {
            return response()->json(['status'=> false, 'message'=> $th->getMessage() ], 422);
         }
 
         return response()->json(['status'=> true,'message'=>'Registro almacenado']);
+    }
+
+    private function sendMailLanding($data)
+    {
+
+        try {
+            Mail::to(config('app.mail_landing'))->send(new sendMailLanding($data));
+        } catch (\Throwable $th) {
+            return response()->json( [ 'status' => false, 'message' => $th->getMessage() ], 422);
+        }
+
+        return response()->json(['status' => true, 'message' => 'Mensaje enviado' ]);
     }
 }
