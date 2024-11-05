@@ -45,17 +45,20 @@
         <p>Has recibido un nuevo mensaje a través de un formulario</p>
 
         <div class="info">
-             {{ dd($data) }}
-            {{-- @foreach ($data as ($item))
-               
-            @endforeach --}}
+             
+            @foreach ($data['data'] as $key => $item)
+            @if ($key != 'landing_id')
+                
+            <strong>{{  $key }}:</strong> {{ $item}}<br>
+            @endif
+            @endforeach
             {{-- <strong>Nombre:</strong> {{ $data['name'] }}<br>
             <strong>Email:</strong> {{ $data['email'] }}<br>
             <strong>Teléfono:</strong> {{ $data['phone'] }}<br> --}}
         </div>
 
-        <p><strong>Mensaje:</strong></p>
-        <p>{{ $data['body'] }}</p>
+        {{-- <p><strong>Mensaje:</strong></p>
+        <p>{{ $data['body'] }}</p> --}}
 
         <div class="footer">
             <p>Este es un correo generado automáticamente. Por favor, no respondas a este mensaje.</p>
