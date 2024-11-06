@@ -46,7 +46,7 @@
 
         <div class="info">
              
-            @foreach ($data['data'] as $key => $item)
+            @foreach ($data as $key => $item)
             @if ($key != 'landing_id')
                 
             <strong>{{  $key }}:</strong> {{ $item}}<br>
