@@ -134,9 +134,9 @@ class Main extends Controller
         // dd($emessage->collect());
     }
 
-    public function landing($id)
+    public function landing($slug)
     {
-        return response()->json(Landing::with(['imagenes','campos'])->where('id',$id)->first());
+        return response()->json(Landing::with(['imagenes','campos'])->where('slug',$slug)->first());
     }
 
     public function landingsend(Request $request)

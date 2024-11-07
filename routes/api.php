@@ -30,7 +30,7 @@ Route::post('/sanctum/login',[Authentication::class,'login']);
 Route::post('/contact',[Main::class,'contact']);
 Route::post('/newsletter',[Main::class,'newsletter']);
 Route::get('/messenger',[Main::class,'messenger']);
-Route::get('/{id}/landing',[Main::class,'landing']);
+Route::get('/landing/{slug}',[Main::class,'landing']);
 Route::post('/landingsend',[Main::class,'landingsend']);
 
 Route::get('/facebook_webhook', [\App\Http\Controllers\SocialController::class, 'facebook_webhook']);
