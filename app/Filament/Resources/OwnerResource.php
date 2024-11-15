@@ -93,16 +93,16 @@ class OwnerResource extends Resource
                         ->label(__("general.Country"))
                         ->maxLength(255),
 
-                    Forms\Components\DatePicker::make('birthdate')
-                        ->label(__("general.Birthdate")),
+                    // Forms\Components\DatePicker::make('birthdate')
+                    //     ->label(__("general.Birthdate")),
 
-                    Forms\Components\TextInput::make('gender')
-                        ->label(__("general.Gender"))
-                        ->maxLength(255),
+                    // Forms\Components\TextInput::make('gender')
+                    //     ->label(__("general.Gender"))
+                    //     ->maxLength(255),
 
-                    Forms\Components\TextInput::make('profile_picture')
-                        ->label(__("general.ProfilePicture"))
-                        ->maxLength(255),
+                    // Forms\Components\TextInput::make('profile_picture')
+                    //     ->label(__("general.ProfilePicture"))
+                    //     ->maxLength(255),
 
                     Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
 
