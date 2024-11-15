@@ -60,9 +60,7 @@ class OwnerResource extends Resource
                         ->maxLength(255),
 
                     Forms\Components\TextInput::make('phone')
-                        ->label(__("general.Phone"))
-                        ->tel()
-                        ->numeric(),
+                        ->label(__("general.Phone")),
 
                     Forms\Components\TextInput::make('address')
                         ->label(__("general.Address"))
