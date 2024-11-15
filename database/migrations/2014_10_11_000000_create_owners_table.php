@@ -14,11 +14,15 @@ return new class extends Migration
         Schema::create('owners', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('dni')->nullable();
+            $table->bigInteger('cuit')->nullable();
             $table->string('first_name'); // Campo para el nombre
             $table->string('last_name'); // Campo para el apellido
             $table->string('email')->unique(); // Campo para el correo electrónico
             $table->bigInteger('phone')->nullable(); // Campo para el número de teléfono
             $table->string('address')->nullable(); // Campo para la dirección
+            $table->string('number')->nullable(); // Campo para la dirección
+            $table->string('piso')->nullable(); // Campo para la dirección
+            $table->string('dto')->nullable(); // Campo para la dirección
             $table->string('city')->nullable(); // Campo para la ciudad
             $table->string('state')->nullable(); // Campo para el estado
             $table->string('zip_code')->nullable(); // Campo para el código postal

@@ -38,6 +38,10 @@ class OwnerResource extends Resource
                         ->unique(ignoreRecord: true)
                         ->numeric(),
 
+                    Forms\Components\TextInput::make('cuit')
+                        ->label(__("general.CUIT"))
+                        ->numeric(),
+
                     Forms\Components\TextInput::make('first_name')
                         ->label(__("general.FirstName"))
                         ->required()
@@ -63,6 +67,17 @@ class OwnerResource extends Resource
                     Forms\Components\TextInput::make('address')
                         ->label(__("general.Address"))
                         ->maxLength(255),
+
+                    Forms\Components\TextInput::make('number')
+                        ->label(__("general.number"))
+                        ->numeric(),
+                    
+                    Forms\Components\TextInput::make('piso')
+                        ->label(__("general.piso"))
+                        ->numeric(),
+
+                    Forms\Components\TextInput::make('dto')
+                        ->label(__("general.dto")),
 
                     Forms\Components\TextInput::make('city')
                         ->label(__("general.City"))

@@ -29,17 +29,14 @@ class LoteResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('width')
                     ->label(__("general.Width"))
-                    ->required()
                     ->maxLength(255),
 
                 Forms\Components\TextInput::make('height')
                     ->label(__("general.Long"))
-                    ->required()
                     ->maxLength(255),
 
                 Forms\Components\TextInput::make('m2')
                     ->label(__("general.M2"))
-                    ->required()
                     ->maxLength(255),
 
                 Forms\Components\Select::make('sector_id')
@@ -54,12 +51,10 @@ class LoteResource extends Resource
 
                 Forms\Components\Select::make('lote_type_id')
                     ->label(__("general.LoteType"))
-                    ->required()
                     ->relationship(name: 'loteType', titleAttribute: 'name'),
 
                 Forms\Components\Select::make('lote_status_id')
                     ->label(__("general.LoteStatus"))
-                    ->required()
                     ->relationship(name: 'loteStatus', titleAttribute: 'name'),
 
                 Forms\Components\Select::make('owner_id')
