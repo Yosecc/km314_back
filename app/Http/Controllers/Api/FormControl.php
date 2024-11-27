@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Auto;
-use App\Models\Lote;
-use App\Models\User;
-use Illuminate\Http\Request;
-use App\Models\FormControlPeople;
 use App\Http\Controllers\Controller;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Auto;
 use App\Models\FormControl as FormControlDB;
+use App\Models\FormControlPeople;
+use App\Models\Lote;
+use App\Models\OwnerFamily;
+use App\Models\User;
+use Filament\Notifications\Notification;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class FormControl extends Controller
 {
@@ -19,7 +20,9 @@ class FormControl extends Controller
         $formControl = FormControlDB::where('owner_id', $request->user()->owner->id)->with(['peoples','autos'])->orderBy('created_at','desc')->get();
 
         $misLotes = Lote::where('owner_id', $request->user()->owner->id)->with(['sector','loteStatus','loteType'])->get();
-        
+
+        $families = OwnerFamily::where('owner_id', $request->user()->owner->id)->get();
+
         return response()->json([
             'misForms' => $formControl->map(function($form){
                 $form->status = $form->statusComputed();
@@ -29,7 +32,8 @@ class FormControl extends Controller
                 $form->status = $form->statusComputed();
                 return $form;
             })->where('status','!=','Pending')->values(),
-            'misLotes' => $misLotes
+            'misLotes' => $misLotes,
+            'families' => $families;
         ]);
     }
 
@@ -76,7 +80,7 @@ class FormControl extends Controller
             'peoples.*.last_name' => 'apellido de la persona',
             'peoples.*.phone' => 'teléfono de la persona',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
@@ -111,8 +115,8 @@ class FormControl extends Controller
             // Insertar el formulario principal
             $idForm = FormControlDB::insertGetId($data);
         }
-    
-    
+
+
         // Insertar los datos de las personas
         $peoplesData = collect($request->peoples)->map(function($people) use ($idForm){
 
@@ -152,7 +156,7 @@ class FormControl extends Controller
         });
 
         // FormControlPeople::insert($peoplesData->toArray());
-        
+
         // Insertar los datos de los autos
         $autosData = collect($request->autos)->map(function($auto) use ($idForm, $request){
             $data = [
@@ -176,15 +180,15 @@ class FormControl extends Controller
 
             return $auto;
         });
-        
+
         // Auto::insert($autosData->toArray());
-    
+
         $formControl = FormControlDB::where('id', $idForm)->with(['peoples','autos'])->first();
 
         if(!$request->id){
 
             $recipient = User::find(1);
-            
+
             Notification::make()
                 ->title('Nuevo formulario #FORM_'.$idForm)
                 ->sendToDatabase($recipient);

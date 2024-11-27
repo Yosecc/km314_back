@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\OwnerResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\OwnerResource\RelationManagers;
+use Filament\Forms\Components\Toggle;
+
 
 class OwnerResource extends Resource
 {
@@ -23,7 +25,7 @@ class OwnerResource extends Resource
     protected static ?string $navigationLabel = 'Propietario';
     protected static ?string $label = 'propietario';
 
-    
+
 
     public static function form(Form $form): Form
     {
@@ -69,7 +71,7 @@ class OwnerResource extends Resource
                     Forms\Components\TextInput::make('number')
                         ->label(__("general.number"))
                         ->numeric(),
-                    
+
                     Forms\Components\TextInput::make('piso')
                         ->label(__("general.piso"))
                         ->numeric(),
@@ -108,26 +110,62 @@ class OwnerResource extends Resource
 
                 ]),
 
-                Forms\Components\Repeater::make('autos')
+            Forms\Components\Repeater::make('autos')
                 ->relationship()
-                    ->schema([
-                        Forms\Components\TextInput::make('marca')
-                            ->label(__("general.Marca"))
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('modelo')
-                            ->label(__("general.Modelo"))
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('patente')
-                            ->label(__("general.Patente"))
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('color')
-                            ->label(__("general.Color"))
-                            ->maxLength(255),
-                        Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-                        Forms\Components\Hidden::make('model')->default('Owner'),
-                    ])
-                    ->defaultItems(0)
-                    ->columns(2)  
+                ->schema([
+                    Forms\Components\TextInput::make('marca')
+                        ->label(__("general.Marca"))
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('modelo')
+                        ->label(__("general.Modelo"))
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('patente')
+                        ->label(__("general.Patente"))
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('color')
+                        ->label(__("general.Color"))
+                        ->maxLength(255),
+                    Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+                    Forms\Components\Hidden::make('model')->default('Owner'),
+                ])
+                ->defaultItems(0)
+                ->columns(2),
+
+            Forms\Components\Repeater::make('families')
+                ->label("Familiares")
+                ->relationship()
+                ->schema([
+                    Forms\Components\TextInput::make('dni')
+                        ->label(__("general.DNI"))
+                        ->required()
+                        ->unique(ignoreRecord: true)
+                        ->numeric(),
+
+                    Forms\Components\TextInput::make('first_name')
+                        ->label(__("general.FirstName"))
+                        ->required()
+                        ->maxLength(255),
+
+                    Forms\Components\TextInput::make('last_name')
+                        ->label(__("general.LastName"))
+                        ->required()
+                        ->maxLength(255),
+
+                    Forms\Components\TextInput::make('parentage')
+                        ->label(__("general.Parentesco"))
+                        ->required()
+                        ->maxLength(255),
+
+                    Forms\Components\TextInput::make('phone')
+                        ->label(__("general.Phone")),
+
+                    Toggle::make('is_menor')->label('Menor de edad'),
+
+                ])
+                ->defaultItems(0)
+                ->columns(2),
+
+
             ])->columns(1);
     }
 
@@ -151,7 +189,7 @@ class OwnerResource extends Resource
                     ->label(__("general.Phone"))
                     ->numeric()
                     ->sortable(),
-               
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -21,7 +21,7 @@ class FormControl extends Model
 
     public function aprobar()
     {
-        if($this->status != 'Authorized'){   
+        if($this->status != 'Authorized'){
             $this->status = 'Authorized';
             $this->authorized_user_id = Auth::user()->id;
             $this->save();
@@ -31,7 +31,7 @@ class FormControl extends Model
 
     public function rechazar()
     {
-        if($this->status != 'Denied'){   
+        if($this->status != 'Denied'){
             $this->status = 'Denied';
             $this->denied_user_id = Auth::user()->id;
             $this->save();
@@ -41,20 +41,20 @@ class FormControl extends Model
     public function statusComputed():string
     {
         $status = $this->status;
-        
+
         $today = Carbon::now('America/Argentina/Buenos_Aires');
 
-        
+
         $fechaStart = Carbon::parse($this->start_date_range);
         // Extraer la hora del campo start_time_range
         $horaStart = Carbon::parse($this->start_time_range)->format('H');
         $minutoStart = Carbon::parse($this->start_time_range)->format('i');
-        
+
         // Asignar la hora y minuto a la fecha
         $fechaStart->setTime($horaStart, $minutoStart);
 
         if(!$this->date_unilimited){
-           
+
             if ($fechaStart->lessThan($today)){ #Si ya paso la fecha
                 if($status == 'Pending'){
                     $status = 'Vencido';
@@ -113,7 +113,7 @@ class FormControl extends Model
     {
 
         Carbon::setLocale('es');
-        
+
         $fechaStart = Carbon::parse($this->start_date_range);
         $horaStart = Carbon::parse($this->start_time_range)->format('H');
         $minutoStart = Carbon::parse($this->start_time_range)->format('i');
@@ -171,19 +171,19 @@ class FormControl extends Model
         $start_date_range = $this->start_date_range;
         $end_date_range = $this->end_date_range;
         // Concatenar las horas a las fechas si están presentes
-        
+
         $start_date_range .= ' ' . ($this->start_time_range ?  $this->start_time_range : '00:00');
         $end_date_range .= ' ' . ($this->end_time_range ? $this->end_time_range : '00:00');
-        
+
 
         // dd( $start_date_range);
         // Convertir las fechas de cadena a objetos Carbon
         $start = Carbon::createFromFormat('Y-m-d H:i',  $start_date_range);
         $end = Carbon::createFromFormat('Y-m-d H:i', $end_date_range);
-        
+
         // Obtener la fecha actual
         $currentDate = Carbon::now();
-        
+
         // Verificar si la fecha actual está dentro del rango
         return $currentDate->between($start, $end);
     }
@@ -193,7 +193,7 @@ class FormControl extends Model
         $start_date_range = $this->start_date_range;
         $end_date_range = $this->end_date_range;
         // Concatenar las horas a las fechas si están presentes
-        
+
         $start_date_range .= ' ' . ($this->start_time_range ?  $this->start_time_range : '00:00');
         $end_date_range .= ' ' . ($this->end_time_range ? $this->end_time_range : '00:00');
         return Carbon::createFromFormat('Y-m-d H:i', $start_date_range)->isoFormat('LLL') . ' / ' . Carbon::createFromFormat('Y-m-d H:i', $end_date_range)->isoFormat('LLL');

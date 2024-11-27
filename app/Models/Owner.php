@@ -26,4 +26,9 @@ class Owner extends Model
     {
         return $this->hasMany(Lote::class);
     }
+
+    public function families()
+    {
+        return $this->hasMany(OwnerFamily::class);
+    }
 }

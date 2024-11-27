@@ -43,15 +43,15 @@ class FormControlResource extends Resource
     {
         return 'formularios';
     }
-    
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                
+
                         Forms\Components\Fieldset::make('')
                             ->schema([
-                                
+
 
                         Forms\Components\CheckboxList::make('access_type')->label(__("general.TypeActivitie"))
                             ->options(['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club hause', 'lote' => 'Lote', ])
@@ -59,7 +59,7 @@ class FormControlResource extends Resource
                             ->columns(2)
                             ->required()
                             ->gridDirection('row'),
-                            
+
                         Forms\Components\Select::make('lote_ids')
                             ->label(__("general.Lotes"))
                             ->multiple()
@@ -168,7 +168,7 @@ class FormControlResource extends Resource
                     ->defaultItems(0)
                     ->columnSpanFull()
                     ,
-                
+
 
                 Forms\Components\Textarea::make('observations')
                     ->columnSpanFull()
@@ -192,9 +192,9 @@ class FormControlResource extends Resource
                     // ->readOnly()
                     // ->options(User::all()->pluck('name', 'id'))
                     ,
-                
+
                 Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-                
+
                 Forms\Components\Select::make('owner_id')
                     // ->required()
                     ->relationship(name: 'owner')
@@ -234,7 +234,7 @@ class FormControlResource extends Resource
                         return $claves[$state];
                     }),
                     // ->color(fn (string $state): string => match ($state) ),
-                    
+
                 Tables\Columns\TextColumn::make('access_type')
                     ->badge()
                     ->label(__("general.TypeActivitie"))
@@ -253,13 +253,13 @@ class FormControlResource extends Resource
                     }),
                 // Tables\Columns\TextColumn::make('lote_ids')->label(__('general.Lote')),
                 Tables\Columns\TextColumn::make('peoples_count')->counts('peoples')->label(__('general.Peoples')),
-                // Tables\Columns\TextColumn::make('peopleResponsible.phone')            
+                // Tables\Columns\TextColumn::make('peopleResponsible.phone')
                 //     ->copyable()
                 //     ->label(__('general.peopleResponsiblePhone'))
                 //     ->copyMessage('Phone copied')
                 //     ->copyMessageDuration(1500),
                 // Tables\Columns\TextColumn::make('autos_count')->counts('autos')->label('Autos'),
-                // 
+                //
                 Tables\Columns\TextColumn::make('start_date_range')
                     ->formatStateUsing(function (FormControl $record){
                         // return '↗ '.$record->getFechasFormat()['start'].' - <br> ↘ '.$record->getFechasFormat()['end'];
@@ -282,7 +282,7 @@ class FormControlResource extends Resource
                     ->sortable()
                     ->label(__('general.authorized_user_id'))
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 Tables\Columns\TextColumn::make('deniedUser.name')
                     ->numeric()
                     ->sortable()
@@ -350,7 +350,7 @@ class FormControlResource extends Resource
                                 fn (Builder $query, $date): Builder => $query->whereDate('end_date_range', '<=', $date),
                             );
                     }),
-                
+
                 Filter::make('created_at')
                     ->label(__('general.created_at'))
                     ->form([
@@ -380,14 +380,14 @@ class FormControlResource extends Resource
                         'Denied' => 'Denied',
                         'Pending' => 'Pending',
                     ]),
-                        
+
             ])
             ->filtersFormColumns(3)
             ->actions([
                 Action::make('aprobar')
                     ->action(function(FormControl $record){
                         $record->aprobar();
-                        Notification::make() 
+                        Notification::make()
                             ->title('Formulario aprobado')
                             ->success()
                             ->send();
@@ -403,7 +403,7 @@ class FormControlResource extends Resource
                 Action::make('rechazar')
                     ->action(function(FormControl $record){
                         $record->rechazar();
-                        Notification::make() 
+                        Notification::make()
                             ->title('Formulario rechzado')
                             ->success()
                             ->send();
@@ -429,7 +429,7 @@ class FormControlResource extends Resource
                     ->requiresConfirmation()
                     ->action(function (Collection $records){
                         $records->each->aprobar();
-                        Notification::make() 
+                        Notification::make()
                             ->title('Formularios aprobados')
                             ->success()
                             ->send();
@@ -441,7 +441,7 @@ class FormControlResource extends Resource
                     ->requiresConfirmation()
                     ->action(function (Collection $records){
                         $records->each->rechazar();
-                        Notification::make() 
+                        Notification::make()
                             ->title('Formularios aprobados')
                             ->success()
                             ->send();

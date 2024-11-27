@@ -54,7 +54,7 @@ class UserResource extends Resource
                     ->preload()
                     ->searchable(),
                 Forms\Components\Select::make('owner_id')
-                    ->required()
+                    // ->required()
                     ->relationship(name: 'owner')
                     ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
                     ->label(__("general.Owner")),
