@@ -33,7 +33,7 @@ class FormControl extends Controller
                 return $form;
             })->where('status','!=','Pending')->values(),
             'misLotes' => $misLotes,
-            'families' => $families;
+            'families' => $families
         ]);
     }
 
