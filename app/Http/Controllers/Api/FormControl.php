@@ -23,6 +23,8 @@ class FormControl extends Controller
 
         $families = OwnerFamily::where('owner_id', $request->user()->owner->id)->get();
 
+        $autos = Auto::where('model','Owner')->where('model_id',$request->user()->owner->id)->get();
+
         return response()->json([
             'misForms' => $formControl->map(function($form){
                 $form->status = $form->statusComputed();
@@ -33,7 +35,8 @@ class FormControl extends Controller
                 return $form;
             })->where('status','!=','Pending')->values(),
             'misLotes' => $misLotes,
-            'families' => $families
+            'families' => $families,
+            'autos' => $autos
         ]);
     }
 
@@ -51,19 +54,20 @@ class FormControl extends Controller
             'end_time_range' => 'nullable|date_format:H:i:s',
             'date_unilimited' => 'nullable',
             'observations' => 'nullable|string',
-            'peoples' => 'array',
-            'peoples.*.dni' => 'required',
-            'peoples.*.first_name' => 'required',
-            'peoples.*.last_name' => 'required',
-            'peoples.*.phone' => 'required',
-            'peoples.*.is_responsable' => 'required',
-            'peoples.*.is_acompanante' => 'required',
-            'peoples.*.is_menor' => 'required',
-            'autos' => 'array',
-            'autos.*.marca' => 'required',
-            'autos.*.modelo' => 'required',
-            'autos.*.patente' => 'required',
-            'autos.*.color' => 'required',
+            'families' => 'nullable|array',
+            'peoples' => 'nullable|array|required_without:families',
+            'peoples.*.dni' => 'required_without:families',
+            'peoples.*.first_name' => 'required_without:families',
+            'peoples.*.last_name' => 'required_without:families',
+            'peoples.*.phone' => 'required_without:families',
+            'peoples.*.is_responsable' => 'required_without:families',
+            'peoples.*.is_acompanante' => 'required_without:families',
+            'peoples.*.is_menor' => 'required_without:families',
+            'autos' => 'nullable|array',
+            // 'autos.*.marca' => 'required',
+            // 'autos.*.modelo' => 'required',
+            // 'autos.*.patente' => 'required',
+            // 'autos.*.color' => 'required',
         ], [], [
             // Atributos personalizados
             'lote_ids' => 'ID de lote',
@@ -116,70 +120,87 @@ class FormControl extends Controller
             $idForm = FormControlDB::insertGetId($data);
         }
 
+        if($request->families && isset($request->families) && count($request->families)){
 
-        // Insertar los datos de las personas
-        $peoplesData = collect($request->peoples)->map(function($people) use ($idForm){
+            $peoplesData = collect($request->families)->map(function($people) use ($idForm){
 
-            $data = [
-                'form_control_id' => $idForm,
-                'dni'             => $people['dni'],
-                'first_name'      => $people['first_name'],
-                'last_name'       => $people['last_name'],
-                'phone'           => $people['phone'],
-                'is_responsable'  => filter_var($people['is_responsable'], FILTER_VALIDATE_BOOLEAN),
-                'is_acompanante'  => filter_var($people['is_acompanante'], FILTER_VALIDATE_BOOLEAN),
-                'is_menor'        => filter_var($people['is_menor'], FILTER_VALIDATE_BOOLEAN),
-                // 'created_at'      => now(),
-                'updated_at'      => now(),
-            ];
+                $data = [
+                    'form_control_id' => $idForm,
+                    'dni'             => $people['dni'],
+                    'first_name'      => $people['first_name'],
+                    'last_name'       => $people['last_name'],
+                    'phone'           => $people['phone'],
+                    'is_responsable'  => false,
+                    'is_acompanante'  => false,
+                    'is_menor'        => filter_var($people['is_menor'], FILTER_VALIDATE_BOOLEAN),
+                    // 'created_at'      => now(),
+                    'updated_at'      => now(),
+                ];
 
-            if(!isset($people['id'])){
-                // $data['updated_at'] = now();
-                $data['created_at'] = now();
-            }
+                if(!isset($people['id'])){
+                    $data['created_at'] = now();
+                }
 
-            FormControlPeople::updateOrInsert( [ 'id' => isset($people['id']) ? $people['id'] : null ] , $data );
+                FormControlPeople::updateOrInsert( [ 'id' => isset($people['id']) ? $people['id'] : null ] , $data );
 
-            return $people;
-            // return [
-            //     'form_control_id' => $idForm,
-            //     'dni'             => $people['dni'],
-            //     'first_name'      => $people['first_name'],
-            //     'last_name'       => $people['last_name'],
-            //     'phone'           => $people['phone'],
-            //     'is_responsable'  => filter_var($people['is_responsable'], FILTER_VALIDATE_BOOLEAN),
-            //     'is_acompanante'  => filter_var($people['is_acompanante'], FILTER_VALIDATE_BOOLEAN),
-            //     'is_menor'        => filter_var($people['is_menor'], FILTER_VALIDATE_BOOLEAN),
-            //     'created_at'      => now(),
-            //     'updated_at'      => now(),
-            // ];
-        });
+                return $people;
+            });
+        }
+
+        if($request->peoples && isset($request->peoples) && count($request->peoples)){
+            // Insertar los datos de las personas
+            $peoplesData = collect($request->peoples)->map(function($people) use ($idForm){
+
+                $data = [
+                    'form_control_id' => $idForm,
+                    'dni'             => $people['dni'],
+                    'first_name'      => $people['first_name'],
+                    'last_name'       => $people['last_name'],
+                    'phone'           => $people['phone'],
+                    'is_responsable'  => filter_var($people['is_responsable'], FILTER_VALIDATE_BOOLEAN),
+                    'is_acompanante'  => filter_var($people['is_acompanante'], FILTER_VALIDATE_BOOLEAN),
+                    'is_menor'        => filter_var($people['is_menor'], FILTER_VALIDATE_BOOLEAN),
+                    // 'created_at'      => now(),
+                    'updated_at'      => now(),
+                ];
+
+                if(!isset($people['id'])){
+                    $data['created_at'] = now();
+                }
+
+                FormControlPeople::updateOrInsert( [ 'id' => isset($people['id']) ? $people['id'] : null ] , $data );
+
+                return $people;
+            });
+        }
 
         // FormControlPeople::insert($peoplesData->toArray());
 
-        // Insertar los datos de los autos
-        $autosData = collect($request->autos)->map(function($auto) use ($idForm, $request){
-            $data = [
-                'marca'      => $auto['marca'],
-                'patente'    => $auto['patente'],
-                'modelo'     => $auto['modelo'],
-                'color'      => $auto['color'],
-                'user_id'    => $request->user()->id,
-                'model'      => 'FormControl',
-                'model_id'   => $idForm,
-                'created_at' => now(),
-                // 'updated_at' => now(),
-            ];
+        if($request->autos && isset($request->autos) && count($request->autos)){
+            // Insertar los datos de los autos
+            $autosData = collect($request->autos)->map(function($auto) use ($idForm, $request){
+                $data = [
+                    'marca'      => $auto['marca'],
+                    'patente'    => $auto['patente'],
+                    'modelo'     => $auto['modelo'],
+                    'color'      => $auto['color'],
+                    'user_id'    => $request->user()->id,
+                    'model'      => 'FormControl',
+                    'model_id'   => $idForm,
+                    'created_at' => now(),
+                    // 'updated_at' => now(),
+                ];
 
-            if(!isset($auto['id'])){
-                // $data['updated_at'] = now();
-                $data['created_at'] = now();
-            }
+                if(!isset($auto['id'])){
+                    // $data['updated_at'] = now();
+                    $data['created_at'] = now();
+                }
 
-            Auto::updateOrInsert( [ 'id' => isset($auto['id']) ? $auto['id'] : null ] , $data );
+                Auto::updateOrInsert( [ 'id' => isset($auto['id']) ? $auto['id'] : null ] , $data );
 
-            return $auto;
-        });
+                return $auto;
+            });
+        }
 
         // Auto::insert($autosData->toArray());
 
