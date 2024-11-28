@@ -179,6 +179,11 @@ class FormControl extends Controller
         if($request->autos && isset($request->autos) && count($request->autos)){
             // Insertar los datos de los autos
             $autosData = collect($request->autos)->map(function($auto) use ($idForm, $request){
+
+                if(isset($auto['model']) && $auto['model'] == 'Owner'){
+                    unset($auto['id']);
+                }
+
                 $data = [
                     'marca'      => $auto['marca'],
                     'patente'    => $auto['patente'],
