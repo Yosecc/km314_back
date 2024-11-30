@@ -56,6 +56,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::middleware('auth:sanctum')->get('/sliders', [Main::class,'sliders']);
 Route::middleware('auth:sanctum')->get('/spontaneous_visit', [Main::class,'spontaneous_visit']);
+Route::middleware('auth:sanctum')->post('/spontaneous_visit_action', [Main::class,'spontaneous_visit_action']);
 
 // middleware(['token_validate'])->
 Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
