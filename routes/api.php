@@ -25,7 +25,7 @@ use App\Http\Controllers\Api\Authentication;
 */
 
 
- 
+
 Route::post('/sanctum/login',[Authentication::class,'login']);
 Route::post('/contact',[Main::class,'contact']);
 Route::post('/newsletter',[Main::class,'newsletter']);
@@ -41,7 +41,7 @@ Route::get('/recover_messages_mail', function () {
 
     // Almacenar los mensajes en caché por 35 minutos
     Cache::put('messagesMail', $messages, now()->addMinutes(35));
-    
+
     // Loguear el mensaje de información
     \Log::info('mensajes de email recuperados desde la ruta');
 
@@ -55,6 +55,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->get('/sliders', [Main::class,'sliders']);
+Route::middleware('auth:sanctum')->get('/spontaneous_visit', [Main::class,'spontaneous_visit']);
 
 // middleware(['token_validate'])->
 Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
@@ -68,7 +69,7 @@ Route::middleware('auth:sanctum')->prefix('solicitudes')->group(function () {
     Route::post('file/delete',[Solicitudes::class,'deleteFile']);
     Route::get('index',[Solicitudes::class,'index']);
     Route::get('prox_solicitudes',[Solicitudes::class,'getProximasSolicitudes']);
-    
+
 });
 
 Route::middleware('auth:sanctum')->prefix('expensas')->group(function () {

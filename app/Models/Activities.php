@@ -25,6 +25,7 @@ class Activities extends Model
         return $this->hasMany(ActivitiesAuto::class);
     }
 
+
     public function formControl()
     {
         return $this->belongsTo(FormControl::class);

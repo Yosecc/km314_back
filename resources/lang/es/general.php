@@ -52,7 +52,7 @@ return [
     'RecorderExit' => 'Registrar Salida',
     'Search' => 'Buscar',
     'Select people one or more options' => 'Seleccionar una o más opciones',
-    'Type' => 'Tipo',                                                               
+    'Type' => 'Tipo',
     'TipoEntrada' => 'Tipo de entrada',
     'Select the responsible person' => 'Seleccione la persona responsable',
     'Observations' => 'Observaciones',
@@ -86,5 +86,6 @@ return [
     'Authorized' => 'Autorizado',
     'Denied' => 'Rechazada',
     'Vencido' => 'Vencido',
-    'Expirado' => 'Expirado'
+    'Expirado' => 'Expirado',
+    'Familiares' => 'Familiares'
 ];

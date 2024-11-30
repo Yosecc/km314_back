@@ -10,4 +10,9 @@ class OwnerFamily extends Model
     use HasFactory;
 
     protected $fillable = ['owner_id','dni','first_name','last_name','parentage','is_menor','phone'];
+
+    public function familiarPrincipal()
+    {
+        return $this->belongsTo(Owner::class,'owner_id');
+    }
 }

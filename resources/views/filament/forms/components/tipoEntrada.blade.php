@@ -6,7 +6,7 @@
     @if (!$isDisabled())
         <div  class="grid grid-rows-4 grid-flow-col gap-4" x-data="{state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$getStatePath()}')") }} }">
             @foreach($opciones as $key => $value)
-                <div 
+                <div
                     x-data="{ id: {{ $key }} }"
                     @click="state = {{ $key }}"
                     class="fi-wi-stats-overview-stat relative rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 cursor-pointer"
@@ -26,17 +26,19 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                         </svg>
                     @endif
-                    
                     <span>{{ $value }} </span>
+                    @if($key == 1)
+                    <span style="font-size: 14px; margin: 0px; padding: 0px">y/o familiares</span>
+                    @endif
                 </div>
-                
+
                 </div>
             @endforeach
         </div>
         @else
         <div  class="grid grid-rows-4 grid-flow-col gap-4" x-data="{state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$getStatePath()}')") }} }">
             @foreach($opciones as $key => $value)
-                <div 
+                <div
                     x-data="{ id: {{ $key }} }"
                     class="fi-wi-stats-overview-stat relative rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 cursor-pointer"
                     :style="state == id && { backgroundColor: 'rgb(245 158 11)' }"
@@ -55,10 +57,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                         </svg>
                     @endif
-                    
                     <span>{{ $value }} </span>
+                    @if($key == 1)
+                    <span style="font-size: 14px; margin: 0px; padding: 0px">y/o familiares</span>
+                    @endif
                 </div>
-                
+
                 </div>
             @endforeach
         </div>

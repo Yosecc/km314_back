@@ -19,11 +19,11 @@ use App\Filament\Resources\ActivitiesResource;
 class ActivitiesPage extends CreateRecord
 {
     protected static string $resource = ActivitiesResource::class;
- 
+
     protected function getHeaderWidgets(): array
     {
         return [
-            
+
             // \App\Filament\Resources\ActivitiesResource\Widgets\ActivitiesWidget::class,
             // \App\Filament\Resources\ActivitiesResource\Widgets\ActivitiesOptionsForm::class,
         ];
@@ -59,7 +59,7 @@ class ActivitiesPage extends CreateRecord
             if ($peopleNotInside->isNotEmpty()) {
                 // Retornar mensaje de error si alguna persona no ha entrado
                 $personas = $this->getPeopleNames($peopleNotInside, $model);
-                
+
                 Notification::make()
                     ->title('Algunas personas no han entrado aún: ' . implode(', ', $personas->toArray()))
                     ->danger()
@@ -100,12 +100,12 @@ class ActivitiesPage extends CreateRecord
         } else if ($model == 'FormControl') {
             $personas = FormControlPeople::whereIn('id', $peopleIds->toArray())->get();
         }
-        
+
         return $personas->map(function($people) {
             return $people['first_name'].' '.$people['last_name'];
         });
     }
-   
+
     protected function afterCreate(): void
     {
         // dd('SI',$this->record, $this->data);
@@ -130,8 +130,24 @@ class ActivitiesPage extends CreateRecord
                             'updated_at' => Carbon::now(),
                         ];
                     });
-
         ActivitiesPeople::insert($people->toArray());
+
+        if(isset($this->data['families']) && count($this->data['families'])){
+            $familie = collect($this->data['families'])
+                ->map(function($people) use ($model, $record ){
+                    return [
+                        'activities_id' => $record->id ,
+                        'model' => 'OwnerFamily',
+                        'model_id' => $people,
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ];
+                });
+
+            ActivitiesPeople::insert($familie->toArray());
+        }
+
+
 
         $autos = collect($this->data['autos'])
                     ->map(function($auto) use ($model, $record ){

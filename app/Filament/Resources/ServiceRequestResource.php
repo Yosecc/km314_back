@@ -47,7 +47,7 @@ class ServiceRequestResource extends Resource
     protected static ?string $navigationGroup = 'Solicitudes';
 
     public static $service = null;
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'Solicitudes';
@@ -111,14 +111,14 @@ class ServiceRequestResource extends Resource
                                     ->options(WorksAndInstallation::get()->pluck('name','id')->toArray())
                                     ->disabled( fn (Get $get) => $get('model') != 'WorksAndInstallation' )
                                     ->visible( fn (Get $get) => $get('model') == 'WorksAndInstallation' ),
-                                
+
                                 Forms\Components\Select::make('model_id')
                                     // ->label(__("general.LoteStatus"))
                                     ->required()
                                     ->options(CommonSpaces::get()->pluck('name','id')->toArray())
                                     ->disabled( fn (Get $get) => $get('model') != 'CommonSpaces' )
                                     ->visible( fn (Get $get) => $get('model') == 'CommonSpaces' ),
-                                
+
                                 Forms\Components\Select::make('model_id')
                                     // ->label(__("general.LoteStatus"))
                                     ->required()
@@ -132,9 +132,9 @@ class ServiceRequestResource extends Resource
                                     ->options(StartUpOption::get()->pluck('name','id')->toArray())
                                     ->disabled( fn (Get $get) => $get('model') != 'StartUp' )
                                     ->visible( fn (Get $get) => $get('model') == 'StartUp' ),
-                                    
-                                    
-                            ])->columns(2), 
+
+
+                            ])->columns(2),
                             Textarea::make('observations'),
                             Fieldset::make('responsible')
                                 ->label('Responsable')
@@ -171,7 +171,7 @@ class ServiceRequestResource extends Resource
                     Wizard\Step::make('Info')
                         ->schema([
 
-                            Forms\Components\Select::make('owner_id')->label(__("general.Owner"))    
+                            Forms\Components\Select::make('owner_id')->label(__("general.Owner"))
                                 ->relationship(name: 'owner')
                                 ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}"),
 
@@ -220,7 +220,7 @@ class ServiceRequestResource extends Resource
                         ])->columns(2),
                 ]),
 
-                
+
             ])->columns(1);
     }
 
@@ -228,7 +228,7 @@ class ServiceRequestResource extends Resource
     {
         return $table
             ->columns([
-                
+
                 Tables\Columns\ColorColumn::make('serviceRequestStatus.color')
                 ->label(''),
                 Tables\Columns\TextColumn::make('serviceRequestStatus.name')
