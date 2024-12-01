@@ -226,31 +226,33 @@ class FormControl extends Controller
 
     public function file(Request $request)
     {
-        $idForm = $request->id;
+        \Log::info([$request, $request->all()]);
+        // $idForm = $request->id;
         // $files = $request->file('files');
-        if ($request->file('file')->isValid()) {
-            $path = $request->file('file')->path();
+        // if ($request->file('file')->isValid()) {
+        //     $path = $request->file('file')->path();
 
-            $extension = $request->file('file')->extension();
+        //     $extension = $request->file('file')->extension();
 
-            $file = $request->file('file');
-            $name = $file->getClientOriginalName();
-            $extension = $file->getClientOriginalExtension();
+        //     $file = $request->file('file');
+        //     $name = $file->getClientOriginalName();
+        //     $extension = $file->getClientOriginalExtension();
 
-            $name = $file->hashName(); // Generate a unique, random name...
-            $extension = $file->extension(); //
+        //     $name = $file->hashName(); // Generate a unique, random name...
+        //     $extension = $file->extension(); //
 
-            \Log::info([
-                $path,
-                $extension,
-                $file,
-                $name,
-                $extension ,
-                $name,
-                $extension,
-            ]);
+        //     \Log::info([
+        //         $path,
+        //         $extension,
+        //         $file,
+        //         $name,
+        //         $extension ,
+        //         $name,
+        //         $extension,
+        //     ]);
 
-            $path = $request->file('file')->storePubliclyAs('form_control', $request->user()->id);
-        }
+        //     $path = $request->file('file')->storePubliclyAs('form_control', $request->user()->id);
+        //     return response()->json(true,200);
+        // }
     }
 }
