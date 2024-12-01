@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Mail\Contact;
 use App\Models\Slider;
 use App\Models\Landing;
+use App\Models\Trabajos;
 use App\Models\Newsletter;
 use App\Models\OwnerSpontaneousVisit;
 use App\Models\LandingData;
@@ -36,6 +37,11 @@ class Main extends Controller
             return $slide;
         })->pluck('img');
 
+    }
+
+    public function trabajos(Request $request)
+    {
+        return response()->json(Trabajos::get()->pluck('name','name')->toArray() ,200);
     }
 
     public function spontaneous_visit(Request $request)
