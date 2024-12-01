@@ -21,6 +21,7 @@ return new class extends Migration
             $table->boolean('is_responsable')->default(false);
             $table->boolean('is_acompanante')->default(false);
             $table->boolean('is_menor')->default(false);
+
             $table->timestamps();
         });
     }

@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('lote_ids')->nullable();
             $table->string('access_type')->nullable();
             $table->string('income_type')->nullable();
+            $table->string('tipo_trabajo')->nullable();
+
             $table->date('start_date_range');
             $table->time('start_time_range', $precision = 0)->nullable();
             $table->date('end_date_range')->nullable();
@@ -27,7 +29,7 @@ return new class extends Migration
             // $table->enum('category', ['Owner', 'Tenant', 'Restaurant', 'Frequent works', 'Occasional works']);
             $table->foreignId('authorized_user_id')->nullable()->constrained('users');
             $table->foreignId('denied_user_id')->nullable()->constrained('users');
-             
+
             $table->foreignId('user_id')->constrained('users');
             $table->string('observations')->nullable();
 

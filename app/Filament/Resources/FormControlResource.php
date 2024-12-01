@@ -8,6 +8,7 @@ use App\Models\Lote;
 use App\Models\User;
 use Filament\Tables;
 use App\Models\Owner;
+use App\Models\Trabajos;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
@@ -28,7 +29,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\FormControlResource\Pages;
 use App\Filament\Resources\FormControlResource\RelationManagers;
-
+use Filament\Forms\Components\Radio;
 class FormControlResource extends Resource
 {
     protected static ?string $model = FormControl::class;
@@ -96,6 +97,14 @@ class FormControlResource extends Resource
                                 }
                                 return array_search("lote", $get('access_type')) !== false ? true : false;
                             })->live(),
+
+                        Radio::make('tipo_trabajo')
+                            ->options(Trabajos::get()->pluck('name','name')->toArray())
+                            ->visible(function(Get $get){
+                                return collect($get('income_type'))->contains('Trabajador');
+                            })
+
+
                     ])
                     ->columns(2),
 
@@ -198,7 +207,7 @@ class FormControlResource extends Resource
                 Forms\Components\Select::make('owner_id')
                     // ->required()
                     ->relationship(name: 'owner')
-                    ->disabled()
+                    // ->disabled()
                     ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
                     ->label(__("general.Owner")),
             ]);
