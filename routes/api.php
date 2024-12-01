@@ -63,7 +63,7 @@ Route::middleware('auth:sanctum')->post('/spontaneous_visit_action', [Main::clas
 Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
     Route::post('store',[FormControl::class,'store']);
     Route::post('index',[FormControl::class,'index']);
-    Route::post('files',[FormControl::class,'files']);
+    Route::post('file',[FormControl::class,'file']);
 });
 
 Route::middleware('auth:sanctum')->prefix('solicitudes')->group(function () {
