@@ -54,7 +54,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::middleware('auth:sanctum')->get('/trabajos', [Main::class,'trabajos']);
+Route::middleware('auth:sanctum')->get('/trabajosVBNJMK,.', [Main::class,'trabajosVBNJMK,.']);
 Route::middleware('auth:sanctum')->get('/sliders', [Main::class,'sliders']);
 Route::middleware('auth:sanctum')->get('/spontaneous_visit', [Main::class,'spontaneous_visit']);
 Route::middleware('auth:sanctum')->post('/spontaneous_visit_action', [Main::class,'spontaneous_visit_action']);
@@ -63,6 +63,7 @@ Route::middleware('auth:sanctum')->post('/spontaneous_visit_action', [Main::clas
 Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
     Route::post('store',[FormControl::class,'store']);
     Route::post('index',[FormControl::class,'index']);
+    Route::post('files',[FormControl::class,'files']);
 });
 
 Route::middleware('auth:sanctum')->prefix('solicitudes')->group(function () {
