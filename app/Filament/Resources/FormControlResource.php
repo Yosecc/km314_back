@@ -170,7 +170,7 @@ class FormControlResource extends Resource
                     ,
 
 
-                Forms\Components\Textarea::make('observations')
+                Forms\Components\TextInput::make('observations')
                     ->columnSpanFull()
                     ->label(__('general.Observations')),
 
@@ -198,6 +198,7 @@ class FormControlResource extends Resource
                 Forms\Components\Select::make('owner_id')
                     // ->required()
                     ->relationship(name: 'owner')
+                    ->disabled()
                     ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
                     ->label(__("general.Owner")),
             ]);
