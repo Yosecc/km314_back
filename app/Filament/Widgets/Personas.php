@@ -17,13 +17,15 @@ class Personas extends BaseWidget
     protected static ?int $sort = -10;
 
     protected static ?string $heading = 'Personas en el barrio (contadores)';
-    
+
 
     // protected static ?string $pollingInterval = '30s';
     protected function getStats(): array
     {
         return [
             Stat::make('Propietarios', $this->getEntradasPropietarios()),
+            Stat::make('Familiares', $this->getEntradasFamiliares()),
+            Stat::make('Visitantes espontáneos', $this->getEntradasVisitantesEspontaneos()),
             Stat::make('Empleados', $this->getEntradasEmployee()),
             Stat::make('Visitantes', $this->getEntradasFormVisitantesGenerales())->description('Entrada general - Club playa - Club House'),
             Stat::make('Inquilinos', $this->getEntradasFormInquilinosLotes())->description('Lotes'),
@@ -46,7 +48,33 @@ class Personas extends BaseWidget
             // dd($peopleInside);
         return $peopleInside;
     }
-    
+
+    public function getEntradasFamiliares()
+    {
+        $peopleInside = ActivitiesPeople::select('model_id')
+            ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
+            ->groupBy('model_id')
+            ->where('model','OwnerFamily')
+            ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
+            ->distinct('model_id')
+            ->count('model_id');
+            // dd($peopleInside);
+        return $peopleInside;
+    }
+
+    public function getEntradasVisitantesEspontaneos()
+    {
+        $peopleInside = ActivitiesPeople::select('model_id')
+            ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
+            ->groupBy('model_id')
+            ->where('model','OwnerSpontaneousVisit')
+            ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
+            ->distinct('model_id')
+            ->count('model_id');
+            // dd($peopleInside);
+        return $peopleInside;
+    }
+
     public function getEntradasEmployee()
     {
         $peopleInside = ActivitiesPeople::select('model_id')
@@ -78,7 +106,7 @@ class Personas extends BaseWidget
             ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
             ->get()
             ->count();
-    
+
         return $peopleInside;
     }
 

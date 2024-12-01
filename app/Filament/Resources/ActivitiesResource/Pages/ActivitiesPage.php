@@ -7,6 +7,7 @@ use App\Models\Owner;
 use Filament\Actions;
 use App\Models\Employee;
 use Filament\Actions\Action;
+use App\Models\OwnerSpontaneousVisit;
 use App\Models\ActivitiesAuto;
 use App\Models\ActivitiesPeople;
 use App\Models\FormControlPeople;
@@ -89,6 +90,24 @@ class ActivitiesPage extends CreateRecord
                 $this->halt();
             }
         }
+
+        if (!empty($this->data['spontaneous_visit'])) {
+            $valores = collect($this->data['spontaneous_visit'])
+                ->map(function ($visitante) {
+                    return OwnerSpontaneousVisit::where('id', $visitante)
+                        ->where('aprobado', 1)
+                        ->exists();
+                });
+
+            // Si algún valor es `false`, se ejecuta `$this->halt()`
+            if ($valores->contains(false)) {
+                Notification::make()
+                    ->title('Alguno de los visitantes espontaneos seleccionados no tiene permiso de entrada')
+                    ->danger()
+                    ->send();
+                $this->halt();
+            }
+        }
     }
 
     private function getPeopleNames($peopleIds, $model)
@@ -145,6 +164,25 @@ class ActivitiesPage extends CreateRecord
                 });
 
             ActivitiesPeople::insert($familie->toArray());
+        }
+
+        if (!empty($this->data['spontaneous_visit'])) {
+            $valores = collect($this->data['spontaneous_visit'])
+                ->map(function ($visitante) use ($record) {
+                    $vis = OwnerSpontaneousVisit::where('id', $visitante)->first();
+                    $vis->agregado = 1;
+                    $vis->save();
+
+                    return [
+                        'activities_id' => $record->id ,
+                        'model' => 'OwnerSpontaneousVisit',
+                        'model_id' => $visitante,
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ];
+                });
+
+                ActivitiesPeople::insert($valores->toArray());
         }
 
 

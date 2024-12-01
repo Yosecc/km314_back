@@ -15,4 +15,9 @@ class OwnerFamily extends Model
     {
         return $this->belongsTo(Owner::class,'owner_id');
     }
+
+    public function activitiePeople()
+    {
+        return $this->hasOne(ActivitiesPeople::class,'model_id')->where('model','OwnerFamily')->latest();
+    }
 }

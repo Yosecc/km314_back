@@ -17,7 +17,7 @@ return new class extends Migration
             $table->bigInteger('dni')->nullable();
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('email');
+            $table->string('email')->nullable();
             $table->bigInteger('phone')->nullable();
             $table->boolean('aprobado')->nullable();
             $table->boolean('agregado')->nullable();

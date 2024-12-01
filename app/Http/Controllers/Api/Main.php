@@ -62,6 +62,9 @@ class Main extends Controller
 
         if($visitante){
             $visitante->aprobado = $request->status;
+            if($request->status == 0){
+                $visitante->agregado = 0;
+            }
             $visitante->save();
         }
 

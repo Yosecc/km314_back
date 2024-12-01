@@ -34,6 +34,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
+use Filament\Forms\Components\Radio;
+
 
 class ActivitiesResource extends Resource
 {
@@ -113,7 +115,7 @@ class ActivitiesResource extends Resource
         return $datos;
     }
 
-    public static function searchOwnerFamily($dni, $type , $ids = [])
+    public static function searchOwnerFamily($dni, $type , $ids = [], $owner_id)
     {
         $data = OwnerFamily::where('dni','like','%'.$dni.'%')->limit(10)->get();
 
@@ -132,7 +134,11 @@ class ActivitiesResource extends Resource
         };
 
         if(count($ids)){
-            $data = OwnerFamily::whereIn('owner_id', $ids)->get()->map($mapeo);
+            $data = OwnerFamily::whereIn('id', $ids)->get()->map($mapeo);
+        }
+
+        if($owner_id!=0){
+            $data = OwnerFamily::where('owner_id', $owner_id)->get()->map($mapeo);
         }
 
         $data = $data->map($mapeo);
@@ -235,6 +241,7 @@ class ActivitiesResource extends Resource
     public static function createSpontaneusVisit($data)
     {
         $owner_id = $data['owner_id'];
+        // dd($owner_id);
         $visitantes = collect($data['spontaneous_visit']);
 
         $visitantes = $visitantes->map(function($visitante) use ($owner_id) {
@@ -454,26 +461,60 @@ class ActivitiesResource extends Resource
                                     'context' => $context
                                 ]);
                             })
+                            ->visible(function(Get $get, $context ){
+                                if($context == 'view' && !count($get('peoples'))){
+                                    return false;
+                                }
+                                return true;
+                            })
                             ->live(),
 
                         Forms\Components\CheckboxList::make('families')->label(__('general.Familiares'))
-                            // ->searchable()
+                            ->searchable()
                             ->options(function(Get $get, $context){
+
+                                // dd($get('families'),$get('peoples'), $context);
 
                                 if(!$get('num_search') && $context != 'view'){
                                     return [];
                                 }
 
-                                return self::searchOwnerFamily($get('num_search'), 'option' , $context == 'view' ? $get('families') : [] );
+                                if($context == 'view' && !count($get('families'))){
+                                    return [];
+                                }
+
+                                $owner_id = 0;
+                                if($get('peoples')){
+                                    $owners = $get('peoples');
+                                    $owner_id = $owners[0];
+                                }
+
+                                return self::searchOwnerFamily($get('num_search'), 'option' , $context == 'view' ? $get('families') : [], $context == 'view' ? 0 : $owner_id );
 
                             })
                             ->descriptions(function(Get $get , $context){
                                 if(!$get('num_search') && $context != 'view'){
                                     return [];
                                 }
+                                if($context == 'view' && !count($get('families'))){
+                                    return [];
+                                }
+                                $owner_id = 0;
+                                if($get('peoples')){
+                                    $owners = $get('peoples');
+                                    $owner_id = $owners[0];
+                                }
+                                return self::searchOwnerFamily($get('num_search'), 'descriptions' , $context == 'view' ? $get('families') : [],$owner_id );
 
-                                return self::searchOwnerFamily($get('num_search'), 'descriptions' , $context == 'view' ? $get('families') : [] );
-
+                            })
+                            ->visible(function(Get $get, $context ){
+                                if($get('tipo_entrada') != 1){
+                                    return false;
+                                }
+                                if($context == 'view' && !count($get('families'))){
+                                    return false;
+                                }
+                                return true;
                             })
                             ->live(),
                     ])
@@ -539,10 +580,14 @@ class ActivitiesResource extends Resource
 
                                         return [
                                             'model' => $model,
+                                            'tipo_entrada' => $get('tipo_entrada'),
+                                            'num_search' => $get('num_search')
                                         ];
                                     })
                                     ->form([
                                         Forms\Components\Hidden::make('model'),
+                                        Forms\Components\Hidden::make('tipo_entrada'),
+                                        Forms\Components\Hidden::make('num_search'),
                                         Forms\Components\Repeater::make('autos')
                                             ->schema([
                                                 Forms\Components\TextInput::make('marca')->required(),
@@ -555,18 +600,21 @@ class ActivitiesResource extends Resource
                                                 Forms\Components\TextInput::make('color'),
 
                                                 Forms\Components\Radio::make('model_id')->label(__('general.Select the responsible person'))
-                                                    ->options(function(Get $get){
+                                                    ->options(function(Get $get , $context){
+
                                                         return self::getPeoples([
-                                                            'tipo_entrada' =>  self::$PARAMS['tipo_entrada'],
-                                                            'num_search' => self::$PARAMS['num_search'],
+                                                            'tipo_entrada' =>  $get('../../tipo_entrada'),
+                                                            'num_search' => $get('../../num_search'),
                                                             'tipo' => 'option',
+                                                            'ids' =>  [],
                                                         ]);
                                                     })
-                                                    ->descriptions(function(Get $get){
+                                                    ->descriptions(function(Get $get, $context){
                                                         return self::getPeoples([
-                                                            'tipo_entrada' =>  self::$PARAMS['tipo_entrada'],
-                                                            'num_search' => self::$PARAMS['num_search'],
+                                                            'tipo_entrada' =>  $get('../../tipo_entrada'),
+                                                            'num_search' => $get('../../num_search'),
                                                             'tipo' => 'descriptions',
+                                                            'ids' =>   [],
                                                         ]);
                                                     }),
                                                 Forms\Components\Hidden::make('model')->default(function(Get $get){
@@ -586,7 +634,10 @@ class ActivitiesResource extends Resource
                             ]),
                     ])
                     ->columns(1)
-                    ->visible(function(Get $get){
+                    ->visible(function(Get $get, $context){
+                        if($context == 'view' && !count($get('autos'))){
+                            return false;
+                        }
                         return $get('tipo_entrada') ? true: false;
                     }),
 
@@ -594,13 +645,45 @@ class ActivitiesResource extends Resource
                     ->schema([
 
                         Forms\Components\CheckboxList::make('spontaneous_visit')->label(__('general.Select one or more options'))
-                            ->options(function(Get $get, $context){
+                            ->options(function(Get $get, $context, $record){
+
+                            //    dd( $get('tipo_entrada'),$get('num_search'), $get('type'));
+
+                               if($get('type') == 'Exit' && $get('num_search') && $get('tipo_entrada') == 1){
+
+                                $visitantes = OwnerSpontaneousVisit::where('dni', 'LIKE' ,'%'.$get('num_search').'%')->get();
+
+                                $visitantes = $visitantes->map(function($visitante){
+                                    $visitante['texto'] = $visitante['first_name'] ." ".$visitante['last_name'] ;
+                                    return $visitante;
+                                });
+
+                                return $visitantes->pluck('texto','id');
+
+                               }
+
+                               if($context == 'view' && $get('type') == 'Exit' && count($get('spontaneous_visit')) && $get('tipo_entrada') == 1){
+                                $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
+                                $visitantes = $visitantes->map(function($visitante){
+                                    $visitante['texto'] = $visitante['first_name'] ." ".$visitante['last_name'] ;
+                                    return $visitante;
+                                });
+
+                                return $visitantes->pluck('texto','id');
+                               }
+
+
                                 if(!$get('peoples') && $get('tipo_entrada') == 1){
                                     return [];
                                 }
                                 $owner = $get('peoples');
                                 $owner_id = $owner[0];
-                                $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner_id)->where('agregado',null)->get();
+
+                                if($context == 'view'){
+                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
+                                }else{
+                                    $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner_id)->where('agregado',null)->get();
+                                }
 
                                 $visitantes = $visitantes->map(function($visitante){
                                     $visitante['texto'] = $visitante['first_name'] ." ".$visitante['last_name'] ;
@@ -610,13 +693,41 @@ class ActivitiesResource extends Resource
                                 return $visitantes->pluck('texto','id');
                             })
                             ->descriptions(function(Get $get, $context){
+
+                                if($get('type') == 'Exit' && $get('num_search') != ''){
+
+                                    $visitantes = OwnerSpontaneousVisit::where('dni', 'LIKE' ,'%'.$get('num_search').'%')->get();
+
+                                    $visitantes = $visitantes->map(function($visitante){
+                                        $visitante['texto'] = $visitante['dni'];
+                                        return $visitante;
+                                    });
+
+                                    return $visitantes->pluck('texto','id');
+
+                                   }
+
+                                   if($context == 'view' && $get('type') == 'Exit' && count($get('spontaneous_visit')) && $get('tipo_entrada') == 1){
+                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
+                                    $visitantes = $visitantes->map(function($visitante){
+                                        $visitante['texto'] = $visitante['dni'];
+                                        return $visitante;
+                                    });
+
+                                    return $visitantes->pluck('texto','id');
+                                   }
+
+
                                 if(!$get('peoples') && $get('tipo_entrada') == 1){
                                     return [];
                                 }
                                 $owner = $get('peoples');
                                 $owner_id = $owner[0];
-                                $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner_id)
-                                                                    ->where('agregado',null)->get();
+                                if($context == 'view'){
+                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
+                                }else{
+                                    $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner_id)->where('agregado',null)->get();
+                                }
 
                                 $visitantes = $visitantes->map(function($visitante){
                                     $visitante['texto'] = $visitante['dni'];
@@ -625,14 +736,6 @@ class ActivitiesResource extends Resource
 
                                 return $visitantes->pluck('texto','id');
                             })
-                            // ->disableOptionWhen(function($record, $value){
-                            //     $visitante = OwnerSpontaneousVisit::find($value);
-                            //     return $visitante && $visitante->aprobado == 1 ? false: true;
-                            // })
-                            // ->disabled(function(Get $get, $record,){
-                            //     dd($record, $this, $data);
-                            //     return true;
-                            // })
                             ->live(),
                         Actions::make([
                             Action::make('add_spontaneous_visit')
@@ -640,8 +743,8 @@ class ActivitiesResource extends Resource
                                 ->icon('heroicon-m-plus')
                                 // ->requiresConfirmation()
                                 ->fillForm(function(Get $get){
-
                                     $owner = $get('peoples');
+                                    // dd($get('peoples'), $owner[0]);
                                     return [
                                         'owner_id' => $owner[0]
                                     ];
@@ -649,11 +752,12 @@ class ActivitiesResource extends Resource
                                 ->form([
                                     Forms\Components\Hidden::make('owner_id'),
                                     Forms\Components\Repeater::make('spontaneous_visit')
+                                        ->label('Visitante espontáneo')
                                         ->schema([
                                             Forms\Components\TextInput::make('dni')->required(),
                                             Forms\Components\TextInput::make('first_name')->required(),
                                             Forms\Components\TextInput::make('last_name')->required(),
-                                            Forms\Components\TextInput::make('email')->required(),
+                                            Forms\Components\TextInput::make('email'),
                                             Forms\Components\TextInput::make('phone')->numeric(),
                                         ])
                                         ->columns(2)
@@ -663,6 +767,7 @@ class ActivitiesResource extends Resource
                                     return $context != 'view' ? true : false;
                                 })
                                 ->action(function (array $data, $record, Get $get) {
+
                                     self::createSpontaneusVisit($data);
                                 })
                                 ,
@@ -670,7 +775,10 @@ class ActivitiesResource extends Resource
                         ]),
                     ])
                     ->columns(1)
-                    ->visible(function(Get $get){
+                    ->visible(function(Get $get, $context){
+                        if($context == 'view' && !count($get('spontaneous_visit'))){
+                            return false;
+                        }
                         return ($get('tipo_entrada') == 1 )? true : false;
                     }),
 

@@ -15,7 +15,8 @@ class ViewActivitie extends ViewRecord
         $data['peoples'] = $this->record->peoples->whereIn('model',['Owner','Employee','FormControl'])->pluck('model_id')->toArray();
         $data['autos'] = $this->record->autos->pluck('auto_id')->toArray();
         $data['families'] = $this->record->peoples->whereIn('model',['OwnerFamily'])->pluck('model_id')->toArray();
-        // dd( $data['families'],$data['peoples'] );
+        $data['spontaneous_visit'] = $this->record->peoples->whereIn('model',['OwnerSpontaneousVisit'])->pluck('model_id')->toArray();
+        // dd( $data);
         return $data;
     }
 }
