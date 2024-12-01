@@ -94,6 +94,7 @@ class FormControl extends Controller
             'lote_ids'          => $request->lote_ids,
             'access_type'       => $request->access_type,
             'income_type'       => $request->income_type,
+            'tipo_trabajo'       => $request->tipo_trabajo,
             'start_date_range'  => $request->start_date_range,
             'start_time_range'  => $request->start_time_range,
             'end_date_range'    => $request->end_date_range,
@@ -108,7 +109,6 @@ class FormControl extends Controller
         ];
 
         if($request->id){
-
             FormControlDB::where('id', $request->id)->update($data);
             $idForm = $request->id;
         }else{
@@ -222,5 +222,35 @@ class FormControl extends Controller
 
         return response()->json($formControl);
 
+    }
+
+    public function file(Request $request)
+    {
+        $idForm = $request->id;
+        // $files = $request->file('files');
+        if ($request->file('file')->isValid()) {
+            $path = $request->file('file')->path();
+
+            $extension = $request->file('file')->extension();
+
+            $file = $request->file('file');
+            $name = $file->getClientOriginalName();
+            $extension = $file->getClientOriginalExtension();
+
+            $name = $file->hashName(); // Generate a unique, random name...
+            $extension = $file->extension(); //
+
+            \Log::info([
+                $path,
+                $extension,
+                $file,
+                $name,
+                $extension ,
+                $name,
+                $extension,
+            ]);
+
+            $path = $request->file('file')->storePubliclyAs('form_control', $request->user()->id);
+        }
     }
 }
