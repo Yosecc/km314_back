@@ -226,7 +226,7 @@ class FormControl extends Controller
 
     public function file(Request $request)
     {
-        \Log::info([$request->fileToUpload->isValid()]);
+        \Log::info([$request->file('fileToUpload')->isValid()]);
         // $idForm = $request->id;
         // $files = $request->file('files');
         // if ($request->file('file')->isValid()) {
