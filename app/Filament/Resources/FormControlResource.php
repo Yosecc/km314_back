@@ -30,6 +30,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\FormControlResource\Pages;
 use App\Filament\Resources\FormControlResource\RelationManagers;
 use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\FileUpload;
 class FormControlResource extends Resource
 {
     protected static ?string $model = FormControl::class;
@@ -174,6 +175,21 @@ class FormControlResource extends Resource
                         Forms\Components\Hidden::make('model')->default('FormControl')
                     ])
                     ->columns(4)
+                    ->defaultItems(0)
+                    ->columnSpanFull()
+                    ,
+
+                Forms\Components\Repeater::make('files')
+                    ->relationship()
+                    ->schema([
+                        Forms\Components\TextInput::make('description')
+                            ->label(__("general.Description"))
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('form_control_id'),
+                        Forms\Components\TextInput::make('user_id')->default(Auth::user()->id),
+                        FileUpload::make('file')
+                    ])
+                    ->columns(2)
                     ->defaultItems(0)
                     ->columnSpanFull()
                     ,

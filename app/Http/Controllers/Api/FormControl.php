@@ -7,6 +7,7 @@ use App\Models\Auto;
 use App\Models\FormControl as FormControlDB;
 use App\Models\FormControlPeople;
 use App\Models\Lote;
+use App\Models\FormControlFile;
 use App\Models\OwnerFamily;
 use App\Models\User;
 use Filament\Notifications\Notification;
@@ -226,33 +227,32 @@ class FormControl extends Controller
 
     public function file(Request $request)
     {
-        \Log::info([$request->hasFile('fileToUpload'), $request->file('fileToUpload')]);
-        // $idForm = $request->id;
-        // $files = $request->file('files');
-        // if ($request->file('file')->isValid()) {
-        //     $path = $request->file('file')->path();
+        $rules=[
+            'fileToUpload' => 'required|file|mimes:jpeg,jpg,png,pdf|max:5048',
+            'description' => 'nullable',
+            'form_id' => 'required'
+        ];
 
-        //     $extension = $request->file('file')->extension();
+        $validator= Validator::make($request->all(),$rules);
 
-        //     $file = $request->file('file');
-        //     $name = $file->getClientOriginalName();
-        //     $extension = $file->getClientOriginalExtension();
+        if ($validator->fails()) {
+            \Log::info($validator->errors());
+        return response()->json($validator->errors(), 422);
+        }
 
-        //     $name = $file->hashName(); // Generate a unique, random name...
-        //     $extension = $file->extension(); //
+        $attachmentPath = null;
+        if ($request->hasFile('fileToUpload')) {
+            $attachmentPath = $request->file('fileToUpload')->store('public', 'public');
 
-        //     \Log::info([
-        //         $path,
-        //         $extension,
-        //         $file,
-        //         $name,
-        //         $extension ,
-        //         $name,
-        //         $extension,
-        //     ]);
+        }
 
-        //     $path = $request->file('file')->storePubliclyAs('form_control', $request->user()->id);
-        //     return response()->json(true,200);
-        // }
+        FormControlFile::insert([
+            'form_control_id' => $request->form_id,
+            'user_id' =>  $request->user()->id,
+            'file' =>  $attachmentPath,
+            'description' => $request->description
+        ]);
+
+        return response()->json(['file' => $attachmentPath],200);
     }
 }

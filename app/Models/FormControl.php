@@ -135,6 +135,11 @@ class FormControl extends Model
         return $this->hasMany(FormControlLote::class);
     }
 
+    public function files()
+    {
+        return $this->hasMany(FormControlFile::class);
+    }
+
     public function authorizedUser()
     {
         return $this->belongsTo(User::class,'authorized_user_id');
