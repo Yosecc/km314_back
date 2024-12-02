@@ -265,10 +265,18 @@ class FormControl extends Controller
         FormControlFile::insert([
             'form_control_id' => $request->form_id,
             'user_id' =>  $request->user()->id,
+            // 'name' => $request->name,
             'file' =>  $attachmentPath,
             'description' => $request->description
         ]);
 
         return response()->json(['file' => $attachmentPath],200);
+    }
+
+    public function file_delete($id)
+    {
+        FormControlFile::find($id)->delete();
+
+        return true;
     }
 }

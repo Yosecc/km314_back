@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
     Route::post('store',[FormControl::class,'store']);
     Route::post('index',[FormControl::class,'index']);
     Route::post('file',[FormControl::class,'file']);
+    Route::post('file/delete/{id}',[FormControl::class,'file_delete']);
 });
 
 Route::middleware('auth:sanctum')->prefix('solicitudes')->group(function () {
