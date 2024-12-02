@@ -18,7 +18,7 @@ class FormControl extends Controller
 {
     public function index(Request $request)
     {
-        $formControl = FormControlDB::where('owner_id', $request->user()->owner->id)->with(['peoples','autos'])->orderBy('created_at','desc')->get();
+        $formControl = FormControlDB::where('owner_id', $request->user()->owner->id)->with(['peoples','autos','files'])->orderBy('created_at','desc')->get();
 
         $misLotes = Lote::where('owner_id', $request->user()->owner->id)->with(['sector','loteStatus','loteType'])->get();
 
