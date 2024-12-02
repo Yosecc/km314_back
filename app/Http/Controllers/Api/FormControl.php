@@ -13,7 +13,7 @@ use App\Models\User;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\Storage;
 class FormControl extends Controller
 {
     public function index(Request $request)
@@ -30,24 +30,24 @@ class FormControl extends Controller
             'misForms' => $formControl->map(function($form){
                 $form->status = $form->statusComputed();
                 $form['files'] = $form->files->map(function($file){
-                    return [
-                        'description' => $file->description,
-                        'file' => $file->description,
-                        'name' => $file->file,
-                        'path' => storage_path($file->file),
-                    ];
+					//dd($file);
+					$file['name'] =   $file['file'];
+					$file['path'] = config('app.url').Storage::url($file['file']);
+
+					return $file;
+
                 });
                 return $form;
             })->where('status','Pending')->values(),
             'historicoForms' => $formControl->map(function($form){
                 $form->status = $form->statusComputed();
                 $form['files'] = $form->files->map(function($file){
-                    return [
-                        'description' => $file->description,
-                        'file' => $file->description,
-                        'name' => $file->file,
-                        'path' => storage_path($file->file),
-                    ];
+					//dd($file);
+					$file['name'] =   $file['file'];
+					$file['path'] = config('app.url').Storage::url($file['file']);
+
+					return $file;
+
                 });
                 return $form;
             })->where('status','!=','Pending')->values(),
