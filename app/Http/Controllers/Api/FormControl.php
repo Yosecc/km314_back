@@ -29,7 +29,7 @@ class FormControl extends Controller
         return response()->json([
             'misForms' => $formControl->map(function($form){
                 $form->status = $form->statusComputed();
-                $form->files = $form->files->map(function($file){
+                $form['files'] = $form->files->map(function($file){
                     return [
                         'description' => $file->description,
                         'file' => $file->description,
@@ -41,6 +41,14 @@ class FormControl extends Controller
             })->where('status','Pending')->values(),
             'historicoForms' => $formControl->map(function($form){
                 $form->status = $form->statusComputed();
+                $form['files'] = $form->files->map(function($file){
+                    return [
+                        'description' => $file->description,
+                        'file' => $file->description,
+                        'name' => $file->file,
+                        'path' => storage_path($file->file),
+                    ];
+                });
                 return $form;
             })->where('status','!=','Pending')->values(),
             'misLotes' => $misLotes,
