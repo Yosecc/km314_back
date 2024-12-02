@@ -227,8 +227,9 @@ class FormControl extends Controller
 
     public function file(Request $request)
     {
+
         $rules=[
-            'fileToUpload' => 'required|file|mimes:jpeg,jpg,png,pdf|max:5048',
+            'fileToUpload' => 'required|file|mimes:jpeg,jpg,png,pdf',
             'description' => 'nullable',
             'form_id' => 'required'
         ];
@@ -242,8 +243,7 @@ class FormControl extends Controller
 
         $attachmentPath = null;
         if ($request->hasFile('fileToUpload')) {
-            $attachmentPath = $request->file('fileToUpload')->store('public', 'public');
-
+            $attachmentPath = $request->file('fileToUpload')->store('', 'public');
         }
 
         FormControlFile::insert([
