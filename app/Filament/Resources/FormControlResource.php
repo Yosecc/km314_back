@@ -185,8 +185,8 @@ class FormControlResource extends Resource
                         Forms\Components\TextInput::make('description')
                             ->label(__("general.Description"))
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('form_control_id'),
-                        Forms\Components\TextInput::make('user_id')->default(Auth::user()->id),
+                        Forms\Components\Hidden::make('form_control_id'),
+                        Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
                         FileUpload::make('file')
                     ])
                     ->columns(2)
