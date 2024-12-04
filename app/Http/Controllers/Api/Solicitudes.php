@@ -24,17 +24,18 @@ class Solicitudes extends Controller
         $solicitudes = $solicitudes->map(function($solicitud){
             $solicitud['starts_at'] = Carbon::parse($solicitud['starts_at'])->format('Y/m/d H:m:s');
             $solicitud['ends_at'] = Carbon::parse($solicitud['ends_at'])->format('Y/m/d H:m:s');
-            
+
             if($solicitud->responsible){
                 $solicitud->responsible->makeHidden(['created_at','updated_at']);
             }
             if($solicitud->serviceRequestFile){
                 $solicitud->serviceRequestFile->map(function($archivo){
-                    $archivo['file'] = asset(Storage::url($archivo['file']));
+                    $archivo['file'] = config('app.url').Storage::url($archivo['file']);
+
                     return $archivo;
                 });
             }
-            
+
             return $solicitud;
         });
 
@@ -60,31 +61,31 @@ class Solicitudes extends Controller
         ->orderBy('created_at', 'desc')
         ->orderBy('ends_at', 'desc')
         ->get();
-    
+
         $solicitudes = $this->_getSolicitudes($solicitudes);
-        
+
         $now = Carbon::now();
         $tiposSolicitudes = ServiceRequestType::all();
-        
+
         $solicitudes = $solicitudes->map(function ($item) use ($now) {
             $item->starts_at_date = Carbon::createFromFormat('Y/m/d H:i:s', $item->starts_at);
-        
+
             $item->ends_at_date = $item->ends_at ? Carbon::createFromFormat('Y/m/d H:i:s', $item->ends_at) : $item->starts_at_date;
-        
+
             $item->is_active = $now->between($item->starts_at_date, $item->ends_at_date);
             $item->is_future = $item->starts_at_date->isFuture();
-        
+
             $item->time_left = $item->is_active
                 ? $now->diffForHumans($item->ends_at_date, true)
                 : ($item->is_future
                     ? $now->diffForHumans($item->starts_at_date, true)
                     : $item->ends_at_date->diffForHumans($now, true)
                 );
-        
+
             if ($item->is_future) {
                 $item->is_active = true;
             }
-        
+
             return $item;
         })
         ->where('is_active', true)
@@ -112,7 +113,7 @@ class Solicitudes extends Controller
 
     public function store(Request $request)
     {
-        
+
         $validator = Validator::make($request->all(), [
             "service_request_status_id" => 'nullable',
             "service_request_responsible_people_id" => 'nullable',
@@ -137,7 +138,7 @@ class Solicitudes extends Controller
             'ends_at' => 'fecha de fin',
             'name' => 'nombre',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
@@ -149,7 +150,7 @@ class Solicitudes extends Controller
 
             return [
                 'alias' => $request['alias'],
-                'name' => $request['name'], 
+                'name' => $request['name'],
                 'starts_at' => Carbon::parse($request['starts_at'])->format('Y-m-d H:m:s'),
                 'ends_at' => $request['ends_at'] ? Carbon::parse($request['ends_at'])->format('Y-m-d H:m:s') : null,
                 'service_request_responsible_people_id' => isset($request['service_request_responsible_people_id']) ? $request['service_request_responsible_people_id'] : null,
@@ -183,10 +184,10 @@ class Solicitudes extends Controller
             $d['user_id'] = $request->user()->id;
             $d['created_at'] = Carbon::now();
             $d['updated_at'] = Carbon::now();
-            
+
             $id = ServiceRequest::insertGetId($d);
         }
-        
+
         $solicitud = ServiceRequest::find($id);
 
         if(isset($data['responsible'])){
@@ -202,7 +203,7 @@ class Solicitudes extends Controller
                 $solicitud->save();
             }
         }
-        
+
         $solicitud = ServiceRequest::where('id',$id)
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
                             ->get();
@@ -222,7 +223,7 @@ class Solicitudes extends Controller
             "description" => 'nullable',
             "file_id" => 'nullable'
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
@@ -232,7 +233,7 @@ class Solicitudes extends Controller
         if (!$solicitud) {
             return response()->json(['No existe la socitud'], 422);
         }
-        
+
         if(isset($request->file_id) && $request->file_id){
             $file = ServiceRequestFile::where('id',$request->file_id)->update([
                 'description' => $request->description,
@@ -245,8 +246,8 @@ class Solicitudes extends Controller
                 $data['created_at'] = Carbon::now();
                 $data['updated_at'] = Carbon::now();
 
-                $path = Storage::putFile('service_request_files', new File($request->file),'public');
-                
+                $path = Storage::putFile('', new File($request->file),'public');
+
                 $data['file'] = $path;
                 $data["description"] = $request->description;
                 $data['user_id'] = $request->user()->id;
@@ -271,7 +272,7 @@ class Solicitudes extends Controller
         $validator = Validator::make($request->all(), [
             "id" => 'required',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
@@ -285,7 +286,7 @@ class Solicitudes extends Controller
         if(Storage::disk('public')->exists($file->file)){
             Storage::disk('public')->delete($file->file);
         }
-        
+
         $file->delete();
 
         return response()->json(true);
