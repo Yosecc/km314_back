@@ -217,6 +217,8 @@ class Solicitudes extends Controller
 
     public function file(Request $request)
     {
+
+        \Log::info($request->all());
         $validator = Validator::make($request->all(), [
             "id" => 'required',
             "file" => 'required',
@@ -251,7 +253,7 @@ class Solicitudes extends Controller
                     $path = $request->file('file')->store('', 'public');
                 }
 
-                $path = Storage::putFile('', new File($request->file),'public');
+                // $path = Storage::putFile('', new File($request->file),'public');
 
                 $data['file'] = $path;
                 $data["description"] = $request->description;
