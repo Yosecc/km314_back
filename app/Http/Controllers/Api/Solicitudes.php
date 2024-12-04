@@ -246,6 +246,11 @@ class Solicitudes extends Controller
                 $data['created_at'] = Carbon::now();
                 $data['updated_at'] = Carbon::now();
 
+                $path = null;
+                if ($request->hasFile('file')) {
+                    $path = $request->file('file')->store('', 'public');
+                }
+
                 $path = Storage::putFile('', new File($request->file),'public');
 
                 $data['file'] = $path;
