@@ -19,13 +19,14 @@ use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 
 class Messages extends Page implements HasForms, HasTable
 {
-
+    use HasPageShield;
     use InteractsWithTable;
     use InteractsWithForms;
-    
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static string $view = 'filament.pages.messages';
@@ -35,7 +36,7 @@ class Messages extends Page implements HasForms, HasTable
     public function __construct()
     {
         if(!Cache::store('file')->has('access_token')){
-            return redirect()->route('auth.facebook');   
+            return redirect()->route('auth.facebook');
         }
     }
 
@@ -45,8 +46,8 @@ class Messages extends Page implements HasForms, HasTable
             // dd('llega');
             $redirectUri = config('app.url') . '/auth/facebook';
             header('Location: '.$redirectUri);
-            die(); 
-            return redirect()->route('auth.facebook');   
+            die();
+            return redirect()->route('auth.facebook');
         }
     }
 

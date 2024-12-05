@@ -17,12 +17,13 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 
 class Inbox extends Page implements HasForms, HasTable
 {
     use InteractsWithTable;
     use InteractsWithForms;
-
+    use HasPageShield;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static string $view = 'filament.pages.inbox';
 
@@ -95,7 +96,7 @@ class Inbox extends Page implements HasForms, HasTable
                 ->icon('heroicon-m-envelope')
                 ->copyable()
                 ->copyMessage('Email address copied')
-                ->copyMessageDuration(1500)    
+                ->copyMessageDuration(1500)
                 ->description(fn (ConversationsMail $record): string => $record->subject),
             TextColumn::make('date')->dateTime()
         ];
