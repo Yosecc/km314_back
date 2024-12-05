@@ -135,7 +135,7 @@ class ServiceRequestResource extends Resource
 
 
                             ])->columns(2),
-                            Textarea::make('observations'),
+                            Forms\Components\TextInput::make('observations'),
                             Fieldset::make('responsible')
                                 ->label('Responsable')
                                 ->relationship('responsible')

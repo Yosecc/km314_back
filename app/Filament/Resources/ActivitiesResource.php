@@ -578,10 +578,13 @@ class ActivitiesResource extends Resource
                                             $model = 'FormControl';
                                         }
 
+
+
                                         return [
                                             'model' => $model,
                                             'tipo_entrada' => $get('tipo_entrada'),
-                                            'num_search' => $get('num_search')
+                                            'num_search' => $get('num_search'),
+                                            'families' => $get('families')
                                         ];
                                     })
                                     ->form([
@@ -602,20 +605,68 @@ class ActivitiesResource extends Resource
                                                 Forms\Components\Radio::make('model_id')->label(__('general.Select the responsible person'))
                                                     ->options(function(Get $get , $context){
 
-                                                        return self::getPeoples([
+                                                        $data = self::getPeoples([
                                                             'tipo_entrada' =>  $get('../../tipo_entrada'),
                                                             'num_search' => $get('../../num_search'),
                                                             'tipo' => 'option',
                                                             'ids' =>  [],
                                                         ]);
+
+                                                        if(count($get('families'))){
+                                                            $type = 'option';
+                                                            $ids = $get('families');
+                                                            $mapeo = function($people) use ($type){
+
+                                                                if($type == 'option'){
+                                                                    $people['texto'] = $people['first_name']. ' '.$people['last_name'];
+                                                                    $people['texto'].= ' - ' .$people['parentage'] ;
+                                                                }else{
+                                                                    // dd($people->familiarPrincipal);
+                                                                    $people['texto'] = $people->dni;
+                                                                    $people['texto'] .= ' - Familiar de: '.$people->familiarPrincipal->first_name . " " . $people->familiarPrincipal->last_name ;
+                                                                }
+
+                                                                return $people;
+                                                            };
+                                                            $datas = OwnerFamily::whereIn('id', $ids)->get()->map($mapeo);
+
+                                                            $data = array_merge($data, $datas->toArray());
+                                                        }
+
+                                                        return $data;
                                                     })
                                                     ->descriptions(function(Get $get, $context){
-                                                        return self::getPeoples([
+
+                                                        $data = self::getPeoples([
                                                             'tipo_entrada' =>  $get('../../tipo_entrada'),
                                                             'num_search' => $get('../../num_search'),
                                                             'tipo' => 'descriptions',
                                                             'ids' =>   [],
                                                         ]);
+
+                                                        if(count($get('families'))){
+                                                            $type = 'option';
+                                                            $ids = $get('families');
+                                                            $mapeo = function($people) use ($type){
+
+                                                                if($type == 'option'){
+                                                                    $people['texto'] = $people['first_name']. ' '.$people['last_name'];
+                                                                    $people['texto'].= ' - ' .$people['parentage'] ;
+                                                                }else{
+                                                                    // dd($people->familiarPrincipal);
+                                                                    $people['texto'] = $people->dni;
+                                                                    $people['texto'] .= ' - Familiar de: '.$people->familiarPrincipal->first_name . " " . $people->familiarPrincipal->last_name ;
+                                                                }
+
+                                                                return $people;
+                                                            };
+                                                            $datas = OwnerFamily::whereIn('id', $ids)->get()->map($mapeo);
+
+                                                            $data = array_merge($data, $datas->toArray());
+                                                        }
+
+                                                        return $data;
+
                                                     }),
                                                 Forms\Components\Hidden::make('model')->default(function(Get $get){
                                                     return $get('../../model');
