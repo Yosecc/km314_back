@@ -5,6 +5,8 @@ namespace App\Filament\Resources;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Owner;
+use App\Models\Lote;
+
 use App\Models\Property;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -13,7 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PropertyResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\PropertyResource\RelationManagers;
-
+use Filament\Forms\Get;
 class PropertyResource extends Resource
 {
     protected static ?string $model = Property::class;
@@ -54,10 +56,27 @@ class PropertyResource extends Resource
                 Forms\Components\Select::make('owner_id')->label(__("general.Owner"))
                     ->required()
                     ->relationship(name: 'owner')
+                    ->live()
                     ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}"),
+
                 Forms\Components\Select::make('lote_id')->label(__("general.Lote"))
                     ->required()
-                    ->relationship(name: 'lote')
+                    ->live()
+                    // ->relationship(name: 'lote')
+                    ->options(function(Get $get){
+
+					    if(!$get('owner_id')){
+                            return [];
+                        }
+                            //dd($get('owner_id'));
+                            $lotes = Lote::where('owner_id',$get('owner_id'))->get();
+                            //$lotes = Lote::get();
+                            $lotes->map(function($lote){
+                                $lote['texto'] = $lote->sector->name.$lote->lote_id;
+                                return $lote;
+                            });
+                            return $lotes->pluck('texto','id')->toArray();
+					})
                     // ->getOptionLabelFromRecordUsing(fn (Lote $record) => "{$record->first_name} {$record->last_name}"),
 
             ]);
