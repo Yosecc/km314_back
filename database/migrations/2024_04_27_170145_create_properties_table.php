@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('property_type_id')->constrained();
             $table->foreignId('owner_id')->constrained();
+            $table->foreignId('lote_id')->constrained();
             $table->string('width')->nullable();
             $table->string('identificador')->nullable();
             $table->string('height')->nullable();

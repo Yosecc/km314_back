@@ -22,18 +22,18 @@ class PropertyResource extends Resource
 
     protected static ?string $navigationLabel = 'Propiedades';
     protected static ?string $label = 'propiedad';
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'propiedades';
     }
-    
+
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                
+
                 Forms\Components\TextInput::make('identificador')->label(__("general.identificador"))
                     ->required()
                     ->maxLength(255),
@@ -50,12 +50,16 @@ class PropertyResource extends Resource
                 Forms\Components\Select::make('property_type_id')->label(__("general.PropertyType"))
                     ->required()
                     ->relationship(name: 'propertyType', titleAttribute: 'name'),
-                
+
                 Forms\Components\Select::make('owner_id')->label(__("general.Owner"))
                     ->required()
                     ->relationship(name: 'owner')
                     ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}"),
-               
+                Forms\Components\Select::make('lote_id')->label(__("general.Lote"))
+                    ->required()
+                    ->relationship(name: 'lote')
+                    // ->getOptionLabelFromRecordUsing(fn (Lote $record) => "{$record->first_name} {$record->last_name}"),
+
             ]);
     }
 
@@ -74,9 +78,9 @@ class PropertyResource extends Resource
 
                 Tables\Columns\TextColumn::make('owner')
                     ->formatStateUsing(fn (Owner $state) => "{$state->first_name} {$state->last_name}" )
-                    
+
                     ->sortable(),
-                
+
                 // Tables\Columns\TextColumn::make('width')
                     // ->label(__("general.Width"))
                     // ->searchable(),

@@ -12,6 +12,7 @@ class Property extends Model
     protected $fillable = [
         'property_type_id',
         'owner_id',
+        'lote_id',
         'width',
         'height',
         'm2',
@@ -27,5 +28,10 @@ class Property extends Model
     {
         return $this->belongsTo(Owner::class);
     }
-    
+
+    public function lote()
+    {
+        return $this->belongsTo(Lote::class);
+    }
+
 }
