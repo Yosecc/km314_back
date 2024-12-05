@@ -42,10 +42,11 @@ class IncidentResource extends Resource
                     ->displayFormat('d/m/Y')
                     // ->prefix('Starts')
                     // ->suffix('at midnight')
-                    ->minDate(now())
-                    ->maxDate(now())
+                    ->minDate(now()->format('Y-m-d')."00:00:00")
+                    //->maxDate(now())
                     ->default(now()->format('Y-m-d H:m:s'))
                     ->live()
+                    ->required()
                     // ->readonly()// context view / edit
                     ,
 
@@ -66,35 +67,39 @@ class IncidentResource extends Resource
                 // Forms\Components\TextInput::make('status')->default(0)->required(),
 
                 Repeater::make('notes')
-                    ->label('Notas')
-                    ->relationship()
-                    ->defaultItems(0)
-                    // ->deletable(false)
-                    ->schema([
+                ->label('Notas')
+                ->relationship()
+                ->defaultItems(0)
+                // ->deletable(false)
+                ->itemLabel(fn (array $state): ?string => $state['user_name'] ?? null)
+                ->schema([
 
+                    Forms\Components\Textarea::make('description')
+                        ->label('Descripción de la nota')
+                        ->required()
+                        ->columnSpanFull(),
+                    FileUpload::make('file'),
+                    Forms\Components\TextInput::make('user_name')
+                        ->label('Nombre de usuario')
+                        ->formatStateUsing(fn (): string => Auth::user()->name )
+                        ->readOnly(),
+                    Forms\Components\Hidden::make('user_id')
+                        ->default(Auth::user()->id)
+                        ->required()
+                        ->visible(false)
+                        ,
+                ])
+                ->columns(1)
+                ->columnSpanFull()
+                ,
 
-                        // TextEntry::make('user_id')->formatStateUsing(fn (string $state): string => Auth::user()->name ),
-
-                        Forms\Components\Textarea::make('description')
-                            ->label('Descripción de la nota')
-                            ->required()
-                            ->columnSpanFull(),
-                        FileUpload::make('file'),
-                        Forms\Components\TextInput::make('user_id')
-                            ->default(Auth::user()->id)
-                            ->readOnly()
-                            ->required()
-                            ->numeric(),
-                    ])
-                    ->columns(2)
-                    ->columnSpanFull()
-                    ,
-
-                Forms\Components\TextInput::make('user_id')
+                Forms\Components\TextInput::make('user_name')
+                    ->label('Nombre de usuario')
+                    ->formatStateUsing(fn (): string => Auth::user()->name )
+                    ->readOnly(),
+				Forms\Components\Hidden::make('user_id')
                     ->default(Auth::user()->id)
-                    ->formatStateUsing(fn (string $state): string => Auth::user()->name )
-                    ->readOnly()
-                    ->numeric(),
+                    ,
             ]);
     }
 
