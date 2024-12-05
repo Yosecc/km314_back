@@ -15,4 +15,8 @@ class LoginLog extends Model
         'user_agent',
         'logged_in_at',
     ];
+
+    public function user(){
+        return $this->belongsTo(User::class);
+    }
 }
