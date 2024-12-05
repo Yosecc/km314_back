@@ -233,6 +233,7 @@ class ActivitiesResource extends Resource
             $auto['user_id'] = Auth::user()->id;
             $auto['created_at'] = Carbon::now();
             $auto['updated_at'] = Carbon::now();
+            unset($auto['familiar_model_id']);
             return $auto;
         });
         Auto::insert($data->toArray());
