@@ -604,6 +604,7 @@ class ActivitiesResource extends Resource
                                                     ->label(__('general.Select the responsible person'))
                                                     ->afterStateUpdated(function($state, Set $set){
                                                         $set('model','Owner');
+                                                        $set('model_id',$state);
                                                     })
                                                     ->options(function(Get $get , $context){
 
@@ -635,6 +636,7 @@ class ActivitiesResource extends Resource
                                                     ->reactive()
                                                     ->afterStateUpdated(function($state, Set $set){
                                                         $set('model','OwnerFamily');
+                                                        $set('model_id',$state);
                                                     })
                                                     ->options(function(Get $get , $context){
                                                             $type = 'option';
@@ -692,7 +694,7 @@ class ActivitiesResource extends Resource
                                     })
                                     ->action(function (array $data, $record, Get $get) {
                                         $autos = collect($data['autos']);
-                                        dd($autos );
+                                        // dd($autos );
                                         self::createAuto($autos->toArray(), ['type' => $get('tipo_entrada')] );
                                     }),
 

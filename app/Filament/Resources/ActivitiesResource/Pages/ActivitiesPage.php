@@ -198,6 +198,7 @@ class ActivitiesPage extends CreateRecord
                     });
 
         ActivitiesAuto::insert($autos->toArray());
+
     }
 
 
