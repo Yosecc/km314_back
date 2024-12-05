@@ -12,15 +12,15 @@ class Entry extends BaseWidget
     use HasWidgetShield;
     protected static ?int $sort = -99;
     // protected int | string | array $columnSpan = 'full';
-    protected static ?string $heading = 'Atajos de actividades (entrada y salida)';
+    protected ?string $heading = 'Atajos de actividades (entrada y salida)';
     protected function getColumns(): int
     {
         return 2;
-    }    
-    
+    }
+
     protected function getStats(): array
     {
-        
+
         // if(!Auth::user()->hasAnyRole([2])){
         //     return [];
         // }
@@ -40,7 +40,7 @@ class Entry extends BaseWidget
                 // ->descriptionIcon('heroicon-m-arrow-trending-up')
                 // ->color('success')
                 ,
-           
+
         ];
     }
 }

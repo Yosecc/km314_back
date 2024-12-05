@@ -16,7 +16,7 @@ class Personas extends BaseWidget
     use HasWidgetShield;
     protected static ?int $sort = -10;
 
-    protected static ?string $heading = 'Personas en el barrio (contadores)';
+    protected ?string $heading = 'Personas en el barrio (contadores)';
 
 
     // protected static ?string $pollingInterval = '30s';
@@ -30,8 +30,7 @@ class Personas extends BaseWidget
             Stat::make('Visitantes', $this->getEntradasFormVisitantesGenerales())->description('Entrada general - Club playa - Club House'),
             Stat::make('Inquilinos', $this->getEntradasFormInquilinosLotes())->description('Lotes'),
             Stat::make('Trabajadores', $this->getEntradasFormTrabajadoresLotes())->description('Lotes'),
-            Stat::make('Visitas', $this->getEntradasFormVisitaLotes())->description('Lotes')
-            ,
+            Stat::make('Visitas', $this->getEntradasFormVisitaLotes())->description('Lotes'),
 
         ];
     }
