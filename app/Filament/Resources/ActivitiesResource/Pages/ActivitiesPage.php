@@ -43,6 +43,11 @@ class ActivitiesPage extends CreateRecord
             $model = 'FormControl';
         }
 
+        if($this->data['type'] ==  1) {
+            $this->data['type'] = 'Entry';
+        }elseif($this->data['type'] ==  2){
+            $this->data['type'] = 'Exit';
+        }
         $peopleIds = collect($this->data['peoples']);
 
         if ($this->data['type'] == 'Exit') {

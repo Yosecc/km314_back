@@ -226,6 +226,18 @@ class ActivitiesResource extends Resource
         })->pluck('texto','id')->toArray();
     }
 
+    public static function searchAutosFamiliar($ids, $type, $model)
+    {
+        return Auto::whereIn('model_id',$ids)->where('model', $model)->get()->map(function($auto) use ($type){
+            if($type == 'option'){
+                $auto['texto'] = $auto['marca']. ' - '.$auto['modelo'];
+            }else{
+                $auto['texto'] = $auto['patente'].' - '.$auto['color'];
+            }
+            return $auto;
+        })->pluck('texto','id')->toArray();
+    }
+
 
     public static function createAuto($data, $config)
     {
@@ -233,7 +245,7 @@ class ActivitiesResource extends Resource
             $auto['user_id'] = Auth::user()->id;
             $auto['created_at'] = Carbon::now();
             $auto['updated_at'] = Carbon::now();
-            unset($auto['familiar_model_id']);
+            // unset($auto['familiar_model_id']);
             return $auto;
         });
         Auto::insert($data->toArray());
@@ -288,15 +300,45 @@ class ActivitiesResource extends Resource
         return $form
             ->schema([
 
-                Forms\Components\Select::make('type')
-                    ->required()
-                    ->columnStart(4)
-                    ->options([
-                        'Entry' => __('general.Entry'),
-                        'Exit' => __('general.Exit'),
-                    ])
-                    ->label(__('general.Type'))
-                    ->default(isset($_GET['type']) ? $_GET['type']  : '' ),
+                // Forms\Components\Select::make('type')
+                //     ->required()
+                //     // ->columnStart(4)
+                //     ->options([
+                //         'Entry' => __('general.Entry'),
+                //         'Exit' => __('general.Exit'),
+                //     ])
+                //     ->label(__('general.Type'))
+                //     ->default(isset($_GET['type']) ? $_GET['type']  : '' ),
+
+
+                    Forms\Components\ViewField::make('type')
+                        ->required()
+                        ->view('filament.forms.components.tipoActividad')
+                        ->label(__('general.Type'))
+                        ->default(function(){
+                            if(!isset($_GET['type'])){
+                                return '';
+                            }
+
+                            if($_GET['type']  == 'Entry'){
+                                return 1;
+                            }
+                            if($_GET['type']  == 'Exit'){
+                                return 2;
+                            }
+                            return 0;
+                        })
+                        ->viewData([
+                            'opciones' => [
+                                1 => __('general.Entry'),
+                                2 => __('general.Exit'),
+                            ],
+                        ])
+                        ->disabled(function($context){
+                            return $context == 'view' ? true : false;
+                        })
+                        ->live()
+                    ,
 
                 Forms\Components\Fieldset::make()
                     ->schema([
@@ -312,18 +354,53 @@ class ActivitiesResource extends Resource
                             ->live()
                     ])
                     ->columns(1),
+                    Forms\Components\Fieldset::make()
+                    ->label(__('general.Search'))
+                        ->columns([
+                            'sm' => 4,
+                            'xl' => 6,
+                            '2xl' => 8,
+                        ])
+                        ->schema([
+                            Forms\Components\TextInput::make('num_search')
+                                ->label(__('general.DNI'))
+                                ->columnSpan(['sm'=> 2])
+                                ->columnStart([
+                                    'sm' => 2,
+                                    'xl' => 3,
+                                    '2xl' => 4,
+                                ])
+                                ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
+                                ->live(),
+                        ])
+                        ->visible(function(Get $get, $context){
+                            return $get('tipo_entrada') && $context != 'view' ? true: false;
+                        }),
 
-                Forms\Components\Fieldset::make('search')->label(__('general.Search'))
-                    ->schema([
-                        Forms\Components\Grid::make(3)
-                            ->schema([
-                                Forms\Components\TextInput::make('num_search')->label(__('general.DNI'))->live(),
-                            ]),
-                    ])
-                    ->visible(function(Get $get, $context){
-                        return $get('tipo_entrada') && $context != 'view' ? true: false;
-                    })
-                    ->columns(1),
+                // Forms\Components\TextInput::make('num_search')
+                    // ->label(__('general.DNI'))
+                    // ->live()
+                    // ->visible(function(Get $get, $context){
+                    //     return $get('tipo_entrada') && $context != 'view' ? true: false;
+                    // })
+                    // ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
+                    // ->columns(['md' => 2, 'xl' => 4])
+                    // ->extraAttributes(['title' => 'Text input'])
+                    // ->extraFieldWrapperAttributes(['class' => 'inputDNI'])
+                    // ,
+                // Forms\Components\Fieldset::make('search')
+                //     ->label(__('general.Search'))
+
+                //     ->schema([
+                //         Forms\Components\Grid::make(3)
+                //             ->schema([
+                //                 Forms\Components\TextInput::make('num_search')->label(__('general.DNI'))->live(),
+                //             ]),
+                //     ])
+                //     ->visible(function(Get $get, $context){
+                //         return $get('tipo_entrada') && $context != 'view' ? true: false;
+                //     })
+                //     ->columns(1),
                 Forms\Components\Fieldset::make('forms_control')->label(__('general.Forms Control'))
                     ->schema([
                         Forms\Components\Grid::make(2)
@@ -536,16 +613,24 @@ class ActivitiesResource extends Resource
                                     return self::searchAutos($get('autos'),'option');
                                 }
 
+                                $data = [];
+
                                 if($get('tipo_entrada') == 1){
-                                    return count($get('peoples')) ? self::searchOwnersAutos($get('peoples'), 'option') : [];
+                                    $data = count($get('peoples')) ? self::searchOwnersAutos($get('peoples'), 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 2){
-                                    return count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'option') : [];
+                                    $data = count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
-                                    return $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'option') : [];
+                                    $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'option') : [];
                                 }
-                                return [];
+
+                                if($get('families')){
+                                    $datas = $get('families') ? self::searchAutosFamiliar($get('families'),'option','OwnerFamily') : [];
+                                    $data = array_merge($data, $datas);
+								}
+
+                                return $data;
                             })
                             ->descriptions(function(Get $get, $context){
 
@@ -856,7 +941,7 @@ class ActivitiesResource extends Resource
                     ->visible(function(Get $get){
                         return $get('tipo_entrada') ? true: false;
                     })
-            ])->columns(4);
+            ])->columns(1);
     }
 
 
