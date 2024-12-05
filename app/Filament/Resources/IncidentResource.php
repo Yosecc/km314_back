@@ -108,12 +108,15 @@ class IncidentResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('date_incident')
+                    ->label('Fecha')
                     ->searchable(),
-                Tables\Columns\IconColumn::make('status')
-                    ->boolean(),
+                // Tables\Columns\IconColumn::make('status')
+                //     ->boolean(),
                 Tables\Columns\TextColumn::make('user.name')
+                    ->label('Usuario')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
