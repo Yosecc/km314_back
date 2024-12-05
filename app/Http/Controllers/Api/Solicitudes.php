@@ -266,7 +266,7 @@ class Solicitudes extends Controller
 
         $solicitud = ServiceRequest::where('id',$request->id)
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
-                            ->first();
+                            ->get();
 
         $solicitud = $this->_getSolicitudes($solicitud);
 
