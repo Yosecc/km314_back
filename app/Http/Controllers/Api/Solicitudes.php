@@ -30,7 +30,7 @@ class Solicitudes extends Controller
             }
             if($solicitud->serviceRequestFile){
                 $solicitud->serviceRequestFile->map(function($archivo){
-                    $archivo['file'] = config('app.url').Storage::url($archivo['file']);
+                    // $archivo['file'] = config('app.url').Storage::url($archivo['file']);
                     $archivo['path'] = config('app.url').Storage::url($archivo['file']);
                     $archivo['name'] = '';
 
