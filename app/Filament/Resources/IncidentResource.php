@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\Get;
+
 use App\Filament\Resources\IncidentResource\Pages;
 use App\Filament\Resources\IncidentResource\RelationManagers;
 use App\Models\Incident;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Repeater;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\FileUpload;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Forms\Get;
 class IncidentResource extends Resource
 {
     protected static ?string $model = Incident::class;
@@ -81,7 +83,7 @@ class IncidentResource extends Resource
                     FileUpload::make('file'),
                     Forms\Components\TextInput::make('user_name')
                         ->label('Nombre de usuario')
-                        ->formatStateUsing(fn (): string => Auth::user()->name )
+                        ->formatStateUsing(fn (Get $get): string => User::find($get('user_id'))->name )
                         ->readOnly()->visible(false),
                     Forms\Components\Hidden::make('user_id')
                         ->default(Auth::user()->id)
@@ -95,7 +97,7 @@ class IncidentResource extends Resource
 
                 Forms\Components\TextInput::make('user_name')
                     ->label('Nombre de usuario')
-                    ->formatStateUsing(fn (): string => Auth::user()->name )
+                    ->formatStateUsing(fn (Get $get): string => User::find($get('user_id'))->name )
                     ->readOnly(),
 				Forms\Components\Hidden::make('user_id')
                     ->default(Auth::user()->id)
