@@ -25,7 +25,7 @@ class UserResource extends Resource
     protected static ?string $label = 'usuario';
     protected static ?string $navigationGroup = 'Configuración';
 
-    
+
 
     public static function form(Form $form): Form
     {
@@ -36,6 +36,7 @@ class UserResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
                     ->email()
+                    ->unique('user','email')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\DateTimePicker::make('email_verified_at'),
@@ -43,7 +44,7 @@ class UserResource extends Resource
                     ->password()
                     ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                     ->dehydrated(fn ($state) => filled($state))
-                    
+
                     ->required(function($context){
                         return $context == 'edit' ? false : true;
                     })
@@ -64,7 +65,7 @@ class UserResource extends Resource
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['password'] = bcrypt($data['password']);
-    
+
         return $data;
     }
 
@@ -77,7 +78,7 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('roles.name')
-                    
+
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
