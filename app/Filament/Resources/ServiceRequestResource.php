@@ -67,13 +67,13 @@ class ServiceRequestResource extends Resource
                                 Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
 
                                 Forms\Components\Select::make('service_request_type_id')
-                                    // ->label(__("general.LoteStatus"))
+                                    ->label('Tipo de servicio')
                                     ->required()
                                     ->relationship(name: 'serviceRequestType', titleAttribute: 'name')
                                     ->live(),
 
                                 Forms\Components\Select::make('service_id')
-                                    // ->label(__("general.LoteStatus"))
+                                    ->label('Servicio'))
                                     ->required()
                                     ->relationship(name: 'service', titleAttribute: 'name')
                                     ->live()
@@ -85,6 +85,7 @@ class ServiceRequestResource extends Resource
                                     }),
 
                                 Forms\Components\TextInput::make('name')
+                                    ->label('Nombre')
                                     ->required()
                                     ->live()
                                     ->maxLength(255)->columnSpan(2),
@@ -92,7 +93,7 @@ class ServiceRequestResource extends Resource
                                 Forms\Components\Hidden::make('model'),
 
                                 Forms\Components\Select::make('model_id')
-                                    // ->label(__("general.LoteStatus"))
+                                    ->label('')
                                     ->required()
                                     ->options(RentalAttention::get()->pluck('name','id')->toArray())
                                     ->disabled( fn (Get $get) => $get('model') != 'RentalAttention' )
@@ -100,6 +101,7 @@ class ServiceRequestResource extends Resource
 
                                 Forms\Components\Select::make('model_id')
                                     // ->label(__("general.LoteStatus"))
+                                    ->label('')
                                     ->required()
                                     ->options(HomeInspection::get()->pluck('name','id')->toArray())
                                     ->disabled( fn (Get $get) => $get('model') != 'HomeInspection' )
@@ -107,6 +109,7 @@ class ServiceRequestResource extends Resource
 
                                 Forms\Components\Select::make('model_id')
                                     // ->label(__("general.LoteStatus"))
+                                    ->label('')
                                     ->required()
                                     ->options(WorksAndInstallation::get()->pluck('name','id')->toArray())
                                     ->disabled( fn (Get $get) => $get('model') != 'WorksAndInstallation' )
@@ -114,6 +117,7 @@ class ServiceRequestResource extends Resource
 
                                 Forms\Components\Select::make('model_id')
                                     // ->label(__("general.LoteStatus"))
+                                    ->label('Espacio')
                                     ->required()
                                     ->options(CommonSpaces::get()->pluck('name','id')->toArray())
                                     ->disabled( fn (Get $get) => $get('model') != 'CommonSpaces' )
@@ -121,12 +125,14 @@ class ServiceRequestResource extends Resource
 
                                 Forms\Components\Select::make('model_id')
                                     // ->label(__("general.LoteStatus"))
+                                    ->label('')
                                     ->required()
                                     ->options(StartUp::get()->pluck('name','id')->toArray())
                                     ->disabled( fn (Get $get) => $get('model') != 'StartUp' )
                                     ->visible( fn (Get $get) => $get('model') == 'StartUp' ),
 
                                 Select::make('options')
+                                     ->label('opciones')
                                     ->multiple()
                                     ->searchable()
                                     ->options(StartUpOption::get()->pluck('name','id')->toArray())
@@ -135,7 +141,7 @@ class ServiceRequestResource extends Resource
 
 
                             ])->columns(2),
-                            Forms\Components\TextInput::make('observations'),
+                            Forms\Components\TextInput::make('observations')->label('Observaciones'),
                             Fieldset::make('responsible')
                                 ->label('Responsable')
                                 ->relationship('responsible')
@@ -163,10 +169,9 @@ class ServiceRequestResource extends Resource
                     Wizard\Step::make('Date')
                         ->schema([
 
-                            Forms\Components\DateTimePicker::make('starts_at')
-                                ->required(),
+                            Forms\Components\DateTimePicker::make('starts_at')->label('Fecha de inicio')->required(),
 
-                            Forms\Components\DateTimePicker::make('ends_at'),
+                            Forms\Components\DateTimePicker::make('ends_at')->label('Fecha de fin'),
                         ]),
                     Wizard\Step::make('Info')
                         ->schema([
@@ -188,7 +193,7 @@ class ServiceRequestResource extends Resource
                             //     ->options(Property::get()->pluck('identificador', 'id')->toArray()),
 
                             Forms\Components\Select::make('service_request_status_id')
-                                // ->label(__("general.LoteStatus"))
+                                ->label("Estado de la Solicitud")
                                 ->relationship(name: 'serviceRequestStatus', titleAttribute: 'name')
                                 // ->options(ServiceRequestStatus::get()->pluck('name','id')->toArray())
                                 ->required(),
@@ -199,7 +204,7 @@ class ServiceRequestResource extends Resource
                                 ->schema([
 
                                     Hidden::make('user_id')->default(Auth::user()->id),
-                                    Textarea::make('description'),
+                                    Textarea::make('description')->label('Descripción'),
 
                                 ])
                                 ->defaultItems(0)
@@ -207,11 +212,11 @@ class ServiceRequestResource extends Resource
 
                             Repeater::make('serviceRequestFile')
                                 ->relationship()
-                                ->label('Archivo')
+                                ->label('Documentos')
                                 ->schema([
                                     Hidden::make('user_id')->default(Auth::user()->id),
-                                    Textarea::make('description'),
-                                    Forms\Components\FileUpload::make('file')
+                                    Textarea::make('description')->label('Descripción'),
+                                    Forms\Components\FileUpload::make('file')->label('Archivo')
                                 ])
                                 ->defaultItems(0)
                                 ->columns(1)
@@ -231,17 +236,17 @@ class ServiceRequestResource extends Resource
 
                 Tables\Columns\ColorColumn::make('serviceRequestStatus.color')
                 ->label(''),
-                Tables\Columns\TextColumn::make('serviceRequestStatus.name')
+                Tables\Columns\TextColumn::make('serviceRequestStatus.name')->label('Estado')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('serviceRequestType.name')
+                Tables\Columns\TextColumn::make('serviceRequestType.name')->label('Tipo')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('service.name')
+                Tables\Columns\TextColumn::make('service.name')->label('Servicio')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('name')
+                Tables\Columns\TextColumn::make('name')->label('Título')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('starts_at')
+                Tables\Columns\TextColumn::make('starts_at')->label('Fecha de inicio')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('ends_at')
+                Tables\Columns\TextColumn::make('ends_at')->label('Fecha de fin')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
