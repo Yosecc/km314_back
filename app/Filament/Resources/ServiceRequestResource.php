@@ -73,7 +73,7 @@ class ServiceRequestResource extends Resource
                                     ->live(),
 
                                 Forms\Components\Select::make('service_id')
-                                    ->label('Servicio'))
+                                    ->label('Servicio')
                                     ->required()
                                     ->relationship(name: 'service', titleAttribute: 'name')
                                     ->live()
