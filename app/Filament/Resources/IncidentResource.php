@@ -82,7 +82,7 @@ class IncidentResource extends Resource
                     Forms\Components\TextInput::make('user_name')
                         ->label('Nombre de usuario')
                         ->formatStateUsing(fn (): string => Auth::user()->name )
-                        ->readOnly(),
+                        ->readOnly()->visible(false),
                     Forms\Components\Hidden::make('user_id')
                         ->default(Auth::user()->id)
                         ->required()
