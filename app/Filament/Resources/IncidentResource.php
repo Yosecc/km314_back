@@ -59,7 +59,7 @@ class IncidentResource extends Resource
                     ->live()
                     ->maxLength(255),
 
-                Forms\Components\Textarea::make('description')
+                Forms\Components\TextInput::make('description')
                 ->label('Descripción de la incidencia')
                     ->required()
                     ->columnSpanFull(),
@@ -74,7 +74,7 @@ class IncidentResource extends Resource
                 ->itemLabel(fn (array $state): ?string => $state['user_name'] ?? null)
                 ->schema([
 
-                    Forms\Components\Textarea::make('description')
+                    Forms\Components\TextInput::make('description')
                         ->label('Descripción de la nota')
                         ->required()
                         ->columnSpanFull(),
