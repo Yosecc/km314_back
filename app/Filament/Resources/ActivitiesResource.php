@@ -35,8 +35,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Radio;
-
-
+use Filament\Tables\Filters\Filter;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 class ActivitiesResource extends Resource
 {
     protected static ?string $model = Activities::class;
@@ -1012,7 +1013,39 @@ class ActivitiesResource extends Resource
 
             ])
             ->filters([
-                //
+                Filter::make('buscar')
+                    ->label(__('Buscar'))
+                    ->form([
+                        Forms\Components\TextInput::make('query')
+                            ->label(__('general.Search'))
+                            ->placeholder('Buscar por nombre o dni'),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if (!empty($data['query'])) {
+                            // Obtén todos los modelos dentro del namespace App\Models
+                            $namespace = 'App\Models';
+                            $path = app_path('Models');
+                            $models = collect(File::allFiles($path))
+                                ->map(function ($file) use ($namespace) {
+                                    $class = $namespace . '\\' . Str::replaceLast('.php', '', $file->getFilename());
+                                    return class_exists($class) ? $class : null;
+                                })
+                                ->filter()
+                                ->values();
+
+                            // Construye la consulta para buscar en `peoples`
+                            $query->whereHas('peoples', function ($peopleQuery) use ($models, $data) {
+                                foreach ($models as $modelClass) {
+                                    $peopleQuery->orWhere('model', class_basename($modelClass))
+                                                ->whereIn('model_id', $modelClass::where(function ($query) use ($data) {
+                                                    $query->where('dni', 'like', "%{$data['query']}%")
+                                                          ->orWhere('first_name', 'like', "%{$data['query']}%")
+                                                          ->orWhere('last_name', 'like', "%{$data['query']}%");
+                                                })->pluck('id'));
+                                }
+                            });
+                        }
+                    })
             ])
             ->actions([
                 // Tables\Actions\EditAction::make(),
