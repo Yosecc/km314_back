@@ -16,8 +16,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class LoginLogResource extends Resource
 {
     protected static ?string $model = LoginLog::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationLabel = 'Registro de ingresos al sistema';
+    protected static ?string $navigationGroup = 'Seguridad';
 
     public static function form(Form $form): Form
     {

@@ -25,13 +25,15 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use App\Filament\Resources\ActivitiesResource\Widgets\UltimasActividades;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
-
+use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationBuilder;
+use Filament\Navigation\NavigationItem;
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
 
-       
+
         return $panel
             ->default()
             ->id('admin')
@@ -87,6 +89,16 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->databaseNotifications()
+            // ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
+            //     return $builder->groups([
+            //         NavigationGroup::make('Seguridad')
+            //             ->items([
+            //                 ...\App\Filament\Resources\ActivitiesResource::getNavigationItems(),
+
+            //             ]),
+
+            //     ]);
+            // })
             ;
     }
 }

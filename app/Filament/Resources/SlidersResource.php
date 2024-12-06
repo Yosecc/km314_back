@@ -38,7 +38,7 @@ class SlidersResource extends Resource
             ->schema([
                 FileUpload::make('img')
                     ->disk('public')
-                    ->directory('service_request_files')
+                    // ->directory('service_request_files')
                     ->visibility('public'),
                 Toggle::make('status')
             ]);

@@ -31,6 +31,8 @@ class Messages extends Page implements HasForms, HasTable
 
     protected static string $view = 'filament.pages.messages';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public $newMessage;
 
     public function __construct()

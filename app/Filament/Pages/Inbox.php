@@ -26,7 +26,7 @@ class Inbox extends Page implements HasForms, HasTable
     use HasPageShield;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static string $view = 'filament.pages.inbox';
-
+    protected static ?string $navigationLabel = 'Mensajes';
     public string $activeTab = 'tablaMail';
 
     // Método para renderizar la tabla de correos

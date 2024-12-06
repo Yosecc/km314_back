@@ -13,6 +13,7 @@ use App\Models\EmployeeAutos;
 use App\Models\FormControl;
 use App\Models\FormControlAuto;
 use App\Models\FormControlPeople;
+use App\Models\ActivitiesPeople;
 use App\Models\Lote;
 use App\Models\OwnerSpontaneousVisit;
 use App\Models\Owner;
@@ -1023,18 +1024,20 @@ class ActivitiesResource extends Resource
                     ->query(function (Builder $query, array $data) {
                         if (!empty($data['query'])) {
                             // Obtén todos los modelos dentro del namespace App\Models
-                            $namespace = 'App\Models';
-                            $path = app_path('Models');
-                            $models = collect(File::allFiles($path))
-                                ->map(function ($file) use ($namespace) {
-                                    $class = $namespace . '\\' . Str::replaceLast('.php', '', $file->getFilename());
-                                    return class_exists($class) ? $class : null;
-                                })
-                                ->filter()
-                                ->values();
 
+//dd( $models);
+							 $d = ActivitiesPeople::limit(100)->get();
+                                $d = $d->groupBy('model')->keys();
+								$models = $d->map(function($model){
+									if($model == 'FormControl'){
+										$model = 'FormControlPeople';
+									}
+									return "App\Models\\".$model;
+								});
+                                //dd($d);
                             // Construye la consulta para buscar en `peoples`
                             $query->whereHas('peoples', function ($peopleQuery) use ($models, $data) {
+								 //dd($peopleQuery,$models, $data);
                                 foreach ($models as $modelClass) {
                                     $peopleQuery->orWhere('model', class_basename($modelClass))
                                                 ->whereIn('model_id', $modelClass::where(function ($query) use ($data) {

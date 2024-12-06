@@ -44,7 +44,7 @@ class ServiceRequestResource extends Resource
 
     protected static ?string $navigationLabel = 'Solicitudes';
     protected static ?string $label = 'solicitud';
-    protected static ?string $navigationGroup = 'Solicitudes';
+    // protected static ?string $navigationGroup = 'Solicitudes';
 
     public static $service = null;
 
