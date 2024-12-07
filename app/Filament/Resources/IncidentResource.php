@@ -49,6 +49,9 @@ class IncidentResource extends Resource
                     ->default(now()->format('Y-m-d H:m:s'))
                     ->live()
                     ->required()
+                    ->disabled(function($context){
+                        return $context == 'edit' ? false:true;
+                    })
                     // ->readonly()// context view / edit
                     ,
 
