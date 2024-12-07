@@ -19,6 +19,7 @@ use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Set;
 class OwnerResource extends Resource
 {
     protected static ?string $model = Owner::class;
@@ -48,6 +49,10 @@ class OwnerResource extends Resource
                         ->numeric(),
 
                     Forms\Components\TextInput::make('first_name')
+                        ->live()
+                        ->afterStateUpdated(function($state, Set $set){
+                            $set('user.name', $state);
+                        })
                         ->label(__("general.FirstName"))
                         ->required()
                         ->maxLength(255),
@@ -62,7 +67,12 @@ class OwnerResource extends Resource
                         ->email()
                         ->unique(ignoreRecord: true)
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->live()
+                        ->afterStateUpdated(function($state, Set $set){
+                            $set('user.email', $state);
+                        })
+                        ,
 
                     Forms\Components\TextInput::make('phone')
                         ->label(__("general.Phone")),
