@@ -21,9 +21,9 @@ class ServiceResource extends Resource
 
     protected static ?string $navigationLabel = 'Servicios';
     protected static ?string $label = 'servicio';
-    protected static ?string $navigationGroup = 'Servicios';
+    protected static ?string $navigationGroup = 'Servicios - Configuración';
 
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'Servicios';
@@ -37,7 +37,7 @@ class ServiceResource extends Resource
                     // ->label(__("general.LoteStatus"))
                     ->required()
                     ->relationship(name: 'serviceType', titleAttribute: 'name'),
-              
+
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),

@@ -21,9 +21,9 @@ class ServiceTypeResource extends Resource
 
     protected static ?string $navigationLabel = 'Tipos de servicios';
     protected static ?string $label = 'tipo de servicio';
-    protected static ?string $navigationGroup = 'Servicios';
+    protected static ?string $navigationGroup = 'Servicios - Configuración';
 
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'Tipo de servicios';

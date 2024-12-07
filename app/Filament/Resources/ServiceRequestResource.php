@@ -42,7 +42,7 @@ class ServiceRequestResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Solicitudes';
+    protected static ?string $navigationLabel = 'Solicitudes - Configuración';
     protected static ?string $label = 'solicitud';
     // protected static ?string $navigationGroup = 'Solicitudes';
 
