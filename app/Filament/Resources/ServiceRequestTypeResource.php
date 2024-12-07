@@ -21,9 +21,9 @@ class ServiceRequestTypeResource extends Resource
 
     protected static ?string $navigationLabel = 'Tipos de las solicitudes';
     protected static ?string $label = 'tipo de la solicitud';
-    protected static ?string $navigationGroup = 'Solicitudes';
+    protected static ?string $navigationGroup = 'Solicitudes - Configuración';
 
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'Tipos de las solicitudes';
