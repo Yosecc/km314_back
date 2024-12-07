@@ -230,7 +230,8 @@ class FormControl extends Controller
 
         if(!$request->id){
 
-            $recipient = User::find(1);
+
+            $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
 
             Notification::make()
                 ->title('Nuevo formulario #FORM_'.$idForm)

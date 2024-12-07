@@ -11,11 +11,11 @@ use App\Models\ServiceRequest;
 use App\Models\ServiceRequestFile;
 use App\Models\ServiceRequestType;
 use App\Http\Controllers\Controller;
-
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Models\ServiceRequestResponsiblePeople;
-
+use Filament\Notifications\Notification;
 class Solicitudes extends Controller
 {
 
@@ -209,6 +209,16 @@ class Solicitudes extends Controller
         $solicitud = ServiceRequest::where('id',$id)
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
                             ->get();
+
+       try {
+        $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
+
+        Notification::make()
+            ->title('Nueva solicitud #'.$solicitud->id)
+            ->sendToDatabase($recipient);
+       } catch (\Throwable $th) {
+        //throw $th;
+       }
 
         $solicitud = $this->_getSolicitudes($solicitud);
 
