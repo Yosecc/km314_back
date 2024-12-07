@@ -21,9 +21,9 @@ class ConstructionStatusResource extends Resource
 
     protected static ?string $navigationLabel = 'Estado de construcciones';
     protected static ?string $label = 'estado de construcción';
-    protected static ?string $navigationGroup = 'Configuracion de construcciones';
+    protected static ?string $navigationGroup = 'Construcciones - Configuración';
 
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'estado de construcciones';
@@ -55,11 +55,11 @@ class ConstructionStatusResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
-                
-                
-                
-                
+
+
+
+
+
             ])
             ->filters([
                 //

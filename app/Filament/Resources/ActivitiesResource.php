@@ -46,9 +46,9 @@ class ActivitiesResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
 
-    protected static ?string $navigationLabel = 'Actividades';
+    protected static ?string $navigationLabel = 'Entradas/Salidas';
 
-    protected static ?string $label = 'actividad';
+    protected static ?string $label = 'Entrada/Salida';
 
     protected static ?string $navigationGroup = 'Control de acceso';
 
@@ -56,7 +56,7 @@ class ActivitiesResource extends Resource
 
     public static function getPluralModelLabel(): string
     {
-        return 'actividades';
+        return 'Entradas/Salidas';
     }
 
     public static function searchEmployee($dni, $type, $ids = [])

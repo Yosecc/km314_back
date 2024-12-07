@@ -21,9 +21,9 @@ class ConstructionTypeResource extends Resource
 
     protected static ?string $navigationLabel = 'Tipo de construcciones';
     protected static ?string $label = 'tipo de construcción';
-    protected static ?string $navigationGroup = 'Configuracion de construcciones';
+    protected static ?string $navigationGroup = 'Construcciones - Configuración';
 
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'tipo de construcciones';
@@ -52,10 +52,10 @@ class ConstructionTypeResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-             
-             
-             
-             
+
+
+
+
             ])
             ->filters([
                 //

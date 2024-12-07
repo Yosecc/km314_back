@@ -21,9 +21,9 @@ class ConstructionCompanieResource extends Resource
 
     protected static ?string $navigationLabel = 'Compañías de construcciones';
     protected static ?string $label = 'compañía de construcción';
-    protected static ?string $navigationGroup = 'Configuracion de construcciones';
+    protected static ?string $navigationGroup = 'Construcciones - Configuración';
 
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'compañías de construcciones';
@@ -49,7 +49,7 @@ class ConstructionCompanieResource extends Resource
     {
         return $table
             ->columns([
-                
+
                 Tables\Columns\TextColumn::make('name')
                 ->label(__("general.Name"))
                     ->searchable(),
