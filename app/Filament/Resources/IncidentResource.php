@@ -81,27 +81,25 @@ class IncidentResource extends Resource
                         ->required()
                         ->columnSpanFull(),
                     FileUpload::make('file'),
+
+                    Forms\Components\Hidden::make('user_id')
+                        ->default(Auth::user()->id)
+                        ->required()
+                        ->visible(false) ,
                     Forms\Components\TextInput::make('user_name')
                         ->label('Nombre de usuario')
                         ->formatStateUsing(fn (Get $get): string => User::find($get('user_id'))->name )
                         ->readOnly()->visible(false),
-                    Forms\Components\Hidden::make('user_id')
-                        ->default(Auth::user()->id)
-                        ->required()
-                        ->visible(false)
-                        ,
                 ])
                 ->columns(1)
                 ->columnSpanFull()
                 ,
-
+                Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
                 Forms\Components\TextInput::make('user_name')
                     ->label('Nombre de usuario')
                     ->formatStateUsing(fn (Get $get): string => User::find($get('user_id'))->name )
                     ->readOnly(),
-				Forms\Components\Hidden::make('user_id')
-                    ->default(Auth::user()->id)
-                    ,
+
             ]);
     }
 
