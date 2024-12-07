@@ -50,7 +50,7 @@ class IncidentResource extends Resource
                     ->live()
                     ->required()
                     ->disabled(function($context){
-                        return $context == 'edit' ? false:true;
+                        return $context == 'edit' ? true:false;
                     })
                     // ->readonly()// context view / edit
                     ,
