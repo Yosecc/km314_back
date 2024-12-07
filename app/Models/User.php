@@ -19,7 +19,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return true;
     }
-    
+
 
     /**
      * The attributes that are mass assignable.
@@ -58,4 +58,9 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->belongsTo(Owner::class);
     }
+
+    // public function roles()
+    // {
+    //     return $this->belongsToMany(Role::class);
+    // }
 }

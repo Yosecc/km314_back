@@ -92,10 +92,10 @@ class PropertyResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                 Tables\Columns\TextColumn::make('propertyType.name')
+                 Tables\Columns\TextColumn::make('propertyType.name')->label('Tipo de propiedad')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('owner')
+                Tables\Columns\TextColumn::make('owner')->label('Propietario')
                     ->formatStateUsing(fn (Owner $state) => "{$state->first_name} {$state->last_name}" )
 
                     ->sortable(),

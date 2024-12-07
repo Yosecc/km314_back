@@ -28,9 +28,10 @@ class TutorialResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('title')
+                    ->label('Título')
                     ->required()
                     ->maxLength(255),
-                RichEditor::make('description')
+                RichEditor::make('description')->label('Descripción')
             ])->columns(1);
     }
 
@@ -38,7 +39,7 @@ class TutorialResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('title')
+                Tables\Columns\TextColumn::make('title')->label('Título')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

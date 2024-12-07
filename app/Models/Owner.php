@@ -22,6 +22,10 @@ class Owner extends Model
         return $this->hasOne(ActivitiesPeople::class,'model_id')->where('model','Owner')->latest();
     }
 
+    public function user(){
+        return $this->hasOne(User::class,'owner_id');
+    }
+
     public function lotes()
     {
         return $this->hasMany(Lote::class);
