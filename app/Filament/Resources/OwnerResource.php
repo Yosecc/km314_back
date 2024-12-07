@@ -49,10 +49,10 @@ class OwnerResource extends Resource
                         ->numeric(),
 
                     Forms\Components\TextInput::make('first_name')
-                        ->live()
-                        ->afterStateUpdated(function($state, Set $set){
-                            $set('user.name', $state);
-                        })
+                        // ->live()
+                        // ->afterStateUpdated(function($state, Set $set){
+                        //     $set('user.name', $state);
+                        // })
                         ->label(__("general.FirstName"))
                         ->required()
                         ->maxLength(255),
@@ -68,10 +68,10 @@ class OwnerResource extends Resource
                         ->unique(ignoreRecord: true)
                         ->required()
                         ->maxLength(255)
-                        ->live()
-                        ->afterStateUpdated(function($state, Set $set){
-                            $set('user.email', $state);
-                        })
+                        // ->live()
+                        // ->afterStateUpdated(function($state, Set $set){
+                        //     $set('user.email', $state);
+                        // })
                         ,
 
                     Forms\Components\TextInput::make('phone')
