@@ -28,6 +28,7 @@ use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationItem;
+use  App\Filament\Resources\IncidentResource\Widgets\IncidentesStats;
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -67,6 +68,8 @@ class AdminPanelProvider extends PanelProvider
                 // Widgets\FilamentInfoWidget::class,
                 // Entry::class,
                 UltimasActividades::class,
+
+                    IncidentesStats::class,
                 // Personas::class,
                 // PropietariosEnElBarrio::class,
                 // EmpleadosEnElBarrio::class,
