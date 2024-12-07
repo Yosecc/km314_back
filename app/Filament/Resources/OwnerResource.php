@@ -121,39 +121,39 @@ class OwnerResource extends Resource
 
                     Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
 
-                    Fieldset::make('Usuario')
-                        ->relationship('user')
-                        ->schema([
-                            Forms\Components\TextInput::make('name')
-                                ->required()
-                                ->maxLength(255),
-                            Forms\Components\TextInput::make('email')
-                                ->email()
-                                ->unique(ignoreRecord: true)
-                                ->required()
-                                ->maxLength(255),
-                            Forms\Components\DateTimePicker::make('email_verified_at')->default(now()->format('Y-m-d H:m:s')),
-                            Forms\Components\TextInput::make('password')
-                                ->password()
-                                ->dehydrateStateUsing(fn ($state) => Hash::make($state))
-                                ->dehydrated(fn ($state) => filled($state))
-                                ->required(function($context){
-                                    return $context == 'edit' ? false : true;
-                                })
-                                ->maxLength(255),
-                            Forms\Components\Select::make('roles')
-                                ->label('Rol')
-                                ->relationship('roles', 'name')
-                                ->default([3])
-                                ->disabled()
-                                ->preload()
-                                ,
-                            Forms\Components\Select::make('owner_id')
-                                ->disabled()
-                                ->relationship(name: 'owner')
-                                ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
-                                ->label(__("general.Owner")),
-                        ])
+                    // Fieldset::make('Usuario')
+                    //     ->relationship('user')
+                    //     ->schema([
+                    //         Forms\Components\TextInput::make('name')
+                    //             ->required()
+                    //             ->maxLength(255),
+                    //         Forms\Components\TextInput::make('email')
+                    //             ->email()
+                    //             ->unique(ignoreRecord: true)
+                    //             ->required()
+                    //             ->maxLength(255),
+                    //         // Forms\Components\DateTimePicker::make('email_verified_at')->default(now()->format('Y-m-d H:m:s')),
+                    //         Forms\Components\TextInput::make('password')
+                    //             ->password()
+                    //             ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                    //             ->dehydrated(fn ($state) => filled($state))
+                    //             ->required(function($context){
+                    //                 return $context == 'edit' ? false : true;
+                    //             })
+                    //             ->maxLength(255),
+                    //         Forms\Components\Select::make('roles')
+                    //             ->label('Rol')
+                    //             ->relationship('roles', 'name')
+                    //             ->default([3])
+                    //             ->disabled()
+                    //             ->preload()
+                    //             ,
+                    //         Forms\Components\Select::make('owner_id')
+                    //             ->disabled()
+                    //             ->relationship(name: 'owner')
+                    //             ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                    //             ->label(__("general.Owner")),
+                    //     ])
 
                 ]),
 
