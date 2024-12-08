@@ -31,6 +31,8 @@ use App\Filament\Resources\FormControlResource\Pages;
 use App\Filament\Resources\FormControlResource\RelationManagers;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Actions\Action as FormAction;
 class FormControlResource extends Resource
 {
     protected static ?string $model = FormControl::class;
@@ -226,6 +228,42 @@ class FormControlResource extends Resource
                     // ->disabled()
                     ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
                     ->label(__("general.Owner")),
+
+                    Actions::make([
+                        FormAction::make('aprobar')
+                            ->button()
+                            ->requiresConfirmation()
+                            ->color('success')
+                            ->label('Aprobar')
+                            ->action(function(FormControl $record){
+                                dd($record);
+                                $record->aprobar();
+                                Notification::make()
+                                    ->title('Formulario aprobado')
+                                    ->success()
+                                    ->send();
+                            })->hidden(function(FormControl $record){
+                                return $record->isActive() || $record->isExpirado() || $record->isVencido() ? true : false;
+                            }),
+                        FormAction::make('rechazar')
+                            ->action(function(FormControl $record){
+                                $record->rechazar();
+                                Notification::make()
+                                    ->title('Formulario rechzado')
+                                    ->success()
+                                    ->send();
+                            })
+                            ->button()
+                            ->requiresConfirmation()
+                            ->icon('heroicon-m-hand-thumb-down')
+                            ->color('danger')
+                            ->label('Rechazar')
+                            ->hidden(function(FormControl $record){
+                                return $record->isDenied() || $record->isExpirado() || $record->isVencido() ? true : false;
+                            })
+                    ])->visible(function($context){
+                        return $context == 'edit' ? true : false;
+                    }),
             ]);
     }
 
@@ -328,6 +366,7 @@ class FormControlResource extends Resource
                 //     ->dateTime()
                 //     ->sortable()
                 //     ->toggleable(isToggledHiddenByDefault: true),
+
             ])
             ->filters([
                 Filter::make('start_date_range')
