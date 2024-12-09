@@ -39,6 +39,7 @@ use Filament\Forms\Components\Radio;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Filament\Tables\Filters\SelectFilter;
 class ActivitiesResource extends Resource
 {
     protected static ?string $model = Activities::class;
@@ -1014,6 +1015,25 @@ class ActivitiesResource extends Resource
 
             ])
             ->filters([
+
+                Filter::make('created_at')
+                ->label('Fecha de creación')
+				->form([
+                    Forms\Components\DatePicker::make('created_at'),
+                ])->query(function (Builder $query, array $data): Builder {
+                    return $query
+                        ->when(
+                            $data['created_at'],
+                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', '=', $date),
+                        );
+                }),
+                SelectFilter::make('type')
+                ->label('Tipo')
+                ->options([
+                    'Entry' => __('general.Entry'),
+                                    'Exit' => __('general.Exit'),
+                ]),
+
                 Filter::make('buscar')
                     ->label(__('Buscar'))
                     ->form([
