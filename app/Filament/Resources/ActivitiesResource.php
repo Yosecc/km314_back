@@ -303,22 +303,27 @@ class ActivitiesResource extends Resource
         return $form
             ->schema([
 
-                // Forms\Components\Select::make('type')
-                //     ->required()
-                //     // ->columnStart(4)
-                //     ->options([
-                //         'Entry' => __('general.Entry'),
-                //         'Exit' => __('general.Exit'),
-                //     ])
-                //     ->label(__('general.Type'))
-                //     ->default(isset($_GET['type']) ? $_GET['type']  : '' ),
+                Forms\Components\Select::make('type')
+                     ->required()
+                     // ->columnStart(4)
+                     ->options([
+                         'Entry' => __('general.Entry'),
+                         'Exit' => __('general.Exit'),
+                     ])
+                     ->label(__('general.Type'))
+					->disabled(true)
+				->visible(function($context){
+                            return $context == 'view' ? true : false;
+                        })
+                     ->default(isset($_GET['type']) ? $_GET['type']  : '' ),
 
 
                     Forms\Components\ViewField::make('type')
                         ->required()
                         ->view('filament.forms.components.tipoActividad')
                         ->label(__('general.Type'))
-                        ->default(function(){
+                        ->default(function($state, $context){
+
                             if(!isset($_GET['type'])){
                                 return '';
                             }
@@ -339,6 +344,9 @@ class ActivitiesResource extends Resource
                         ])
                         ->disabled(function($context){
                             return $context == 'view' ? true : false;
+                        })
+						->visible(function($context){
+                            return $context == 'view' ? false : true;
                         })
                         ->live()
                     ,
