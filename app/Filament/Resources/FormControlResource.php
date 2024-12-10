@@ -33,6 +33,7 @@ use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action as FormAction;
+use App\Models\ConstructionCompanie;
 class FormControlResource extends Resource
 {
     protected static ?string $model = FormControl::class;
@@ -105,7 +106,15 @@ class FormControlResource extends Resource
                             ->options(Trabajos::get()->pluck('name','name')->toArray())
                             ->visible(function(Get $get){
                                 return collect($get('income_type'))->contains('Trabajador');
+                            }),
+                        Forms\Components\Select::make('construction_companie_id')
+                            ->options(function(){
+                                return ConstructionCompanie::get()->pluck('name','id')->toArray();
                             })
+                            ->visible(function(Get $get){
+                                return collect($get('income_type'))->contains('Trabajador');
+                            })
+                            ->live(),
 
 
                     ])

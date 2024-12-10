@@ -26,6 +26,8 @@ return new class extends Migration
             $table->time('end_time_range', $precision = 0)->nullable();
             $table->enum('status', ['Authorized', 'Denied','Pending']);
             $table->foreignId('owner_id')->nullable()->constrained();
+            $table->foreignId('construction_companie_id')->nullable()->constrained('construction_companies');
+
             // $table->enum('category', ['Owner', 'Tenant', 'Restaurant', 'Frequent works', 'Occasional works']);
             $table->foreignId('authorized_user_id')->nullable()->constrained('users');
             $table->foreignId('denied_user_id')->nullable()->constrained('users');

@@ -11,7 +11,7 @@ class FormControl extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['owner_id','access_type','income_type','tipo_trabajo','is_moroso', 'lote_ids','start_date_range', 'start_time_range', 'end_date_range', 'end_time_range', 'status', 'category', 'authorized_user_id','denied_user_id','user_id','date_unilimited','observations'];
+    protected $fillable = ['owner_id','access_type','income_type','tipo_trabajo','is_moroso', 'lote_ids','start_date_range', 'start_time_range', 'end_date_range', 'end_time_range', 'status', 'category', 'authorized_user_id','denied_user_id','user_id','date_unilimited','observations','construction_companie_id'];
 
     protected $casts = [
         'lote_ids' => 'array',
