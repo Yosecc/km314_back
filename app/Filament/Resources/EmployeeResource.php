@@ -6,6 +6,9 @@ use Filament\Forms;
 use Filament\Tables;
 use App\Models\Works;
 use App\Models\Employee;
+use App\Models\ConstructionCompanie;
+use App\Models\Trabajos;
+
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
@@ -14,6 +17,8 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\EmployeeResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\EmployeeResource\RelationManagers;
+use Filament\Forms\Set;
+use Filament\Forms\Get;
 
 class EmployeeResource extends Resource
 {
@@ -44,22 +49,46 @@ class EmployeeResource extends Resource
                         ->label(__("general.DNI"))
                         ->required()
                         ->numeric(),
-                    
+
                     Forms\Components\TextInput::make('first_name')
                         ->label(__("general.FirstName"))
                         ->required()
                         ->maxLength(255),
-                    
+
                     Forms\Components\TextInput::make('last_name')
                         ->label(__("general.LastName"))
                         ->required()
                         ->maxLength(255),
-                    
+
                     Forms\Components\TextInput::make('phone')
                         ->label(__("general.Phone"))
                         ->tel()
                         ->numeric(),
                     Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+                    Forms\Components\Select::make('trabajo_id')
+                        ->label('Tipo de trabajo/Cargo')
+                        ->options(Trabajos::get()->pluck('name','id')->toArray()),
+                    Forms\Components\Select::make('model_origen')
+                        ->label('Compañía de origen')
+                        ->options([
+                            'ConstructionCompanie' => 'Compañías De Construcciones',
+                            'Employee' => 'KM314'
+                        ])
+                        // ->afterStateUpdated(function($state,Set $set){
+
+                        // })
+                        ->live(),
+                    Forms\Components\Select::make('model_origen_id')
+                        ->options(function(){
+                            return ConstructionCompanie::get()->pluck('name','id')->toArray();
+                        })->disabled(function(Get $get){
+                            return $get('model_origen') == 'ConstructionCompanie' ? false:true;
+                        })
+                        ->visible(function(Get $get){
+                            return $get('model_origen') == 'ConstructionCompanie' ? false:true;
+                        })
+                        ->live(),
+
                 ])->columns(2),
                 Forms\Components\Repeater::make('autos')
                     ->relationship()
@@ -83,7 +112,7 @@ class EmployeeResource extends Resource
                             // ->maxLength(255),
                     ])
                     ->defaultItems(0)
-                    ->columns(2)  
+                    ->columns(2)
             ])->columns(1);
     }
 

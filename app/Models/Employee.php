@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Employee extends Model
 {
     use HasFactory;
-    protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id'];
+    protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id','trabajo_id','model_origen','model_origen_id'];
 
     public function work()
     {
@@ -19,6 +19,13 @@ class Employee extends Model
     {
         return $this->hasMany(Auto::class,'model_id')->where('model','Employee');
     }
+
+    public function trabajos()
+    {
+        return $this->hasMany(Trabajos::class,'trabajo_id');
+    }
+
+
 
     public function activitiePeople()
     {
