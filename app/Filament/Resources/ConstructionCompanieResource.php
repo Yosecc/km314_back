@@ -45,7 +45,6 @@ class ConstructionCompanieResource extends Resource
                     ->required()
                     ->maxLength(255),
                 Forms\Components\Select::make('lote_id')->label(__("general.Lote"))
-                    ->required()
                     ->live()
                     // ->relationship(name: 'lote')
                     ->options(function(Get $get){
@@ -72,6 +71,7 @@ class ConstructionCompanieResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('lote')
                     ->label(__("general.Lote"))
+                    ->formatStateUsing(fn (Lote $state) => "{$state->sector->name}{$state->lote_id}" )
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                 ->label(__("general.created_at"))
