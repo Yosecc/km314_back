@@ -34,6 +34,9 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action as FormAction;
 use App\Models\ConstructionCompanie;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 class FormControlResource extends Resource
 {
     protected static ?string $model = FormControl::class;
@@ -142,6 +145,24 @@ class FormControlResource extends Resource
                         Forms\Components\Toggle::make('date_unilimited')->label(__('general.date_unilimited'))->live(),
                     ])
                     ->columns(4),
+
+                Forms\Components\Fieldset::make('personas')->label('Seleccione las personas a agregar en la lista')
+                    ->schema([
+                        Repeater::make('peronas')
+                            ->schema(function(Get $get){
+                                return ConstructionCompanie::where('id',$get('construction_companie_id'))->get()
+                                ->map(function($compania){
+                                    return TextInput::make('name')->default($compania['name']);
+                                });
+                            })
+                            ->columns(2)
+                    ])
+                    ->visible(function(Get $get){
+                        return $get('construction_companie_id') ? true : false;
+                    })
+                    ->columns(4),
+
+
                 Forms\Components\Repeater::make('peoples')
                     ->label(__("general.Peoples"))
                     ->relationship()
