@@ -14,6 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Repeater;
 class ConstructionCompanieResource extends Resource
 {
@@ -59,16 +60,56 @@ class ConstructionCompanieResource extends Resource
                     Repeater::make('empleados')
                         ->relationship()
                         ->schema([
-                            Forms\Components\TextInput::make('first_name')->required(),
-                            // Forms\Components\Select::make('role')
-                            //     ->options([
-                            //         'member' => 'Member',
-                            //         'administrator' => 'Administrator',
-                            //         'owner' => 'Owner',
-                            //     ])
-                            //     ->required(),
-                        ])
-                        ->columns(2)
+                            Forms\Components\Select::make('work_id')
+                                ->label(__("general.Work"))
+                                ->required()
+                                ->relationship(name: 'work', titleAttribute: 'name'),
+
+                            Forms\Components\TextInput::make('dni')
+                                ->label(__("general.DNI"))
+                                ->required()
+                                ->numeric(),
+
+                            Forms\Components\TextInput::make('first_name')
+                                ->label(__("general.FirstName"))
+                                ->required()
+                                ->maxLength(255),
+
+                            Forms\Components\TextInput::make('last_name')
+                                ->label(__("general.LastName"))
+                                ->required()
+                                ->maxLength(255),
+
+                            Forms\Components\TextInput::make('phone')
+                                ->label(__("general.Phone"))
+                                ->tel()
+                                ->numeric(),
+
+                            Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+
+                            Forms\Components\Select::make('model_origen')
+                                ->label('Compañía de origen')
+                                ->options([
+                                    'ConstructionCompanie' => 'Compañías De Construcciones',
+                                    'Employee' => 'KM314'
+                                ])
+                                ->default('ConstructionCompanie')
+                                ->disabled()
+                                ->live(),
+
+                            Forms\Components\Select::make('model_origen_id')
+                                ->options(function(){
+                                    return ConstructionCompanie::get()->pluck('name','id')->toArray();
+                                })->disabled(function(Get $get){
+                                    return $get('model_origen') == 'ConstructionCompanie' ? false:true;
+                                })
+                                ->visible(function(Get $get){
+                                    return $get('model_origen') == 'ConstructionCompanie' ? true:false;
+                                })
+                                ->live(),
+                                ])
+                                ->columns(2)
+                                ->columnSpanFull()
 
             ]);
     }
