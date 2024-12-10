@@ -94,7 +94,8 @@ class ConstructionCompanieResource extends Resource
                                     'Employee' => 'KM314'
                                 ])
                                 ->default('ConstructionCompanie')
-                                ->readOnly()
+                                ->disabled()
+                                ->dehydrated()
                                 ->live(),
 
                             Forms\Components\Select::make('model_origen_id')
