@@ -5,8 +5,10 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ConstructionCompanieResource\Pages;
 use App\Filament\Resources\ConstructionCompanieResource\RelationManagers;
 use App\Models\ConstructionCompanie;
+use App\Models\Lote;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -42,6 +44,18 @@ class ConstructionCompanieResource extends Resource
                     ->tel()
                     ->required()
                     ->maxLength(255),
+                Forms\Components\Select::make('lote_id')->label(__("general.Lote"))
+                    ->required()
+                    ->live()
+                    // ->relationship(name: 'lote')
+                    ->options(function(Get $get){
+                        $lotes = Lote::get();
+                        $lotes->map(function($lote){
+                            $lote['texto'] = $lote->sector->name.$lote->lote_id;
+                            return $lote;
+                        });
+                        return $lotes->pluck('texto','id')->toArray();
+					})
             ]);
     }
 
@@ -55,6 +69,9 @@ class ConstructionCompanieResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('phone')
                 ->label(__("general.Phone"))
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('lote')
+                    ->label(__("general.Lote"))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                 ->label(__("general.created_at"))

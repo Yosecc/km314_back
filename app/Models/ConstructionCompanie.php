@@ -9,6 +9,11 @@ class ConstructionCompanie extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name','phone'];
+    protected $fillable = ['name','phone','lote_id'];
+
+    public function lote()
+    {
+        return $this->belongsTo(Lote::class);
+    }
 
 }

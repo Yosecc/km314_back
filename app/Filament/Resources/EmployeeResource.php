@@ -64,20 +64,17 @@ class EmployeeResource extends Resource
                         ->label(__("general.Phone"))
                         ->tel()
                         ->numeric(),
+
                     Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-                    Forms\Components\Select::make('trabajo_id')
-                        ->label('Tipo de trabajo/Cargo')
-                        ->options(Trabajos::get()->pluck('name','id')->toArray()),
+
                     Forms\Components\Select::make('model_origen')
                         ->label('Compañía de origen')
                         ->options([
                             'ConstructionCompanie' => 'Compañías De Construcciones',
                             'Employee' => 'KM314'
                         ])
-                        // ->afterStateUpdated(function($state,Set $set){
-
-                        // })
                         ->live(),
+
                     Forms\Components\Select::make('model_origen_id')
                         ->options(function(){
                             return ConstructionCompanie::get()->pluck('name','id')->toArray();
@@ -85,7 +82,7 @@ class EmployeeResource extends Resource
                             return $get('model_origen') == 'ConstructionCompanie' ? false:true;
                         })
                         ->visible(function(Get $get){
-                            return $get('model_origen') == 'ConstructionCompanie' ? false:true;
+                            return $get('model_origen') == 'ConstructionCompanie' ? true:false;
                         })
                         ->live(),
 

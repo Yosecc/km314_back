@@ -20,7 +20,7 @@ return new class extends Migration
             $table->bigInteger('phone')->nullable(); // Campo para el número de teléfono
             $table->foreignId('user_id')->constrained('users');
 
-            $table->foreignId('trabajo_id')->constrained('trabajos')->nullable();
+
             $table->string('model_origen')->nullable();
             $table->bigInteger('model_origen_id')->nullable();
 
