@@ -14,7 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Filament\Forms\Components\Repeater;
 class ConstructionCompanieResource extends Resource
 {
     protected static ?string $model = ConstructionCompanie::class;
@@ -54,7 +54,22 @@ class ConstructionCompanieResource extends Resource
                             return $lote;
                         });
                         return $lotes->pluck('texto','id')->toArray();
-					})
+					}),
+
+                    Repeater::make('empleados')
+                        ->relationship()
+                        ->schema([
+                            Forms\Components\TextInput::make('first_name')->required(),
+                            // Forms\Components\Select::make('role')
+                            //     ->options([
+                            //         'member' => 'Member',
+                            //         'administrator' => 'Administrator',
+                            //         'owner' => 'Owner',
+                            //     ])
+                            //     ->required(),
+                        ])
+                        ->columns(2)
+
             ]);
     }
 

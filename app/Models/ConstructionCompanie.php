@@ -16,4 +16,11 @@ class ConstructionCompanie extends Model
         return $this->belongsTo(Lote::class);
     }
 
+    public function empleados()
+    {
+        return $this->hasMany(Employee::class,'model_origen_id')
+                    ->where('model_origen','ConstructionCompanie')
+                    ;
+    }
+
 }

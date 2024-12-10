@@ -20,7 +20,7 @@ class WorksResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $navigationLabel = 'Empleos';
-    
+
     protected static ?string $label = 'empleo';
 
     protected static ?string $navigationGroup = 'Configuración';
@@ -40,6 +40,7 @@ class WorksResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
