@@ -329,7 +329,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         return $claves[$state];
                     }),
                     // ->color(fn (string $state): string => match ($state) ),
-
+                    Tables\Columns\TextColumn::make('lote_ids')->badge()->label(__('general.Lote')),
                 Tables\Columns\TextColumn::make('access_type')
                     ->badge()
                     ->label(__("general.TypeActivitie"))
