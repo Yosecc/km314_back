@@ -494,7 +494,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->label('Aprobar')
                     ->hidden(function(FormControl $record){
                         return $record->isActive() || $record->isExpirado() || $record->isVencido() ? true : false;
-                    }),
+                    })
+                    ->visible(auth()->user()->can('aprobar_form')),
                 Action::make('rechazar')
                     ->action(function(FormControl $record){
                         $record->rechazar();
@@ -510,7 +511,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->label('Rechazar')
                     ->hidden(function(FormControl $record){
                         return $record->isDenied() || $record->isExpirado() || $record->isVencido() ? true : false;
-                    }),
+                    })->visible(auth()->user()->can('rechazar_form')),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -522,6 +523,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->color('success')
                     ->icon('heroicon-m-hand-thumb-up')
                     ->requiresConfirmation()
+                    ->visible(auth()->user()->can('aprobar_form'))
                     ->action(function (Collection $records){
                         $records->each->aprobar();
                         Notification::make()
@@ -534,6 +536,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->color('danger')
                     ->icon('heroicon-m-hand-thumb-down')
                     ->requiresConfirmation()
+                    ->visible(auth()->user()->can('rechazar_form'))
                     ->action(function (Collection $records){
                         $records->each->rechazar();
                         Notification::make()
