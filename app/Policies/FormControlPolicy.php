@@ -10,6 +10,16 @@ class FormControlPolicy
 {
     use HandlesAuthorization;
 
+    public function aprobar(User $user): bool
+    {
+        return $user->can('aprobar_form::control');
+    }
+
+	public function rechazar(User $user): bool
+    {
+        return $user->can('rechazar_form::control');
+    }
+
     /**
      * Determine whether the user can view any models.
      */

@@ -266,7 +266,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->color('success')
                             ->label('Aprobar')
                             ->action(function(FormControl $record){
-                                dd($record);
+
                                 $record->aprobar();
                                 Notification::make()
                                     ->title('Formulario aprobado')
@@ -274,12 +274,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     ->send();
                             })->hidden(function(FormControl $record){
                                 return $record->isActive() || $record->isExpirado() || $record->isVencido() ? true : false;
-                            }),
+                            })->visible(auth()->user()->can('aprobar_form::control')),
                         FormAction::make('rechazar')
                             ->action(function(FormControl $record){
                                 $record->rechazar();
                                 Notification::make()
-                                    ->title('Formulario rechzado')
+                                    ->title('Formulario rechazado')
                                     ->success()
                                     ->send();
                             })
@@ -288,6 +288,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->icon('heroicon-m-hand-thumb-down')
                             ->color('danger')
                             ->label('Rechazar')
+							->visible(auth()->user()->can('rechazar_form::control'))
                             ->hidden(function(FormControl $record){
                                 return $record->isDenied() || $record->isExpirado() || $record->isVencido() ? true : false;
                             })
@@ -495,7 +496,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->hidden(function(FormControl $record){
                         return $record->isActive() || $record->isExpirado() || $record->isVencido() ? true : false;
                     })
-                    ->visible(auth()->user()->can('aprobar_form')),
+                    ->visible(auth()->user()->can('aprobar_form::control'))
+				,
                 Action::make('rechazar')
                     ->action(function(FormControl $record){
                         $record->rechazar();
@@ -511,7 +513,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->label('Rechazar')
                     ->hidden(function(FormControl $record){
                         return $record->isDenied() || $record->isExpirado() || $record->isVencido() ? true : false;
-                    })->visible(auth()->user()->can('rechazar_form')),
+                    })
+				->visible(auth()->user()->can('rechazar_form::control'))
+				,
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -523,7 +527,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->color('success')
                     ->icon('heroicon-m-hand-thumb-up')
                     ->requiresConfirmation()
-                    ->visible(auth()->user()->can('aprobar_form'))
+                    ->visible(auth()->user()->can('aprobar_form::control'))
                     ->action(function (Collection $records){
                         $records->each->aprobar();
                         Notification::make()
@@ -536,7 +540,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->color('danger')
                     ->icon('heroicon-m-hand-thumb-down')
                     ->requiresConfirmation()
-                    ->visible(auth()->user()->can('rechazar_form'))
+                    ->visible(auth()->user()->can('rechazar_form::control'))
                     ->action(function (Collection $records){
                         $records->each->rechazar();
                         Notification::make()
