@@ -7,6 +7,8 @@ use App\Models\User;
 use Filament\Tables;
 use App\Models\Owner;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Hash;
@@ -31,6 +33,18 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Select::make('owner_id')
+                ->label(__("general.Owner"))
+                ->relationship(name: 'owner', modifyQueryUsing: fn (Builder $query) => $query->orderBy('first_name')->orderBy('last_name'))
+                ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                ->searchable(['first_name', 'last_name'])
+                ->afterStateUpdated(function(Set $set, $state){
+                    $owner = Owner::find($state);
+                    $set('name', $owner->first_name . ' ' . $owner->last_name);
+                    $set('roles',[3]);
+                    $set('email', $owner->email);
+                })
+                ->live(),
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -54,11 +68,7 @@ class UserResource extends Resource
                     ->multiple()
                     ->preload()
                     ->searchable(),
-                Forms\Components\Select::make('owner_id')
-                    // ->required()
-                    ->relationship(name: 'owner')
-                    ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
-                    ->label(__("general.Owner")),
+
             ]);
     }
 
