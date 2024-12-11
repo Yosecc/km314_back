@@ -38,50 +38,57 @@ class FormControl extends Model
         }
     }
 
-    public function statusComputed():string
+    public function statusComputed(): string
     {
         $status = $this->status;
-
         $today = Carbon::now('America/Argentina/Buenos_Aires');
 
+        // Combinar fecha y hora de inicio
+        $fechaStart = $this->combineDateTime($this->start_date_range, $this->start_time_range);
 
-        $fechaStart = Carbon::parse($this->start_date_range);
-        // Extraer la hora del campo start_time_range
-        $horaStart = Carbon::parse($this->start_time_range)->format('H');
-        $minutoStart = Carbon::parse($this->start_time_range)->format('i');
+        if (!$this->date_unilimited) {
+            // Combinar fecha y hora de fin
+            $fechaEnd = $this->combineDateTime($this->end_date_range, $this->end_time_range);
 
-        // Asignar la hora y minuto a la fecha
-        $fechaStart->setTime($horaStart, $minutoStart);
-
-        if(!$this->date_unilimited){
-
-            if ($fechaStart->lessThan($today)){ #Si ya paso la fecha
-                if($status == 'Pending'){
-                    $status = 'Vencido';
-                }
-            }
-
-            $fechaEnd = Carbon::parse($this->end_date_range);
-            $horaEnd = Carbon::parse($this->end_time_range)->format('H');
-            $minutoEnd = Carbon::parse($this->end_time_range)->format('i');
-            $fechaEnd->setTime($horaEnd, $minutoEnd);
-
-            if ($fechaEnd->lessThan($today)){
-                if($status == 'Pending' || $status == 'Vencido'){
-                    $status = 'Expirado';
-                }
-            }
-
-        }else{
-            // dd($today,$fechaStart);
-            if ($fechaStart->lessThan($today)){ #Si ya paso la fecha
-                if($status == 'Pending'){
-                    $status = 'Vencido';
+            // Verificar si la fecha de fin ya pasó
+            if ($fechaEnd && $fechaEnd->lessThan($today)) {
+                if (in_array($status, ['Pending', 'Vencido'])) {
+                    return 'Expirado';
                 }
             }
         }
 
+        // Verificar si la fecha de inicio ya pasó
+        if ($fechaStart && $fechaStart->lessThan($today)) {
+            if ($status === 'Pending') {
+                return 'Vencido';
+            }
+        }
+
         return $status;
+    }
+
+    /**
+     * Combina una fecha y una hora en un objeto Carbon.
+     *
+     * @param string|null $date La fecha (en formato `Y-m-d`).
+     * @param string|null $time La hora (en formato `H:i:s` o similar).
+     * @return Carbon|null Objeto Carbon combinado, o null si no se puede construir.
+     */
+    private function combineDateTime(?string $date, ?string $time): ?Carbon
+    {
+        if (!$date || !$time) {
+            return null;
+        }
+
+        try {
+            $fecha = Carbon::parse($date);
+            $hora = Carbon::parse($time)->format('H:i');
+            return $fecha->setTimeFromTimeString($hora);
+        } catch (\Exception $e) {
+            // Manejar errores si los valores no son válidos
+            return null;
+        }
     }
 
     public function isVencido() :bool
