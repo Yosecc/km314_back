@@ -37,7 +37,9 @@ use App\Models\ConstructionCompanie;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-class FormControlResource extends Resource
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+
+class FormControlResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = FormControl::class;
 
@@ -50,6 +52,20 @@ class FormControlResource extends Resource
     public static function getPluralModelLabel(): string
     {
         return 'formularios';
+    }
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
+            'aprobar',
+            'rechazar'
+        ];
     }
 
     public static function form(Form $form): Form
@@ -144,22 +160,6 @@ class FormControlResource extends Resource
                         Forms\Components\TimePicker::make('end_time_range')->label(__('general.end_time_range'))->seconds(false),
                         Forms\Components\Toggle::make('date_unilimited')->label(__('general.date_unilimited'))->live(),
                     ])
-                    ->columns(4),
-
-                Forms\Components\Fieldset::make('personas')->label('Seleccione las personas a agregar en la lista')
-                    ->schema([
-                        Repeater::make('peronas')
-                            ->schema(function(Get $get){
-                                return ConstructionCompanie::where('id',$get('construction_companie_id'))->get()
-                                ->map(function($compania){
-                                    return TextInput::make('name')->default($compania['name']);
-                                });
-                            })
-                            ->columns(2)
-                    ])
-                    ->visible(function(Get $get){
-                        return $get('construction_companie_id') ? true : false;
-                    })
                     ->columns(4),
 
 
