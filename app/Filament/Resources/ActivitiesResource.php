@@ -62,7 +62,11 @@ class ActivitiesResource extends Resource
 
     public static function searchEmployee($dni, $type, $ids = [])
     {
-        $data = Employee::where('dni', 'like', '%'.$dni.'%')->limit(10)->get();
+        $data = Employee::where('dni', 'like', '%'.$dni.'%')->orWhere(function($query) use ($dni) {
+            $query->whereHas('autos', function ($query) use ($dni){
+                $query->where('patente','like','%'.$dni.'%');
+            });
+    })->limit(10)->get();
 
         $mapeo = function($people) use ($type){
 
@@ -88,7 +92,12 @@ class ActivitiesResource extends Resource
 
     public static function searchOwners($dni, $type , $ids = [])
     {
-        $data = Owner::where('dni', 'like', '%'.$dni.'%')->limit(10)->get();
+        $data = Owner::where('dni', 'like', '%'.$dni.'%')
+            ->orWhere(function($query) use ($dni) {
+                $query->whereHas('autos', function ($query) use ($dni){
+                    $query->where('patente','like','%'.$dni.'%');
+                });
+        })->limit(10)->get();
 
         $mapeo = function($people) use ($type){
 
@@ -374,7 +383,7 @@ class ActivitiesResource extends Resource
                         ])
                         ->schema([
                             Forms\Components\TextInput::make('num_search')
-                                ->label(__('general.DNI'))
+                                ->label(__('general.DNI')."/Patente")
                                 ->columnSpan(['sm'=> 2])
                                 ->columnStart([
                                     'sm' => 2,
@@ -457,10 +466,17 @@ class ActivitiesResource extends Resource
                                         }
 
                                         $num = $get('num_search');
-                                        return FormControl::whereHas('peoples', function ($query) use($num){
-                                            $query->where('dni','like','%'.$num.'%');
-                                        })->orderBy('id','desc')->get()->map(callback: $mapeo)
-                                        // ->whereNotIn('status',['Vencido','Expirado'])
+                                        return FormControl::whereHas('peoples', function ($query) use ($num)
+                                            {
+                                                $query->where('dni','like','%'.$num.'%');
+                                            })
+                                            ->orWhere(function($query) use ($num) {
+                                                $query->whereHas('autos', function ($query) use ($num){
+                                                    $query->where('patente','like','%'.$num.'%');
+                                                });
+                                            })
+                                            ->orderBy('id','desc')->get()->map(callback: $mapeo)
+                                        //->whereNotIn('status',['Vencido','Expirado'])
                                         ->pluck('texto','id')->toArray();
                                     })
                                     ->descriptions(function(Get $get, Set $set, $context){
