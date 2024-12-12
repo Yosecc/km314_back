@@ -134,6 +134,8 @@ class FormControl extends Model
         return [
             'start' => $fechaStart->translatedFormat('l, F d, Y h:i A'),
             'end' =>  $fechaend->translatedFormat('l, F d, Y h:i A'),
+            '_start' => $fechaStart,
+            '_end'=> $fechaend,
         ];
     }
 

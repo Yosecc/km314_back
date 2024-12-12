@@ -47,7 +47,10 @@ class VisitantesAgendados extends Page implements HasForms, HasTable
 				TextColumn::make('formControl.id')->formatStateUsing(function ($state){
 					return '#FORM_'.$state;
 				}),
-                TextColumn::make('first_name'),
+                TextColumn::make('first_name')->formatStateUsing(function ($record){
+
+                    return "{$record->first_name} {$record->last_name}";
+                  }),
                	TextColumn::make('formControl.start_date_range')
 					->formatStateUsing(function ($record){
 
