@@ -23,7 +23,7 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
     use InteractsWithForms;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static string $view = 'filament.pages.visitantes-historial';
-    protected static ?string $navigationLabel = 'Historial de Visitantes';
+    protected static ?string $navigationLabel = 'Personas en el barrio';
     protected static ?string $slug = 'history-visitors';
     protected static ?string $navigationGroup = 'Control de acceso';
 
@@ -69,13 +69,14 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
         return $table
             ->query($query)
             ->columns([
-                TextColumn::make('model_id')->label('ID del Modelo')->sortable(),
+                // TextColumn::make('model_id')->label('ID del Modelo')->sortable(),
+                TextColumn::make('activitie.created_at')->dateTime(),
                 TextColumn::make('model_name')->label('Nombre')->sortable(),
 				TextColumn::make('activitie.formControl.access_type')->badge(),
 				TextColumn::make('activitie.formControl.lote_ids')->badge(),
 				TextColumn::make('activitie.formControl.start_date_range')->date(),
 				TextColumn::make('activitie.formControl.start_time_range'),
-				TextColumn::make('activitie.created_at')->dateTime(),
+
             ]);
    }
  public function getTableRecordKey($record): string
