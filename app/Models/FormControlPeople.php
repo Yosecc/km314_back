@@ -14,7 +14,7 @@ class FormControlPeople extends Model
     public function formControl()
     {
         return $this->belongsTo(FormControl::class);
-    
+
     }
 
     public function activitiePeople()
