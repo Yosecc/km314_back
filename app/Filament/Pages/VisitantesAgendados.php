@@ -21,17 +21,10 @@ class VisitantesAgendados extends Page implements HasForms, HasTable
     use InteractsWithTable;
     use InteractsWithForms;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
     protected static string $view = 'filament.pages.visitantes-agendados';
-
-    // protected static string $slug = 'scheduled-visitors';
-
     protected static ?string $navigationLabel = 'Visitantes Agendados';
     protected static ?string $slug = 'scheduled-visitors';
-
-   protected static ?string $navigationGroup = 'Control de acceso';
-//	protected static ?string $navigationParentItem = 'Formulario de control';
-
+    protected static ?string $navigationGroup = 'Control de acceso';
 
     public function table(Table $table): Table
     {

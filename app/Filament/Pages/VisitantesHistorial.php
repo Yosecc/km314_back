@@ -21,15 +21,11 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
     use HasPageShield;
     use InteractsWithTable;
     use InteractsWithForms;
-        protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
+    protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static string $view = 'filament.pages.visitantes-historial';
-
-
     protected static ?string $navigationLabel = 'Historial de Visitantes';
     protected static ?string $slug = 'history-visitors';
-
-   protected static ?string $navigationGroup = 'Control de acceso';
+    protected static ?string $navigationGroup = 'Control de acceso';
 
    public function table(Table $table): Table
    {
@@ -43,28 +39,28 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
        return $table
            ->query($query)
            ->columns([
-               //TextColumn::make('id'),
-               TextColumn::make('formControl.id')->formatStateUsing(function ($state){
-                   return '#FORM_'.$state;
-               }),
-               TextColumn::make('first_name')->formatStateUsing(function ($record){
+               TextColumn::make('id'),
+            //    TextColumn::make('formControl.id')->formatStateUsing(function ($state){
+            //        return '#FORM_'.$state;
+            //    }),
+            //    TextColumn::make('first_name')->formatStateUsing(function ($record){
 
-                   return "{$record->first_name} {$record->last_name}";
-                 }),
-                  TextColumn::make('formControl.start_date_range')
-                   ->formatStateUsing(function ($record){
+            //        return "{$record->first_name} {$record->last_name}";
+            //      }),
+            //       TextColumn::make('formControl.start_date_range')
+            //        ->formatStateUsing(function ($record){
 
-                     return Carbon::parse("{$record->formControl->start_date_range} {$record->formControl->start_time_range}")->toDayDateTimeString();
-                   })
-                   ->searchable()
-                   ->sortable()
-                   ->label(__('general.start_date_range')),
-
-           ])
-          ->actions([
-               Action::make('Ver Formulario')->url(fn (FormControlPeople $record): string => route('filament.admin.resources.form-controls.view', $record->formControl ))
+            //          return Carbon::parse("{$record->formControl->start_date_range} {$record->formControl->start_time_range}")->toDayDateTimeString();
+            //        })
+            //        ->searchable()
+            //        ->sortable()
+            //        ->label(__('general.start_date_range')),
 
            ])
+        //   ->actions([
+        //        Action::make('Ver Formulario')->url(fn (FormControlPeople $record): string => route('filament.admin.resources.form-controls.view', $record->formControl ))
+
+        //    ])
            ;
    }
 
