@@ -22,4 +22,10 @@ class ActivitiesPeople extends Model
     {
         return $this->morphTo();
     }
+
+     // Mutador para modificar el valor de "model" al acceder al atributo
+     public function getModelAttribute($value)
+     {
+         return $value === 'FormtControl' ? 'FormControlPeople' : $value;
+     }
 }
