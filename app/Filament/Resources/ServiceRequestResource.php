@@ -2,39 +2,42 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
-use App\Models\Lote;
-use Filament\Tables;
-use App\Models\Owner;
-use App\Models\Service;
-use App\Models\StartUp;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
-use App\Models\Property;
-use Filament\Forms\Form;
-use Filament\Tables\Table;
-use Illuminate\Support\Str;
-use App\Models\CommonSpaces;
-use App\Models\StartUpOption;
-use App\Models\HomeInspection;
-use App\Models\ServiceRequest;
-use App\Models\RentalAttention;
-use Filament\Resources\Resource;
-use Filament\Forms\Components\Grid;
-use App\Models\ServiceRequestStatus;
-use App\Models\WorksAndInstallation;
-use Illuminate\Support\Facades\Auth;
-use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Wizard;
-use Filament\Forms\Components\Fieldset;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ServiceRequestResource\Pages;
 use App\Filament\Resources\ServiceRequestResource\RelationManagers;
+use App\Models\CommonSpaces;
+use App\Models\HomeInspection;
+use App\Models\Lote;
+use App\Models\Owner;
+use App\Models\Property;
+use App\Models\RentalAttention;
+use App\Models\Service;
+use App\Models\ServiceRequest;
+use App\Models\ServiceRequestFile;
+use App\Models\ServiceRequestStatus;
+use App\Models\StartUp;
+use App\Models\StartUpOption;
+use App\Models\WorksAndInstallation;
+use Filament\Forms;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Actions\Action;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Wizard;
+use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class ServiceRequestResource extends Resource
 {
@@ -204,7 +207,7 @@ class ServiceRequestResource extends Resource
                                 ->schema([
 
                                     Hidden::make('user_id')->default(Auth::user()->id),
-                                    Textarea::make('description')->label('Descripción'),
+                                    Forms\Components\TextInput::make('description')->label('Descripción'),
 
                                 ])
                                 ->defaultItems(0)
@@ -215,8 +218,19 @@ class ServiceRequestResource extends Resource
                                 ->label('Documentos')
                                 ->schema([
                                     Hidden::make('user_id')->default(Auth::user()->id),
-                                    Textarea::make('description')->label('Descripción'),
-                                    Forms\Components\FileUpload::make('file')->label('Archivo')
+                                    Forms\Components\TextInput::make('description')->label('Descripción'),
+                                    Forms\Components\FileUpload::make('file')->label('Archivo')->storeFileNamesIn('attachment_file_names'),
+                                    Actions::make([
+                                        Action::make('open_file')
+                                            ->label('Abrir archivo')
+                                            ->icon('heroicon-m-plus')
+                                            ->url(function (ServiceRequestFile $record) {
+                                                dd($record);
+                                                // return '/storage/' . $record->file_path;
+                                             })
+                                            ,
+
+                                    ]),
                                 ])
                                 ->defaultItems(0)
                                 ->columns(1)

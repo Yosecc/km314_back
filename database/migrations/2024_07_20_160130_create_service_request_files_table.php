@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->string('file');
             $table->string('description')->nullable();
+            $table->string('attachment_file_names')->nullable();
+
             $table->timestamps();
         });
     }

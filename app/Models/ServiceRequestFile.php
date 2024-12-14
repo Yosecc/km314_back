@@ -9,5 +9,5 @@ class ServiceRequestFile extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['service_request_id','user_id','file','description'];
+    protected $fillable = ['service_request_id','user_id','file','description','attachment_file_names'];
 }

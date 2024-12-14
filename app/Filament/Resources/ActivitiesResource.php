@@ -937,8 +937,8 @@ class ActivitiesResource extends Resource
                                             Forms\Components\TextInput::make('dni')->required(),
                                             Forms\Components\TextInput::make('first_name')->required(),
                                             Forms\Components\TextInput::make('last_name')->required(),
-                                            Forms\Components\TextInput::make('email'),
-                                            Forms\Components\TextInput::make('phone')->numeric(),
+                                            Forms\Components\TextInput::make('email')->required(),
+                                            Forms\Components\TextInput::make('phone')->numeric()->required(),
                                         ])
                                         ->columns(2)
                                         ->columnSpanFull(),
