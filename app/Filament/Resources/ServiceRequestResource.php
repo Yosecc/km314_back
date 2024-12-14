@@ -224,7 +224,7 @@ class ServiceRequestResource extends Resource
                                         Action::make('open_file')
                                             ->label('Abrir archivo')
                                             ->icon('heroicon-m-plus')
-                                            ->url(function (ServiceRequestFile $record) {
+                                            ->url(function ($record) {
                                                 dd($record);
                                                 // return '/storage/' . $record->file_path;
                                              })
