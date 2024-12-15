@@ -12,8 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Tables\Columns\ToggleColumn;
-use Filament\Forms\Components\Toggle;
+
 class ServiceTypeResource extends Resource
 {
     protected static ?string $model = ServiceType::class;
@@ -37,7 +36,7 @@ class ServiceTypeResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Toggle::make('isCalendar')
+
             ]);
     }
 
@@ -47,7 +46,7 @@ class ServiceTypeResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                ToggleColumn::make('isCalendar'),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

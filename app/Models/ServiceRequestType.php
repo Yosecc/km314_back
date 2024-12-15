@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class ServiceRequestType extends Model
 {
     use HasFactory;
-    protected $fillable = ['name'];
+    protected $casts = [
+        'isCalendar' => 'boolean',
+    ];
+    protected $fillable = ['name','isCalendar'];
 
 }
