@@ -14,9 +14,11 @@ use App\Models\Service;
 use App\Models\ServiceRequest;
 use App\Models\ServiceRequestFile;
 use App\Models\ServiceRequestStatus;
+use App\Models\ServiceRequestType;
 use App\Models\StartUp;
 use App\Models\StartUpOption;
 use App\Models\WorksAndInstallation;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action;
@@ -36,10 +38,11 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
+
 class ServiceRequestResource extends Resource
 {
     protected static ?string $model = ServiceRequest::class;
@@ -176,43 +179,46 @@ class ServiceRequestResource extends Resource
                             Forms\Components\DateTimePicker::make('starts_at')
                                 ->label('Fecha de inicio')
                                 ->required()
-                                ->afterStateUpdated(function (Get $get, Set $set ,$state) {
-                                    // Obtener los valores necesarios
-                                    $serviceRequestTypeId = $get('service_request_type_id');
-                                    $serviceId = $get('service_id');
-                                    $modelId = $get('model_id');
-                                    $model = $get('model');
+                                ->live()
+                                ->afterStateUpdated(function (Get $get, Set $set, $state) {
 
-                                    // Fecha y hora de inicio seleccionada
-                                    $selectedStartDateTime = Carbon::parse($state); // Convertir $state a Carbon
+                                    //dd($get('service_request_type_id'), );
+                                    $SRtype = ServiceRequestType::find($get('service_request_type_id'));
 
-                                    // Fecha y hora de fin seleccionada
-                                    $endsAt = $get('ends_at');
-                                    $selectedEndDateTime = $endsAt
-                                        ? Carbon::parse($endsAt) // Usar la fecha proporcionada si no es nula
-                                        : $selectedStartDateTime->copy()->addMinutes(60); // Sumar 60 minutos si es nula
-
-                                    $set('ends_at',$selectedEndDateTime);
-                                    // Buscar traslapes en la tabla ServiceRequest
-                                    $overlappingReservations = ServiceRequest::where('model', $model)
-                                        ->where('model_id', $modelId)
-                                        ->where('service_request_type_id', $serviceRequestTypeId)
-                                        ->where(function ($query) use ($selectedStartDateTime, $selectedEndDateTime) {
-                                            $query->where(function ($subQuery) use ($selectedStartDateTime, $selectedEndDateTime) {
-                                                $subQuery->where('starts_at', '<', $selectedEndDateTime)
-                                                         ->where('ends_at', '>', $selectedStartDateTime);
-                                            });
-                                        })
-                                        ->exists();
-
-                                    if ($overlappingReservations) {
-                                        // Reservación no está disponible
-                                        dd('El horario no está disponible');
-                                    } else {
-                                        // Reservación disponible
-                                        dd('El horario está disponible');
+                                    if(!$SRtype->isCalendar){
+                                        return;
                                     }
-                                })
+									// Fecha y hora de inicio seleccionada
+									$selectedStartDateTime = Carbon::parse($state); // Convertir $state a Carbon
+
+									// Calcular la nueva fecha de fin como una hora después de la fecha de inicio
+									$selectedEndDateTime = $selectedStartDateTime->copy()->addMinutes(60);
+
+									// Actualizar el campo 'ends_at' siempre que cambie la fecha de inicio
+									$set('ends_at', $selectedEndDateTime->format('Y-m-d H:i:s'));
+
+
+
+								 $isAvailable = ServiceRequest::isAvailable(
+                                                    $selectedStartDateTime->format('Y-m-d H:i:s'),
+                                                    $selectedEndDateTime->format('Y-m-d H:i:s'),
+                                                    $get('service_request_type_id'),
+                                                    $get('model_id'),
+                                                    $get('model')
+                                                );
+
+									if (!$isAvailable) {
+										Notification::make()
+											->title('Reservación no está disponible')
+											->danger()
+											->send();
+									} else {
+										Notification::make()
+											->title('Reservación disponible')
+											->success()
+											->send();
+									}
+								})
                                 ,
 
                             Forms\Components\DateTimePicker::make('ends_at')->label('Fecha de fin'),
