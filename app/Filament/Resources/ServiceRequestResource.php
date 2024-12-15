@@ -173,7 +173,13 @@ class ServiceRequestResource extends Resource
                     Wizard\Step::make('Date')
                         ->schema([
 
-                            Forms\Components\DateTimePicker::make('starts_at')->label('Fecha de inicio')->required(),
+                            Forms\Components\DateTimePicker::make('starts_at')
+                                ->label('Fecha de inicio')
+                                ->required()
+                                ->afterStateUpdated(function(Get $get){
+                                    dd($get('service_request_type_id'), $get('service_id'), $get('model_id'), $get('model'));
+                                })
+                                ,
 
                             Forms\Components\DateTimePicker::make('ends_at')->label('Fecha de fin'),
                         ]),
