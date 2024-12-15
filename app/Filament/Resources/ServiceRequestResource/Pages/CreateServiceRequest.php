@@ -3,17 +3,25 @@
 namespace App\Filament\Resources\ServiceRequestResource\Pages;
 
 use App\Filament\Resources\ServiceRequestResource;
-use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
-use App\Models\User;
-use Filament\Notifications\Notification;
 use App\Models\ServiceRequest;
+use App\Models\ServiceRequestType;
+use App\Models\User;
+use Filament\Actions;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\CreateRecord;
+
 class CreateServiceRequest extends CreateRecord
 {
     protected static string $resource = ServiceRequestResource::class;
 
     protected function beforeCreate(): void
     {
+
+        $SRtype = ServiceRequestType::find($this->data['service_request_type_id']);
+
+        if(!$SRtype->isCalendar){
+            return;
+        }
 
         $isAvailable = ServiceRequest::isAvailable(
             $this->data['starts_at'],

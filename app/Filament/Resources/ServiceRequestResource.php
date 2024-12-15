@@ -179,6 +179,7 @@ class ServiceRequestResource extends Resource
                             Forms\Components\DateTimePicker::make('starts_at')
                                 ->label('Fecha de inicio')
                                 ->required()
+                                ->minDate(now())
                                 ->live()
                                 ->afterStateUpdated(function (Get $get, Set $set, $state) {
 
