@@ -197,15 +197,13 @@ class ServiceRequestResource extends Resource
 									// Actualizar el campo 'ends_at' siempre que cambie la fecha de inicio
 									$set('ends_at', $selectedEndDateTime->format('Y-m-d H:i:s'));
 
-
-
-								 $isAvailable = ServiceRequest::isAvailable(
-                                                    $selectedStartDateTime->format('Y-m-d H:i:s'),
-                                                    $selectedEndDateTime->format('Y-m-d H:i:s'),
-                                                    $get('service_request_type_id'),
-                                                    $get('model_id'),
-                                                    $get('model')
-                                                );
+                                    $isAvailable = ServiceRequest::isAvailable(
+                                        $selectedStartDateTime->format('Y-m-d H:i:s'),
+                                        $selectedEndDateTime->format('Y-m-d H:i:s'),
+                                        $get('service_request_type_id'),
+                                        $get('model_id'),
+                                        $get('model')
+                                    );
 
 									if (!$isAvailable) {
 										Notification::make()
