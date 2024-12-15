@@ -33,7 +33,7 @@ class CreateServiceRequest extends CreateRecord
 
         if (!$isAvailable) {
             Notification::make()
-                ->title('Reservación no está disponible')
+                ->title('Fecha de la reservación no está disponible')
                 ->danger()
                 ->send();
                 $this->halt();

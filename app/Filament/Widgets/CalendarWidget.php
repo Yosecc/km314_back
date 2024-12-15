@@ -13,12 +13,13 @@ use App\Models\Property;
 use App\Models\RentalAttention;
 use App\Models\Service;
 use App\Models\ServiceRequest;
+use App\Models\ServiceRequestType;
 use App\Models\StartUp;
 use App\Models\StartUpOption;
 use App\Models\WorksAndInstallation;
+
+
 use Carbon\Carbon;
-
-
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Fieldset;
@@ -31,6 +32,7 @@ use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Saade\FilamentFullCalendar\Actions;
@@ -85,6 +87,7 @@ class CalendarWidget extends FullCalendarWidget
         return [
             Wizard::make([
                 Wizard\Step::make('Service')
+                    ->label('Servicio')
                     ->schema([
                         Grid::make()
                         ->schema([
@@ -158,41 +161,83 @@ class CalendarWidget extends FullCalendarWidget
 
 
                         ])->columns(2),
-                        Textarea::make('observation'),
-                        Fieldset::make('responsible')
-                            ->label('Responsable')
-                            ->relationship('responsible')
-                            ->schema([
-                                TextInput::make('dni')
-                                    ->label(__("general.DNI"))
-                                    ->required()
-                                    ->numeric(),
-                                TextInput::make('first_name')
-                                    ->label(__("general.FirstName"))
-                                    ->required()
-                                    ->maxLength(255),
-                                TextInput::make('last_name')
-                                    ->label(__("general.LastName"))
-                                    ->required()
-                                    ->maxLength(255),
-                                TextInput::make('phone')
-                                    ->label(__("general.Phone"))
-                                    ->tel()
-                                    ->numeric(),
+                            Textarea::make('observation'),
+                            Fieldset::make('responsible')
+                                ->label('Responsable')
+                                ->relationship('responsible')
+                                ->schema([
+                                    TextInput::make('dni')
+                                        ->label(__("general.DNI"))
+                                        ->required()
+                                        ->numeric(),
+                                    TextInput::make('first_name')
+                                        ->label(__("general.FirstName"))
+                                        ->required()
+                                        ->maxLength(255),
+                                    TextInput::make('last_name')
+                                        ->label(__("general.LastName"))
+                                        ->required()
+                                        ->maxLength(255),
+                                    TextInput::make('phone')
+                                        ->label(__("general.Phone"))
+                                        ->tel()
+                                        ->numeric(),
                             ])
                             ->disabled( fn (Get $get) => $get('model') != 'CommonSpaces' )
                             ->visible( fn (Get $get) => $get('model') == 'CommonSpaces' ),
                     ]),
                 Wizard\Step::make('Date')
+                    ->label('Fecha')
                     ->schema([
 
                         DateTimePicker::make('starts_at')
-                            ->required(),
+                            ->label('Fecha de inicio')
+                            ->required()
+                            ->minDate(now())
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set, $state) {
 
-                        DateTimePicker::make('ends_at')
-                            ->required(),
+                                //dd($get('service_request_type_id'), );
+                                $SRtype = ServiceRequestType::find($get('service_request_type_id'));
+
+                                if(!$SRtype->isCalendar){
+                                    return;
+                                }
+                                // Fecha y hora de inicio seleccionada
+                                $selectedStartDateTime = Carbon::parse($state); // Convertir $state a Carbon
+
+                                // Calcular la nueva fecha de fin como una hora después de la fecha de inicio
+                                $selectedEndDateTime = $selectedStartDateTime->copy()->addMinutes(60);
+
+                                // Actualizar el campo 'ends_at' siempre que cambie la fecha de inicio
+                                $set('ends_at', $selectedEndDateTime->format('Y-m-d H:i:s'));
+
+                                $isAvailable = ServiceRequest::isAvailable(
+                                    $selectedStartDateTime->format('Y-m-d H:i:s'),
+                                    $selectedEndDateTime->format('Y-m-d H:i:s'),
+                                    $get('service_request_type_id'),
+                                    $get('model_id'),
+                                    $get('model')
+                                );
+
+                                if (!$isAvailable) {
+                                    Notification::make()
+                                        ->title('Fecha de reservación no está disponible')
+                                        ->danger()
+                                        ->send();
+                                } else {
+                                    Notification::make()
+                                        ->title('Fecha de reservación disponible')
+                                        ->success()
+                                        ->send();
+                                }
+                            })
+                        ,
+
+                        DateTimePicker::make('ends_at')->label('Fecha de fin')->required()->live(),
                     ]),
                 Wizard\Step::make('Info')
+                    ->label('Información')
                     ->schema([
 
                         Select::make('owner_id')->label(__("general.Owner"))

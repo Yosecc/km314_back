@@ -208,19 +208,19 @@ class ServiceRequestResource extends Resource
 
 									if (!$isAvailable) {
 										Notification::make()
-											->title('Reservación no está disponible')
+											->title('Fecha de reservación no está disponible')
 											->danger()
 											->send();
 									} else {
 										Notification::make()
-											->title('Reservación disponible')
+											->title('Fecha de reservación disponible')
 											->success()
 											->send();
 									}
 								})
                                 ,
 
-                            Forms\Components\DateTimePicker::make('ends_at')->label('Fecha de fin'),
+                            Forms\Components\DateTimePicker::make('ends_at')->label('Fecha de fin')->live(),
                         ]),
                     Wizard\Step::make('Info')
                         ->schema([
