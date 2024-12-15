@@ -37,7 +37,7 @@ class ServiceRequestTypeResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                    Toggle::make('isCalendar')
+                    Toggle::make('isCalendar')->label('Calendario')
             ]);
     }
 
