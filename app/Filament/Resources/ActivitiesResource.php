@@ -321,10 +321,10 @@ class ActivitiesResource extends Resource
                      ])
                      ->label(__('general.Type'))
 					->disabled(true)
-				->visible(function($context){
+				    ->visible(function($context){
                             return $context == 'view' ? true : false;
                         })
-                     ->default(isset($_GET['type']) ? $_GET['type']  : '' ),
+                    ->default(isset($_GET['type']) ? $_GET['type']  : '' ),
 
 
                     Forms\Components\ViewField::make('type')
@@ -390,6 +390,7 @@ class ActivitiesResource extends Resource
                                     'xl' => 3,
                                     '2xl' => 4,
                                 ])
+                                ->extraAttributes(['onkeydown' => "if(event.key === 'Enter') { event.preventDefault(); return false; }"])
                                 ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
                                 ->live(),
                         ])

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('service_request_types', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->boolean('isCalendar')->default(false);
             $table->timestamps();
         });
     }

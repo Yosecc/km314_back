@@ -37,6 +37,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ServiceRequestResource extends Resource
@@ -223,14 +224,15 @@ class ServiceRequestResource extends Resource
                                     Actions::make([
                                         Action::make('open_file')
                                             ->label('Abrir archivo')
-                                            ->icon('heroicon-m-plus')
-                                            ->url(function ($record) {
-                                                dd($record);
-                                                // return '/storage/' . $record->file_path;
+                                            ->icon('heroicon-m-eye')
+                                            ->url(function ($record, $context) {
+												return Storage::url($record->file);
                                              })
-                                            ,
-
-                                    ]),
+											->openUrlInNewTab(),
+                                    ])
+                                    ->visible(function($record){
+                                        return $record ? true : false;
+                                    }),
                                 ])
                                 ->defaultItems(0)
                                 ->columns(1)
