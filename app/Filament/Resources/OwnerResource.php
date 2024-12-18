@@ -2,24 +2,26 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
-use Filament\Tables;
-use App\Models\Owner;
-use Filament\Forms\Form;
-use Filament\Tables\Table;
-use Filament\Resources\Resource;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\OwnerResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\OwnerResource\RelationManagers;
-use Filament\Forms\Components\Toggle;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Owner;
+use App\Models\OwnerStatus;
+use Filament\Forms;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Form;
 use Filament\Forms\Set;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+
 class OwnerResource extends Resource
 {
     protected static ?string $model = Owner::class;
@@ -120,6 +122,13 @@ class OwnerResource extends Resource
                     //     ->maxLength(255),
 
                     Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+
+
+
+                    Forms\Components\Select::make('owner_status_id')
+                        ->options(OwnerStatus::get()->pluck('name','id')->toArray())
+                        // ->relationship(name: 'status', titleAttribute: 'name')
+                        ->nullable()
 
                     // Fieldset::make('Usuario')
                     //     ->relationship('user')

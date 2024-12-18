@@ -87,5 +87,8 @@ return [
     'Denied' => 'Rechazada',
     'Vencido' => 'Vencido',
     'Expirado' => 'Expirado',
-    'Familiares' => 'Familiares'
+    'Familiares' => 'Familiares',
+    'piso' => 'Piso',
+    'dto' => 'dto',
+    'number' => 'Número'
 ];

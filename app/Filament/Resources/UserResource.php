@@ -40,6 +40,9 @@ class UserResource extends Resource
                 ->searchable(['first_name', 'last_name'])
                 ->afterStateUpdated(function(Set $set, $state){
                     $owner = Owner::find($state);
+					if(!$owner){
+					return ;
+					}
                     $set('name', $owner->first_name . ' ' . $owner->last_name);
                     $set('roles',[3]);
                     $set('email', $owner->email);

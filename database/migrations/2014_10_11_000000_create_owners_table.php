@@ -32,7 +32,8 @@ return new class extends Migration
             $table->string('profile_picture')->nullable(); // Campo para la foto de perfil
             $table->string('user_id'); // Campo para la foto de perfil
             // $table->foreignId('user_id')->constrained('users');
-            
+            // $table->foreignId('owner_status_id')->nullable()->constrained();
+
             $table->timestamps();
         });
     }

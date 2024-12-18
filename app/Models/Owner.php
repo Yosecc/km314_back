@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Owner extends Model
 {
     use HasFactory;
-    protected $fillable = ['cuit','number','piso','dto','first_name', 'last_name', 'email', 'phone', 'address', 'city', 'state', 'zip_code', 'country', 'birthdate', 'gender', 'profile_picture','dni','user_id'];
+    protected $fillable = ['cuit','number','piso','dto','first_name', 'last_name', 'email', 'phone', 'address', 'city', 'state', 'zip_code', 'country', 'birthdate', 'gender', 'profile_picture','dni','user_id','owner_status_id'];
 
     protected $with = ['autos','lotes'];
 
@@ -34,5 +34,10 @@ class Owner extends Model
     public function families()
     {
         return $this->hasMany(OwnerFamily::class);
+    }
+
+    public function status()
+    {
+        $this->belongsTo(OwnerStatus::class,'owner_status_id');
     }
 }

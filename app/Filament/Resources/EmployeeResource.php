@@ -26,8 +26,8 @@ class EmployeeResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Empleados';
-    protected static ?string $label = 'empleado';
+    protected static ?string $navigationLabel = 'Trabajadores';
+    protected static ?string $label = 'trabajador';
     // protected static ?string $navigationGroup = 'Web';
 
     // public static function getPluralModelLabel(): string
