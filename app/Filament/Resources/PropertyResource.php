@@ -48,16 +48,26 @@ class PropertyResource extends Resource
                 Forms\Components\TextInput::make('m2')->label(__("general.M2"))
                     ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('cuentamunicipal')
+                    ->label(__("Cuenta Municipal"))
+                    ->maxLength(255),
+
 
                 Forms\Components\Select::make('property_type_id')->label(__("general.PropertyType"))
                     ->required()
                     ->relationship(name: 'propertyType', titleAttribute: 'name'),
 
-                Forms\Components\Select::make('owner_id')->label(__("general.Owner"))
+                Forms\Components\Select::make('owner_id')
                     ->required()
-                    ->relationship(name: 'owner')
+                    ->options(function(){
+                        return Owner::get()->map(function($lote){
+                            $lote['name'] = $lote->nombres();
+                            return $lote;
+                        })->pluck('name', 'id')->toArray();
+                    })
+                    ->searchable()
                     ->live()
-                    ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}"),
+                    ->label(__("general.Owner")),
 
                 Forms\Components\Select::make('lote_id')->label(__("general.Lote"))
                     ->required()
@@ -96,7 +106,7 @@ class PropertyResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('owner')->label('Propietario')
-                    ->formatStateUsing(fn (Owner $state) => "{$state->first_name} {$state->last_name}" )
+                    ->formatStateUsing(fn (Owner $state) => "{$state->nombres()}" )
 
                     ->sortable(),
 

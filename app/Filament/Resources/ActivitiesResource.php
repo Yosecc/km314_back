@@ -7,39 +7,43 @@ use App\Actions\Star;
 use App\Filament\Resources\ActivitiesResource\Pages;
 use App\Filament\Resources\ActivitiesResource\RelationManagers;
 use App\Models\Activities;
+use App\Models\ActivitiesPeople;
 use App\Models\Auto;
 use App\Models\Employee;
 use App\Models\EmployeeAutos;
 use App\Models\FormControl;
 use App\Models\FormControlAuto;
 use App\Models\FormControlPeople;
-use App\Models\ActivitiesPeople;
 use App\Models\Lote;
-use App\Models\OwnerSpontaneousVisit;
 use App\Models\Owner;
 use App\Models\OwnerAutos;
 use App\Models\OwnerFamily;
+use App\Models\OwnerSpontaneousVisit;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\HtmlString;
-use Filament\Forms\Components\Radio;
-use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
-use Filament\Tables\Filters\SelectFilter;
+
 class ActivitiesResource extends Resource
 {
     protected static ?string $model = Activities::class;
@@ -105,8 +109,9 @@ class ActivitiesResource extends Resource
                 $people['texto'] = $people['first_name']. ' '.$people['last_name'];
                 // $people['texto'].= ' - Propietario';
             }else{
+
                 $people['texto'] = $people->dni;
-                $people['texto'] .= ' - Propietario';
+                $people['texto'] .= '- Propietario - ' . ($people->status ? $people->status['name'] : '');
             }
 
             return $people;
@@ -238,7 +243,7 @@ class ActivitiesResource extends Resource
         })->pluck('texto','id')->toArray();
     }
 
-    public static function searchAutosFamiliar($ids, $type, $model)
+    public static function searchAutosModel($ids, $type, $model)
     {
         return Auto::whereIn('model_id',$ids)->where('model', $model)->get()->map(function($auto) use ($type){
             if($type == 'option'){
@@ -251,13 +256,17 @@ class ActivitiesResource extends Resource
     }
 
 
+
+
     public static function createAuto($data, $config)
     {
         $data = collect($data)->map(function($auto) use ($config){
             $auto['user_id'] = Auth::user()->id;
             $auto['created_at'] = Carbon::now();
             $auto['updated_at'] = Carbon::now();
-            // unset($auto['familiar_model_id']);
+            unset($auto['familiar_model_id']);
+            unset($auto['espontaneo_model_id']);
+
             return $auto;
         });
         Auto::insert($data->toArray());
@@ -277,6 +286,8 @@ class ActivitiesResource extends Resource
                 'last_name' => $visitante['last_name'],
                 'email' => $visitante['email'],
                 'phone' => $visitante['phone'],
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
         });
 
@@ -312,61 +323,73 @@ class ActivitiesResource extends Resource
         return $form
             ->schema([
 
-                Forms\Components\Select::make('type')
-                     ->required()
-                     // ->columnStart(4)
-                     ->options([
-                         'Entry' => __('general.Entry'),
-                         'Exit' => __('general.Exit'),
-                     ])
-                     ->label(__('general.Type'))
-					->disabled(true)
-				    ->visible(function($context){
-                            return $context == 'view' ? true : false;
-                        })
-                    ->default(isset($_GET['type']) ? $_GET['type']  : '' ),
+                    Grid::make([
+                        'default' => 3,
+                    ])
+                    ->schema([
 
+                        Forms\Components\Select::make('type')
+                            ->required()
+                            ->options([
+                                'Entry' => __('general.Entry'),
+                                'Exit' => __('general.Exit'),
+                            ])
+                            ->label(__('general.Type'))
+                            ->disabled(true)
+                            ->visible(function($context){
+                                return $context == 'view' ? true : false;
+                            })
+                            ->default(isset($_GET['type']) ? $_GET['type']  : '' ),
 
-                    Forms\Components\ViewField::make('type')
-                        ->required()
-                        ->view('filament.forms.components.tipoActividad')
-                        ->label(__('general.Type'))
-                        ->default(function($state, $context){
+                        DateTimePicker::make('created_at')
+                            ->label('Fecha de entrada')
+                            ->disabled(true)
+                            ->visible(function($context){
+                                return $context == 'view' ? true : false;
+                            }),
 
-                            if(!isset($_GET['type'])){
-                                return '';
-                            }
+                    ]),
+                Forms\Components\ViewField::make('type')
+                    ->required()
+                    ->view('filament.forms.components.tipoActividad')
+                    ->label(__('general.Type'))
+                    ->default(function($state, $context){
 
-                            if($_GET['type']  == 'Entry'){
-                                return 1;
-                            }
-                            if($_GET['type']  == 'Exit'){
-                                return 2;
-                            }
-                            return 0;
-                        })
-                        ->viewData([
-                            'opciones' => [
-                                1 => __('general.Entry'),
-                                2 => __('general.Exit'),
-                            ],
-                        ])
-                        ->disabled(function($context){
-                            return $context == 'view' ? true : false;
-                        })
-						->visible(function($context){
-                            return $context == 'view' ? false : true;
-                        })
-                        ->live()
-                    ,
+                        if(!isset($_GET['type'])){
+                            return '';
+                        }
 
+                        if($_GET['type']  == 'Entry'){
+                            return 1;
+                        }
+                        if($_GET['type']  == 'Exit'){
+                            return 2;
+                        }
+                        return 0;
+                    })
+                    ->viewData([
+                        'opciones' => [
+                            1 => __('general.Entry'),
+                            2 => __('general.Exit'),
+                        ],
+                    ])
+                    ->disabled(function($context){
+                        return $context == 'view' ? true : false;
+                    })
+                    ->visible(function($context){
+                        return $context == 'view' ? false : true;
+                    })
+                    ->live(),
+                /**
+                 * TIPO DE ENTRADA
+                 */
                 Forms\Components\Fieldset::make()
                     ->schema([
                         Forms\Components\ViewField::make('tipo_entrada')
                             ->required()
                             ->view('filament.forms.components.tipoEntrada')
                             ->viewData([
-                                'opciones' => [ 1 => 'Propietarios', 2 => 'Empleados', 3 => 'Otros' ] ,
+                                'opciones' => [ 1 => 'Propietarios', 2 => 'Trabajadores', 3 => 'Otros' ] ,
                             ])
                             ->disabled(function($context){
                                 return $context == 'view' ? true : false;
@@ -374,54 +397,37 @@ class ActivitiesResource extends Resource
                             ->live()
                     ])
                     ->columns(1),
-                    Forms\Components\Fieldset::make()
+
+                /**
+                 * BUSCADOR
+                 */
+                Forms\Components\Fieldset::make()
                     ->label(__('general.Search'))
-                        ->columns([
-                            'sm' => 4,
-                            'xl' => 6,
-                            '2xl' => 8,
-                        ])
-                        ->schema([
-                            Forms\Components\TextInput::make('num_search')
-                                ->label(__('general.DNI')."/Patente")
-                                ->columnSpan(['sm'=> 2])
-                                ->columnStart([
-                                    'sm' => 2,
-                                    'xl' => 3,
-                                    '2xl' => 4,
-                                ])
-                                ->extraAttributes(['onkeydown' => "if(event.key === 'Enter') { event.preventDefault(); return false; }"])
-                                ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
-                                ->live(),
-                        ])
-                        ->visible(function(Get $get, $context){
-                            return $get('tipo_entrada') && $context != 'view' ? true: false;
-                        }),
-
-                // Forms\Components\TextInput::make('num_search')
-                    // ->label(__('general.DNI'))
-                    // ->live()
-                    // ->visible(function(Get $get, $context){
-                    //     return $get('tipo_entrada') && $context != 'view' ? true: false;
-                    // })
-                    // ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
-                    // ->columns(['md' => 2, 'xl' => 4])
-                    // ->extraAttributes(['title' => 'Text input'])
-                    // ->extraFieldWrapperAttributes(['class' => 'inputDNI'])
-                    // ,
-                // Forms\Components\Fieldset::make('search')
-                //     ->label(__('general.Search'))
-
-                //     ->schema([
-                //         Forms\Components\Grid::make(3)
-                //             ->schema([
-                //                 Forms\Components\TextInput::make('num_search')->label(__('general.DNI'))->live(),
-                //             ]),
-                //     ])
-                //     ->visible(function(Get $get, $context){
-                //         return $get('tipo_entrada') && $context != 'view' ? true: false;
-                //     })
-                //     ->columns(1),
+                    ->columns([
+                        'sm' => 4,
+                        'xl' => 6,
+                        '2xl' => 8,
+                    ])
+                    ->schema([
+                        Forms\Components\TextInput::make('num_search')
+                            ->label(__('general.DNI')."/Patente")
+                            ->columnSpan(['sm'=> 2])
+                            ->columnStart([
+                                'sm' => 2,
+                                'xl' => 3,
+                                '2xl' => 4,
+                            ])
+                            ->extraAttributes(['onkeydown' => "if(event.key === 'Enter') { event.preventDefault(); return false; }"])
+                            ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
+                            ->live(),
+                    ])
+                    ->visible(function(Get $get, $context){
+                        return $get('tipo_entrada') && $context != 'view' ? true: false;
+                    }),
+                /**
+                 * ///////////
+                 * FORMULARIOS
+                 */
                 Forms\Components\Fieldset::make('forms_control')->label(__('general.Forms Control'))
                     ->schema([
                         Forms\Components\Grid::make(2)
@@ -539,11 +545,16 @@ class ActivitiesResource extends Resource
                     ->visible(function($state, Get $get){
                         return ($get('tipo_entrada') == 3 )? true : false;
                     }),
-
+                /**
+                 * LISTA DE PERSONAS
+                 */
                 Forms\Components\Fieldset::make('peoples_list')->label(__('general.Peoples'))
                     ->columns(2)
                     ->schema([
 
+                        /**
+                         * PERSONAS
+                         */
                         Forms\Components\CheckboxList::make('peoples')->label(__('general.Select people one or more options'))
                             ->searchable()
                             ->options(function(Get $get, $context, $record){
@@ -573,8 +584,31 @@ class ActivitiesResource extends Resource
                                 }
                                 return true;
                             })
-                            ->live(),
+                            ->afterStateUpdated(function($state, Get $get, Set $set){
+                                if($get('tipo_entrada') == 1){
+                                    Owner::whereIn('id',$state)->get()->each(function($owner) use ($set){
+                                        $lotes = collect($owner->lotes);
+                                        // $lotesS = [];
+                                        $lote = $lotes->map(function($lote){
+                                            return $lote->getNombre();
+                                        })->first();
 
+                                        // dd($lote );
+                                        $set('lote_ids',$lote);
+                                        if($owner->owner_status_id == 2){
+                                            Notification::make()
+                                                ->title('Propietario moroso: '.$owner->nombres())
+                                                ->warning()
+                                                ->send();
+                                        }
+                                    });
+
+                                }
+                            })
+                            ->live(),
+                        /**
+                         * FAMILIARES
+                         */
                         Forms\Components\CheckboxList::make('families')->label(__('general.Familiares'))
                             ->searchable()
                             ->options(function(Get $get, $context){
@@ -622,248 +656,57 @@ class ActivitiesResource extends Resource
                                 }
                                 return true;
                             })
+                            ->afterStateUpdated(function($state, Get $get, Set $set){
+                                if($get('tipo_entrada') == 1){
+                                    OwnerFamily::whereIn('id',$state)->get()->each(function($family) use ($set){
+                                        // dd($family->familiarPrincipal->lotes);
+                                        $lotes = collect($family->familiarPrincipal->lotes);
+
+                                        $lote = $lotes->map(function($lote){
+                                            return $lote->getNombre();
+                                        })->first();
+
+                                        // dd($lote );
+                                        $set('lote_ids',$lote);
+
+                                    });
+
+                                }
+                            })
                             ->live(),
                     ])
                     ->visible(function(Get $get){
-                        return $get('tipo_entrada') ? true: false;
+                        //&& ($get('peoples') || $get('families'))
+                        return $get('tipo_entrada')  ? true: false;
                     }),
 
-
-                Forms\Components\Fieldset::make('autos_list')->label('Autos')
-                    ->schema([
-
-                        Forms\Components\CheckboxList::make('autos')->label(__('general.Select one or more options'))
-                            // ->relationship(titleAttribute: 'activities_auto_id')
-                            ->searchable()
-                            ->options(function(Get $get, $context){
-
-                                if($context == 'view'){
-                                    return self::searchAutos($get('autos'),'option');
-                                }
-
-                                $data = [];
-
-                                if($get('tipo_entrada') == 1){
-                                    $data = count($get('peoples')) ? self::searchOwnersAutos($get('peoples'), 'option') : [];
-                                }
-                                if($get('tipo_entrada') == 2){
-                                    $data = count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'option') : [];
-                                }
-                                if($get('tipo_entrada') == 3){
-                                    $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'option') : [];
-                                }
-
-                                if($get('families')){
-                                    $datas = $get('families') ? self::searchAutosFamiliar($get('families'),'option','OwnerFamily') : [];
-                                    $data = array_merge($data, $datas);
-								}
-
-                                return $data;
-                            })
-                            ->descriptions(function(Get $get, $context){
-
-                                if($context == 'view'){
-                                    return self::searchAutos($get('autos'),'descriptions');
-                                }
-
-                                if($get('tipo_entrada') == 1){
-                                    return count($get('peoples')) ? self::searchOwnersAutos($get('peoples'), 'descriptions') : [];
-                                }
-                                if($get('tipo_entrada') == 2){
-                                    return count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'descriptions') : [];
-                                }
-                                if($get('tipo_entrada') == 3){
-                                    return $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'descriptions') : [];
-                                }
-                                return [];
-                            }),
-                            Actions::make([
-                                Action::make('add_auto')
-                                    ->label('Agregar Auto')
-                                    ->icon('heroicon-m-plus')
-                                    // ->requiresConfirmation()
-                                    ->fillForm(function(Get $get){
-                                        $model = '';
-                                        if($get('tipo_entrada') == 1){
-                                            $model = 'Owner';
-                                        }else if ($get('tipo_entrada') == 2){
-                                            $model = 'Employee';
-                                        }else if($get('tipo_entrada') == 3){
-                                            $model = 'FormControl';
-                                        }
-
-                                        return [
-                                            'model' => $model,
-                                            'tipo_entrada' => $get('tipo_entrada'),
-                                            'num_search' => $get('num_search'),
-                                            'families' => $get('families')
-                                        ];
-                                    })
-                                    ->form([
-                                        Forms\Components\Hidden::make('model'),
-                                        Forms\Components\Hidden::make('tipo_entrada'),
-                                        Forms\Components\Hidden::make('num_search'),
-                                        Forms\Components\Repeater::make('autos')
-                                            ->schema([
-                                                Forms\Components\TextInput::make('marca')->required(),
-                                                Forms\Components\TextInput::make('modelo')
-                                                    ->required()
-                                                    ->maxLength(255),
-                                                Forms\Components\TextInput::make('patente')
-                                                    ->required()
-                                                    ->maxLength(255),
-                                                Forms\Components\TextInput::make('color'),
-
-                                                Forms\Components\Radio::make('model_id')
-                                                    ->label(__('general.Select the responsible person'))
-                                                    ->afterStateUpdated(function($state, Set $set){
-                                                        $set('model','Owner');
-                                                        $set('model_id',$state);
-                                                    })
-                                                    ->options(function(Get $get , $context){
-
-                                                        $data = self::getPeoples([
-                                                            'tipo_entrada' =>  $get('../../tipo_entrada'),
-                                                            'num_search' => $get('../../num_search'),
-                                                            'tipo' => 'option',
-                                                            'ids' =>  [],
-                                                        ]);
-
-
-
-                                                        return $data;
-                                                    })
-                                                    ->descriptions(function(Get $get, $context){
-
-                                                        $data = self::getPeoples([
-                                                            'tipo_entrada' =>  $get('../../tipo_entrada'),
-                                                            'num_search' => $get('../../num_search'),
-                                                            'tipo' => 'descriptions',
-                                                            'ids' =>   [],
-                                                        ]);
-
-                                                        return $data;
-
-                                                    }),
-
-                                                Forms\Components\Radio::make('familiar_model_id')->label('')
-                                                    ->reactive()
-                                                    ->afterStateUpdated(function($state, Set $set){
-                                                        $set('model','OwnerFamily');
-                                                        $set('model_id',$state);
-                                                    })
-                                                    ->options(function(Get $get , $context){
-                                                            $type = 'option';
-                                                            $ids = $get('../../families');
-                                                            $mapeo = function($people) use ($type){
-
-                                                                if($type == 'option'){
-                                                                    $people['texto'] = $people['first_name']. ' '.$people['last_name'];
-                                                                    $people['texto'].= ' - ' .$people['parentage'] ;
-                                                                }else{
-                                                                    // dd($people->familiarPrincipal);
-                                                                    $people['texto'] = $people->dni;
-                                                                    $people['texto'] .= ' - Familiar de: '.$people->familiarPrincipal->first_name . " " . $people->familiarPrincipal->last_name ;
-                                                                }
-
-                                                                return $people;
-                                                            };
-                                                            $data = OwnerFamily::whereIn('id', $ids)->get();
-
-                                                        return $data->map($mapeo)->pluck('texto','id')->toArray();
-                                                    })
-                                                    ->descriptions(descriptions: function(Get $get, $context){
-
-                                                            $type = 'descriptions';
-                                                            $ids = $get('../../families');
-                                                            $mapeo = function($people) use ($type){
-
-                                                                if($type == 'option'){
-                                                                    $people['texto'] = $people['first_name']. ' '.$people['last_name'];
-                                                                    $people['texto'].= ' - ' .$people['parentage'] ;
-                                                                }else{
-                                                                    // dd($people->familiarPrincipal);
-                                                                    $people['texto'] = $people->dni;
-                                                                    $people['texto'] .= ' - Familiar de: '.$people->familiarPrincipal->first_name . " " . $people->familiarPrincipal->last_name ;
-                                                                }
-
-                                                                return $people;
-                                                            };
-                                                            $data = OwnerFamily::whereIn('id', $ids)->get();
-
-                                                        return $data->map($mapeo)->pluck('texto','id')->toArray();
-
-                                                    })
-                                                    ->visible(function(Get $get){
-                                                        return $get('../../families') && count($get('../../families')) ? true : false;
-                                                    }),
-                                                Forms\Components\Hidden::make('model')->default(function(Get $get){
-                                                    return $get('../../model');
-                                                }),
-                                            ])
-                                            ->columns(4)->columnSpanFull(),
-                                    ])
-                                    ->visible(function($context){
-                                        return $context != 'view' ? true : false;
-                                    })
-                                    ->action(function (array $data, $record, Get $get) {
-                                        $autos = collect($data['autos']);
-                                        // dd($autos );
-                                        self::createAuto($autos->toArray(), ['type' => $get('tipo_entrada')] );
-                                    }),
-
-                            ]),
-                    ])
-                    ->columns(1)
-                    ->visible(function(Get $get, $context){
-                        if($context == 'view' && !count($get('autos'))){
-                            return false;
-                        }
-                        return $get('tipo_entrada') ? true: false;
-                    }),
-
+                /**
+                 * VISITANTES ESPONTANEOS
+                 */
                 Forms\Components\Fieldset::make('spontaneous_visit_list')->label('Visita espontánea')
                     ->schema([
 
                         Forms\Components\CheckboxList::make('spontaneous_visit')->label(__('general.Select one or more options'))
                             ->options(function(Get $get, $context, $record){
 
-                            //    dd( $get('tipo_entrada'),$get('num_search'), $get('type'));
 
-                               if($get('type') == 'Exit' && $get('num_search') && $get('tipo_entrada') == 1){
-
-                                $visitantes = OwnerSpontaneousVisit::where('dni', 'LIKE' ,'%'.$get('num_search').'%')->get();
-
-                                $visitantes = $visitantes->map(function($visitante){
-                                    $visitante['texto'] = $visitante['first_name'] ." ".$visitante['last_name'] ;
-                                    return $visitante;
-                                });
-
-                                return $visitantes->pluck('texto','id');
-
-                               }
-
-                               if($context == 'view' && $get('type') == 'Exit' && count($get('spontaneous_visit')) && $get('tipo_entrada') == 1){
-                                $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
-                                $visitantes = $visitantes->map(function($visitante){
-                                    $visitante['texto'] = $visitante['first_name'] ." ".$visitante['last_name'] ;
-                                    return $visitante;
-                                });
-
-                                return $visitantes->pluck('texto','id');
-                               }
-
-
-                                if(!$get('peoples') && $get('tipo_entrada') == 1){
-                                    return [];
-                                }
-                                $owner = $get('peoples');
-                                $owner_id = $owner[0];
 
                                 if($context == 'view'){
                                     $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
                                 }else{
-                                    $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner_id)->where('agregado',null)->get();
+                                    if($get('type') == 2){
+                                        $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
+                                        ->where('aprobado',1)
+                                        ->where('agregado',1)
+                                        ->where('salida',null)
+                                        ->get();
+                                    }else{
+
+                                        $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
+                                        ->where('agregado',null)
+                                        ->whereDate('created_at',now())
+                                        ->get();
+                                    }
                                 }
 
                                 $visitantes = $visitantes->map(function($visitante){
@@ -874,50 +717,27 @@ class ActivitiesResource extends Resource
                                 return $visitantes->pluck('texto','id');
                             })
                             ->descriptions(function(Get $get, $context){
-
-                                if($get('type') == 'Exit' && $get('num_search') != ''){
-
-                                    $visitantes = OwnerSpontaneousVisit::where('dni', 'LIKE' ,'%'.$get('num_search').'%')->get();
-
-                                    $visitantes = $visitantes->map(function($visitante){
-                                        $visitante['texto'] = $visitante['dni'];
-                                        return $visitante;
-                                    });
-
-                                    return $visitantes->pluck('texto','id');
-
-                                   }
-
-                                   if($context == 'view' && $get('type') == 'Exit' && count($get('spontaneous_visit')) && $get('tipo_entrada') == 1){
-                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
-                                    $visitantes = $visitantes->map(function($visitante){
-                                        $visitante['texto'] = $visitante['dni'];
-                                        return $visitante;
-                                    });
-
-                                    return $visitantes->pluck('texto','id');
-                                   }
-
-
-                                if(!$get('peoples') && $get('tipo_entrada') == 1){
-                                    return [];
-                                }
-                                $owner = $get('peoples');
-                                $owner_id = $owner[0];
                                 if($context == 'view'){
                                     $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
                                 }else{
-                                    $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner_id)->where('agregado',null)->get();
+                                    $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
+                                                    ->where('agregado',null)
+                                                    ->whereDate('created_at',now())
+                                                    ->get();
                                 }
 
                                 $visitantes = $visitantes->map(function($visitante){
-                                    $visitante['texto'] = $visitante['dni'];
+                                    // $visitante->owner->nombres();
+                                    $visitante['texto'] = $visitante['dni']. " Relacionado con: " .$visitante->owner->nombres();
                                     return $visitante;
                                 });
 
                                 return $visitantes->pluck('texto','id');
                             })
                             ->live(),
+
+
+
                         Actions::make([
                             Action::make('add_spontaneous_visit')
                                 ->label('Agregar Visitante espontáneo')
@@ -925,13 +745,35 @@ class ActivitiesResource extends Resource
                                 // ->requiresConfirmation()
                                 ->fillForm(function(Get $get){
                                     $owner = $get('peoples');
-                                    // dd($get('peoples'), $owner[0]);
+                                    if(!count($owner)){
+                                        return [];
+                                    }
                                     return [
                                         'owner_id' => $owner[0]
                                     ];
                                 })
                                 ->form([
-                                    Forms\Components\Hidden::make('owner_id'),
+                                    // Forms\Components\Hidden::make('owner_id'),
+                                    Forms\Components\Select::make('owner_id')
+                                        ->label(__("general.Owner"))
+                                        ->required()
+                                        // ->relationship(name: 'owner', modifyQueryUsing: fn (Builder $query) => $query->orderBy('first_name')->orderBy('last_name'))
+                                        ->options(Owner::orderBy('first_name')->orderBy('last_name')->get()->map(function($owner){
+                                            $owner['name'] = "{$owner->first_name} {$owner->last_name}";
+                                            return $owner;
+                                        })->pluck("name","id")->toArray())
+                                        // ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                                        ->searchable()
+                                        // ->afterStateUpdated(function(Set $set, $state){
+                                        //     $owner = Owner::find($state);
+                                        //     if(!$owner){
+                                        //         return ;
+                                        //     }
+                                        //     $set('name', $owner->first_name . ' ' . $owner->last_name);
+                                        //     $set('roles',[3]);
+                                        //     $set('email', $owner->email);
+                                        // })
+                                        ->live(),
                                     Forms\Components\Repeater::make('spontaneous_visit')
                                         ->label('Visitante espontáneo')
                                         ->schema([
@@ -954,6 +796,7 @@ class ActivitiesResource extends Resource
                                 ,
 
                         ]),
+
                     ])
                     ->columns(1)
                     ->visible(function(Get $get, $context){
@@ -963,12 +806,303 @@ class ActivitiesResource extends Resource
                         return ($get('tipo_entrada') == 1 )? true : false;
                     }),
 
-                Forms\Components\Textarea::make('observations')
+                /**
+                 * LISTA DE AUTOS
+                 */
+                Forms\Components\Fieldset::make('autos_list')->label('Autos')
+                    ->schema([
+
+                        /**
+                         * AUTOS LISTADO
+                         */
+                        Forms\Components\CheckboxList::make('autos')->label(__('general.Select one or more options'))
+                            // ->relationship(titleAttribute: 'activities_auto_id')
+                            ->searchable()
+                            ->options(function(Get $get, $context){
+
+                                if($context == 'view'){
+                                    return self::searchAutos($get('autos'),'option');
+                                }
+
+                                $data = [];
+
+                                if($get('tipo_entrada') == 1){
+                                    $data = count($get('peoples')) ? self::searchOwnersAutos($get('peoples'), 'option') : [];
+                                }
+                                if($get('tipo_entrada') == 2){
+                                    $data = count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'option') : [];
+                                }
+                                if($get('tipo_entrada') == 3){
+                                    $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'option') : [];
+                                }
+
+                                if($get('families')){
+                                    $datas = $get('families') ? self::searchAutosModel($get('families'),'option','OwnerFamily') : [];
+                                    $data = collect($data)->union($datas)->toArray();
+								}
+
+                                if($get('spontaneous_visit')){
+                                    $datas = $get('spontaneous_visit') ? self::searchAutosModel($get('spontaneous_visit'),'option','OwnerSpontaneousVisit') : [];
+                                    $data = collect($data)->union($datas)->toArray();
+                                }
+
+                                return $data;
+                            })
+                            ->descriptions(function(Get $get, $context){
+
+                                if($context == 'view'){
+                                    return self::searchAutos($get('autos'),'descriptions');
+                                }
+
+                                $data = [];
+                                if($get('tipo_entrada') == 1){
+                                    $data = count($get('peoples')) ? self::searchOwnersAutos($get('peoples'), 'descriptions') : [];
+                                }
+                                if($get('tipo_entrada') == 2){
+                                    $data = count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'descriptions') : [];
+                                }
+                                if($get('tipo_entrada') == 3){
+                                    $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'descriptions') : [];
+                                }
+                                if($get('families')){
+                                    $datas = $get('families') ? self::searchAutosModel($get('families'),'descriptions','OwnerFamily') : [];
+                                    $data = collect($data)->union($datas)->toArray();
+								}
+
+                                if($get('spontaneous_visit')){
+                                    $datas = $get('spontaneous_visit') ? self::searchAutosModel($get('spontaneous_visit'),'descriptions','OwnerSpontaneousVisit') : [];
+                                    $data = collect($data)->union($datas)->toArray();
+                                }
+                                return $data;
+                            }),
+                        /**
+                         * ACCIONES
+                         */
+                        Actions::make([
+                            Action::make('add_auto')
+                                ->label('Agregar Auto')
+                                ->icon('heroicon-m-plus')
+                                // ->requiresConfirmation()
+                                ->fillForm(function(Get $get){
+                                    $model = '';
+                                    if($get('tipo_entrada') == 1){
+                                        $model = 'Owner';
+
+                                    }else if ($get('tipo_entrada') == 2){
+                                        $model = 'Employee';
+                                    }else if($get('tipo_entrada') == 3){
+                                        $model = 'FormControl';
+                                    }
+
+                                    return [
+                                        'model' => $model,
+                                        'tipo_entrada' => $get('tipo_entrada'),
+                                        'num_search' => $get('num_search'),
+                                        'families' => $get('families')
+                                    ];
+                                })
+                                ->form([
+                                    Forms\Components\Hidden::make('model'),
+                                    Forms\Components\Hidden::make('tipo_entrada'),
+                                    Forms\Components\Hidden::make('num_search'),
+                                    Forms\Components\Repeater::make('autos')
+                                        ->schema([
+                                            Forms\Components\TextInput::make('marca')->required(),
+                                            Forms\Components\TextInput::make('modelo')
+                                                ->required()
+                                                ->maxLength(255),
+                                            Forms\Components\TextInput::make('patente')
+                                                ->required()
+                                                ->maxLength(255),
+                                            Forms\Components\TextInput::make('color'),
+
+                                            Forms\Components\Radio::make('model_id')
+                                                ->columnSpanFull()
+                                                ->label(__('general.Select the responsible person'))
+                                                ->afterStateUpdated(function($state, Set $set){
+                                                    $set('model','Owner');
+                                                    $set('model_id',$state);
+                                                })
+                                                ->options(function(Get $get , $context){
+
+                                                    $data = self::getPeoples([
+                                                        'tipo_entrada' =>  $get('../../tipo_entrada'),
+                                                        'num_search' => $get('../../num_search'),
+                                                        'tipo' => 'option',
+                                                        'ids' =>  [],
+                                                    ]);
+
+
+                                                    // dd($data, $visitantes);
+                                                    return $data;
+                                                })
+                                                ->descriptions(function(Get $get, $context){
+
+                                                    $data = self::getPeoples([
+                                                        'tipo_entrada' =>  $get('../../tipo_entrada'),
+                                                        'num_search' => $get('../../num_search'),
+                                                        'tipo' => 'descriptions',
+                                                        'ids' =>   [],
+                                                    ]);
+
+                                                    return $data;
+
+                                                }),
+
+                                            Forms\Components\Radio::make('familiar_model_id')->label('')
+                                                ->reactive()
+                                                ->columnSpanFull()
+                                                ->afterStateUpdated(function($state, Set $set){
+                                                    $set('model','OwnerFamily');
+                                                    $set('model_id',$state);
+                                                })
+                                                ->options(function(Get $get , $context){
+                                                        $type = 'option';
+                                                        $ids = $get('../../families');
+                                                        $mapeo = function($people) use ($type){
+
+                                                            if($type == 'option'){
+                                                                $people['texto'] = $people['first_name']. ' '.$people['last_name'];
+                                                                $people['texto'].= ' - ' .$people['parentage'] ;
+                                                            }else{
+                                                                // dd($people->familiarPrincipal);
+                                                                $people['texto'] = $people->dni;
+                                                                $people['texto'] .= ' - Familiar de: '.$people->familiarPrincipal->first_name . " " . $people->familiarPrincipal->last_name ;
+                                                            }
+
+                                                            return $people;
+                                                        };
+                                                        $data = OwnerFamily::whereIn('id', $ids)->get();
+
+                                                    return $data->map($mapeo)->pluck('texto','id')->toArray();
+                                                })
+                                                ->descriptions(descriptions: function(Get $get, $context){
+
+                                                        $type = 'descriptions';
+                                                        $ids = $get('../../families');
+                                                        $mapeo = function($people) use ($type){
+
+                                                            if($type == 'option'){
+                                                                $people['texto'] = $people['first_name']. ' '.$people['last_name'];
+                                                                $people['texto'].= ' - ' .$people['parentage'] ;
+                                                            }else{
+                                                                // dd($people->familiarPrincipal);
+                                                                $people['texto'] = $people->dni;
+                                                                $people['texto'] .= ' - Familiar de: '.$people->familiarPrincipal->first_name . " " . $people->familiarPrincipal->last_name ;
+                                                            }
+
+                                                            return $people;
+                                                        };
+                                                        $data = OwnerFamily::whereIn('id', $ids)->get();
+
+                                                    return $data->map($mapeo)->pluck('texto','id')->toArray();
+
+                                                })
+                                                ->visible(function(Get $get){
+                                                    return $get('../../families') && count($get('../../families')) ? true : false;
+                                                }),
+// ALTER TABLE `autos` CHANGE `model` `model` ENUM('Employee','Owner','FormControl','OwnerFamily','OwnerSpontaneousVisit') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
+                                            Forms\Components\Radio::make('espontaneo_model_id')->label('')
+                                                ->reactive()
+                                                ->columnSpanFull()
+                                                ->afterStateUpdated(function($state, Set $set){
+                                                    $set('model','OwnerSpontaneousVisit');
+                                                    $set('model_id',$state);
+                                                })
+                                                ->options(function(Get $get , $context){
+                                                    return  OwnerSpontaneousVisit::Dni( $get('../../num_search'))
+                                                        ->where('agregado',null)
+                                                        ->whereDate('created_at',now())
+                                                        ->get()->map(function($visitante){
+                                                            $visitante['texto'] = $visitante['first_name'] ." ".$visitante['last_name'] ;
+                                                            return $visitante;
+                                                        })->pluck('texto','id')->toArray();
+                                                })
+                                                ->descriptions(descriptions: function(Get $get, $context){
+                                                    return  OwnerSpontaneousVisit::Dni( $get('../../num_search'))
+                                                        ->where('agregado',null)
+                                                        ->whereDate('created_at',now())
+                                                        ->get()->map(function($visitante){
+                                                            $visitante['texto'] = $visitante['dni']. " Relacionado con: " .$visitante->owner->nombres();
+                                                            return $visitante;
+                                                        })->pluck('texto','id')->toArray();
+                                                })
+                                                // ->visible(function(Get $get){
+                                                //     return $get('../../spontaneous_visit') && count($get('../../spontaneous_visit')) ? true : false;
+                                                // })
+                                                ,
+
+
+                                            Forms\Components\Hidden::make('model')->default(function(Get $get){
+                                                return $get('../../model');
+                                            }),
+                                        ])
+                                        ->columns(4)->columnSpanFull(),
+                                ])
+                                ->visible(function($context){
+                                    return $context != 'view' ? true : false;
+                                })
+                                ->action(function (array $data, $record, Get $get) {
+                                    $autos = collect($data['autos']);
+                                    // dd($autos );
+                                    self::createAuto($autos->toArray(), ['type' => $get('tipo_entrada')] );
+                                }),
+
+                        ]),
+                    ])
+                    ->columns(1)
+                    ->visible(function(Get $get, $context){
+                        if($context == 'view' && !count($get('autos'))){
+                            return false;
+                        }
+                        return $get('tipo_entrada') ? true: false;
+                    }),
+
+
+                /**
+                 * LOTE
+                 */
+                Forms\Components\Select::make('lote_ids')
+                        ->required(function(Get $get){
+                            return ($get('type') == 1 && ($get('tipo_entrada') == 1 || $get('tipo_entrada') == 2))? true : false;
+                        })
+                        ->label(__('general.SelectedLote'))
+                        ->options(function(Get $get){
+                            return Lote::get()->map(function($lote){
+                                $lote['lote_name'] = $lote->getNombre();
+                                return $lote;
+                            })->pluck('lote_name', 'lote_name')->toArray();
+                        })
+                        ->searchable()
+                        ->visible(function(Get $get, $context){
+                            return $context == 'view' && !$get('lote_ids') ? false:true;
+                        })
+                        ->visible(function(Get $get, $context){
+                            if($context == 'view' && !count($get('spontaneous_visit'))){
+                                return false;
+                            }
+                            return ($get('tipo_entrada') == 1 || $get('tipo_entrada') == 2 )? true : false;
+                        }),
+                /**
+                 * /////
+                 */
+                Forms\Components\TextInput::make('observations')
                     ->columnSpanFull()
                     ->label(__('general.Observations'))
                     ->visible(function(Get $get){
                         return $get('tipo_entrada') ? true: false;
-                    })
+                    }),
+
+                    Actions::make([
+                        Action::make('create')
+                            ->label('Crear nueva Entrada/Salida')
+                            ->icon('heroicon-m-plus')
+                            ->url(fn (): string => route('filament.admin.resources.activities.create'))
+                            ,
+
+                    ])->visible(function($context){
+                        return $context == 'view';
+                    }),
             ])->columns(1);
     }
 
@@ -1069,8 +1203,6 @@ class ActivitiesResource extends Resource
                     ->query(function (Builder $query, array $data) {
                         if (!empty($data['query'])) {
                             // Obtén todos los modelos dentro del namespace App\Models
-
-//dd( $models);
 							 $d = ActivitiesPeople::limit(100)->get();
                                 $d = $d->groupBy('model')->keys();
 								$models = $d->map(function($model){

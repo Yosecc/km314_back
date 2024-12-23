@@ -18,7 +18,11 @@ class Lote extends Model
         'ubication',
         'lote_type_id',
         'lote_status_id',
-        'owner_id'
+        'owner_id',
+        'frente',
+        'contrafrente',
+        'lado_uno',
+        'lado_dos',
     ];
     protected $with = ['sector','loteStatus','loteType'];
 
@@ -41,5 +45,12 @@ class Lote extends Model
     {
         return $this->belongsTo(Owner::class);
     }
+
+    public function getNombre()
+    {
+        return $this->sector->name . $this->lote_id;
+    }
+
+
 
 }

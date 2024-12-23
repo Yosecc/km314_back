@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('owners', function (Blueprint $table) {
-            $table->foreignId('owner_status_id')->nullable()->constrained();
+        Schema::table('lotes', function (Blueprint $table) {
+            $table->string('frente')->nullable();
+            $table->string('contrafrente')->nullable();
+            $table->string('lado_uno')->nullable();
+            $table->string('lado_dos')->nullable();
         });
-
     }
 
     /**

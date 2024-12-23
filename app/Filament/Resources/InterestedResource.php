@@ -25,7 +25,7 @@ class InterestedResource extends Resource
     protected static ?string $label = 'interesado';
     // protected static ?string $navigationGroup = 'Configuración';
 
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'interesados';
@@ -74,15 +74,24 @@ class InterestedResource extends Resource
                     ->label(__("general.interested_origins_id"))
                     ->relationship(name: 'interestedOrigins', titleAttribute: 'name')
                     ->required(),
+
                 Forms\Components\Select::make('lote_id')
-                    ->label(__("general.Lote"))
-                    ->relationship(name: 'lote',titleAttribute: 'lote_id')
-                    // ->searchable()
-                    ->getOptionLabelFromRecordUsing(fn (Lote $record) => "{$record->sector->name} {$record->lote_id}"),
+                    ->options(function(){
+                        return Lote::get()->map(function($lote){
+                            $lote['lote_name'] = $lote->getNombre();
+                            return $lote;
+                        })->pluck('lote_name', 'id')->toArray();
+                    })
+                    ->required()
+                    ->searchable()
+                    ->label(__("general.Lote")),
+
+
                 Forms\Components\Select::make('propertie_id')
                     ->label(__("general.Propertie"))
                     ->searchable()
                     ->relationship(name: 'propertie', titleAttribute: 'identificador'),
+
                 Forms\Components\Textarea::make('observations')
                     ->columnSpanFull()
                     ->label(__('general.Observations')),
@@ -123,7 +132,7 @@ class InterestedResource extends Resource
                     ->label(__("general.created_at"))
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),  
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),

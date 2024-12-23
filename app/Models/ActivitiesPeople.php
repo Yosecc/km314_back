@@ -26,6 +26,28 @@ class ActivitiesPeople extends Model
      // Mutador para modificar el valor de "model" al acceder al atributo
      public function getModelAttribute($value)
      {
-         return $value === 'FormtControl' ? 'FormControlPeople' : $value;
+         return $value === 'FormControl' ? 'FormControlPeople' : $value;
      }
+
+     public function ownerSpontaneousVisit()
+     {
+        return $this->belongsTo(OwnerSpontaneousVisit::class,'model_id')->with(['owner']);
+     }
+     public function formControlPeople()
+     {
+        return $this->belongsTo(FormControlPeople::class,'model_id');
+     }
+     public function owner()
+     {
+        return $this->belongsTo(Owner::class,'model_id');
+     }
+     public function employee()
+     {
+        return $this->belongsTo(Employee::class,'model_id');
+     }
+     public function ownerFamily()
+     {
+        return $this->belongsTo(OwnerFamily::class,'model_id');
+     }
+
 }

@@ -2,26 +2,27 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
+use App\Filament\Resources\ConstructionResource\Pages;
+use App\Filament\Resources\ConstructionResource\RelationManagers;
+use App\Models\Construction;
 use App\Models\Lote;
-use Filament\Tables;
+use App\Models\loteStatus;
 use App\Models\Owner;
 use App\Models\Property;
-use Filament\Forms\Form;
-use App\Models\loteStatus;
-use Filament\Tables\Table;
-use App\Models\Construction;
 use App\Models\PropertyType;
-use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
+use Filament\Forms;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Notifications\Actions\Action as ActionNotification;
 use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\ConstructionResource\Pages;
-use Filament\Notifications\Actions\Action as ActionNotification;
-use App\Filament\Resources\ConstructionResource\RelationManagers;
 
 class ConstructionResource extends Resource
 {
@@ -33,7 +34,7 @@ class ConstructionResource extends Resource
     protected static ?string $label = 'construcción';
     // protected static ?string $navigationGroup = 'Configuracion de construcciones';
 
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'construcciones';
@@ -55,16 +56,32 @@ class ConstructionResource extends Resource
                     ->required()
                     ->relationship(name: 'constructionStatus', titleAttribute: 'name')
                     ->label(__("general.status_construccion")),
+
                 Forms\Components\Select::make('lote_id')
-                    ->relationship(name: 'lote')
-                    ->getOptionLabelFromRecordUsing(fn (Lote $record) => "{$record->sector->name} {$record->lote_id}")
+                    // ->relationship(name: 'lote')
+                    ->options(function(){
+                        return Lote::get()->map(function($lote){
+                            $lote['lote_name'] = $lote->getNombre();
+                            return $lote;
+                        })->pluck('lote_name', 'id')->toArray();
+                    })
+                    // ->getOptionLabelFromRecordUsing(fn (Lote $record) => "{$record->getNombre()}")
                     ->required()
+                    ->searchable()
                     ->label(__("general.Lote")),
                 Forms\Components\Select::make('owner_id')
                     ->required()
-                    ->relationship(name: 'owner')
-                    ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                    // ->relationship(name: 'owner')
+                    ->options(function(){
+                        return Owner::get()->map(function($lote){
+                            $lote['name'] = $lote->nombres();
+                            return $lote;
+                        })->pluck('name', 'id')->toArray();
+                    })
+                    ->searchable()
+                    // ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->nombres()}")
                     ->label(__("general.Owner")),
+
                 Forms\Components\TextInput::make('width')
                     ->label(__("general.Width"))
                     ->maxLength(255),
@@ -104,11 +121,13 @@ class ConstructionResource extends Resource
                 Tables\Columns\TextColumn::make('lote')
                     ->label(__("general.Lote"))
                     ->searchable()
-                    ->formatStateUsing(fn (Lote $state) => "{$state->sector->name}{$state->lote_id}" )
+                    ->badge()
+                    ->formatStateUsing(fn (Lote $state) => "{$state->getNombre()}" )
                     ->sortable(),
                 Tables\Columns\TextColumn::make('owner')
+                ->label(__('Propietario'))
                     ->searchable()
-                    ->formatStateUsing(fn (Owner $state) => "{$state->first_name} {$state->last_name}" )
+                    ->formatStateUsing(fn (Owner $state) => "{$state->nombres()}" )
                     ->sortable(),
                 Tables\Columns\TextColumn::make('deleted_at')
                     ->label(__("general.deleted_at"))
@@ -120,10 +139,10 @@ class ConstructionResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-             
-             
-             
-             
+
+
+
+
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
@@ -178,7 +197,7 @@ class ConstructionResource extends Resource
                         ])
                         ->send();
                 })
-                
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

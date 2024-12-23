@@ -10,7 +10,7 @@ class ServiceRequest extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['alias','name','user_id','starts_at','ends_at','service_request_responsible_people_id','service_request_status_id','service_request_type_id','service_id','lote_id','owner_id','model','model_id','options','observations'];
+    protected $fillable = ['alias','name','user_id','starts_at','ends_at','service_request_responsible_people_id','service_request_status_id','service_request_type_id','service_id','lote_id','owner_id','model','model_id','options','observations','asignado_status_id'];
 
     protected $casts = [
         'options' => 'array',
@@ -54,6 +54,11 @@ class ServiceRequest extends Model
     public function owner()
     {
         return $this->belongsTo(Owner::class);
+    }
+
+    public function userAsignado()
+    {
+        return $this->belongsTo(User::class, 'asignado_status_id');
     }
 
      /**

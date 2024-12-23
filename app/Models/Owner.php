@@ -10,7 +10,7 @@ class Owner extends Model
     use HasFactory;
     protected $fillable = ['cuit','number','piso','dto','first_name', 'last_name', 'email', 'phone', 'address', 'city', 'state', 'zip_code', 'country', 'birthdate', 'gender', 'profile_picture','dni','user_id','owner_status_id'];
 
-    protected $with = ['autos','lotes'];
+    protected $with = ['autos','lotes','status'];
 
     public function autos()
     {
@@ -38,6 +38,10 @@ class Owner extends Model
 
     public function status()
     {
-        $this->belongsTo(OwnerStatus::class,'owner_status_id');
+        return $this->belongsTo(OwnerStatus::class,'owner_status_id');
+    }
+
+    public function nombres(): string{
+        return $this->first_name." ".$this->last_name;
     }
 }

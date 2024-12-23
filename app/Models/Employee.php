@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
     use HasFactory;
-    protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id','model_origen','model_origen_id'];
+    protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id','model_origen','model_origen_id','fecha_vencimiento_seguro','owner_id'];
 
     public function work()
     {
@@ -30,5 +31,39 @@ class Employee extends Model
     public function activitiePeople()
     {
         return $this->hasOne(ActivitiesPeople::class,'model_id')->where('model','Employee')->latest();
+    }
+
+    public function isVencidoSeguro()
+    {
+        if(!$this->fecha_vencimiento_seguro){
+            return false;
+        }
+        return Carbon::parse($this->fecha_vencimiento_seguro) < now() ? true : false;
+    }
+
+    public function vencidosFile()
+    {
+        if (!$this->files || $this->files->isEmpty()) {
+            return null;
+        }
+
+        $files = $this->files
+            ->filter(function ($file) {
+                return Carbon::parse($file->fecha_vencimiento)->isPast();
+            })
+            ->pluck('name')
+            ->toArray();
+
+        return !empty($files) ? $files : null;
+    }
+
+    public function horarios()
+    {
+        return $this->hasMany(EmployeeSchedule::class);
+    }
+
+    public function files()
+    {
+        return $this->hasMany(EmployeeFile::class);
     }
 }

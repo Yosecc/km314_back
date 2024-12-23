@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\LoteResource\Pages;
 use App\Filament\Resources\LoteResource\RelationManagers;
 use App\Models\Lote;
+use App\Models\Owner;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -27,6 +28,20 @@ class LoteResource extends Resource
     {
         return $form
             ->schema([
+
+                Forms\Components\TextInput::make('frente')
+                    ->label(__("Frente"))
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('contrafrente')
+                    ->label(__("Contrafrente"))
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('lado_uno')
+                    ->label(__("Lado uno"))
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('lado_dos')
+                    ->label(__("lado dos"))
+                    ->maxLength(255),
+
                 Forms\Components\TextInput::make('width')
                     ->label(__("general.Width"))
                     ->maxLength(255),
@@ -44,10 +59,17 @@ class LoteResource extends Resource
                     ->required()
                     ->relationship(name: 'sector', titleAttribute: 'name'),
 
-                Forms\Components\TextInput::make('lote_id')
+                Forms\Components\Select::make('lote_id')
                     ->label(__("general.LoteID"))
+                    ->options(function(){
+                        return Lote::get()->map(function($lote){
+                            $lote['lote_name'] = $lote->getNombre();
+                            return $lote;
+                        })->pluck('lote_name', 'id')->toArray();
+                    })
+                    ->searchable()
                     ->required()
-                    ->numeric(),
+                    ,
 
                 Forms\Components\Select::make('lote_type_id')
                     ->label(__("general.LoteType"))
@@ -59,13 +81,19 @@ class LoteResource extends Resource
 
                 Forms\Components\Select::make('owner_id')
                     ->label(__("general.Owner"))
-                    ->relationship(name: 'owner', titleAttribute: 'last_name'),
+                    ->options(function(){
+                        return Owner::get()->map(function($lote){
+                            $lote['name'] = $lote->nombres();
+                            return $lote;
+                        })->pluck('name', 'id')->toArray();
+                    })
+                    ->searchable(),
 
-                Forms\Components\Textarea::make('ubication')
-                    ->label(__("general.Ubication"))
+                Forms\Components\TextInput::make('ubication')
+                    ->label(__("Observaciones"))
                     ->columnSpanFull(),
 
-                
+
             ]);
     }
 
@@ -80,15 +108,22 @@ class LoteResource extends Resource
                 Tables\Columns\TextColumn::make('lote_id')->label(__("general.LoteID"))
                     ->numeric()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('loteStatus.name')->label(__("general.LoteStatus"))
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('loteType.name')->label(__("general.LoteType"))
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('owner.first_name')->label(__("general.Owner"))
-                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('owner')
+                    ->label(__("general.Owner"))
+                    ->searchable()
+                    ->formatStateUsing(fn (Owner $state) => "{$state->nombres()}" )
+                    ->sortable(),
+
+
+
                 // Tables\Columns\TextColumn::make('height')
                 //     ->searchable(),
                 // Tables\Columns\TextColumn::make('m2')

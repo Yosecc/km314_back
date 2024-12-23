@@ -30,4 +30,6 @@ class Activities extends Model
     {
         return $this->belongsTo(FormControl::class);
     }
+
+
 }

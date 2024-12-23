@@ -53,7 +53,11 @@ class UserResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
                     ->email()
-                    ->unique('users','email')
+                    ->unique(
+                        table: 'users', // Nombre de la tabla
+                        column: 'email', // Nombre de la columna
+                        ignoreRecord: true // Ignora el registro actual al validar
+                    )
                     ->required()
                     ->maxLength(255),
                 Forms\Components\DateTimePicker::make('email_verified_at')->default(now()->format('Y-m-d H:m:s')),

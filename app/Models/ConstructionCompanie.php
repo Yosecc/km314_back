@@ -23,4 +23,9 @@ class ConstructionCompanie extends Model
                     ;
     }
 
+    public function horarios()
+    {
+        return $this->hasMany(ConstructionCompanieSchedule::class);
+    }
+
 }

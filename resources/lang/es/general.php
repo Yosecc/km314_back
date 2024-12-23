@@ -90,5 +90,7 @@ return [
     'Familiares' => 'Familiares',
     'piso' => 'Piso',
     'dto' => 'dto',
-    'number' => 'Número'
+    'number' => 'Número',
+    'Parentesco' => 'Parentesco',
+    'CUIT' => 'CUIT'
 ];

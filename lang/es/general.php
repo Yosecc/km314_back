@@ -89,6 +89,8 @@ return [
     'Expirado' => 'Expirado',
     'piso' => 'Piso',
     'dto' => 'dto',
-    'number' => 'Número'
+    'number' => 'Número',
+    'Parentesco' => 'Parentesco',
+    'CUIT' => 'CUIT'
 
 ];

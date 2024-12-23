@@ -17,6 +17,7 @@ use App\Models\ServiceRequestStatus;
 use App\Models\ServiceRequestType;
 use App\Models\StartUp;
 use App\Models\StartUpOption;
+use App\Models\User;
 use App\Models\WorksAndInstallation;
 use Carbon\Carbon;
 use Filament\Forms;
@@ -33,12 +34,12 @@ use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -247,6 +248,15 @@ class ServiceRequestResource extends Resource
                                 // ->options(ServiceRequestStatus::get()->pluck('name','id')->toArray())
                                 ->required(),
 
+                            Forms\Components\Select::make('asignado_status_id')
+                                ->label("Usuario asignado")
+                                ->searchable()
+                                // ->relationship(name: 'serviceRequestStatus', titleAttribute: 'name')
+                                ->options(User::get()->pluck('name','id')->toArray())
+                                ->required(),
+
+
+
                             Repeater::make('serviceRequestNote')
                                 ->relationship()
                                 ->label('Nota')
@@ -258,6 +268,8 @@ class ServiceRequestResource extends Resource
                                 ])
                                 ->defaultItems(0)
                                 ->columns(1),
+
+
 
                             Repeater::make('serviceRequestFile')
                                 ->relationship()
@@ -299,6 +311,10 @@ class ServiceRequestResource extends Resource
                 ->label(''),
                 Tables\Columns\TextColumn::make('serviceRequestStatus.name')->label('Estado')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('lote')
+                    ->formatStateUsing(fn (Lote $state): string => $state->getNombre())
+                    ->badge()
+                    ->label('Lote'),
                 Tables\Columns\TextColumn::make('serviceRequestType.name')->label('Tipo')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('service.name')->label('Servicio')

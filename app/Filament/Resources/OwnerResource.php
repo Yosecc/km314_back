@@ -31,8 +31,7 @@ class OwnerResource extends Resource
     protected static ?string $navigationLabel = 'Propietario';
     protected static ?string $label = 'propietario';
 
-
-
+    protected static ?string $recordTitleAttribute = 'first_name';
     public static function form(Form $form): Form
     {
         return $form
@@ -126,6 +125,7 @@ class OwnerResource extends Resource
 
 
                     Forms\Components\Select::make('owner_status_id')
+                        ->label('Estatus')
                         ->options(OwnerStatus::get()->pluck('name','id')->toArray())
                         // ->relationship(name: 'status', titleAttribute: 'name')
                         ->nullable()
@@ -275,4 +275,19 @@ class OwnerResource extends Resource
             'index' => Pages\ManageOwners::route('/'),
         ];
     }
+
+    public static function getGlobalSearchResultDetails($record): array
+    {
+        return [
+            'Lote' => $record->lotes->first()->getNombre(),
+            // 'Category' => $record->category->name,
+        ];
+    }
+
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['first_name', 'last_name', 'email'];
+    }
+
 }

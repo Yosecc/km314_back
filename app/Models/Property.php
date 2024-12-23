@@ -16,7 +16,8 @@ class Property extends Model
         'width',
         'height',
         'm2',
-        'identificador'
+        'identificador',
+        'cuentamunicipal'
     ];
 
     public function propertyType()

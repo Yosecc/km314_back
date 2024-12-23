@@ -175,7 +175,13 @@ class ActivitiesPage extends CreateRecord
             $valores = collect($this->data['spontaneous_visit'])
                 ->map(function ($visitante) use ($record) {
                     $vis = OwnerSpontaneousVisit::where('id', $visitante)->first();
-                    $vis->agregado = 1;
+
+                    if ($this->data['type'] == 'Exit') {
+                        $vis->salida = 1;
+                    }else{
+                        $vis->agregado = 1;
+                    }
+
                     $vis->save();
 
                     return [
@@ -189,8 +195,6 @@ class ActivitiesPage extends CreateRecord
 
                 ActivitiesPeople::insert($valores->toArray());
         }
-
-
 
         $autos = collect($this->data['autos'])
                     ->map(function($auto) use ($model, $record ){
