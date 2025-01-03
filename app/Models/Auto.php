@@ -11,4 +11,6 @@ class Auto extends Model
 
     protected $fillable = ['marca', 'patente','modelo','color','user_id','model','model_id'];
 
+    protected $hidden = ['user_id','model','model_id','created_at','updated_at'];
+
 }

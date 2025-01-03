@@ -11,4 +11,6 @@ class EmployeeFile extends Model
 
     protected $fillable = [ 'name', 'file', 'fecha_vencimiento', 'employee_id' ];
 
+    protected $hidden = ['employee_id','created_at','updated_at'];
+
 }

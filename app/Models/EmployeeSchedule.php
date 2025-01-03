@@ -11,6 +11,8 @@ class EmployeeSchedule extends Model
 
     protected $fillable = ['employee_id', 'day_of_week', 'start_time', 'end_time'];
 
+    protected $hidden = ['created_at', 'updated_at'];
+
     public function employee()
     {
         return $this->belongsTo(Employee::class);
