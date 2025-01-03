@@ -50,7 +50,7 @@ class Main extends Controller
                                 ->with(['autos','files','horarios'])
                                 ->get();
 
-        return response()->json(['empleados'=>$empleados,'tipo_empleos' => Works::where('status', true)->orderBy('name','desc')->get()], 200);
+        return response()->json(['empleados'=>$empleados,'tipo_empleos' => Works::where('status', true)->orderBy('name','asc')->get()], 200);
     }
 
     public function spontaneous_visit(Request $request)
