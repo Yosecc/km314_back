@@ -1153,9 +1153,9 @@ class ActivitiesResource extends Resource
                     ->label(__('general.Lotes'))
                     ->numeric()
                     ->sortable()
-                    ->visible(function(Get $get){
-                        return $get('tipo_entrada') != 1 ? true: false;
-                    })
+                    // ->visible(function(Get $get){
+                    //     return $get('tipo_entrada') != 1 ? true: false;
+                    // })
                     ,
 
                     // Tables\Columns\TextColumn::make('lote_ids')
