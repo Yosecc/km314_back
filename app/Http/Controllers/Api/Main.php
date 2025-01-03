@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
+use App\Http\Controllers\SocialMessages;
 use App\Mail\Contact;
-use App\Models\Slider;
+use App\Mail\sendMailLanding;
+use App\Models\FormControlTypeIncome;
 use App\Models\Landing;
-use App\Models\Trabajos;
+use App\Models\LandingData;
 use App\Models\Newsletter;
 use App\Models\OwnerSpontaneousVisit;
-use App\Models\LandingData;
+use App\Models\Slider;
+use App\Models\Trabajos;
 use Illuminate\Http\Request;
-use App\Mail\sendMailLanding;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\SocialMessages;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -32,6 +33,13 @@ class Main extends Controller
     public function trabajos(Request $request)
     {
         return response()->json(Trabajos::get()->pluck('name','name')->toArray() ,200);
+    }
+
+    public function tipos_ingresos()
+    {
+        $data = FormControlTypeIncome::where('status',1)->with(['subtipos'])->get();
+
+        return response()->json($data, 200);
     }
 
     public function spontaneous_visit(Request $request)
