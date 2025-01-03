@@ -70,7 +70,7 @@ class ActivitiesResource extends Resource
             $query->whereHas('autos', function ($query) use ($dni){
                 $query->where('patente','like','%'.$dni.'%');
             });
-    })->limit(10)->get();
+        })->limit(10)->get();
 
         $mapeo = function($people) use ($type){
 
@@ -558,32 +558,47 @@ class ActivitiesResource extends Resource
                         Forms\Components\CheckboxList::make('peoples')->label(__('general.Select people one or more options'))
                             ->searchable()
                             ->options(function(Get $get, $context, $record){
-                                // dd($get('peoples'), $get('tipo_entrada'), $record);
-                                return self::getPeoples([
-                                    'tipo_entrada' => $get('tipo_entrada'),
-                                    'num_search' => $get('num_search') ,
-                                    'form_control_id' => $get('form_control_id'),
-                                    'tipo' => 'option',
-                                    'ids' =>  $context == 'view' ? $get('peoples') : [],
-                                    'context' => $context
-                                ]);
-                            })
-                            ->descriptions(function(Get $get , $context){
-                                return self::getPeoples([
-                                    'tipo_entrada' => $get('tipo_entrada'),
-                                    'num_search' => $get('num_search') ,
-                                    'form_control_id' => $get('form_control_id'),
-                                    'tipo' => 'descriptions',
-                                    'ids' =>  $context == 'view' ? $get('peoples') : [],
-                                    'context' => $context
-                                ]);
-                            })
-                            ->visible(function(Get $get, $context ){
-                                if($context == 'view' && !count($get('peoples'))){
-                                    return false;
-                                }
-                                return true;
-                            })
+
+                                $peoples = $get('peoples');
+                                 if($context == 'view' && isset($peoples) && !count($peoples) && $record->peoples){
+                                     $peoples = $record->peoples->pluck('model_id')->toArray();
+                                 }
+                                 dd($peoples );
+                                 return self::getPeoples([
+                                     'tipo_entrada' => $get('tipo_entrada'),
+                                     'num_search' => $get('num_search') ,
+                                     'form_control_id' => $get('form_control_id'),
+                                     'tipo' => 'option',
+                                     'ids' =>  $context == 'view' ? $peoples : [],
+                                     'context' => $context
+                                 ]);
+                             })
+                             ->descriptions(function(Get $get , $context, $record){
+                                 $peoples = $get('peoples');
+                                 if($context == 'view' && isset($peoples) && !count($peoples) && $record->peoples){
+                                     $peoples = $record->peoples->pluck('model_id')->toArray();
+                                 }
+                                 return self::getPeoples([
+                                     'tipo_entrada' => $get('tipo_entrada'),
+                                     'num_search' => $get('num_search') ,
+                                     'form_control_id' => $get('form_control_id'),
+                                     'tipo' => 'descriptions',
+                                     'ids' =>  $context == 'view' ? $peoples : [],
+                                     'context' => $context
+                                 ]);
+                             })
+                             ->visible(function(Get $get, $context, $record  ){
+
+                                 $peoples = $get('peoples');
+                                 if($context == 'view' && isset($peoples) && !count($peoples) && $record->peoples){
+                                     $peoples = $record->peoples->pluck('id')->toArray();
+                                 }
+
+                                 if($context == 'view' && !count($peoples)){
+                                     return false;
+                                 }
+                                 return true;
+                             })
                             ->afterStateUpdated(function($state, Get $get, Set $set){
                                 if($get('tipo_entrada') == 1){
                                     Owner::whereIn('id',$state)->get()->each(function($owner) use ($set){
@@ -1137,7 +1152,20 @@ class ActivitiesResource extends Resource
                 Tables\Columns\TextColumn::make('lote_ids')
                     ->label(__('general.Lotes'))
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->visible(function(Get $get){
+                        return $get('tipo_entrada') != 1 ? true: false;
+                    })
+                    ,
+
+                    // Tables\Columns\TextColumn::make('lote_ids')
+                    // ->label(__('general.Lotes'))
+                    // ->numeric()
+                    // ->sortable()
+                    // ->visible(function(Get $get){
+                    //     return $get('tipo_entrada') == 1 ? true: false;
+                    // })
+                    // ,
                 Tables\Columns\TextColumn::make('formControl.access_type')
                     ->badge()
                     ->label(__("general.TypeActivitie"))

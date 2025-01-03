@@ -17,11 +17,15 @@ use Filament\Tables\Columns\ColorColumn;
 class TrabajosResource extends Resource
 {
     protected static ?string $model = Trabajos::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
-    protected static ?string $navigationLabel = 'Tipo de trabajos';
-    protected static ?string $navigationGroup = 'Configuración';
+    protected static ?string $navigationLabel = 'Subtipo de ingreso';
+    protected static ?string $navigationGroup = 'Configuración - Formulario';
+    protected static ?string $label = 'subtipo de ingreso';
+    protected static bool $shouldRegisterNavigation = false;
+    public static function getPluralModelLabel(): string
+    {
+        return 'subtipos de ingresos';
+    }
 
     public static function form(Form $form): Form
     {

@@ -13,7 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Filament\Tables\Filters\SelectFilter;
 class LoteResource extends Resource
 {
     protected static ?string $model = Lote::class;
@@ -118,19 +118,22 @@ class LoteResource extends Resource
 
                 Tables\Columns\TextColumn::make('owner')
                     ->label(__("general.Owner"))
-                    ->searchable()
                     ->formatStateUsing(fn (Owner $state) => "{$state->nombres()}" )
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('owner.phone')
+                    ->label(__("Teléfono"))
+                    ->sortable(),
 
-
-                // Tables\Columns\TextColumn::make('height')
-                //     ->searchable(),
-                // Tables\Columns\TextColumn::make('m2')
-                //     ->searchable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('loteStatus')
+                        ->label(__('Estado del lote'))
+                        ->relationship('loteStatus', 'name'),
+
+                SelectFilter::make('owner')
+                    ->label(__('Propietario'))
+                    ->relationship('owner', 'first_name'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

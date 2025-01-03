@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('trabajos', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('color')->nullable();
-            $table->timestamps();
+        Schema::table('trabajos', function (Blueprint $table) {
+            $table->foreignId(column: 'form_control_type_income_id')->nullable()->constrained('form_control_type_incomes');
         });
     }
 
@@ -24,6 +21,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('trabajos');
+        //
     }
 };

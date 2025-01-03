@@ -9,5 +9,5 @@ class Trabajos extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name','color'];
+    protected $fillable = ['name','color','form_control_type_income_id'];
 }
