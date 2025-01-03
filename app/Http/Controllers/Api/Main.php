@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\SocialMessages;
 use App\Mail\Contact;
 use App\Mail\sendMailLanding;
+use App\Models\Employee;
 use App\Models\FormControlTypeIncome;
 use App\Models\Landing;
 use App\Models\LandingData;
@@ -40,6 +41,15 @@ class Main extends Controller
         $data = FormControlTypeIncome::where('status',1)->with(['subtipos'])->get();
 
         return response()->json($data, 200);
+    }
+
+    public function empleados(Request $request)
+    {
+        $empleados = Employee::where('owner_id', $request->user()->owner->id)
+                                ->with(['autos','files','horarios'])
+                                ->get();
+
+        return response()->json($empleados, 200);
     }
 
     public function spontaneous_visit(Request $request)
