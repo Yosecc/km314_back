@@ -563,7 +563,7 @@ class ActivitiesResource extends Resource
                                  if($context == 'view' && isset($peoples) && !count($peoples) && $record->peoples){
                                      $peoples = $record->peoples->pluck('model_id')->toArray();
                                  }
-                                 dd($peoples );
+                                //  dd($peoples );
                                  return self::getPeoples([
                                      'tipo_entrada' => $get('tipo_entrada'),
                                      'num_search' => $get('num_search') ,
