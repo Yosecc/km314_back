@@ -14,6 +14,7 @@ use App\Models\Newsletter;
 use App\Models\OwnerSpontaneousVisit;
 use App\Models\Slider;
 use App\Models\Trabajos;
+use App\Models\Works;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -49,7 +50,7 @@ class Main extends Controller
                                 ->with(['autos','files','horarios'])
                                 ->get();
 
-        return response()->json($empleados, 200);
+        return response()->json(['empleados'=>$empleados,'tipo_empleos' => Works::where('status', true)->get()], 200);
     }
 
     public function spontaneous_visit(Request $request)
