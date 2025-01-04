@@ -55,7 +55,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->get('/tipos_ingresos', [Main::class,'tipos_ingresos']);
+Route::middleware('auth:sanctum')->post('/resource_empleados', [Main::class,'resourceEmpleados']);
 Route::middleware('auth:sanctum')->get('/empleados', [Main::class,'empleados']);
+
 Route::middleware('auth:sanctum')->get('/trabajos', [Main::class,'trabajos']);
 Route::middleware('auth:sanctum')->get('/sliders', [Main::class,'sliders']);
 Route::middleware('auth:sanctum')->get('/spontaneous_visit', [Main::class,'spontaneous_visit']);

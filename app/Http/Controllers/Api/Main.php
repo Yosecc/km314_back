@@ -53,6 +53,48 @@ class Main extends Controller
         return response()->json(['empleados'=>$empleados,'tipo_empleos' => Works::where('status', true)->orderBy('name','asc')->get()], 200);
     }
 
+    public function resourceEmpleados(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'work_id'  => 'required',
+            'dni' => 'required',
+            'first_name' => 'required',
+            'last_name'  => 'required',
+            'phone' => 'required',
+            'fecha_vencimiento_seguro' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json( ['status' => false, 'errors' => $validator->errors() ], 422);
+        }
+
+        if(isset($request->id)){
+            Employee::where('id',$request->id)->update([
+                'work_id' => $request->work_id,
+                'dni' => $request->dni,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'phone' => $request->phone,
+                'fecha_vencimiento_seguro' => $request->fecha_vencimiento_seguro,
+            ]);
+        }else{
+            Employee::insert([
+                'work_id' => $request->work_id,
+                'dni' => $request->dni,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'phone' => $request->phone,
+                'user_id' => $request->user()->id,
+                'fecha_vencimiento_seguro' => $request->fecha_vencimiento_seguro,
+                'owner_id' => $request->user()->owner->id,
+                'model_origen' => 'Owner' ,
+                'model_origen_id' => $request->user()->owner->id,
+            ]);
+        }
+
+        return response()->json(['status' => true, 'message' => 'Registro guardado' ], 200);
+    }
+
     public function spontaneous_visit(Request $request)
     {
 

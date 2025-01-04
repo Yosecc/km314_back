@@ -78,7 +78,8 @@ class EmployeeResource extends Resource
                         ->label('Origen')
                         ->options([
                             'ConstructionCompanie' => 'Compañías De Construcciones',
-                            'Employee' => 'KM314'
+                            'Employee' => 'KM314',
+                            'Owner' => 'Propietario',
                         ])
                         ->live(),
 
