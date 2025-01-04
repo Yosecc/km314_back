@@ -10,7 +10,7 @@ class Employee extends Model
 {
     use HasFactory;
 
-    protected $hidden = ['work_id','user_id','model_origen','model_origen_id','owner_id','created_at','updated_at'];
+    protected $hidden = ['user_id','model_origen','model_origen_id','owner_id','created_at','updated_at'];
     protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id','model_origen','model_origen_id','fecha_vencimiento_seguro','owner_id'];
 
     public function work()
