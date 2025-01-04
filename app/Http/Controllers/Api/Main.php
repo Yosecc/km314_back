@@ -76,6 +76,7 @@ class Main extends Controller
                 'last_name' => $request->last_name,
                 'phone' => $request->phone,
                 'fecha_vencimiento_seguro' => $request->fecha_vencimiento_seguro,
+                'updated_at' => now(),
             ]);
         }else{
             Employee::insert([
@@ -89,6 +90,8 @@ class Main extends Controller
                 'owner_id' => $request->user()->owner->id,
                 'model_origen' => 'Owner' ,
                 'model_origen_id' => $request->user()->owner->id,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
 
