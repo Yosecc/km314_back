@@ -61,14 +61,14 @@ class Main extends Controller
             'first_name' => 'required',
             'last_name'  => 'required',
             'phone' => 'required',
-            'fecha_vencimiento_seguro' => 'required',
+            // 'fecha_vencimiento_seguro' => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json( ['status' => false, 'errors' => $validator->errors() ], 422);
         }
 
-        if(isset($request->id)){
+        if(isset($request->id)&&$request->id!=null){
             Employee::where('id',$request->id)->update([
                 'work_id' => $request->work_id,
                 'dni' => $request->dni,
