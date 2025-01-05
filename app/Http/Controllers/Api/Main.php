@@ -47,6 +47,7 @@ class Main extends Controller
     public function empleados(Request $request)
     {
         $empleados = Employee::where('owner_id', $request->user()->owner->id)
+                                ->orderBy('created_at','desc')
                                 ->with(['autos','files','horarios'])
                                 ->get();
 
@@ -96,6 +97,12 @@ class Main extends Controller
         }
 
         return response()->json(['status' => true, 'message' => 'Registro guardado' ], 200);
+    }
+
+    public function deleteEmpleados(Request $request)
+    {
+        Employee::where('id',$request->id)->delete();
+        return response()->json(['status' => true, 'message' => 'Registro eliminado' ], 200);
     }
 
     public function spontaneous_visit(Request $request)

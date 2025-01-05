@@ -56,6 +56,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::middleware('auth:sanctum')->get('/tipos_ingresos', [Main::class,'tipos_ingresos']);
 Route::middleware('auth:sanctum')->post('/resource_empleados', [Main::class,'resourceEmpleados']);
+Route::middleware('auth:sanctum')->post('/delete_empleados', [Main::class,'deleteEmpleados']);
+
 Route::middleware('auth:sanctum')->get('/empleados', [Main::class,'empleados']);
 
 Route::middleware('auth:sanctum')->get('/trabajos', [Main::class,'trabajos']);
