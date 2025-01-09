@@ -181,8 +181,21 @@ class OwnerResource extends Resource
                     Forms\Components\TextInput::make('color')
                         ->label(__("general.Color"))
                         ->maxLength(255),
-                    Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-                    Forms\Components\Hidden::make('model')->default('Owner'),
+                    Forms\Components\Hidden::make('user_id')
+						->disabled(function($context, $record) {
+                return $context === 'edit' && $record;
+            })
+						->default(function($context, $record) {
+							//dd($record);
+							return  Auth::user()->id ;
+						}),
+					Forms\Components\Hidden::make('model')
+						->disabled(function($context, $record) {
+                return $context === 'edit' && $record;
+            })
+						->default(function($context) {
+							return  'Owner' ;
+						}),
                 ])
                 ->defaultItems(0)
                 ->columns(2),
@@ -213,6 +226,7 @@ class OwnerResource extends Resource
                         ->maxLength(255),
 
                     Forms\Components\TextInput::make('phone')
+					->numeric()
                         ->label(__("general.Phone")),
 
                     Toggle::make('is_menor')->label('Menor de edad'),

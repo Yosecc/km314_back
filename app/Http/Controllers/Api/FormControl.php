@@ -137,32 +137,32 @@ class FormControl extends Controller
             $idForm = FormControlDB::insertGetId($data);
         }
 
-        if($request->families && isset($request->families) && count($request->families)){
+        // if($request->families && isset($request->families) && count($request->families)){
 
-            $peoplesData = collect($request->families)->map(function($people) use ($idForm){
+        //     $peoplesData = collect($request->families)->map(function($people) use ($idForm){
 
-                $data = [
-                    'form_control_id' => $idForm,
-                    'dni'             => $people['dni'],
-                    'first_name'      => $people['first_name'],
-                    'last_name'       => $people['last_name'],
-                    'phone'           => $people['phone'],
-                    'is_responsable'  => false,
-                    'is_acompanante'  => false,
-                    'is_menor'        => filter_var($people['is_menor'], FILTER_VALIDATE_BOOLEAN),
-                    // 'created_at'      => now(),
-                    'updated_at'      => now(),
-                ];
+        //         $data = [
+        //             'form_control_id' => $idForm,
+        //             'dni'             => $people['dni'],
+        //             'first_name'      => $people['first_name'],
+        //             'last_name'       => $people['last_name'],
+        //             'phone'           => $people['phone'],
+        //             'is_responsable'  => false,
+        //             'is_acompanante'  => false,
+        //             'is_menor'        => filter_var($people['is_menor'], FILTER_VALIDATE_BOOLEAN),
+        //             // 'created_at'      => now(),
+        //             'updated_at'      => now(),
+        //         ];
 
-                if(!isset($people['id'])){
-                    $data['created_at'] = now();
-                }
+        //         if(!isset($people['id'])){
+        //             $data['created_at'] = now();
+        //         }
 
-                FormControlPeople::updateOrInsert( [ 'id' => isset($people['id']) ? $people['id'] : null ] , $data );
+        //         FormControlPeople::updateOrInsert( [ 'id' => isset($people['id']) ? $people['id'] : null ] , $data );
 
-                return $people;
-            });
-        }
+        //         return $people;
+        //     });
+        // }
 
         if($request->peoples && isset($request->peoples) && count($request->peoples)){
             // Insertar los datos de las personas
