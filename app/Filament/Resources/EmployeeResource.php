@@ -81,6 +81,27 @@ class EmployeeResource extends Resource
                             'Employee' => 'KM314',
                             'Owner' => 'Propietario',
                         ])
+                        ->default(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return 'Owner';
+                            }
+                        })
+                        ->disabled(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return true;
+                            }
+                        })
+                        ->dehydrated(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return true;
+                            }
+                        })
+                        ->visible(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return false;
+                            }
+                            return true;
+                        })
                         ->live(),
 
                     Forms\Components\Select::make('model_origen_id')
@@ -108,6 +129,27 @@ class EmployeeResource extends Resource
                                 $owner['texto'] = $owner->nombres();
                                 return $owner;
                             })->pluck('texto','id')->toArray();
+                        })
+                        ->default(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return Auth::user()->owner_id;
+                            }
+                        })
+                        ->disabled(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return true;
+                            }
+                        })
+                        ->dehydrated(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return true;
+                            }
+                        })
+                        ->visible(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return false;
+                            }
+                            return true;
                         })
 
 
