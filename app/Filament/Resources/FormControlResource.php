@@ -32,6 +32,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -649,6 +650,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     }
                     return true;
                 }),
+                ViewAction::make()
+                ->label('Ver')
+                ->icon('heroicon-o-eye')
+                ,
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
