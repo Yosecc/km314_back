@@ -309,6 +309,8 @@ class EmployeeResource extends Resource
     {
         return [
             'index' => Pages\ManageEmployees::route('/'),
+            'view' => Pages\ViewEmployeeResource::route('/{record}'),
+
         ];
     }
 }
