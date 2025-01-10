@@ -332,6 +332,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return true;
                         }
                     })
+                    ->visible(function(){
+                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            return false;
+                        }
+                        return true;
+                    })
                     ,
 
                     Actions::make([
