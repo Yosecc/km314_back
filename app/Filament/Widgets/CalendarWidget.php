@@ -37,10 +37,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Saade\FilamentFullCalendar\Actions;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 class CalendarWidget extends FullCalendarWidget
 {
 
+    use HasWidgetShield;
     public Model | string | null $model = ServiceRequest::class;
 
     public function config(): array

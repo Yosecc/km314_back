@@ -2,42 +2,43 @@
 
 namespace App\Filament\Resources;
 
-use Carbon\Carbon;
-use Filament\Forms;
+use App\Filament\Resources\FormControlResource\Pages;
+use App\Filament\Resources\FormControlResource\RelationManagers;
+use App\Models\ConstructionCompanie;
+use App\Models\FormControl;
+use App\Models\FormControlTypeIncome;
 use App\Models\Lote;
-use App\Models\User;
-use Filament\Tables;
 use App\Models\Owner;
 use App\Models\Trabajos;
+use App\Models\User;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Carbon\Carbon;
+use Filament\Forms;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Actions\Action as FormAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
-use Filament\Forms\Form;
-use Filament\Tables\Table;
-use App\Models\FormControl;
-use Filament\Resources\Resource;
-use Filament\Forms\Components\Tabs;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Filters\Filter;
-use Illuminate\Support\Facades\Auth;
-use Filament\Forms\Components\Section;
-use Filament\Tables\Actions\BulkAction;
 use Filament\Notifications\Notification;
-use Filament\Forms\Components\DatePicker;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\FormControlResource\Pages;
-use App\Filament\Resources\FormControlResource\RelationManagers;
-use Filament\Forms\Components\Radio;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Actions;
-use Filament\Forms\Components\Actions\Action as FormAction;
-use App\Models\ConstructionCompanie;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Illuminate\Support\Facades\Auth;
 
 class FormControlResource extends Resource implements HasShieldPermissions
 {
@@ -73,24 +74,53 @@ class FormControlResource extends Resource implements HasShieldPermissions
         return $form
             ->schema([
 
-                        Forms\Components\Fieldset::make('')
-                            ->schema([
+                Forms\Components\Fieldset::make('')
+                    ->schema([
 
-
-                        Forms\Components\CheckboxList::make('access_type')->label(__("general.TypeActivitie"))
-                            ->options(['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club hause', 'lote' => 'Lote', ])
+                        Forms\Components\CheckboxList::make('access_type')
+                            ->label(__("general.TypeActivitie"))
+                            ->options([
+                                'general' => 'Entrada general',
+                                'playa' => 'Clud playa', 'hause' =>
+                                'Club hause',
+                                'lote' => 'Lote',
+                            ])
                             ->live()
                             ->columns(2)
                             ->required()
-                            ->gridDirection('row'),
+                            ->gridDirection('row')
+                            ->default(function(){
+                                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                    return ['lote'];
+                                }
+                            })
+                            ->disabled(function(){
+                                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                    return true;
+                                }
+                            })
+                            ->dehydrated(function(){
+                                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                    return true;
+                                }
+                            }),
 
                         Forms\Components\Select::make('lote_ids')
                             ->label(__("general.Lotes"))
                             ->multiple()
-                            ->options(Lote::get()->map(function($lote){
-                                $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
-                                return $lote;
-                            })->pluck('lote_name', 'lote_name')->toArray())
+                            ->options(function() {
+                                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                    return Auth::user()->owner->lotes->map(function($lote) {
+                                        $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
+                                        return $lote;
+                                    })->pluck('lote_name', 'lote_name')->toArray();
+                                } else {
+                                    return Lote::get()->map(function($lote) {
+                                        $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
+                                        return $lote;
+                                    })->pluck('lote_name', 'lote_name')->toArray();
+                                }
+                            })
                             ->required(function(Get $get){
                                 if($get('access_type')== null || !count($get('access_type'))){
                                     return false;
@@ -102,10 +132,18 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     return false;
                                 }
                                 return array_search("lote", $get('access_type')) !== false ? true : false;
-                            })->live(),
+                            })
+                            ->live(),
 
-                        Forms\Components\CheckboxList::make('income_type')->label(__("general.TypeIncome"))
-                            ->options(['Inquilino' => 'Inquilino', 'Trabajador' => 'Trabajador', 'Visita' => 'Visita'])
+                        Forms\Components\CheckboxList::make('income_type')
+                            ->label(__("general.TypeIncome"))
+                            ->options(function(){
+                                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                    return FormControlTypeIncome::where('status',1)->whereNotIn('id',[2])->get()->pluck('name','name')->toArray();
+                                } else {
+                                    return FormControlTypeIncome::where('status',1)->get()->pluck('name','name')->toArray();
+                                }
+                            })
                             ->columns(2)
                             ->gridDirection('row')
                             ->required(function(Get $get){
@@ -121,23 +159,23 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 return array_search("lote", $get('access_type')) !== false ? true : false;
                             })->live(),
 
-                        Radio::make('tipo_trabajo')
-                            ->options(Trabajos::get()->pluck('name','name')->toArray())
-                            ->visible(function(Get $get){
-                                return collect($get('income_type'))->contains('Trabajador');
-                            }),
-                        Forms\Components\Select::make('construction_companie_id')
-                            ->options(function(){
-                                return ConstructionCompanie::get()->pluck('name','id')->toArray();
-                            })
-                            ->visible(function(Get $get){
-                                return collect($get('income_type'))->contains('Trabajador');
-                            })
-                            ->live(),
+                Radio::make('tipo_trabajo')
+                    ->options(Trabajos::get()->pluck('name','name')->toArray())
+                    ->visible(function(Get $get){
+                        return collect($get('income_type'))->contains('Trabajador');
+                    }),
+                Forms\Components\Select::make('construction_companie_id')
+                    ->options(function(){
+                        return ConstructionCompanie::get()->pluck('name','id')->toArray();
+                    })
+                    ->visible(function(Get $get){
+                        return collect($get('income_type'))->contains('Trabajador');
+                    })
+                    ->live(),
 
 
-                    ])
-                    ->columns(2),
+            ])
+            ->columns(2),
 
                 Forms\Components\Fieldset::make('range')->label('Rango de fecha de estancia')
                     ->schema([
@@ -158,7 +196,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             })
                             ->live(),
                         Forms\Components\TimePicker::make('end_time_range')->label(__('general.end_time_range'))->seconds(false),
-                        Forms\Components\Toggle::make('date_unilimited')->label(__('general.date_unilimited'))->live(),
+                        Forms\Components\Toggle::make('date_unilimited')
+                            ->label(__('general.date_unilimited'))
+                            ->live()
+                            ->visible(function(){
+                                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                    return false;
+                                }
+                                return true;
+                            }),
                     ])
                     ->columns(4),
 
@@ -203,9 +249,23 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         Forms\Components\TextInput::make('color')
                             ->label(__("general.Color"))
                             ->maxLength(255),
-                        Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-                        Forms\Components\Hidden::make('model')->default('FormControl')
-                    ])
+
+                        Forms\Components\Hidden::make('user_id')
+                            ->disabled(function($context, $record) {
+                                return $context === 'edit' && $record;
+                            })
+                            ->default(function($context, $record) {
+                                //dd($record);
+                                return  Auth::user()->id ;
+                            }),
+                        Forms\Components\Hidden::make('model')
+                            ->disabled(function($context, $record) {
+                                return $context === 'edit' && $record;
+                            })
+                            ->default(function($context) {
+                                return  'Owner' ;
+                            }),
+                        ])
                     ->columns(4)
                     ->defaultItems(0)
                     ->columnSpanFull()
@@ -235,12 +295,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->label(__("general.Status"))
                     // ->options(['Pending' => 'Pendiente','Authorized' => 'Autorizado', 'Denied' => 'Denegado'])
                     ->default('Pending')
-                    ->afterStateUpdated(function (Set $set) {
-                        $set('authorized_user_id', Auth::user()->id);
-                    })
+                    // ->afterStateUpdated(function (Set $set) {
+                    //     $set('authorized_user_id', Auth::user()->id);
+                    // })
                     // ->readonly()
                     ->live()
-                    ->visible(Auth::user()->hasAnyRole([1])),
+                    // ->visible(Auth::user()->hasAnyRole([1]))
+                    ,
 
                 Forms\Components\Hidden::make('authorized_user_id')
                     // ->default(Auth::user()->id)
@@ -253,11 +314,25 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
 
                 Forms\Components\Select::make('owner_id')
-                    // ->required()
                     ->relationship(name: 'owner')
-                    // ->disabled()
                     ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
-                    ->label(__("general.Owner")),
+                    ->label(__("general.Owner"))
+                    ->default(function(){
+                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            return Auth::user()->owner_id;
+                        }
+                    })
+                    ->disabled(function(){
+                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            return true;
+                        }
+                    })
+                    ->dehydrated(function(){
+                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            return true;
+                        }
+                    })
+                    ,
 
                     Actions::make([
                         FormAction::make('aprobar')
@@ -272,6 +347,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     ->title('Formulario aprobado')
                                     ->success()
                                     ->send();
+
+
+                                    if($record->owner && $record->owner->user){
+                                        Notification::make()
+                                        ->title('Formulario aprobado')
+                                        ->sendToDatabase($record->owner->user);
+                                    }
                             })->hidden(function(FormControl $record){
                                 return $record->isActive() || $record->isExpirado() || $record->isVencido() ? true : false;
                             })->visible(auth()->user()->can('aprobar_form::control')),
@@ -282,6 +364,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     ->title('Formulario rechazado')
                                     ->success()
                                     ->send();
+
+                                    if($record->owner && $record->owner->user){
+                                        Notification::make()
+                                        ->title('Formulario rechazado')
+                                        ->sendToDatabase($record->owner->user);
+                                    }
                             })
                             ->button()
                             ->requiresConfirmation()
@@ -300,13 +388,21 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
     public static function table(Table $table): Table
     {
+
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->orderBy('status','desc')->orderBy('created_at','desc'))
+            ->modifyQueryUsing(function (Builder $query) {
+                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+
+                    $query->where('owner_id', Auth::user()->owner_id);
+                }
+                return $query->orderBy('created_at', 'desc');
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                 ->sortable()
                 ->searchable(),
                 Tables\Columns\TextColumn::make('status')
+                    ->searchable()
                     ->badge()
                     ->label(__("general.Status"))
                     ->formatStateUsing(function($state, FormControl $record){
@@ -345,9 +441,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         'playa' => 'gray',
                         'hause' => 'gray',
                         'lote' => 'gray',
+                    })
+                    ->visible(function(){
+                        return Auth::user()->hasAnyRole([1]);
                     }),
                 // Tables\Columns\TextColumn::make('lote_ids')->label(__('general.Lote')),
-                Tables\Columns\TextColumn::make('peoples_count')->counts('peoples')->label(__('general.Peoples')),
+                Tables\Columns\TextColumn::make('peoples_count')->counts('peoples')->label(__('general.Visitantes')),
                 // Tables\Columns\TextColumn::make('peopleResponsible.phone')
                 //     ->copyable()
                 //     ->label(__('general.peopleResponsiblePhone'))
@@ -376,13 +475,19 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->numeric()
                     ->sortable()
                     ->label(__('general.authorized_user_id'))
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visible(function(){
+                        return Auth::user()->hasAnyRole([1]);
+                    }),
 
                 Tables\Columns\TextColumn::make('deniedUser.name')
                     ->numeric()
                     ->sortable()
                     ->label(__('general.denied_user_id'))
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visible(function(){
+                        return Auth::user()->hasAnyRole([1]);
+                    }),
                 // Tables\Columns\IconColumn::make('is_moroso')
                 //     ->boolean()
                 //     ->sortable()
@@ -392,7 +497,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->dateTime()
                     ->sortable()
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+
+                    ,
                 // Tables\Columns\TextColumn::make('updated_at')
                 //     ->dateTime()
                 //     ->sortable()
@@ -405,8 +512,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->form([
                         Section::make(__('general.start_date_range'))
                         ->schema([
-                            DatePicker::make('created_from_'),
-                            DatePicker::make('created_until_'),
+                            DatePicker::make('created_from_')->label(__('general.created_from_')),
+                            DatePicker::make('created_until_')->label(__('general.created_until_')),
                         ])
                     ])
                     ->columns([
@@ -428,8 +535,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->form([
                         Section::make(__('general.end_date_range'))
                         ->schema([
-                            DatePicker::make('created_from'),
-                            DatePicker::make('created_until'),
+                            DatePicker::make('created_from')->label(__('general.created_from_')),
+                            DatePicker::make('created_until')->label(__('general.created_until_')),
                         ])
                     ])
                     ->columns([
@@ -452,8 +559,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->form([
                         Section::make(__('general.created_at'))
                         ->schema([
-                            DatePicker::make('created_from'),
-                                            DatePicker::make('created_until'),
+                            DatePicker::make('created_from')->label(__('general.created_from_')),
+                            DatePicker::make('created_until')->label(__('general.created_until_')),
                         ])
                     ])
                     ->columns([
@@ -471,10 +578,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             );
                     }),
                 SelectFilter::make('status')
+                    ->label(__('general.Status'))
                     ->options([
-                        'Authorized' => 'Authorized',
-                        'Denied' => 'Denied',
-                        'Pending' => 'Pending',
+                        'Authorized' => 'Autorizado',
+                        'Denied' => 'Denegado',
+                        'Pending' => 'Pendiente',
                     ]),
 
             ])
@@ -487,6 +595,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->title('Formulario aprobado')
                             ->success()
                             ->send();
+
+                            if($record->owner && $record->owner->user){
+                                Notification::make()
+                                ->title('Formulario aprobado')
+                                ->sendToDatabase($record->owner->user);
+                            }
                     })
                     ->button()
                     ->requiresConfirmation()
@@ -502,9 +616,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->action(function(FormControl $record){
                         $record->rechazar();
                         Notification::make()
-                            ->title('Formulario rechzado')
+                            ->title('Formulario rechazado')
                             ->success()
                             ->send();
+
+                            if($record->owner && $record->owner->user){
+                                Notification::make()
+                                ->title('Formulario rechazado')
+                                ->sendToDatabase($record->owner->user);
+                            }
                     })
                     ->button()
                     ->requiresConfirmation()
@@ -516,7 +636,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     })
 				->visible(auth()->user()->can('rechazar_form::control'))
 				,
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                ->visible(function($record){
+                    if(Auth::user()->hasRole('owner') && Auth::user()->owner_id){
+                        return $record->statusComputed() == 'Pending' ? true : false;
+                    }
+                    return true;
+                }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

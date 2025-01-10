@@ -203,6 +203,13 @@ class EmployeeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function (Builder $query) {
+                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+
+                    $query->where('owner_id', Auth::user()->owner_id);
+                }
+                return $query->orderBy('created_at', 'desc');
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('work.name')
                     ->label(__("general.Work"))

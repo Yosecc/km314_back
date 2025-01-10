@@ -183,16 +183,16 @@ class OwnerResource extends Resource
                         ->maxLength(255),
                     Forms\Components\Hidden::make('user_id')
 						->disabled(function($context, $record) {
-                return $context === 'edit' && $record;
-            })
+                            return $context === 'edit' && $record;
+                        })
 						->default(function($context, $record) {
 							//dd($record);
 							return  Auth::user()->id ;
 						}),
 					Forms\Components\Hidden::make('model')
 						->disabled(function($context, $record) {
-                return $context === 'edit' && $record;
-            })
+                            return $context === 'edit' && $record;
+                        })
 						->default(function($context) {
 							return  'Owner' ;
 						}),

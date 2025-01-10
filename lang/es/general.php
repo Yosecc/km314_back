@@ -37,7 +37,7 @@ return [
     'LoteStatus' => 'Estatus del lote',
     'Owner' => 'Propietario',
     'Ubication' => 'Ubicación',
-    'Status' => 'Estatus',
+    'Status' => 'Estado',
     'PropertyType' => 'Tipo de propiedad',
     'TypeActivitie' => 'Tipo de actividad',
     'Responsable' => 'Responsable',
@@ -91,6 +91,10 @@ return [
     'dto' => 'dto',
     'number' => 'Número',
     'Parentesco' => 'Parentesco',
-    'CUIT' => 'CUIT'
-
+    'CUIT' => 'CUIT',
+    'Description' => 'Descripción',
+    'denied_user_id' => 'Usuario que rechaza',
+    'created_from_' => 'Desde',
+    'created_until_' => 'Hasta',
+    'Visitantes' => 'Visitantes',
 ];
