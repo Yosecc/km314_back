@@ -282,11 +282,11 @@ class EmployeeResource extends Resource
                     ->tooltip(fn (Employee $record) => self::isVencimientos($record)['texto'])
                     // ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('created_at')->label(__('general.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                Tables\Columns\TextColumn::make('updated_at')->label(__('general.updated_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
