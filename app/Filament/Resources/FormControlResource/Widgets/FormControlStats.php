@@ -17,7 +17,9 @@ class FormControlStats extends BaseWidget
         return [
             Stat::make('Mis Formularios',$num)
                 ->icon('heroicon-o-document-text')
-                ->link('form-controls/create'),
+                ->description('Crear formulario')
+                ->descriptionIcon('heroicon-o-link')
+                ->url('form-controls/create'),
         ];
     }
 }
