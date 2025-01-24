@@ -5,8 +5,8 @@
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: #f6f6f6;
-            color: #333;
+            background-color: #333;
+            color: #f6f6f6;
             margin: 0;
             padding: 0;
         }
@@ -15,7 +15,7 @@
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #ffffff;
+            background-color: #444;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
@@ -38,12 +38,17 @@
             line-height: 1.5;
         }
         .content a {
-            color: #3498db;
+            display: inline-block;
+            padding: 10px 20px;
+            color: #fff;
+            background-color: #3498db;
             text-decoration: none;
             font-weight: bold;
+            border-radius: 5px;
+            text-align: center;
         }
         .content a:hover {
-            text-decoration: underline;
+            background-color: #2980b9;
         }
         .footer {
             text-align: center;
@@ -67,7 +72,7 @@
             <p>Y esta es tu contraseña:</p>
             <p style="font-size: 20px; text-align: center; font-weight: bold;">{{ $password }}</p>
             <p>Por favor, visita el siguiente enlace para acceder a tu cuenta:</p>
-            <p><a href="https://admin.kilometro314.com/">https://admin.kilometro314.com/</a></p>
+            <p><a href="https://admin.kilometro314.com/">Acceder a mi cuenta</a></p>
             <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
             <p>¡Gracias!</p>
             <p>Este es un mensaje generado automáticamente, por favor no responda a este correo.</p>
