@@ -28,6 +28,8 @@
         }
         .content {
             margin-bottom: 20px;
+            text-align: center;
+            color: #fff;
         }
         .content h1 {
             color: #e74c3c;
@@ -75,9 +77,9 @@
             <p><a href="https://admin.kilometro314.com/">Acceder a mi cuenta</a></p>
             <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
             <p>¡Gracias!</p>
-            <p>Este es un mensaje generado automáticamente, por favor no responda a este correo.</p>
         </div>
         <div class="footer">
+            <p>Este es un mensaje generado automáticamente, por favor no responda a este correo.</p>
             <p>&copy; {{ date('Y') }} Kilometro 314. Todos los derechos reservados.</p>
         </div>
     </div>
