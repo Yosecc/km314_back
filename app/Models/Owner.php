@@ -67,6 +67,10 @@ class Owner extends Model
             $user->owner_id = $this->id;
             $user->save();
 
+            $user->assignRole(3);
+
+
+
             Owner::where('id',$this->id)->update(['user_id' => $user->id]);
 
             Mail::to('yosec.cervino@gmail.com')->send(new createUserEmail( $user, $this->dni ));

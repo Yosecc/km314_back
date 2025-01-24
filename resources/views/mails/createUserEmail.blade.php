@@ -32,7 +32,7 @@
             color: #fff;
         }
         .content h1 {
-            color: #e74c3c;
+            color: #4d3ce7;
             font-size: 24px;
         }
         .content p {
