@@ -753,7 +753,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
     {
         return [
             'index' => Pages\ListFormControls::route('/'),
-            // 'create' => Pages\CreateFormControl::route('/create'),
+            'create' => Pages\CreateFormControl::route('/create'),
             'edit' => Pages\EditFormControl::route('/{record}/edit'),
             'view' => Pages\ViewFormControl::route('/{record}'),
         ];

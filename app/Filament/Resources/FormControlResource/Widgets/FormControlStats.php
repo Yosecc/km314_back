@@ -17,7 +17,7 @@ class FormControlStats extends BaseWidget
         return [
             Stat::make('Mis Formularios',$num)
                 ->icon('heroicon-o-document-text')
-                ->link(route('filament.admin.resources.form-controls.create')),
+                ->link('form-controls/create'),
         ];
     }
 }
