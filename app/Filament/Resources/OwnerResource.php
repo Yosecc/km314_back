@@ -20,6 +20,7 @@ use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -290,6 +291,7 @@ class OwnerResource extends Resource implements HasShieldPermissions
                 Tables\Actions\DeleteAction::make(),
                 Action::make('createUser')
                     ->label('Crear Usuario')
+                    ->requiresConfirmation()
                     ->action(function (Owner $record) {
                        $response = $record->createUser();
 
@@ -311,6 +313,9 @@ class OwnerResource extends Resource implements HasShieldPermissions
                     Tables\Actions\DeleteBulkAction::make(),
 
                 ]),
+                BulkAction::make('createUsers')
+                    ->requiresConfirmation()
+                    ->action(fn (Collection $records) => $records->each->createUser()),
             ]);
     }
 
