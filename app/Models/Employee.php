@@ -5,10 +5,12 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class Employee extends Model
 {
-    use HasFactory;
+    use HasFactory,SoftDeletes;
 
     protected $hidden = ['user_id','model_origen','model_origen_id','owner_id','created_at','updated_at'];
     protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id','model_origen','model_origen_id','fecha_vencimiento_seguro','owner_id'];
