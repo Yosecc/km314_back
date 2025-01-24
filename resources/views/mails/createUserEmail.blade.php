@@ -63,7 +63,7 @@
             <p>Hola,</p>
             <p>Nos complace informarte que tu usuario y contraseña han sido creados exitosamente.</p>
             <p>Este es tu usuario:</p>
-            <p style="font-size: 20px; text-align: center; font-weight: bold;">{{ $this->user->email }}</p>
+            <p style="font-size: 20px; text-align: center; font-weight: bold;">{{ $this->user['email'] }}</p>
             <p>Y esta es tu contraseña:</p>
             <p style="font-size: 20px; text-align: center; font-weight: bold;">{{ $this->password }}</p>
             <p>Por favor, visita el siguiente enlace para acceder a tu cuenta:</p>
