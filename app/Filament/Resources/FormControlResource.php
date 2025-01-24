@@ -220,6 +220,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     })->pluck('name','id')->toArray() : [] )
                     ->visible(function(){
                         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            if(!isset(Auth::user()->owner->trabajadores) || (isset(Auth::user()->owner->trabajadores) && !Auth::user()->owner->trabajadores->count())){
+                                return false;
+                            }
                             return true;
                         }
                         return false;
