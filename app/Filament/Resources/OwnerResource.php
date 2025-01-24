@@ -21,9 +21,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Resources\Pages\Page;
-class OwnerResource extends Resource
+class OwnerResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Owner::class;
 
@@ -33,6 +33,7 @@ class OwnerResource extends Resource
     protected static ?string $label = 'propietario';
 
     protected static ?string $recordTitleAttribute = 'first_name';
+
 
 
     public static function shouldRegisterNavigation(): bool
@@ -307,7 +308,7 @@ class OwnerResource extends Resource
     {
         return [
             'index' => Pages\ManageOwners::route('/'),
-            'profile-owner' => Pages\ProfileOwnerView::route('/{record}/profile-owner'),
+            'view-profile-owner' => Pages\ProfileOwnerView::route('/{record}/profile-owner'),
         ];
     }
 

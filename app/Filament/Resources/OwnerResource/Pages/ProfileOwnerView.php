@@ -11,7 +11,7 @@ use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 class ProfileOwnerView extends ViewRecord
 {
 
-    use HasPageShield;
+    // use HasPageShield;
     protected static string $resource = OwnerResource::class;
     protected static ?string $navigationIcon = 'heroicon-o-eye'; // Icono para el menú de navegación
     protected static ?string $navigationLabel = 'Ver perfil'; // Etiqueta para el menú de navegación

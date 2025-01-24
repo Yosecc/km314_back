@@ -63,7 +63,7 @@ class OwnerPolicy
      */
     public function forceDelete(User $user, Owner $owner): bool
     {
-        return $user->can('force_delete_owner');
+        return $user->can('{{ ForceDelete }}');
     }
 
     /**
@@ -71,7 +71,7 @@ class OwnerPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_owner');
+        return $user->can('{{ ForceDeleteAny }}');
     }
 
     /**
@@ -79,7 +79,7 @@ class OwnerPolicy
      */
     public function restore(User $user, Owner $owner): bool
     {
-        return $user->can('restore_owner');
+        return $user->can('{{ Restore }}');
     }
 
     /**
@@ -87,7 +87,7 @@ class OwnerPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_owner');
+        return $user->can('{{ RestoreAny }}');
     }
 
     /**
@@ -95,7 +95,7 @@ class OwnerPolicy
      */
     public function replicate(User $user, Owner $owner): bool
     {
-        return $user->can('replicate_owner');
+        return $user->can('{{ Replicate }}');
     }
 
     /**
@@ -103,6 +103,6 @@ class OwnerPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_owner');
+        return $user->can('{{ Reorder }}');
     }
 }

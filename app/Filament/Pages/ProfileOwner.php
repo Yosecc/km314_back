@@ -34,7 +34,7 @@ class ProfileOwner extends Page implements HasForms
     {
         $ownerId = Auth::user()->owner_id;
         if ($ownerId) {
-            return redirect()->route('filament.admin.resources.owners.profile-owner', ['record' => auth()->user()->owner_id]);
+            return redirect()->route('filament.admin.resources.owners.view-profile-owner', ['record' => auth()->user()->owner_id]);
         }
     }
 
