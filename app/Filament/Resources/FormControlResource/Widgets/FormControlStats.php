@@ -18,12 +18,12 @@ class FormControlStats extends BaseWidget
             Stat::make('Mis Formularios',$num)
                 ->icon('heroicon-o-document-text')
                 ->description('Crear formulario')
-                ->descriptionIcon('heroicon-m-arrow-down-right')
+                ->descriptionIcon('heroicon-m-arrow-up-right')
                 ->url('form-controls/create'),
             Stat::make('Mi Perfil', '')
                 ->icon('heroicon-o-user')
                 ->description('Ver perfil')
-                ->descriptionIcon('heroicon-m-arrow-down-right')
+                ->descriptionIcon('heroicon-m-arrow-up-right')
                 ->url(route('filament.admin.resources.owners.view-profile-owner', ['record' => auth()->user()->owner_id])),
         ];
     }
