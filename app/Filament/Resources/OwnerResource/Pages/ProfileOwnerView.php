@@ -21,5 +21,11 @@ class ProfileOwnerView extends ViewRecord
             ]);
     }
 
+    protected function getShieldPermission(): string
+    {
+        return 'viewProfileOwner'; // Define el permiso personalizado
+    }
+
+
 
 }
