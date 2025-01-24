@@ -33,6 +33,13 @@ class OwnerResource extends Resource
     protected static ?string $label = 'propietario';
 
     protected static ?string $recordTitleAttribute = 'first_name';
+
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return !auth()->user()->hasRole('owner');
+    }
+
     public static function form(Form $form): Form
     {
         return $form

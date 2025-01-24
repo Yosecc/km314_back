@@ -21,6 +21,8 @@ class ProfileOwner extends Page implements HasForms
     use InteractsWithForms;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
+    protected static ?string $navigationLabel = 'Perfil Propietario';
+
     // protected static string $view = 'filament.pages.profile-owner';
 
     public static function canAccess(): bool

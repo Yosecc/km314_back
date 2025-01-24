@@ -12,7 +12,7 @@ class ProfileOwnerView extends ViewRecord
 {
     protected static string $resource = OwnerResource::class;
     protected static ?string $navigationIcon = 'heroicon-o-eye'; // Icono para el menú de navegación
-    protected static ?string $navigationLabel = 'Profile Owner View'; // Etiqueta para el menú de navegación
+    protected static ?string $navigationLabel = 'Ver perfil'; // Etiqueta para el menú de navegación
     public function infolist(Infolist $infolist): Infolist
     {
         return $infolist
