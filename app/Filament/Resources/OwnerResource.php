@@ -313,6 +313,7 @@ class OwnerResource extends Resource implements HasShieldPermissions
                     Tables\Actions\DeleteBulkAction::make(),
 
                     BulkAction::make('createUsers')
+                    ->label('Crear Usuarios')
                     ->requiresConfirmation()
                     ->action(fn (Collection $records) => $records->each->createUser()),
                 ]),
