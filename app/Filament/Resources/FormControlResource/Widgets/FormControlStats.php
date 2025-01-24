@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\FormControlResource\Widgets;
 
+use App\Models\FormControl;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Illuminate\Support\Facades\Auth;
 
 class FormControlStats extends BaseWidget
