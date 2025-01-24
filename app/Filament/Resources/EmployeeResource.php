@@ -247,7 +247,6 @@ class EmployeeResource extends Resource
         return $table
             ->modifyQueryUsing(function (Builder $query) {
                 if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-
                     $query->where('owner_id', Auth::user()->owner_id);
                 }
                 return $query->orderBy('created_at', 'desc');

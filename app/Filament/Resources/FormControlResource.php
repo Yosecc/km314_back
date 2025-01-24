@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action as FormAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Radio;
@@ -94,16 +95,19 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                     return ['lote'];
                                 }
+                                return [];
                             })
                             ->disabled(function(){
                                 if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                     return true;
                                 }
+                                return false;
                             })
                             ->dehydrated(function(){
                                 if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                     return true;
                                 }
+                                return true;
                             }),
 
                         Forms\Components\Select::make('lote_ids')
@@ -174,7 +178,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     })
                     ->live(),
 
-
             ])
             ->columns(2),
 
@@ -210,6 +213,55 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->columns(4),
 
 
+                CheckboxList::make('technologies')->label('Trabajadores')
+                    ->options(isset(Auth::user()->owner->trabajadores) ? Auth::user()->owner->trabajadores->map(function($trabajador){
+                        $trabajador['name'] = $trabajador->first_name.' '.$trabajador->last_name;
+                        return $trabajador;
+                    })->pluck('name','id')->toArray() : [] )
+                    ->visible(function(){
+                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            return true;
+                        }
+                        return false;
+                    })
+                    ->dehydrated(function(){
+                        return true;
+                    })
+                    ->live()
+                    ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                        $peoples = collect($get('peoples'));
+                        $trabajadores = Auth::user()->owner->trabajadores->whereIn('id', $state);
+
+                        // Eliminar trabajadores desmarcados
+                        $peoples = $peoples->filter(function ($person) use ($trabajadores) {
+                            return $trabajadores->contains('dni', $person['dni']) || !is_null($person['dni']);
+                        });
+
+                        // Agregar trabajadores marcados
+                        foreach ($trabajadores as $trabajador) {
+                            if (!$peoples->contains('dni', $trabajador->dni)) {
+                                $peoples->push([
+                                    'dni' => $trabajador->dni,
+                                    'first_name' => $trabajador->first_name,
+                                    'last_name' => $trabajador->last_name,
+                                    'phone' => $trabajador->phone,
+                                    'is_responsable' => false,
+                                    'is_acompanante' => false,
+                                    'is_menor' => false,
+                                ]);
+                            }
+                        }
+
+                        // Eliminar registros con valores nulos
+                        $peoples = $peoples->filter(function ($person) {
+                            return !is_null($person['dni']) && !is_null($person['first_name']) && !is_null($person['last_name']);
+                        });
+
+                        // Actualizar el estado de 'peoples' sin sobrescribirlo completamente
+                        $set('peoples', $peoples->values()->toArray());
+                    })
+                    ,
+
                 Forms\Components\Repeater::make('peoples')
                     ->label(__("general.Peoples"))
                     ->relationship()
@@ -235,6 +287,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         Forms\Components\Toggle::make('is_menor')->label(__("general.Minor")),
                     ])
                     ->columns(4)->columnSpanFull(),
+
                 Forms\Components\Repeater::make('autos')
                     ->relationship()
                     ->schema([
@@ -264,7 +317,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 return $context === 'edit' && $record;
                             })
                             ->default(function($context) {
-                                return  'Owner' ;
+                                return  'FormControl' ;
                             }),
                         ])
                     ->columns(4)
@@ -273,6 +326,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ,
 
                 Forms\Components\Repeater::make('files')
+                    ->label('Documentos')
                     ->relationship()
                     ->schema([
                         Forms\Components\TextInput::make('description')
@@ -280,13 +334,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->maxLength(255),
                         Forms\Components\Hidden::make('form_control_id'),
                         Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-                        FileUpload::make('file')
+                        FileUpload::make('file')->label('Archivo')
                     ])
                     ->columns(2)
                     ->defaultItems(0)
-                    ->columnSpanFull()
-                    ,
-
+                    ->columnSpanFull(),
 
                 Forms\Components\TextInput::make('observations')
                     ->columnSpanFull()
@@ -327,69 +379,71 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                             return true;
                         }
+                        return false;
                     })
                     ->dehydrated(function(){
                         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                             return true;
                         }
-                    })
-                    ->visible(function(){
-                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                            return false;
-                        }
                         return true;
                     })
+                    // ->visible(function(){
+                    //     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                    //         return false;
+                    //     }
+                    //     return true;
+                    // })
                     ,
 
-                    Actions::make([
-                        FormAction::make('aprobar')
-                            ->button()
-                            ->requiresConfirmation()
-                            ->color('success')
-                            ->label('Aprobar')
-                            ->action(function(FormControl $record){
+                Actions::make([
+                    FormAction::make('aprobar')
+                        ->button()
+                        ->requiresConfirmation()
+                        ->color('success')
+                        ->label('Aprobar')
+                        ->action(function(FormControl $record){
 
-                                $record->aprobar();
-                                Notification::make()
+                            $record->aprobar();
+                            Notification::make()
+                                ->title('Formulario aprobado')
+                                ->success()
+                                ->send();
+
+
+                                if($record->owner && $record->owner->user){
+                                    Notification::make()
                                     ->title('Formulario aprobado')
-                                    ->success()
-                                    ->send();
+                                    ->sendToDatabase($record->owner->user);
+                                }
+                        })->hidden(function(FormControl $record){
+                            return $record->isActive() || $record->isExpirado() || $record->isVencido() ? true : false;
+                        })->visible(auth()->user()->can('aprobar_form::control')),
+                    FormAction::make('rechazar')
+                        ->action(function(FormControl $record){
+                            $record->rechazar();
+                            Notification::make()
+                                ->title('Formulario rechazado')
+                                ->success()
+                                ->send();
 
-
-                                    if($record->owner && $record->owner->user){
-                                        Notification::make()
-                                        ->title('Formulario aprobado')
-                                        ->sendToDatabase($record->owner->user);
-                                    }
-                            })->hidden(function(FormControl $record){
-                                return $record->isActive() || $record->isExpirado() || $record->isVencido() ? true : false;
-                            })->visible(auth()->user()->can('aprobar_form::control')),
-                        FormAction::make('rechazar')
-                            ->action(function(FormControl $record){
-                                $record->rechazar();
-                                Notification::make()
+                                if($record->owner && $record->owner->user){
+                                    Notification::make()
                                     ->title('Formulario rechazado')
-                                    ->success()
-                                    ->send();
-
-                                    if($record->owner && $record->owner->user){
-                                        Notification::make()
-                                        ->title('Formulario rechazado')
-                                        ->sendToDatabase($record->owner->user);
-                                    }
-                            })
-                            ->button()
-                            ->requiresConfirmation()
-                            ->icon('heroicon-m-hand-thumb-down')
-                            ->color('danger')
-                            ->label('Rechazar')
-							->visible(auth()->user()->can('rechazar_form::control'))
-                            ->hidden(function(FormControl $record){
-                                return $record->isDenied() || $record->isExpirado() || $record->isVencido() ? true : false;
-                            })
-                    ])->visible(function($context){
-                        return $context == 'edit' ? true : false;
-                    }),
+                                    ->sendToDatabase($record->owner->user);
+                                }
+                        })
+                        ->button()
+                        ->requiresConfirmation()
+                        ->icon('heroicon-m-hand-thumb-down')
+                        ->color('danger')
+                        ->label('Rechazar')
+                        ->visible(auth()->user()->can('rechazar_form::control'))
+                        ->hidden(function(FormControl $record){
+                            return $record->isDenied() || $record->isExpirado() || $record->isVencido() ? true : false;
+                        })
+                ])->visible(function($context){
+                    return $context == 'edit' ? true : false;
+                }),
             ]);
     }
 

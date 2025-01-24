@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
+use Filament\Resources\Pages\Page;
 class OwnerResource extends Resource
 {
     protected static ?string $model = Owner::class;
@@ -287,7 +288,15 @@ class OwnerResource extends Resource
     {
         return [
             'index' => Pages\ManageOwners::route('/'),
+            'profile-owner' => Pages\ProfileOwnerView::route('/{record}/profile-owner'),
         ];
+    }
+
+    public static function getRecordSubNavigation(Page $page): array
+    {
+        return $page->generateNavigationItems([
+            Pages\ProfileOwnerView::class,
+        ]);
     }
 
     public static function getGlobalSearchResultDetails($record): array
