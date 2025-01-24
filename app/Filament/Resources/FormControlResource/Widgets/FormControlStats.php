@@ -14,17 +14,24 @@ class FormControlStats extends BaseWidget
     protected function getStats(): array
     {
         $num = FormControl::where('owner_id', Auth::user()->owner_id)->orderBy('created_at', 'desc')->count();
-        return [
+
+        $arr = [
             Stat::make('Mis Formularios',$num)
                 ->icon('heroicon-o-document-text')
                 ->description('Crear formulario')
                 ->descriptionIcon('heroicon-m-arrow-up-right')
                 ->url('form-controls/create'),
-            Stat::make('Mi Perfil', '')
+        ];
+
+        if(auth()->user()->owner_id){
+            $arr[] = Stat::make('Mi Perfil', '')
                 ->icon('heroicon-o-user')
                 ->description('Ver perfil')
                 ->descriptionIcon('heroicon-m-arrow-up-right')
-                ->url(route('filament.admin.resources.owners.view-profile-owner', ['record' => auth()->user()->owner_id])),
-        ];
+                ->url(route('filament.admin.resources.owners.view-profile-owner', ['record' => auth()->user()->owner_id]));
+        }
+
+
+        return $arr;
     }
 }

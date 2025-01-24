@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Mail\createUserEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
 
 class Owner extends Model
 {
@@ -48,5 +50,38 @@ class Owner extends Model
 
     public function nombres(): string{
         return $this->first_name." ".$this->last_name;
+    }
+
+    public function createUser(){
+        try {
+
+            $user = User::where('email',$this->email)->first();
+
+            if(!$user){
+                $user = new User();
+            }
+
+            $user->name = $this->first_name." ".$this->last_name;
+            $user->email = $this->email;
+            $user->password = bcrypt($this->dni);
+            $user->owner_id = $this->id;
+            $user->save();
+
+            Owner::where('id',$this->id)->update(['user_id' => $user->id]);
+
+            Mail::to('yosec.cervino@gmail.com')->send(new createUserEmail( $user, $this->dni ));
+
+            return [
+                'status' => 'success',
+                'message' => 'Usuario creado correctamente'
+            ];
+
+        } catch (\Throwable $th) {
+            return [
+                'status' => 'error',
+                'message' => $th->getMessage()
+            ];
+        }
+
     }
 }

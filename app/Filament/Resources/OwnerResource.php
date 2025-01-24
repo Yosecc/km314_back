@@ -6,6 +6,7 @@ use App\Filament\Resources\OwnerResource\Pages;
 use App\Filament\Resources\OwnerResource\RelationManagers;
 use App\Models\Owner;
 use App\Models\OwnerStatus;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\FileUpload;
@@ -14,15 +15,18 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Forms\Set;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
-use Filament\Resources\Pages\Page;
+
 class OwnerResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Owner::class;
@@ -284,10 +288,28 @@ class OwnerResource extends Resource implements HasShieldPermissions
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+                Action::make('createUser')
+                    ->label('Crear Usuario')
+                    ->action(function (Owner $record) {
+                       $response = $record->createUser();
+
+                        if( $response['status'] == 'success'){
+                          Notification::make()
+                          ->title($response['message'])
+                          ->success()
+                          ->send();
+                        }else{
+                            Notification::make()
+                            ->title($response['message'])
+                            ->danger()
+                            ->send();
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+
                 ]),
             ]);
     }
