@@ -41,6 +41,10 @@ class createUserEmail extends Mailable
     {
         return new Content(
             view: 'mails.createUserEmail',
+            with: [
+                'user' => $this->user,
+                'password' => $this->password,
+            ]
         );
     }
 
