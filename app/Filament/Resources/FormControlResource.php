@@ -81,7 +81,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                         Forms\Components\CheckboxList::make('access_type')
                             ->label(__("general.TypeActivitie"))
-                            ->options([
+                            ->options((Auth::user()->hasRole('owner') && Auth::user()->owner_id) ? [
+                                'lote' => 'Lote',
+                            ] : [
                                 'general' => 'Entrada general',
                                 'playa' => 'Clud playa', 'hause' =>
                                 'Club hause',
@@ -262,8 +264,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                         // Actualizar el estado de 'peoples' sin sobrescribirlo completamente
                         $set('peoples', $peoples->values()->toArray());
-                    })
-                    ,
+                    }),
 
                 Forms\Components\Repeater::make('peoples')
                     ->label(__("general.Peoples"))

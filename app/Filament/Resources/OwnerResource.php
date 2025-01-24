@@ -256,33 +256,33 @@ class OwnerResource extends Resource implements HasShieldPermissions
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('dni')
-                    ->label(__("general.DNI"))
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('first_name')
-                    ->label(__("general.FirstName"))
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('last_name')
-                    ->label(__("general.LastName"))
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('email')
-                    ->label(__("general.Email"))
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('phone')
-                    ->label(__("general.Phone"))
-                    ->numeric()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
+        ->columns([
+            Tables\Columns\TextColumn::make('dni')
+                ->label(__("general.DNI"))
+                ->searchable(),
+             Tables\Columns\TextColumn::make('full_name')
+                ->label("Nombre y Apellido")
+                ->getStateUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                ->searchable(),
+            Tables\Columns\TextColumn::make('email')
+                ->label(__("general.Email"))
+                ->searchable()
+                 ->copyable()
+                ->copyMessage('Email copiado')
+                ->copyMessageDuration(1500),
+            Tables\Columns\TextColumn::make('phone')
+                ->label(__("general.Phone"))
+                ->numeric()
+                ->sortable(),
+            Tables\Columns\TextColumn::make('user.name')
+                ->label("Nombre de usuario")
+                ->toggleable(isToggledHiddenByDefault: true),
+            Tables\Columns\TextColumn::make('created_at')
+                ->label('Fecha de creación')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+        ])
             ->filters([
                 //
             ])

@@ -57,15 +57,19 @@ class Owner extends Model
 
             $user = User::where('email',$this->email)->first();
 
-            if(!$user){
-                $user = new User();
-            }
+            $datos = [
+                'name' => $this->first_name." ".$this->last_name,
+                'email' => $this->email,
+                'password' => bcrypt($this->dni),
+                'owner_id' => $this->id
+            ];
 
-            $user->name = $this->first_name." ".$this->last_name;
-            $user->email = $this->email;
-            $user->password = bcrypt($this->dni);
-            $user->owner_id = $this->id;
-            $user->save();
+            if($user){
+                $user->update($datos);
+            }else{
+                $user_id = User::insertGetId($datos);
+                $user = User::find($user_id);
+            }
 
             $user->assignRole(3);
 
