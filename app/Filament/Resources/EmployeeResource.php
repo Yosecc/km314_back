@@ -72,7 +72,7 @@ class EmployeeResource extends Resource
                         ->tel()
                         ->numeric(),
 
-                    Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+                    Forms\Components\Hidden::make('user_id')->disabled(fn($context)=> $context == 'edit')->default(Auth::user()->id),
 
                     Forms\Components\Select::make('model_origen')
                         ->label('Origen')
@@ -90,11 +90,13 @@ class EmployeeResource extends Resource
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return true;
                             }
+                            return false;
                         })
                         ->dehydrated(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return true;
                             }
+                            return true;
                         })
                         ->visible(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
@@ -139,11 +141,13 @@ class EmployeeResource extends Resource
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return true;
                             }
+                            return false;
                         })
                         ->dehydrated(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return true;
                             }
+                            return false;
                         })
                         ->visible(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
