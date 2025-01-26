@@ -97,4 +97,10 @@ Route::middleware('auth:sanctum')->prefix('servicios')->group(function () {
     Route::get('index',[Servicios::class,'index']);
 });
 
+Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
+
+    Route::get('owner',[Main::class,'getOwner']);
+
+});
+
 

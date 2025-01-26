@@ -260,9 +260,17 @@ class OwnerResource extends Resource implements HasShieldPermissions
             Tables\Columns\TextColumn::make('dni')
                 ->label(__("general.DNI"))
                 ->searchable(),
-             Tables\Columns\TextColumn::make('full_name')
-                ->label("Nombre y Apellido")
-                ->getStateUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+            //  Tables\Columns\TextColumn::make('full_name')
+            //     ->label("Nombre y Apellido")
+            //     ->getStateUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+            //     ->searchable(),
+
+                Tables\Columns\TextColumn::make('first_name')
+                ->label("Nombre")
+                ->searchable(),
+
+                Tables\Columns\TextColumn::make('last_name')
+                ->label("Apellido")
                 ->searchable(),
             Tables\Columns\TextColumn::make('email')
                 ->label(__("general.Email"))

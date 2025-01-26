@@ -11,6 +11,7 @@ use App\Models\FormControlTypeIncome;
 use App\Models\Landing;
 use App\Models\LandingData;
 use App\Models\Newsletter;
+use App\Models\Owner;
 use App\Models\OwnerSpontaneousVisit;
 use App\Models\Slider;
 use App\Models\Trabajos;
@@ -168,8 +169,6 @@ class Main extends Controller
         return response()->json(['status' => true, 'message' => 'Mensaje enviado' ]);
     }
 
-
-
     public function newsletter(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -278,5 +277,12 @@ class Main extends Controller
         }
 
         return response()->json(['status' => true, 'message' => 'Mensaje enviado' ]);
+    }
+
+    public function getOwner(Request $request)
+    {
+        $owner = Owner::where('id', $request->user()->owner->id)->first();
+
+        return response()->json( $owner  , 200);
     }
 }
