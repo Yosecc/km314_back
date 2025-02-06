@@ -277,7 +277,9 @@ class ServiceRequestResource extends Resource
                                 ->schema([
                                     Hidden::make('user_id')->default(Auth::user()->id),
                                     Forms\Components\TextInput::make('description')->label('Descripción'),
-                                    Forms\Components\FileUpload::make('file')->label('Archivo')->storeFileNamesIn('attachment_file_names'),
+                                    Forms\Components\FileUpload::make('file')
+                                        ->label('Archivo')
+                                        ->storeFileNamesIn('attachment_file_names'),
                                     Actions::make([
                                         Action::make('open_file')
                                             ->label('Abrir archivo')

@@ -2,28 +2,30 @@
 
 namespace App\Http\Controllers\Api;
 
-use Carbon\Carbon;
+use App\Http\Controllers\Controller;
 use App\Models\Service;
-use Illuminate\Http\File;
-use function Livewire\store;
-use Illuminate\Http\Request;
 use App\Models\ServiceRequest;
 use App\Models\ServiceRequestFile;
+use App\Models\ServiceRequestNote;
+use App\Models\ServiceRequestResponsiblePeople;
 use App\Models\ServiceRequestType;
-use App\Http\Controllers\Controller;
 use App\Models\User;
+use Carbon\Carbon;
+use Filament\Notifications\Notification;
+use function Livewire\store;
+use Illuminate\Http\File;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use App\Models\ServiceRequestResponsiblePeople;
-use Filament\Notifications\Notification;
+use Filament\Notifications\Actions\Action;
 class Solicitudes extends Controller
 {
 
     private function _getSolicitudes($solicitudes)
     {
         $solicitudes = $solicitudes->map(function($solicitud){
-            $solicitud['starts_at'] = Carbon::parse($solicitud['starts_at'])->format('Y/m/d H:m:s');
-            $solicitud['ends_at'] = Carbon::parse($solicitud['ends_at'])->format('Y/m/d H:m:s');
+            $solicitud['starts_at'] = Carbon::parse($solicitud['starts_at'])->format('Y-m-d H:m:s');
+            $solicitud['ends_at'] = Carbon::parse($solicitud['ends_at'])->format('Y-m-d H:m:s');
 
             if($solicitud->responsible){
                 $solicitud->responsible->makeHidden(['created_at','updated_at']);
@@ -32,8 +34,9 @@ class Solicitudes extends Controller
                 $solicitud->serviceRequestFile->map(function($archivo){
                     // $archivo['file'] = config('app.url').Storage::url($archivo['file']);
                     $archivo['path'] = config('app.url').Storage::url($archivo['file']);
-                    $archivo['name'] = '';
-
+                    $archivo['name'] = $archivo['description'];
+					$archivo['fileName'] = $archivo['attachment_file_names'];
+                    unset($archivo['file'] );
                     return $archivo;
                 });
             }
@@ -116,15 +119,18 @@ class Solicitudes extends Controller
     public function store(Request $request)
     {
 
-        $validator = Validator::make($request->all(), [
-            "service_request_status_id" => 'nullable',
-            "service_request_responsible_people_id" => 'nullable',
-            "lote_id" => 'nullable',
-            "service_request_type_id" => 'required',
+        $data = $request->data;
+        $data = json_decode($request->data, true);
+
+        $validator = Validator::make($data, [
+            //"service_request_status_id" => 'nullable',
+            //"service_request_responsible_people_id" => 'nullable',
+            "lote_id" => 'required',
+            //"service_request_type_id" => 'required',
             "service_id" => 'required',
             "model" => 'nullable',
             "model_id" => 'nullable',
-            "options" => 'nullable',
+            //"options" => 'nullable',
             "name" => 'required',
             "starts_at" => 'required',
             "ends_at" => 'nullable',
@@ -145,30 +151,31 @@ class Solicitudes extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-
         $datos = function($request){
 
             $service = Service::find($request['service_id']);
 
             return [
-                'alias' => $request['alias'],
+                //'alias' => $request['alias'],
                 'name' => $request['name'],
                 'starts_at' => Carbon::parse($request['starts_at'])->format('Y-m-d H:m:s'),
                 'ends_at' => $request['ends_at'] ? Carbon::parse($request['ends_at'])->format('Y-m-d H:m:s') : null,
                 'service_request_responsible_people_id' => isset($request['service_request_responsible_people_id']) ? $request['service_request_responsible_people_id'] : null,
-                'service_request_status_id' => $request['service_request_status_id'],
-                'service_request_type_id' => $service ? $service->service_request_type_id : $request['service_request_type_id'],
+                'service_request_status_id' => isset($request['service_request_status_id']) ? $request['service_request_status_id'] : 1,
+                'service_request_type_id' => $service && $service->service_request_type_id ? $service->service_request_type_id : (isset($request['service_request_type_id']) ? $request['service_request_type_id'] : 1),
                 'service_id' => $request['service_id'],
                 'lote_id' => $request['lote_id'],
                 'owner_id' => $request['owner_id'],
                 'model' => $request['model'],
                 'model_id' => $request['model_id'],
-                'options' => json_encode($request['options']),
+               // 'options' => json_encode($request['options']),
                 'observations' => $request['observations']
             ];
         };
 
-        $data = $request->all();
+		// dd($datos);
+           $data = $request->data;
+        $data = json_decode($request->data, true);
 
         if(isset($data['id'])){
             $id = $data['id'];
@@ -180,17 +187,17 @@ class Solicitudes extends Controller
             $solicitud = ServiceRequest::where('id', $id)->update($d);
 
         }else{
-
             $d = $datos($data);
             $d['owner_id'] = $request->user()->owner->id;
             $d['user_id'] = $request->user()->id;
             $d['created_at'] = Carbon::now();
             $d['updated_at'] = Carbon::now();
-
             $id = ServiceRequest::insertGetId($d);
         }
 
         $solicitud = ServiceRequest::find($id);
+
+
 
         if(isset($data['responsible'])){
             if(isset($data['responsible']['id'])){
@@ -206,15 +213,50 @@ class Solicitudes extends Controller
             }
         }
 
-        $solicitud = ServiceRequest::where('id',$id)
-                            ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
-                            ->get();
+
+
+
+           if ($request->hasFile('files')) {
+    $files_detail = $request->files_detail;
+    foreach ($request->file('files') as $key => $file) {
+        // Guardar el archivo en el disco 'public'
+        $documento = is_string($files_detail[$key]) ? json_decode($files_detail[$key]) : $files_detail[$key];
+
+        if (isset($documento->id) && $documento->id != null) {
+            \Log::info(['QUE HAY EN EL FILE AL EDITAR?', $documento, $file]);
+            // $file = ServiceRequestFile::where('id', $documento->id)->update([
+            //     'attachment_file_names' => $file->getClientOriginalName(),
+            //     'file' => $path,
+            //     'updated_at' => Carbon::now(),
+            //     'user_id' => $request->user()->id,
+            //     'description' => $documento->description
+            // ]);
+        } else {
+            $path = $file->store('', 'public');
+            \Log::info(['////////',$solicitud]);
+
+            ServiceRequestFile::insert([
+                'attachment_file_names' => $file->getClientOriginalName(),
+                'file' => $path,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'user_id' => $request->user()->id,
+                'description' => $documento->description,
+				 'service_request_id' => $solicitud->id
+            ]);
+        }
+    }
+}
+
+       $solicitud = ServiceRequest::where('id',$id)
+        ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
+        ->get();
 
        try {
         $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
 
         Notification::make()
-            ->title('Nueva solicitud #'.$solicitud->id)
+            ->title('Nueva solicitud #'.$solicitud->first()->id)
             ->sendToDatabase($recipient);
        } catch (\Throwable $th) {
         //throw $th;
@@ -309,5 +351,41 @@ class Solicitudes extends Controller
         $file->delete();
 
         return response()->json(true);
+    }
+
+    public function addNota(Request $request)
+    {
+
+        $request->validate([
+            'service_request_id' => 'required',
+            'nota' => 'required|max:250'
+        ]);
+
+        $nota = new ServiceRequestNote();
+        $nota->service_request_id = $request->service_request_id;
+        $nota->user_id = $request->user()->id;
+        $nota->description = $request->nota;
+        $nota->save();
+
+        $notas = ServiceRequestNote::where('service_request_id',$request->service_request_id)
+                    ->with('user')
+                    ->get();
+
+        $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
+
+        Notification::make()
+            ->title('Nueva nota en la solicitud: #'.$request->service_request_id)
+            ->body($request->nota)
+            ->warning()
+            ->duration(5000)
+            ->actions([
+                Action::make('view')
+                    ->label('Ver solicitud')
+                    ->button()
+                    // ->url(route('posts.show', $request->service_request_id), shouldOpenInNewTab: true),
+            ])
+            ->sendToDatabase($recipient);
+
+        return response()->json($notas);
     }
 }

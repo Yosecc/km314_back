@@ -75,7 +75,7 @@ class Owner extends Model
 
             Owner::where('id',$this->id)->update(['user_id' => $user->id]);
 
-            Mail::to('yosec.cervino@gmail.com')->send(new createUserEmail( $user, $this->dni ));
+            Mail::to($user->email)->send(new createUserEmail( $user, $this->dni ));
 
             return [
                 'status' => 'success',
