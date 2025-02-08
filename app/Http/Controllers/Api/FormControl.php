@@ -62,9 +62,9 @@ class FormControl extends Controller
 
         \Log::info([$request->data]);
 
-        $request = json_decode($request->data, true);
+        $requestData = json_decode($request->data, true);
 
-        $validator = Validator::make($request, [
+        $validator = Validator::make($requestData, [
             'lote_ids' => 'nullable',
             'access_type' => 'required',
             'income_type' => 'nullable',
@@ -111,26 +111,26 @@ class FormControl extends Controller
 
         $data = [
             'is_moroso'         => 0,
-            'lote_ids'          => $request['lote_ids'],
-            'access_type'       => is_array($request['access_type']) ? json_encode($request['access_type']) : $request['access_type'],
-            'income_type'       => is_array($request['income_type']) ? json_encode($request['income_type']) : $request['income_type'],
-            'tipo_trabajo'      => $request['tipo_trabajo'],
-            'start_date_range'  => $request['start_date_range'],
-            'start_time_range'  => $request['start_time_range'],
-            'end_date_range'    => $request['end_date_range'],
-            'date_unilimited'   => filter_var($request['date_unilimited'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
-            'end_time_range'    => $request['end_time_range'],
+            'lote_ids'          => $requestData['lote_ids'],
+            'access_type'       => is_array($requestData['access_type']) ? json_encode($requestData['access_type']) : $requestData['access_type'],
+            'income_type'       => is_array($requestData['income_type']) ? json_encode($requestData['income_type']) : $requestData['income_type'],
+            'tipo_trabajo'      => $requestData['tipo_trabajo'],
+            'start_date_range'  => $requestData['start_date_range'],
+            'start_time_range'  => $requestData['start_time_range'],
+            'end_date_range'    => $requestData['end_date_range'],
+            'date_unilimited'   => filter_var($requestData['date_unilimited'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
+            'end_time_range'    => $requestData['end_time_range'],
             // 'status'            => 'Pending',
-            // 'user_id'           => $request['user']()->id,
-            // 'owner_id'          => $request['user']()->id,
-            'observations'      => $request['observations'],
+            // 'user_id'           => $requestData['user']()->id,
+            // 'owner_id'          => $requestData['user']()->id,
+            'observations'      => $requestData['observations'],
             // 'created_at'        => now(),
             'updated_at'        => now(),
         ];
 
-        if(isset($request['id']) && $request['id']!= null){
-            FormControlDB::where('id', $request['id'])->update($data);
-            $idForm = $request['id'];
+        if(isset($requestData['id']) && $requestData['id']!= null){
+            FormControlDB::where('id', $requestData['id'])->update($data);
+            $idForm = $requestData['id'];
         }else{
             $data['user_id'] = $request->user()->id;
             $data['owner_id'] = $request->user()->owner->id;
@@ -141,9 +141,9 @@ class FormControl extends Controller
         }
 
 
-        if($request['peoples'] && isset($request['peoples']) && count($request['peoples'])){
+        if($requestData['peoples'] && isset($requestData['peoples']) && count($requestData['peoples'])){
             // Insertar los datos de las personas
-            $peoplesData = collect($request['peoples'])->map(function($people) use ($idForm){
+            $peoplesData = collect($requestData['peoples'])->map(function($people) use ($idForm){
 
                 $data = [
                     'form_control_id' => $idForm,
@@ -168,9 +168,9 @@ class FormControl extends Controller
             });
         }
 
-        if($request['autos'] && isset($request['autos']) && count($request['autos'])){
+        if($requestData['autos'] && isset($requestData['autos']) && count($requestData['autos'])){
             // Insertar los datos de los autos
-            $autosData = collect($request['autos'])->map(function($auto) use ($idForm, $request){
+            $autosData = collect($requestData['autos'])->map(function($auto) use ($idForm, $request){
 
                 if(isset($auto['model']) && $auto['model'] == 'Owner'){
                     unset($auto['id']);
@@ -226,7 +226,7 @@ class FormControl extends Controller
 
         $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
 
-        if(isset($request['id']) && $request['id']!= null){
+        if(isset($requestData['id']) && $requestData['id']!= null){
 
             Notification::make()
                 ->title('Formulario Actualizado #FORM_'.$idForm)
