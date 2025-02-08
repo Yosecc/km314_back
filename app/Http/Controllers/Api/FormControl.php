@@ -59,9 +59,10 @@ class FormControl extends Controller
 
     public function store(Request $request)
     {
-        // return $request->all();
 
-        $validator = Validator::make($request->all(), [
+        $request = json_decode($request->data, true);
+
+        $validator = Validator::make($request, [
             'lote_ids' => 'nullable',
             'access_type' => 'required|string',
             'income_type' => 'nullable|string',
@@ -108,19 +109,19 @@ class FormControl extends Controller
 
         $data = [
             'is_moroso'         => 0,
-            'lote_ids'          => $request->lote_ids,
-            'access_type'       => $request->access_type,
-            'income_type'       => $request->income_type,
-            'tipo_trabajo'       => $request->tipo_trabajo,
-            'start_date_range'  => $request->start_date_range,
-            'start_time_range'  => $request->start_time_range,
-            'end_date_range'    => $request->end_date_range,
-            'date_unilimited'   => filter_var($request->date_unilimited, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
-            'end_time_range'    => $request->end_time_range,
+            'lote_ids'          => $request['lote_ids'],
+            'access_type'       => $request['access_type'],
+            'income_type'       => $request['income_type'],
+            'tipo_trabajo'      => $request['tipo_trabajo'],
+            'start_date_range'  => $request['start_date_range'],
+            'start_time_range'  => $request['start_time_range'],
+            'end_date_range'    => $request['end_date_range'],
+            'date_unilimited'   => filter_var($request['date_unilimited'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
+            'end_time_range'    => $request['end_time_range'],
             // 'status'            => 'Pending',
-            // 'user_id'           => $request->user()->id,
-            // 'owner_id'          => $request->user()->id,
-            'observations'      => $request->observations,
+            // 'user_id'           => $request['user']()->id,
+            // 'owner_id'          => $request['user']()->id,
+            'observations'      => $request['observations'],
             // 'created_at'        => now(),
             'updated_at'        => now(),
         ];
@@ -137,36 +138,10 @@ class FormControl extends Controller
             $idForm = FormControlDB::insertGetId($data);
         }
 
-        // if($request->families && isset($request->families) && count($request->families)){
 
-        //     $peoplesData = collect($request->families)->map(function($people) use ($idForm){
-
-        //         $data = [
-        //             'form_control_id' => $idForm,
-        //             'dni'             => $people['dni'],
-        //             'first_name'      => $people['first_name'],
-        //             'last_name'       => $people['last_name'],
-        //             'phone'           => $people['phone'],
-        //             'is_responsable'  => false,
-        //             'is_acompanante'  => false,
-        //             'is_menor'        => filter_var($people['is_menor'], FILTER_VALIDATE_BOOLEAN),
-        //             // 'created_at'      => now(),
-        //             'updated_at'      => now(),
-        //         ];
-
-        //         if(!isset($people['id'])){
-        //             $data['created_at'] = now();
-        //         }
-
-        //         FormControlPeople::updateOrInsert( [ 'id' => isset($people['id']) ? $people['id'] : null ] , $data );
-
-        //         return $people;
-        //     });
-        // }
-
-        if($request->peoples && isset($request->peoples) && count($request->peoples)){
+        if($request['peoples'] && isset($request['peoples']) && count($request['peoples'])){
             // Insertar los datos de las personas
-            $peoplesData = collect($request->peoples)->map(function($people) use ($idForm){
+            $peoplesData = collect($request['peoples'])->map(function($people) use ($idForm){
 
                 $data = [
                     'form_control_id' => $idForm,
@@ -191,11 +166,9 @@ class FormControl extends Controller
             });
         }
 
-        // FormControlPeople::insert($peoplesData->toArray());
-
-        if($request->autos && isset($request->autos) && count($request->autos)){
+        if($request['autos'] && isset($request['autos']) && count($request['autos'])){
             // Insertar los datos de los autos
-            $autosData = collect($request->autos)->map(function($auto) use ($idForm, $request){
+            $autosData = collect($request['autos'])->map(function($auto) use ($idForm, $request){
 
                 if(isset($auto['model']) && $auto['model'] == 'Owner'){
                     unset($auto['id']);
@@ -224,12 +197,32 @@ class FormControl extends Controller
             });
         }
 
-        // Auto::insert($autosData->toArray());
+        if ($request->hasFile('files')) {
+            $files_detail = $request->files_detail;
+            foreach ($request->file('files') as $key => $file) {
+                // Guardar el archivo en el disco 'public'
+                $documento = is_string($files_detail[$key]) ? json_decode($files_detail[$key]) : $files_detail[$key];
+
+                if (isset($documento->id) && $documento->id != null) {
+                    // \Log::info(['QUE HAY EN EL FILE AL EDITAR?', $documento, $file]);
+                } else {
+                    $path = $file->store('', 'public');
+
+                    FormControlFile::insert([
+                        'form_control_id' => $idForm ,
+                        'user_id' => $request->user()->id,
+                        'file' => $path,
+                        'description' => $documento->description,
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ]);
+                }
+            }
+        }
 
         $formControl = FormControlDB::where('id', $idForm)->with(['peoples','autos'])->first();
 
         if(!$request->id){
-
 
             $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
 

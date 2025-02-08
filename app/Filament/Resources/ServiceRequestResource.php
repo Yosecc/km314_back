@@ -66,241 +66,243 @@ class ServiceRequestResource extends Resource
         return $form
             ->schema([
 
-                Wizard::make([
-                    Wizard\Step::make('Service')
-                        ->schema([
-                            Grid::make()
-                            ->schema([
+                Grid::make()
+                    ->schema([
 
-                                Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+                        Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
 
-                                Forms\Components\Select::make('service_request_type_id')
-                                    ->label('Tipo de servicio')
-                                    ->required()
-                                    ->relationship(name: 'serviceRequestType', titleAttribute: 'name')
-                                    ->live(),
+                        Forms\Components\Select::make('service_request_type_id')
+                            ->label('Tipo de servicio')
+                            ->required()
+                            ->relationship(name: 'serviceRequestType', titleAttribute: 'name')
+                            ->live(),
 
-                                Forms\Components\Select::make('service_id')
-                                    ->label('Servicio')
-                                    ->required()
-                                    ->relationship(name: 'service', titleAttribute: 'name')
-                                    ->live()
-                                    ->afterStateUpdated(function (?string $state, Set $set) {
-                                        self::$service = Service::find($state);
-                                        $set('name',self::$service->name);
-                                        $set('model',self::$service->model);
-                                        $set('service_request_type_id',self::$service->service_request_type_id);
-                                    }),
+                        Forms\Components\Select::make('service_id')
+                            ->label('Servicio')
+                            ->required()
+                            ->relationship(name: 'service', titleAttribute: 'name')
+                            ->live()
+                            ->afterStateUpdated(function (?string $state, Set $set) {
+                                self::$service = Service::find($state);
+                                $set('name',self::$service->name);
+                                $set('model',self::$service->model);
+                                $set('service_request_type_id',self::$service->service_request_type_id);
+                            }),
 
-                                Forms\Components\TextInput::make('name')
-                                    ->label('Nombre')
-                                    ->required()
-                                    ->live()
-                                    ->maxLength(255)->columnSpan(2),
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nombre')
+                            ->required()
+                            ->live()
+                            ->maxLength(255)->columnSpan(2),
 
-                                Forms\Components\Hidden::make('model'),
+                        Forms\Components\Hidden::make('model'),
 
-                                Forms\Components\Select::make('model_id')
-                                    ->label('')
-                                    ->required()
-                                    ->options(RentalAttention::get()->pluck('name','id')->toArray())
-                                    ->disabled( fn (Get $get) => $get('model') != 'RentalAttention' )
-                                    ->visible( fn (Get $get) => $get('model') == 'RentalAttention' ),
+                        Forms\Components\Select::make('model_id')
+                            ->label('')
+                            ->required()
+                            ->options(RentalAttention::get()->pluck('name','id')->toArray())
+                            ->disabled( fn (Get $get) => $get('model') != 'RentalAttention' )
+                            ->visible( fn (Get $get) => $get('model') == 'RentalAttention' ),
 
-                                Forms\Components\Select::make('model_id')
-                                    // ->label(__("general.LoteStatus"))
-                                    ->label('')
-                                    ->required()
-                                    ->options(HomeInspection::get()->pluck('name','id')->toArray())
-                                    ->disabled( fn (Get $get) => $get('model') != 'HomeInspection' )
-                                    ->visible( fn (Get $get) => $get('model') == 'HomeInspection' ),
+                        Forms\Components\Select::make('model_id')
+                            // ->label(__("general.LoteStatus"))
+                            ->label('')
+                            ->required()
+                            ->options(HomeInspection::get()->pluck('name','id')->toArray())
+                            ->disabled( fn (Get $get) => $get('model') != 'HomeInspection' )
+                            ->visible( fn (Get $get) => $get('model') == 'HomeInspection' ),
 
-                                Forms\Components\Select::make('model_id')
-                                    // ->label(__("general.LoteStatus"))
-                                    ->label('')
-                                    ->required()
-                                    ->options(WorksAndInstallation::get()->pluck('name','id')->toArray())
-                                    ->disabled( fn (Get $get) => $get('model') != 'WorksAndInstallation' )
-                                    ->visible( fn (Get $get) => $get('model') == 'WorksAndInstallation' ),
+                        Forms\Components\Select::make('model_id')
+                            // ->label(__("general.LoteStatus"))
+                            ->label('')
+                            ->required()
+                            ->options(WorksAndInstallation::get()->pluck('name','id')->toArray())
+                            ->disabled( fn (Get $get) => $get('model') != 'WorksAndInstallation' )
+                            ->visible( fn (Get $get) => $get('model') == 'WorksAndInstallation' ),
 
-                                Forms\Components\Select::make('model_id')
-                                    // ->label(__("general.LoteStatus"))
-                                    ->label('Espacio')
-                                    ->required()
-                                    ->options(CommonSpaces::get()->pluck('name','id')->toArray())
-                                    ->disabled( fn (Get $get) => $get('model') != 'CommonSpaces' )
-                                    ->visible( fn (Get $get) => $get('model') == 'CommonSpaces' ),
+                        Forms\Components\Select::make('model_id')
+                            // ->label(__("general.LoteStatus"))
+                            ->label('Espacio')
+                            ->required()
+                            ->options(CommonSpaces::get()->pluck('name','id')->toArray())
+                            ->disabled( fn (Get $get) => $get('model') != 'CommonSpaces' )
+                            ->visible( fn (Get $get) => $get('model') == 'CommonSpaces' ),
 
-                                Forms\Components\Select::make('model_id')
-                                    // ->label(__("general.LoteStatus"))
-                                    ->label('')
-                                    ->required()
-                                    ->options(StartUp::get()->pluck('name','id')->toArray())
-                                    ->disabled( fn (Get $get) => $get('model') != 'StartUp' )
-                                    ->visible( fn (Get $get) => $get('model') == 'StartUp' ),
+                        Forms\Components\Select::make('model_id')
+                            // ->label(__("general.LoteStatus"))
+                            ->label('')
+                            ->required()
+                            ->options(StartUp::get()->pluck('name','id')->toArray())
+                            ->disabled( fn (Get $get) => $get('model') != 'StartUp' )
+                            ->visible( fn (Get $get) => $get('model') == 'StartUp' ),
 
-                                Select::make('options')
-                                     ->label('opciones')
-                                    ->multiple()
-                                    ->searchable()
-                                    ->options(StartUpOption::get()->pluck('name','id')->toArray())
-                                    ->disabled( fn (Get $get) => $get('model') != 'StartUp' )
-                                    ->visible( fn (Get $get) => $get('model') == 'StartUp' ),
+                        Select::make('options')
+                            ->label('opciones')
+                            ->multiple()
+                            ->searchable()
+                            ->options(StartUpOption::get()->pluck('name','id')->toArray())
+                            ->disabled( fn (Get $get) => $get('model') != 'StartUp' )
+                            ->visible( fn (Get $get) => $get('model') == 'StartUp' ),
 
 
-                            ])->columns(2),
-                            Forms\Components\TextInput::make('observations')->label('Observaciones'),
-                            Fieldset::make('responsible')
-                                ->label('Responsable')
-                                ->relationship('responsible')
-                                ->schema([
-                                    Forms\Components\TextInput::make('dni')
-                                        ->label(__("general.DNI"))
-                                        ->required()
-                                        ->numeric(),
-                                    Forms\Components\TextInput::make('first_name')
-                                        ->label(__("general.FirstName"))
-                                        ->required()
-                                        ->maxLength(255),
-                                    Forms\Components\TextInput::make('last_name')
-                                        ->label(__("general.LastName"))
-                                        ->required()
-                                        ->maxLength(255),
-                                    Forms\Components\TextInput::make('phone')
-                                        ->label(__("general.Phone"))
-                                        ->tel()
-                                        ->numeric(),
-                                ])
-                                ->disabled( fn (Get $get) => $get('model') != 'CommonSpaces' )
-                                ->visible( fn (Get $get) => $get('model') == 'CommonSpaces' ),
-                        ]),
-                    Wizard\Step::make('Date')
-                        ->schema([
+                    ])->columns(2),
 
-                            Forms\Components\DateTimePicker::make('starts_at')
-                                ->label('Fecha de inicio')
-                                ->required()
-                                //->minDate(now())
-                                ->live()
-                                ->afterStateUpdated(function (Get $get, Set $set, $state) {
+                Forms\Components\TextInput::make('observations')->label('Observaciones'),
+                Fieldset::make('responsible')
+                    ->label('Responsable')
+                    ->relationship('responsible')
+                    ->schema([
+                        Forms\Components\TextInput::make('dni')
+                            ->label(__("general.DNI"))
+                            ->required()
+                            ->numeric(),
+                        Forms\Components\TextInput::make('first_name')
+                            ->label(__("general.FirstName"))
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('last_name')
+                            ->label(__("general.LastName"))
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('phone')
+                            ->label(__("general.Phone"))
+                            ->tel()
+                            ->numeric(),
+                    ])
+                    ->disabled( fn (Get $get) => $get('model') != 'CommonSpaces' )
+                    ->visible( fn (Get $get) => $get('model') == 'CommonSpaces' ),
 
-                                    //dd($get('service_request_type_id'), );
-                                    $SRtype = ServiceRequestType::find($get('service_request_type_id'));
+                    Grid::make()
+                    ->schema([
+                        Forms\Components\DateTimePicker::make('starts_at')
+                            ->label('Fecha de inicio')
+                            ->required()
+                            //->minDate(now())
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set, $state) {
 
-                                    if(!$SRtype->isCalendar){
-                                        return;
-                                    }
-									// Fecha y hora de inicio seleccionada
-									$selectedStartDateTime = Carbon::parse($state); // Convertir $state a Carbon
+                                //dd($get('service_request_type_id'), );
+                                $SRtype = ServiceRequestType::find($get('service_request_type_id'));
 
-									// Calcular la nueva fecha de fin como una hora después de la fecha de inicio
-									$selectedEndDateTime = $selectedStartDateTime->copy()->addMinutes(60);
+                                if(!$SRtype->isCalendar){
+                                    return;
+                                }
+                                // Fecha y hora de inicio seleccionada
+                                $selectedStartDateTime = Carbon::parse($state); // Convertir $state a Carbon
 
-									// Actualizar el campo 'ends_at' siempre que cambie la fecha de inicio
-									$set('ends_at', $selectedEndDateTime->format('Y-m-d H:i:s'));
+                                // Calcular la nueva fecha de fin como una hora después de la fecha de inicio
+                                $selectedEndDateTime = $selectedStartDateTime->copy()->addMinutes(60);
 
-                                    $isAvailable = ServiceRequest::isAvailable(
-                                        $selectedStartDateTime->format('Y-m-d H:i:s'),
-                                        $selectedEndDateTime->format('Y-m-d H:i:s'),
-                                        $get('service_request_type_id'),
-                                        $get('model_id'),
-                                        $get('model')
-                                    );
+                                // Actualizar el campo 'ends_at' siempre que cambie la fecha de inicio
+                                $set('ends_at', $selectedEndDateTime->format('Y-m-d H:i:s'));
 
-									if (!$isAvailable) {
-										Notification::make()
-											->title('Fecha de reservación no está disponible')
-											->danger()
-											->send();
-									} else {
-										Notification::make()
-											->title('Fecha de reservación disponible')
-											->success()
-											->send();
-									}
-								})
-                                ,
+                                $isAvailable = ServiceRequest::isAvailable(
+                                    $selectedStartDateTime->format('Y-m-d H:i:s'),
+                                    $selectedEndDateTime->format('Y-m-d H:i:s'),
+                                    $get('service_request_type_id'),
+                                    $get('model_id'),
+                                    $get('model')
+                                );
 
-                            Forms\Components\DateTimePicker::make('ends_at')->label('Fecha de fin')->live(),
-                        ]),
-                    Wizard\Step::make('Info')
-                        ->schema([
+                                if (!$isAvailable) {
+                                    Notification::make()
+                                        ->title('Fecha de reservación no está disponible')
+                                        ->danger()
+                                        ->send();
+                                } else {
+                                    Notification::make()
+                                        ->title('Fecha de reservación disponible')
+                                        ->success()
+                                        ->send();
+                                }
+                            }),
 
-                            Forms\Components\Select::make('owner_id')->label(__("general.Owner"))
-                                ->relationship(name: 'owner')
-                                ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}"),
-
-                            Forms\Components\Select::make('lote_id')
-                                ->label(__("general.Lotes"))
-                                ->options(Lote::get()->map(function($lote){
-                                    $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
-                                    return $lote;
-                                })
-                                ->pluck('lote_name', 'id')->toArray()),
-
-                            // Forms\Components\Select::make('propertie_id')
-                            //     ->label(__("general.Propertie"))
-                            //     ->options(Property::get()->pluck('identificador', 'id')->toArray()),
-
-                            Forms\Components\Select::make('service_request_status_id')
-                                ->label("Estado de la Solicitud")
-                                ->relationship(name: 'serviceRequestStatus', titleAttribute: 'name')
-                                // ->options(ServiceRequestStatus::get()->pluck('name','id')->toArray())
-                                ->required(),
-
-                            Forms\Components\Select::make('asignado_status_id')
-                                ->label("Usuario asignado")
-                                ->searchable()
-                                // ->relationship(name: 'serviceRequestStatus', titleAttribute: 'name')
-                                ->options(User::get()->pluck('name','id')->toArray())
-                                ->required(),
+                        Forms\Components\DateTimePicker::make('ends_at')->label('Fecha de fin')->live(),
 
 
 
-                            Repeater::make('serviceRequestNote')
-                                ->relationship()
-                                ->label('Nota')
-                                ->schema([
-
-                                    Hidden::make('user_id')->default(Auth::user()->id),
-                                    Forms\Components\TextInput::make('description')->label('Descripción'),
-
-                                ])
-                                ->defaultItems(0)
-                                ->columns(1),
+                Forms\Components\Select::make('owner_id')->label(__("general.Owner"))
+                ->relationship(name: 'owner')
+                ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}"),
 
 
+            Forms\Components\Select::make('lote_id')
+                ->label("Lote")
+                ->options(Lote::get()->map(function($lote){
+                    $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
+                    return $lote;
+                })
+                ->pluck('lote_name', 'id')->toArray()),
 
-                            Repeater::make('serviceRequestFile')
-                                ->relationship()
-                                ->label('Documentos')
-                                ->schema([
-                                    Hidden::make('user_id')->default(Auth::user()->id),
-                                    Forms\Components\TextInput::make('description')->label('Descripción'),
-                                    Forms\Components\FileUpload::make('file')
-                                        ->label('Archivo')
-                                        ->storeFileNamesIn('attachment_file_names'),
-                                    Actions::make([
-                                        Action::make('open_file')
-                                            ->label('Abrir archivo')
-                                            ->icon('heroicon-m-eye')
-                                            ->url(function ($record, $context) {
-												return Storage::url($record->file);
-                                             })
-											->openUrlInNewTab(),
-                                    ])
-                                    ->visible(function($record){
-                                        return $record ? true : false;
-                                    }),
-                                ])
-                                ->defaultItems(0)
-                                ->columns(1)
+            // Forms\Components\Select::make('propertie_id')
+            //     ->label(__("general.Propertie"))
+            //     ->options(Property::get()->pluck('identificador', 'id')->toArray()),
 
+            Forms\Components\Select::make('service_request_status_id')
+                ->label("Estado de la Solicitud")
+                ->relationship(name: 'serviceRequestStatus', titleAttribute: 'name')
+                // ->options(ServiceRequestStatus::get()->pluck('name','id')->toArray())
+                ->required(),
 
-                        ])->columns(2),
-                ]),
+            Forms\Components\Select::make('asignado_status_id')
+                ->label("Usuario asignado")
+                ->searchable()
+                // ->relationship(name: 'serviceRequestStatus', titleAttribute: 'name')
+                ->options(User::get()->pluck('name','id')->toArray())
+                ->required(),
 
 
+
+            Repeater::make('serviceRequestNote')
+                ->relationship()
+                ->label('Nota')
+				->mutateRelationshipDataBeforeFillUsing(function ($record, $data) {
+					//dd($record->serviceRequestNote, $data);
+					$id = $data['id'];
+					$nota = $record->serviceRequestNote()->where('id',$id)->first();
+					//Auth::user()->name
+
+                    $data['user_id'] = $nota->user->id;
+					$data['name'] = $nota->user->name;
+                    return $data;
+                })
+                ->schema([
+
+                    Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+					Forms\Components\TextInput::make('name')->label('Usuario')->default(Auth::user()->name),
+                    Forms\Components\TextInput::make('description')->label('Descripción'),
+
+                ])
+                ->defaultItems(0)
+                ->columns(1),
+
+
+
+            Repeater::make('serviceRequestFile')
+                ->relationship()
+                ->label('Documentos')
+                ->schema([
+                    Hidden::make('user_id')->default(Auth::user()->id),
+                    Forms\Components\TextInput::make('description')->label('Descripción'),
+                    Forms\Components\FileUpload::make('file')
+                        ->label('Archivo')
+                        ->storeFileNamesIn('attachment_file_names'),
+                    Actions::make([
+                        Action::make('open_file')
+                            ->label('Abrir archivo')
+                            ->icon('heroicon-m-eye')
+                            ->url(function ($record, $context) {
+                                return Storage::url($record->file);
+                             })
+                            ->openUrlInNewTab(),
+                    ])
+                    ->visible(function($record){
+                        return $record ? true : false;
+                    }),
+                ])
+                ->defaultItems(0)
+                ->columns(1)
+])->columns(2),
             ])->columns(1);
     }
 
