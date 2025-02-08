@@ -60,12 +60,14 @@ class FormControl extends Controller
     public function store(Request $request)
     {
 
+        \Log::info([$request->data]);
+
         $request = json_decode($request->data, true);
 
         $validator = Validator::make($request, [
             'lote_ids' => 'nullable',
-            'access_type' => 'required|string',
-            'income_type' => 'nullable|string',
+            'access_type' => 'required',
+            'income_type' => 'nullable',
             'start_date_range' => 'required|date',
             'start_time_range' => 'nullable|date_format:H:i:s',
             'end_date_range' => 'nullable|date',
@@ -110,8 +112,8 @@ class FormControl extends Controller
         $data = [
             'is_moroso'         => 0,
             'lote_ids'          => $request['lote_ids'],
-            'access_type'       => $request['access_type'],
-            'income_type'       => $request['income_type'],
+            'access_type'       => is_array($request['access_type']) ? json_encode($request['access_type']) : $request['access_type'],
+            'income_type'       => is_array($request['income_type']) ? json_encode($request['income_type']) : $request['income_type'],
             'tipo_trabajo'      => $request['tipo_trabajo'],
             'start_date_range'  => $request['start_date_range'],
             'start_time_range'  => $request['start_time_range'],
@@ -126,9 +128,9 @@ class FormControl extends Controller
             'updated_at'        => now(),
         ];
 
-        if($request->id){
-            FormControlDB::where('id', $request->id)->update($data);
-            $idForm = $request->id;
+        if($request['id']){
+            FormControlDB::where('id', $request['id'])->update($data);
+            $idForm = $request['id'];
         }else{
             $data['user_id'] = $request->user()->id;
             $data['owner_id'] = $request->user()->owner->id;
