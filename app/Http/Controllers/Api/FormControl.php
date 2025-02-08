@@ -111,7 +111,7 @@ class FormControl extends Controller
 
         $data = [
             'is_moroso'         => 0,
-            'lote_ids'          => $requestData['lote_ids'],
+            'lote_ids'          => is_array($requestData['lote_ids']) ? json_encode($requestData['lote_ids']) : $requestData['lote_ids'],
             'access_type'       => is_array($requestData['access_type']) ? json_encode($requestData['access_type']) : $requestData['access_type'],
             'income_type'       => is_array($requestData['income_type']) ? json_encode($requestData['income_type']) : $requestData['income_type'],
             'tipo_trabajo'      => $requestData['tipo_trabajo'],
