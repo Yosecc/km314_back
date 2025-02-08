@@ -128,7 +128,7 @@ class FormControl extends Controller
             'updated_at'        => now(),
         ];
 
-        if($request['id']){
+        if(isset($request['id']) && $request['id']!= null){
             FormControlDB::where('id', $request['id'])->update($data);
             $idForm = $request['id'];
         }else{
@@ -199,7 +199,7 @@ class FormControl extends Controller
             });
         }
 
-        if ($request->hasFile('files')) {
+        if (isset($request->files) && count($request->files) > 0) {
             $files_detail = $request->files_detail;
             foreach ($request->file('files') as $key => $file) {
                 // Guardar el archivo en el disco 'public'
@@ -224,12 +224,17 @@ class FormControl extends Controller
 
         $formControl = FormControlDB::where('id', $idForm)->with(['peoples','autos'])->first();
 
-        if(!$request->id){
+        $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
 
-            $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
+        if(isset($request['id']) && $request['id']!= null){
 
             Notification::make()
-                ->title('Nuevo formulario #FORM_'.$idForm)
+                ->title('Formulario Actualizado #FORM_'.$idForm)
+                ->sendToDatabase($recipient);
+        }else{
+
+            Notification::make()
+                ->title('Nuevo Formulario #FORM_'.$idForm)
                 ->sendToDatabase($recipient);
         }
 

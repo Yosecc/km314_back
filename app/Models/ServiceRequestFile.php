@@ -12,7 +12,7 @@ class ServiceRequestFile extends Model
     protected $hidden = ['updated_at'];
 
     protected $fillable = ['service_request_id','user_id','file','description','attachment_file_names'];
-	
+
 	  public function user()
     {
         return $this->belongsTo(User::class);

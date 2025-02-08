@@ -253,11 +253,22 @@ class Solicitudes extends Controller
         ->get();
 
        try {
-        $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
 
-        Notification::make()
-            ->title('Nueva solicitud #'.$solicitud->first()->id)
-            ->sendToDatabase($recipient);
+            $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
+
+            if(isset($request['id']) && $request['id']!= null){
+
+                Notification::make()
+                    ->title('Solicitud Actualizada #SOL_'.$solicitud->first()->id)
+                    ->sendToDatabase($recipient);
+            }else{
+
+                Notification::make()
+                    ->title('Nueva solicitud #SOL_'.$solicitud->first()->id)
+                    ->sendToDatabase($recipient);
+            }
+
+
        } catch (\Throwable $th) {
         //throw $th;
        }
