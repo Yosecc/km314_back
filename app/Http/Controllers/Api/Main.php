@@ -13,6 +13,7 @@ use App\Models\LandingData;
 use App\Models\Newsletter;
 use App\Models\Owner;
 use App\Models\OwnerSpontaneousVisit;
+use App\Models\PopUp;
 use App\Models\Slider;
 use App\Models\Trabajos;
 use App\Models\Works;
@@ -114,10 +115,12 @@ class Main extends Controller
                         ->where('agregado',null)
                         ->get();
 
-        return $visitantes->map(function($visitante){
+        $data = $visitantes->map(function($visitante){
             $visitante['texto'] = $visitante['first_name']." ". $visitante['last_name'];
             return $visitante;
         })->pluck('texto','id');
+
+        return  count($data) ? $data : (object)[] ;
 
     }
 
@@ -141,10 +144,17 @@ class Main extends Controller
                         ->where('agregado',null)
                         ->get();
 
-        return $visitantes->map(function($visitante){
+        $data = $visitantes->map(function($visitante){
             $visitante['texto'] = $visitante['first_name']." ". $visitante['last_name'];
             return $visitante;
         })->pluck('texto','id');
+
+        return  count($data) ? $data : (object)[] ;
+    }
+
+    public function getPopUp(Request $request)
+    {
+        return response()->json(PopUp::where('active',1)->orderBy('created_at','desc')->first());
     }
 
     public function contact(Request $request)

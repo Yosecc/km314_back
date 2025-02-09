@@ -59,6 +59,7 @@ Route::middleware('auth:sanctum')->post('/resource_empleados', [Main::class,'res
 Route::middleware('auth:sanctum')->post('/delete_empleados', [Main::class,'deleteEmpleados']);
 
 Route::middleware('auth:sanctum')->get('/empleados', [Main::class,'empleados']);
+Route::middleware('auth:sanctum')->get('/get_pop_up', [Main::class,'getPopUp']);
 
 Route::middleware('auth:sanctum')->get('/trabajos', [Main::class,'trabajos']);
 Route::middleware('auth:sanctum')->get('/sliders', [Main::class,'sliders']);
