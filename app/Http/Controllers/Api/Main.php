@@ -154,7 +154,12 @@ class Main extends Controller
 
     public function getPopUp(Request $request)
     {
-        return response()->json(PopUp::where('active',1)->orderBy('created_at','desc')->first());
+        $popup = PopUp::where('active',1)->orderBy('created_at','desc')->first();
+		if($popup){
+            $popup->image = $popup->image ? config('app.url').Storage::url( $popup->image) : $popup->image;
+            $popup->makeHidden(['created_at','updated_at','id','active']);
+		}
+		return response()->json($popup );
     }
 
     public function contact(Request $request)

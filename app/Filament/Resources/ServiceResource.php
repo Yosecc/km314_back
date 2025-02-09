@@ -12,7 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Filament\Forms\Components\RichEditor;
 class ServiceResource extends Resource
 {
     protected static ?string $model = Service::class;
@@ -44,7 +44,10 @@ class ServiceResource extends Resource
                 Forms\Components\TextInput::make('color')->type('color'),
                 Forms\Components\TextInput::make('amount')->maxLength(255),
                 Forms\Components\TextInput::make('model')->maxLength(255),
-                Forms\Components\Select::make('service_request_type_id')->relationship(name: 'serviceRequestType', titleAttribute: 'name')
+                Forms\Components\Select::make('service_request_type_id')->relationship(name: 'serviceRequestType', titleAttribute: 'name'),
+
+                RichEditor::make('terminos')->columnSpanFull()
+
             ]);
     }
 

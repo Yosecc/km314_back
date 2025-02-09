@@ -12,7 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\RichEditor;
 class PopUpResource extends Resource
 {
     protected static ?string $model = PopUp::class;
@@ -26,7 +26,7 @@ class PopUpResource extends Resource
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(255),
-                MarkdownEditor::make('description')->columnSpanFull(),
+                RichEditor::make('description')->columnSpanFull(),
                 Forms\Components\FileUpload::make('image')
                     ->image()
                     ->disk('public')
