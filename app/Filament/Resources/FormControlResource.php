@@ -147,7 +147,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->options(function(){
                                 if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                     return FormControlTypeIncome::where('status',1)
-                                    ->whereNotIn('id',[2])
                                     ->get()->pluck('name','name')->toArray();
                                 } else {
                                     return FormControlTypeIncome::where('status',1)->get()->pluck('name','name')->toArray();
@@ -217,56 +216,56 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->columns(4),
 
 
-                // CheckboxList::make('technologies')->label('Trabajadores')
-                //     ->options(isset(Auth::user()->owner->trabajadores) ? Auth::user()->owner->trabajadores->map(function($trabajador){
-                //         $trabajador['name'] = $trabajador->first_name.' '.$trabajador->last_name;
-                //         return $trabajador;
-                //     })->pluck('name','id')->toArray() : [] )
-                //     ->visible(function(){
-                //         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                //             if(!isset(Auth::user()->owner->trabajadores) || (isset(Auth::user()->owner->trabajadores) && !Auth::user()->owner->trabajadores->count())){
-                //                 return false;
-                //             }
-                //             return true;
-                //         }
-                //         return false;
-                //     })
-                //     ->dehydrated(function(){
-                //         return true;
-                //     })
-                //     ->live()
-                //     ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                //         $peoples = collect($get('peoples'));
-                //         $trabajadores = Auth::user()->owner->trabajadores->whereIn('id', $state);
+                CheckboxList::make('technologies')->label('Trabajadores')
+                    ->options(isset(Auth::user()->owner->trabajadores) ? Auth::user()->owner->trabajadores->map(function($trabajador){
+                        $trabajador['name'] = $trabajador->first_name.' '.$trabajador->last_name;
+                        return $trabajador;
+                    })->pluck('name','id')->toArray() : [] )
+                    ->visible(function(){
+                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            if(!isset(Auth::user()->owner->trabajadores) || (isset(Auth::user()->owner->trabajadores) && !Auth::user()->owner->trabajadores->count())){
+                                return false;
+                            }
+                            return true;
+                        }
+                        return false;
+                    })
+                    ->dehydrated(function(){
+                        return true;
+                    })
+                    ->live()
+                    ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                        $peoples = collect($get('peoples'));
+                        $trabajadores = Auth::user()->owner->trabajadores->whereIn('id', $state);
 
-                //         // Eliminar trabajadores desmarcados
-                //         $peoples = $peoples->filter(function ($person) use ($trabajadores) {
-                //             return $trabajadores->contains('dni', $person['dni']) || !is_null($person['dni']);
-                //         });
+                        // Eliminar trabajadores desmarcados
+                        $peoples = $peoples->filter(function ($person) use ($trabajadores) {
+                            return $trabajadores->contains('dni', $person['dni']) || !is_null($person['dni']);
+                        });
 
-                //         // Agregar trabajadores marcados
-                //         foreach ($trabajadores as $trabajador) {
-                //             if (!$peoples->contains('dni', $trabajador->dni)) {
-                //                 $peoples->push([
-                //                     'dni' => $trabajador->dni,
-                //                     'first_name' => $trabajador->first_name,
-                //                     'last_name' => $trabajador->last_name,
-                //                     'phone' => $trabajador->phone,
-                //                     'is_responsable' => false,
-                //                     'is_acompanante' => false,
-                //                     'is_menor' => false,
-                //                 ]);
-                //             }
-                //         }
+                        // Agregar trabajadores marcados
+                        foreach ($trabajadores as $trabajador) {
+                            if (!$peoples->contains('dni', $trabajador->dni)) {
+                                $peoples->push([
+                                    'dni' => $trabajador->dni,
+                                    'first_name' => $trabajador->first_name,
+                                    'last_name' => $trabajador->last_name,
+                                    'phone' => $trabajador->phone,
+                                    'is_responsable' => false,
+                                    'is_acompanante' => false,
+                                    'is_menor' => false,
+                                ]);
+                            }
+                        }
 
-                //         // Eliminar registros con valores nulos
-                //         $peoples = $peoples->filter(function ($person) {
-                //             return !is_null($person['dni']) && !is_null($person['first_name']) && !is_null($person['last_name']);
-                //         });
+                        // Eliminar registros con valores nulos
+                        $peoples = $peoples->filter(function ($person) {
+                            return !is_null($person['dni']) && !is_null($person['first_name']) && !is_null($person['last_name']);
+                        });
 
-                //         // Actualizar el estado de 'peoples' sin sobrescribirlo completamente
-                //         $set('peoples', $peoples->values()->toArray());
-                //     }),
+                        // Actualizar el estado de 'peoples' sin sobrescribirlo completamente
+                        $set('peoples', $peoples->values()->toArray());
+                    }),
 
                 Forms\Components\Repeater::make('peoples')
                     ->label(__("general.Peoples"))
@@ -421,9 +420,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     ->title('Formulario aprobado')
                                     ->sendToDatabase($record->owner->user);
                                 }
-                        })->hidden(function(FormControl $record){
+                        })
+                        ->hidden(function(FormControl $record){
                             return $record->isActive() || $record->isExpirado() || $record->isVencido() ? true : false;
-                        })->visible(auth()->user()->can('aprobar_form::control')),
+                        })
+                        ->visible(auth()->user()->can('aprobar_form::control')),
                     FormAction::make('rechazar')
                         ->action(function(FormControl $record){
                             $record->rechazar();

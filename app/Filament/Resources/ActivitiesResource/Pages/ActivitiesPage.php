@@ -16,7 +16,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Widgets\StatsOverviewWidget;
 use App\Filament\Resources\ActivitiesResource;
-
+use Filament\Notifications\Actions\Action as ActionNotification;
 class ActivitiesPage extends CreateRecord
 {
     protected static string $resource = ActivitiesResource::class;
@@ -30,51 +30,35 @@ class ActivitiesPage extends CreateRecord
         ];
     }
 
-    protected function beforeCreate(): void
+    protected function isSalidaValidate($peopleIds, $model): void
     {
-        // Runs before the form fields are saved to the database.
+        // Validar salida
+        $peopleInside = ActivitiesPeople::whereIn('model_id', $peopleIds)
+            ->where('model', $model)
+            ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
+            ->select('activities_people.model_id', DB::raw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) as entries'), DB::raw('SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END) as exits'))
+            ->groupBy('activities_people.model_id')
+            ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
+            ->pluck('model_id')->toArray();
 
-        $model = '';
-        if($this->data['tipo_entrada'] == 1){
-            $model = 'Owner';
-        }else if ($this->data['tipo_entrada'] == 2){
-            $model = 'Employee';
-        }else if($this->data['tipo_entrada'] == 3){
-            $model = 'FormControl';
+        $peopleNotInside = $peopleIds->diff($peopleInside);
+
+        if ($peopleNotInside->isNotEmpty()) {
+            // Retornar mensaje de error si alguna persona no ha entrado
+            $personas = $this->getPeopleNames($peopleNotInside, $model);
+
+            Notification::make()
+                ->title('Algunas personas no han entrado aún: ' . implode(', ', $personas->toArray()))
+                ->danger()
+                ->send();
+
+            $this->halt();
         }
+    }
 
-        if($this->data['type'] ==  1) {
-            $this->data['type'] = 'Entry';
-        }elseif($this->data['type'] ==  2){
-            $this->data['type'] = 'Exit';
-        }
-        $peopleIds = collect($this->data['peoples']);
-
-        if ($this->data['type'] == 'Exit') {
-            // Validar salida
-            $peopleInside = ActivitiesPeople::whereIn('model_id', $peopleIds)
-                ->where('model', $model)
-                ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
-                ->select('activities_people.model_id', DB::raw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) as entries'), DB::raw('SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END) as exits'))
-                ->groupBy('activities_people.model_id')
-                ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
-                ->pluck('model_id')->toArray();
-
-            $peopleNotInside = $peopleIds->diff($peopleInside);
-
-            if ($peopleNotInside->isNotEmpty()) {
-                // Retornar mensaje de error si alguna persona no ha entrado
-                $personas = $this->getPeopleNames($peopleNotInside, $model);
-
-                Notification::make()
-                    ->title('Algunas personas no han entrado aún: ' . implode(', ', $personas->toArray()))
-                    ->danger()
-                    ->send();
-                $this->halt();
-            }
-        } else if ($this->data['type'] == 'Entry') {
-            // Validar entrada
-            $peopleOutside = ActivitiesPeople::whereIn('model_id', $peopleIds)
+    protected function isEntradaValidate($peopleIds, $model): void
+    {
+        $peopleOutside = ActivitiesPeople::whereIn('model_id', $peopleIds)
                 ->where('model', $model)
                 ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
                 ->select('activities_people.model_id', DB::raw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) as entries'), DB::raw('SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END) as exits'))
@@ -94,6 +78,106 @@ class ActivitiesPage extends CreateRecord
                     ->send();
                 $this->halt();
             }
+    }
+
+    protected function beforeCreate(): void
+    {
+        // Runs before the form fields are saved to the database.
+
+        $model = '';
+
+        //dd($this->data);
+
+        /** @var \Illuminate\Support\Collection<int, int> $peopleIds */
+        $peopleIds = collect($this->data['peoples']);
+
+        if($this->data['type'] ==  1) {
+            $this->data['type'] = 'Entry';
+        }elseif($this->data['type'] ==  2){
+            $this->data['type'] = 'Exit';
+        }
+
+
+        if($this->data['tipo_entrada'] == 1){
+            $model = 'Owner';
+        }else if ($this->data['tipo_entrada'] == 2){
+            $model = 'Employee';
+
+            $employees = Employee::whereIn('id', $peopleIds)->where('owner_id','!=', null)->get();
+
+            if($employees && $employees->count()){
+
+                $employees->each(function($employee) use (&$peopleIds){
+                    // dd($employee);
+
+                    if($employee->owner){
+
+                        if(!$employee->isFormularios()){
+                            Notification::make()
+                                ->title('El empleado '.$employee->first_name.' '.$employee->last_name.' requiere permisos del propietario.')
+                                ->danger()
+                                ->send();
+
+                            $this->halt();
+                        }else{
+
+                            $employee->getFormularios()->each(function($formControl) use($employee, &$peopleIds){
+                                $ids = $formControl->peoples->where('dni', $employee->dni)->pluck('id');
+
+                                $peopleIds = $peopleIds->filter(function($id) use ($employee) {
+                                    return (int)$id !== (int)$employee->id;
+                                })->merge($ids);
+
+                            });
+
+                        }
+
+                    }
+
+                    if ($this->data['type'] == 'Entry') {
+
+                        $isValidHorario = $employee->validaHorarios();
+
+                        if (!$isValidHorario['status']) {
+                            session()->put('force_create', $this->data['is_force']);
+
+                            Notification::make()
+                                ->title($isValidHorario['mensaje'])
+                                ->danger()
+                                // ->actions([
+                                //     ActionNotification::make('force')
+                                //         ->label('Forzar envío')
+                                //         ->button()
+                                //         ->color('danger')
+                                //         ->action(function () {
+                                //             session()->put('force_create', true);
+                                //         }),
+                                // ])
+                                ->send();
+
+                            if (!session()->get('force_create')) {
+                                $this->halt();
+                            }
+                        }
+
+                    }
+
+                });
+
+                $model = 'FormControl';
+
+            }
+
+        }else if($this->data['tipo_entrada'] == 3){
+            $model = 'FormControl';
+        }
+
+
+
+        if ($this->data['type'] == 'Exit') {
+            $this->isSalidaValidate($peopleIds, $model);
+        } else if ($this->data['type'] == 'Entry') {
+            $this->isEntradaValidate($peopleIds, $model);
         }
 
         if (!empty($this->data['spontaneous_visit'])) {
@@ -143,17 +227,39 @@ class ActivitiesPage extends CreateRecord
             $model = 'FormControl';
         }
 
+        $formControlId = null;
+
         $record = $this->record;
         $people = collect($this->data['peoples'])
-                    ->map(function($people) use ($model, $record ){
+                    ->map(function($people) use (&$model, $record, &$formControlId ){
+                        $type = null;
+                        if($model == 'Employee'){
+                            $empleado = Employee::where('id', $people)->first();
+                            if($empleado->owner_id && $empleado->isFormularios()){
+                                $peopleFormControlPeople = $empleado->formControlPeople($empleado->dni);
+                                if($peopleFormControlPeople){
+                                    $model = 'FormControl';
+                                    $type = 'Employee';
+                                    $formControlId = $peopleFormControlPeople->form_control_id;
+                                    $people = $peopleFormControlPeople->id;
+                                }
+                            }
+                        }
                         return [
                             'activities_id' => $record->id ,
                             'model' => $model,
                             'model_id' => $people,
+                            'type' => $type,
                             'created_at' => Carbon::now(),
                             'updated_at' => Carbon::now(),
                         ];
                     });
+
+        if($formControlId){
+            $record->form_control_id = $formControlId;
+            $record->save();
+        }
+
         ActivitiesPeople::insert($people->toArray());
 
         if(isset($this->data['families']) && count($this->data['families'])){

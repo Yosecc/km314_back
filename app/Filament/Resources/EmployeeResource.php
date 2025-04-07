@@ -161,6 +161,11 @@ class EmployeeResource extends Resource
                 ])->columns(2),
                 Forms\Components\Repeater::make('autos')
                     ->relationship()
+                    ->mutateRelationshipDataBeforeFillUsing(function ($record, $data) {
+                        // dd($record->autos, $data);
+                        $data['model'] = $record->autos->where('id', $data['id'])->first()->model;
+                        return $data;
+                    })
                     ->schema([
                         Forms\Components\TextInput::make('marca')
                             ->label(__("general.Marca"))
@@ -205,7 +210,15 @@ class EmployeeResource extends Resource
 
                         Forms\Components\TextInput::make('name')->label('Descripción'),
                         DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento'),
-                        Forms\Components\FileUpload::make('file')->label('Archivo')->storeFileNamesIn('attachment_file_names'),
+                        Forms\Components\FileUpload::make('file')
+                            ->label('Archivo')
+                            ->storeFileNamesIn('attachment_file_names')
+                            ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                return $file ? $file->getClientOriginalName() : $record->file;
+                            })
+                            ->disabled(function($context, Get $get){
+                                return $context == 'edit' ? true:false;
+                            }),
 
                         Actions::make([
                             Action::make('open_file')

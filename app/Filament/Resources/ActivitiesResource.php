@@ -66,23 +66,27 @@ class ActivitiesResource extends Resource
 
     public static function searchEmployee($dni, $type, $ids = [])
     {
+
         $data = Employee::where('dni', 'like', '%'.$dni.'%')->orWhere(function($query) use ($dni) {
             $query->whereHas('autos', function ($query) use ($dni){
                 $query->where('patente','like','%'.$dni.'%');
             });
         })->limit(10)->get();
 
-        $mapeo = function($people) use ($type){
+
+        $mapeo = function($employee) use ($type){
+
+            // dd($employee->isFormularios());
 
             if($type == 'option'){
-                $people['texto'] = $people['first_name']. ' '.$people['last_name'];
-                $people['texto'].= ' - '.__('general.Employee');
+                $employee['texto'] = $employee['first_name']. ' '.$employee['last_name'];
+                $employee['texto'].= ' - '.__('general.Employee');
             }else{
-                $people['texto'] = $people->dni;
-                $people['texto'] .= ' - '.$people->work->name;
+                $employee['texto'] = $employee->dni;
+                $employee['texto'] .= ' - '.$employee->work->name;
             }
 
-            return $people;
+            return $employee;
         };
 
         if(count($ids)){
@@ -389,7 +393,7 @@ class ActivitiesResource extends Resource
                             ->required()
                             ->view('filament.forms.components.tipoEntrada')
                             ->viewData([
-                                'opciones' => [ 1 => 'Propietarios', 2 => 'Trabajadores', 3 => 'Otros' ] ,
+                                'opciones' => [ 1 => 'Propietarios', 2 => 'Empleados', 3 => 'Otros' ] ,
                             ])
                             ->disabled(function($context){
                                 return $context == 'view' ? true : false;
@@ -482,7 +486,10 @@ class ActivitiesResource extends Resource
                                                     $query->where('patente','like','%'.$num.'%');
                                                 });
                                             })
-                                            ->orderBy('id','desc')->get()->map(callback: $mapeo)
+                                            ->orderBy('id','desc')
+                                            ->where('start_date_range','>=',now())
+                                            ->limit(10)
+                                            ->get()->map(callback: $mapeo)
                                         //->whereNotIn('status',['Vencido','Expirado'])
                                         ->pluck('texto','id')->toArray();
                                     })
@@ -510,9 +517,18 @@ class ActivitiesResource extends Resource
                                         }
 
                                         $num = $get('num_search');
-                                        return FormControl::whereHas('peoples', function ($query) use($num){
-                                            $query->where('dni','like','%'.$num.'%');
-                                        })->orderBy('id','desc')->get()->map($mapeo)
+                                        return FormControl::whereHas('peoples', function ($query) use ($num)
+                                            {
+                                                $query->where('dni','like','%'.$num.'%');
+                                            })
+                                            ->orWhere(function($query) use ($num) {
+                                                $query->whereHas('autos', function ($query) use ($num){
+                                                    $query->where('patente','like','%'.$num.'%');
+                                                });
+                                            })
+                                            ->orderBy('id','desc')
+                                            ->whereDate('start_date_range','>=',now())
+                                            ->limit(10)->get()->map($mapeo)
                                         // ->whereNotIn('status',['Vencido','Expirado'])
                                         ->pluck('texto','id')->toArray();
 
@@ -559,17 +575,34 @@ class ActivitiesResource extends Resource
                             ->searchable()
                             ->options(function(Get $get, $context, $record){
 
-                                $peoples = $get('peoples');
-                                 if($context == 'view' && isset($peoples) && !count($peoples) && $record->peoples){
-                                     $peoples = $record->peoples->pluck('model_id')->toArray();
+                                $peoplesIds = $get('peoples');
+                                 if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
+                                    //  $peoplesIds = $record->peoples->pluck('model_id')->toArray();
+
+                                    $peoplesIds = $record->peoples->map(function($peopleActivitie){
+                                        // dd($peopleActivitie);
+                                        if($peopleActivitie->type == 'Employee'){
+                                            $info = $peopleActivitie->getPeople();
+                                            if($info){
+                                                $employee = Employee::where('dni',$info->dni)->first();
+                                                if($employee){
+                                                    $peopleActivitie->model_id = $employee->id;
+                                                    $peopleActivitie->model = 'Employee';
+                                                }
+                                            }
+                                        }
+
+                                        return $peopleActivitie;
+                                     })->pluck('model_id')->toArray();
+
                                  }
-                                //  dd($peoples );
+                                //  dd( $record->peoples, $peoplesIds );
                                  return self::getPeoples([
                                      'tipo_entrada' => $get('tipo_entrada'),
                                      'num_search' => $get('num_search') ,
                                      'form_control_id' => $get('form_control_id'),
                                      'tipo' => 'option',
-                                     'ids' =>  $context == 'view' ? $peoples : [],
+                                     'ids' =>  $context == 'view' ? $peoplesIds : [],
                                      'context' => $context
                                  ]);
                              })
@@ -1079,7 +1112,7 @@ class ActivitiesResource extends Resource
                  */
                 Forms\Components\Select::make('lote_ids')
                         ->required(function(Get $get){
-                            return ($get('type') == 1 && ($get('tipo_entrada') == 1 || $get('tipo_entrada') == 2))? true : false;
+                            return ($get('type') == 1 && ($get('tipo_entrada') == 1 ))? true : false;
                         })
                         ->label(__('general.SelectedLote'))
                         ->options(function(Get $get){
@@ -1108,7 +1141,13 @@ class ActivitiesResource extends Resource
                         return $get('tipo_entrada') ? true: false;
                     }),
 
-                    Actions::make([
+                Forms\Components\Toggle::make('is_force')
+                    ->label('Forzar entrada a empleado (según horario configurado)')
+                    ->visible(function(Get $get, $context){
+                        return $get('tipo_entrada') == 2 && $context == 'create' ? true: false;
+                    }),
+
+                Actions::make([
                         Action::make('create')
                             ->label('Crear nueva Entrada/Salida')
                             ->icon('heroicon-m-plus')

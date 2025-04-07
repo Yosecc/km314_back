@@ -11,7 +11,7 @@ class ActivitiesPeople extends Model
 
     // protected $table = 'activities_activities_people';
 
-    protected $fillable = ['activities_id','model','model_id'];
+    protected $fillable = ['activities_id','model','model_id','type'];
 
     public function activitie()
     {
@@ -27,6 +27,32 @@ class ActivitiesPeople extends Model
      public function getModelAttribute($value)
      {
          return $value === 'FormControl' ? 'FormControlPeople' : $value;
+     }
+
+     public function getPeople()
+     {
+
+        // dd($this->model);
+        if($this->model == 'FormControl' || $this->model == 'FormControlPeople'){
+            return $this->formControlPeople;
+        }
+        if($this->model == 'Owner'){
+            return $this->owner;
+        }
+
+        if($this->model == 'Employee'){
+            return $this->employee;
+        }
+
+        if($this->model == 'OwnerFamily'){
+            return $this->ownerFamily;
+        }
+
+        if($this->model == 'OwnerSpontaneousVisit'){
+            return $this->ownerSpontaneousVisit;
+        }
+
+
      }
 
      public function ownerSpontaneousVisit()

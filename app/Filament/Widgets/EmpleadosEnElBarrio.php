@@ -12,9 +12,9 @@ use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 class EmpleadosEnElBarrio extends BaseWidget
 {
     use HasWidgetShield;
-    protected static ?int $sort = -6;  
+    protected static ?int $sort = -6;
     protected static ?string $heading = 'Empleados en el barrio';
-   
+
     public function table(Table $table): Table
     {
 
@@ -27,7 +27,7 @@ class EmpleadosEnElBarrio extends BaseWidget
             ->get()
             ;
 
-            
+
         return $table
         ->heading('Últimas actividades')
             ->heading(self::$heading)

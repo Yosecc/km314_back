@@ -14,8 +14,8 @@ class TrabajadoresEnElBarrio extends BaseWidget
     use HasWidgetShield;
 
     protected static ?int $sort = -3;
-    protected static ?string $heading = 'Trabajadores en el barrio (Lotes)';
-    
+    protected static ?string $heading = 'Trabajadores en el barrio (Formularios de control)';
+
 
     public function table(Table $table): Table
     {

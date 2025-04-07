@@ -185,14 +185,13 @@ class FormControl extends Model
     {
 
         $start_date_range = $this->start_date_range;
-        $end_date_range = $this->end_date_range;
+        $end_date_range = $this->end_date_range ?? Carbon::now()->addMonth()->format('Y-m-d');
+
         // Concatenar las horas a las fechas si están presentes
 
         $start_date_range .= ' ' . ($this->start_time_range ?  $this->start_time_range : '00:00');
         $end_date_range .= ' ' . ($this->end_time_range ? $this->end_time_range : '00:00');
 
-
-        // dd( $start_date_range);
         // Convertir las fechas de cadena a objetos Carbon
         $start = Carbon::createFromFormat('Y-m-d H:i',  $start_date_range);
         $end = Carbon::createFromFormat('Y-m-d H:i', $end_date_range);

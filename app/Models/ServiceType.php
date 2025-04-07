@@ -12,6 +12,6 @@ class ServiceType extends Model
     protected $casts = [
         'isCalendar' => 'boolean',
     ];
-    protected $fillable = ['name','isCalendar'];
+    protected $fillable = ['name','isCalendar','order'];
 
 }

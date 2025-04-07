@@ -29,7 +29,7 @@ class Personas extends BaseWidget
             Stat::make('Empleados', $this->getEntradasEmployee()),
             Stat::make('Visitantes', $this->getEntradasFormVisitantesGenerales())->description('Entrada general - Club playa - Club House'),
             Stat::make('Inquilinos', $this->getEntradasFormInquilinosLotes())->description('Lotes'),
-            Stat::make('Trabajadores', $this->getEntradasFormTrabajadoresLotes())->description('Lotes'),
+            Stat::make('Trabajadores (Formularios de control)', $this->getEntradasFormTrabajadoresLotes())->description('Lotes'),
             Stat::make('Visitas', $this->getEntradasFormVisitaLotes())->description('Lotes'),
 
         ];

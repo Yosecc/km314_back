@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -44,6 +45,9 @@ class ServiceTypeResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('order')
+                ->label('Orden')
+                ->sortable(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
 
@@ -56,12 +60,42 @@ class ServiceTypeResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('order', 'asc')
             ->filters([
-                //
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+                Action::make('moveUp')
+                    ->label('Subir')
+                    ->icon('heroicon-o-arrow-up')
+                    ->action(function ($record) {
+                        $previous = $record->where('order', '<', $record->order)
+                            ->orderBy('order', 'desc')
+                            ->first();
+
+                        if ($previous) {
+                            $currentOrder = $record->order;
+                            $record->update(['order' => $previous->order]);
+                            $previous->update(['order' => $currentOrder]);
+                        }
+                    })
+                    ->visible(fn ($record) => $record->order > 1), // Oculta si es el primer registro
+                Action::make('moveDown')
+                    ->label('Bajar')
+                    ->icon('heroicon-o-arrow-down')
+                    ->action(function ($record) {
+                        $next = $record->where('order', '>', $record->order)
+                            ->orderBy('order', 'asc')
+                            ->first();
+
+                        if ($next) {
+                            $currentOrder = $record->order;
+                            $record->update(['order' => $next->order]);
+                            $next->update(['order' => $currentOrder]);
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

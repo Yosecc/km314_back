@@ -24,6 +24,8 @@ class Owner extends Model
         return $this->hasMany(Employee::class,'owner_id');
     }
 
+
+
     public function activitiePeople()
     {
         return $this->hasOne(ActivitiesPeople::class,'model_id')->where('model','Owner')->latest();
@@ -46,6 +48,11 @@ class Owner extends Model
     public function status()
     {
         return $this->belongsTo(OwnerStatus::class,'owner_status_id');
+    }
+
+    public function formControls()
+    {
+        return $this->hasMany(FormControl::class,'owner_id');
     }
 
     public function nombres(): string{
