@@ -13,7 +13,7 @@ use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Filament\Tables\Columns\TextInputColumn;
 class ServiceTypeResource extends Resource
 {
     protected static ?string $model = ServiceType::class;
@@ -49,9 +49,16 @@ class ServiceTypeResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('order')
-                ->label('Orden')
-                ->sortable(),
+                // Tables\Columns\TextColumn::make('order')
+                // ->label('Orden')
+                // ->sortable(),
+                TextInputColumn::make('order')
+                    ->label('Orden')
+                    ->sortable()
+                    ->searchable()
+                    ->required()
+                    ->numeric()
+                    , // Oculta si es el primer registro
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
 
