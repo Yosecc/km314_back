@@ -238,7 +238,7 @@ class ServiceRequestResource extends Resource
             //     ->options(Property::get()->pluck('identificador', 'id')->toArray()),
 
             Forms\Components\Select::make('service_request_status_id')
-                ->label("Estado de la Solicitud (Lo ve el usuario)")
+                ->label("Estado de la Solicitud")
                 ->relationship(name: 'serviceRequestStatus', titleAttribute: 'name')
                 // ->options(ServiceRequestStatus::get()->pluck('name','id')->toArray())
                 ->required(),
