@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('services', function (Blueprint $table) {
-            $table->bool('isDateInicio')->default(true);
-            $table->bool('isDateFin')->default(false);
-            $table->bool('status')->default(false);
+            $table->boolean('isDateInicio')->default(true);
+            $table->boolean('isDateFin')->default(false);
+            $table->boolean('status')->default(false);
 
         });
         Schema::table('service_types', function (Blueprint $table) {
-            $table->bool('status')->default(true);
+            $table->boolean('status')->default(true);
         });
     }
 
