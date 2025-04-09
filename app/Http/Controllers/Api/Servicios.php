@@ -19,7 +19,7 @@ class Servicios extends Controller
     {
         $services = Service::with(['serviceType' => function ($query) {
             $query->orderBy('order', 'asc'); // Ordenar los tipos de servicio por 'order'
-        }])->orderBy('order', 'asc')->get(); // Ordenar los servicios por 'order'
+        }])->where('status',1)->orderBy('order', 'asc')->get(); // Ordenar los servicios por 'order'
 
         // Agrupar y ordenar los resultados
         $result = $services->groupBy('service_type_id')
@@ -29,9 +29,11 @@ class Servicios extends Controller
                     'name' => $grupo[0]->serviceType->name,
                     'items' => $grupo->sortBy('order')->values()->all(), // Ordenar los servicios dentro del grupo
                     'order' => $grupo[0]->serviceType->order,
+                    'status' => $grupo[0]->serviceType->status,
                 ];
             })
             ->sortBy('order') // Ordenar los grupos por el campo 'order' del tipo de servicio
+            ->where('status', 1) // Filtrar solo los grupos activos
             ->values()
             ->all();
 

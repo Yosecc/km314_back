@@ -104,7 +104,7 @@ class ServiceResource extends Resource
                 //     ->sortable()
                 //     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('order', 'asc')
+            ->defaultSort('serviceType.order', 'asc')
 
             ->filters([
                 //
