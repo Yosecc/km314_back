@@ -55,10 +55,7 @@ class ServiceTypeResource extends Resource
                 TextInputColumn::make('order')
                     ->label('Orden')
                     ->sortable()
-                    ->searchable()
-                    ->required()
-                    ->numeric()
-                    , // Oculta si es el primer registro
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
 

@@ -6,14 +6,17 @@ use App\Filament\Resources\ServiceResource\Pages;
 use App\Filament\Resources\ServiceResource\RelationManagers;
 use App\Models\Service;
 use Filament\Forms;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\RichEditor;
-use Filament\Tables\Actions\Action;
+
+
 class ServiceResource extends Resource
 {
     protected static ?string $model = Service::class;
@@ -70,10 +73,11 @@ class ServiceResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('order')
-                ->label('Orden')
-                ->searchable()
-                ->sortable(),
+
+                TextInputColumn::make('order')
+                    ->label('Orden')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\ColorColumn::make('color'),
                 // Tables\Columns\TextColumn::make('serviceRequestType.name')
                 //     ->label('Tipo de Solicitud')
