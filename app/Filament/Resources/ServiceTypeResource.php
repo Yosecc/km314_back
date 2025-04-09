@@ -38,6 +38,10 @@ class ServiceTypeResource extends Resource
                     ->required()
                     ->maxLength(255),
 
+                    Forms\Components\Toggle::make('status')
+                        ->label('Activo')
+                        ->default(true),
+
             ]);
     }
 

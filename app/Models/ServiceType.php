@@ -10,8 +10,8 @@ class ServiceType extends Model
     use HasFactory;
 
     protected $casts = [
-        'isCalendar' => 'boolean',
+        'status' => 'boolean',
     ];
-    protected $fillable = ['name','isCalendar','order'];
+    protected $fillable = ['name','order','status'];
 
 }

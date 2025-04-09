@@ -36,20 +36,33 @@ class ServiceResource extends Resource
             ->schema([
 
                 Forms\Components\Select::make('service_type_id')
-                    // ->label(__("general.LoteStatus"))
+                    ->label('Tipo de servicio')
                     ->required()
                     ->relationship(name: 'serviceType', titleAttribute: 'name'),
 
+                Forms\Components\Toggle::make('status')
+                    ->label('Activo')
+                    ->default(true),
                 Forms\Components\TextInput::make('name')
+                    ->label('Nombre')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('color')->type('color'),
-                Forms\Components\TextInput::make('amount')->maxLength(255),
-                Forms\Components\TextInput::make('model')->maxLength(255),
-                Forms\Components\Select::make('service_request_type_id')->relationship(name: 'serviceRequestType', titleAttribute: 'name'),
-
+                Forms\Components\TextInput::make('color')
+                    ->type('color'),
+                Forms\Components\TextInput::make('amount')
+                    ->label('Precio')
+                    ->maxLength(255),
+                Forms\Components\Hidden::make('model'),
+                Forms\Components\Select::make('service_request_type_id')
+                    ->label('Tipo de solicitud ')
+                    ->relationship(name: 'serviceRequestType', titleAttribute: 'name'),
+                Forms\Components\Toggle::make('isDateInicio')
+                    ->label('Solicitar fecha de inicio')
+                    ->default(true),
+                Forms\Components\Toggle::make('isDateFin')
+                    ->label('Solicitar fecha de Fin')
+                    ->default(false),
                 RichEditor::make('terminos')->columnSpanFull()
-
             ]);
     }
 
@@ -59,24 +72,33 @@ class ServiceResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('order')
                 ->label('Orden')
+                ->searchable()
                 ->sortable(),
                 Tables\Columns\ColorColumn::make('color'),
-                Tables\Columns\TextColumn::make('serviceRequestType.name')
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('serviceRequestType.name')
+                //     ->label('Tipo de Solicitud')
+                //     ->sortable(),
+                Tables\Columns\TextColumn::make('serviceType.order')
+                    ->label('Orden según tipo de servicio')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('serviceType.name')
+                    ->label('Tipo de Servicio')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('amount')
-                    ->searchable(),
+                // Tables\Columns\TextColumn::make('amount')->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                // Tables\Columns\TextColumn::make('updated_at')
+                //     ->dateTime()
+                //     ->sortable()
+                //     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('order', 'asc')
 
