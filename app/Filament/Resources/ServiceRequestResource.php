@@ -70,13 +70,6 @@ class ServiceRequestResource extends Resource
                     ->schema([
 
                         Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-
-                        Forms\Components\Select::make('service_request_type_id')
-                            ->label('Tipo de servicio')
-                            ->required()
-                            ->relationship(name: 'serviceRequestType', titleAttribute: 'name')
-                            ->live(),
-
                         Forms\Components\Select::make('service_id')
                             ->label('Servicio')
                             ->required()
@@ -88,6 +81,12 @@ class ServiceRequestResource extends Resource
                                 $set('model',self::$service->model);
                                 $set('service_request_type_id',self::$service->service_request_type_id);
                             }),
+
+                        Forms\Components\Select::make('service_request_type_id')
+                            ->label('Tipo de Solicitud (Uso interno)')
+                            ->required()
+                            ->relationship(name: 'serviceRequestType', titleAttribute: 'name')
+                            ->live(),
 
                         Forms\Components\TextInput::make('name')
                             ->label('Nombre')
@@ -239,17 +238,17 @@ class ServiceRequestResource extends Resource
             //     ->options(Property::get()->pluck('identificador', 'id')->toArray()),
 
             Forms\Components\Select::make('service_request_status_id')
-                ->label("Estado de la Solicitud")
+                ->label("Estado de la Solicitud (Lo ve el usuario)")
                 ->relationship(name: 'serviceRequestStatus', titleAttribute: 'name')
                 // ->options(ServiceRequestStatus::get()->pluck('name','id')->toArray())
                 ->required(),
 
             Forms\Components\Select::make('asignado_status_id')
-                ->label("Usuario asignado")
+                ->label("Usuario asignado (Uso interno)")
                 ->searchable()
                 // ->relationship(name: 'serviceRequestStatus', titleAttribute: 'name')
                 ->options(User::get()->pluck('name','id')->toArray())
-                ->required(),
+                ,
 
 
 
