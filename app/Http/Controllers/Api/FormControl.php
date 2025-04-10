@@ -129,6 +129,11 @@ class FormControl extends Controller
             'updated_at'        => now(),
         ];
 
+        if($data['end_date_range'] == ""){
+
+            $data['end_date_range'] = null;
+        }
+
         if(isset($requestData['id']) && $requestData['id']!= null){
             FormControlDB::where('id', $requestData['id'])->update($data);
             $idForm = $requestData['id'];

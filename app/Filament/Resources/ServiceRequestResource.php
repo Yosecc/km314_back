@@ -220,7 +220,7 @@ class ServiceRequestResource extends Resource
 
 
 
-                Forms\Components\Select::make('owner_id')->label(__("general.Owner"))
+            Forms\Components\Select::make('owner_id')->label(__("general.Owner"))
                 ->relationship(name: 'owner')
                 ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}"),
 

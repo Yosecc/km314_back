@@ -137,18 +137,18 @@ class EmployeeResource extends Resource
                                 return Auth::user()->owner_id;
                             }
                         })
-                        ->disabled(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return true;
-                            }
-                            return false;
-                        })
-                        ->dehydrated(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return true;
-                            }
-                            return false;
-                        })
+                        // ->disabled(function(){
+                        //     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                        //         return true;
+                        //     }
+                        //     return false;
+                        // })
+                        // ->dehydrated(function(){
+                        //     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                        //         return true;
+                        //     }
+                        //     return false;
+                        // })
                         ->visible(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return false;
@@ -159,6 +159,7 @@ class EmployeeResource extends Resource
 
 
                 ])->columns(2),
+
                 Forms\Components\Repeater::make('autos')
                     ->relationship()
                     ->mutateRelationshipDataBeforeFillUsing(function ($record, $data) {
