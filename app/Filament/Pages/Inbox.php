@@ -2,22 +2,26 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Pages\Page;
+use App\Http\Controllers\EmailService;
 
 use App\Models\Activities;
-use Filament\Tables\Table;
 use App\Models\Conversations;
 use App\Models\ConversationsMail;
-use Filament\Tables\Actions\Action;
-use Illuminate\Contracts\View\View;
-use App\Http\Controllers\EmailService;
+use App\Models\MessageProfileAssignments;
+use App\Models\User;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
-use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
 
 class Inbox extends Page implements HasForms, HasTable
 {
@@ -32,8 +36,24 @@ class Inbox extends Page implements HasForms, HasTable
     // Método para renderizar la tabla de correos
     public function tableMail(): Table
     {
+
+
+        if( auth()->user()->hasRole('super_admin') ){
+           $query = ConversationsMail::query()->orderBy('id', 'desc');
+        }else{
+            $mpa = MessageProfileAssignments::where('user_id', auth()->user()->id)
+                ->where('type', 'mail')->get();
+
+            $messagesIds = $mpa->pluck('message_id')->toArray();
+
+            $query = ConversationsMail::query()
+                ->whereIn('id', $messagesIds)
+                ->orderBy('id', 'desc');
+
+        }
+
         return Table::make($this)
-            ->query(ConversationsMail::query()->orderBy('id', 'desc'))
+            ->query($query)
             ->columns($this->camposTableMail())
             ->actions([
                 Action::make('Mensajes')
@@ -45,7 +65,34 @@ class Inbox extends Page implements HasForms, HasTable
                     ->stickyModalFooter()
                     ->stickyModalHeader()
                     ->modalSubmitAction(false)
-                    ->slideOver()
+                    ->slideOver(),
+                Action::make('Asignar')
+                    ->form([
+                        Select::make('user_id')
+                            ->label('Usuario')
+                            ->options(User::query()->pluck('name', 'id'))
+                            ->required(),
+                    ])
+                    ->action(function (array $data, ConversationsMail $record): void {
+
+                       MessageProfileAssignments::create([
+                            'user_id' => $data['user_id'],
+                            'message_id' => $record['id'],
+                            'type' => 'mail',
+                        ]);
+
+                        $recipient = User::find( $data['user_id']);
+
+                        Notification::make()
+                            ->title('Nuevo Mensaje Asignado')
+                            ->sendToDatabase($recipient);
+                    }),
+                Action::make('delete')
+                    ->label('Mover a papelera')
+                    ->color('danger')
+                    ->icon('heroicon-o-trash')
+                    ->requiresConfirmation()
+                    ->action(fn (ConversationsMail $record) => $record->moveTrash())
             ]);
     }
 

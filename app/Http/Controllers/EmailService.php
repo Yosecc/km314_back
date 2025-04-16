@@ -26,8 +26,8 @@ class EmailService extends Controller
             $messages = collect($messages);
 
             $messages = $messages->map(function($message){
-                $attribute = $message->getAttributes();  
-            
+                $attribute = $message->getAttributes();
+
                 $from = isset($message->getFrom()[0]) ? $message->getFrom()[0]->mail : '';
                 $subject = isset($message->getSubject()[0]) ? $message->getSubject()[0] : '';
                 $date = isset($message->getDate()[0]) ? $message->getDate()[0]->format('Y-m-d H:m:s') : '';
@@ -54,9 +54,9 @@ class EmailService extends Controller
     {
         // Obtener la bandeja de entrada
         $folder = $this->client->getFolder('INBOX');
-
+		//dd($folder);
         // Obtener todos los mensajes
-        $messages = $folder->messages()->all()->get();
+        $messages = $folder->messages()->setFetchOrderDesc()->all()->limit($limit = 100)->get();
 
         $this->client->disconnect();
 
@@ -70,12 +70,12 @@ class EmailService extends Controller
 
         $folder = $this->client->getFolder('INBOX');
 
-        // Recuperar un mensaje 
+        // Recuperar un mensaje
         $message = $folder->query()->getMessageByUid($message_id);
 
         // dd($message->getAttributes());
-        
-        
+
+
         $messages = $message->thread($this->client->getFolderByPath('INBOX.Sent'));
 
         // dd( $messages);
@@ -90,7 +90,7 @@ class EmailService extends Controller
     {
 
         $mail = new PHPMailer(true);
-    
+
         try {
             // Definir configuración básica
             $mail->CharSet = 'UTF-8';
@@ -100,7 +100,7 @@ class EmailService extends Controller
             $mail->isHTML(true);
             $mail->Subject = $data['record']['subject'];
             $mail->Body = $data['message'];
-    
+
             // Generar el mensaje completo en formato MIME
             $rawMessage = "From: ".config('mail.mailers.smtp.username')." <" . config('mail.mailers.smtp.username') . ">\r\n";
             $rawMessage .= "To: " . $data['record']['from'] . "\r\n";
@@ -121,17 +121,17 @@ class EmailService extends Controller
 
             $rawMessage .= "\r\n"; // Espacio entre encabezados y cuerpo
             $rawMessage .= chunk_split(base64_encode($data['message']));
-    
+
             // 3. Guardar en "Enviados" usando IMAP
             $imapHost = '{'.config('imap.accounts.default.host').':'.config('imap.accounts.default.port').'/imap/'.config('imap.accounts.default.encryption').'}';
             // dd($imapHost);
             $imapUsername = config('imap.accounts.default.username');
             $imapPassword = config('imap.accounts.default.password');
             $sentFolder = 'INBOX.Sent';
-    
+
             // Abrir conexión IMAP
             $imapStream = imap_open($imapHost, $imapUsername, $imapPassword);
-    
+
             if ($imapStream) {
                 $appendResult = imap_append($imapStream, $imapHost . $sentFolder, $rawMessage, "\\Seen");
                 imap_close($imapStream);
@@ -145,6 +145,17 @@ class EmailService extends Controller
         }
     }
 
+    public function moveToTrash($message_id)
+    {
+        $folder = $this->client->getFolder('INBOX');
+        $message = $folder->query()->getMessageByUid($message_id);
+
+        // Mover el mensaje a la papelera
+        $message->move('INBOX.Trash');
+
+        // Desconectar el cliente
+        $this->client->disconnect();
+    }
     // $status = $client->isConnected();
 
     // $folders = $client->getFolders($hierarchical = true);

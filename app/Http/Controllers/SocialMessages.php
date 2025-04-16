@@ -13,7 +13,7 @@ class SocialMessages extends Controller
     private $version = "v21.0";
 
     private $urlconversations = "/me/conversations";
-    
+
     private $urlaccounts = "/me/accounts";
 
     private $urlmessages = "/me/messages";
@@ -33,7 +33,7 @@ class SocialMessages extends Controller
     public function __construct()
     {
         // Construir la query token con la propiedad de instancia $token
-       
+
         $this->redirectUri = config('app.url') . '/auth/facebook/callback';
 
         if(Cache::store('file')->has('access_token')){
@@ -47,13 +47,13 @@ class SocialMessages extends Controller
             return redirect()->route('auth.facebook');
         }
 
-        $this->getAccounts(); 
-        
+        $this->getAccounts();
+
         $this->pageAccessToken = $this->account['access_token'];
         $this->queryConversations = "?fields=participants,messages{id,message}&access_token=" . $this->pageAccessToken ;
         // $this->conversations = Cache::has('conversations') ? Cache::get('conversations') : [];
         // $this->auth();
-       
+
         // dd($r);
     }
 
@@ -65,10 +65,10 @@ class SocialMessages extends Controller
 
     public function setTokenApp($code)
     {
-        
+
         // $url = $this->urlBase . $this->version . "/oauth/access_token?client_id=".config('providers.facebook.app_id')."&grant_type=client_credentials&client_secret=".config('providers.facebook.app_secret')."&code=".$code;
 
-        // $response = Http::get($url); 
+        // $response = Http::get($url);
         // $response = $response->json();
 
         // dd($response);
@@ -77,18 +77,18 @@ class SocialMessages extends Controller
 
          $u = "https://graph.facebook.com/v21.0/me?fields=id,name&access_token=".$this->token;
 
-         $response = Http::get($u); 
+         $response = Http::get($u);
          $response = $response->json();
-        
+
         //  dd($this->token, $u ,$response);
     }
 
     public function setTokenPage()
     {
-        
+
         // $url = $this->urlBase . $this->version . "/oauth/access_token?client_id=".config('providers.facebook.app_id')."&redirect_uri=".$this->redirectUri."&client_secret=".config('providers.facebook.app_secret')."&code=".$code;
 
-        // $response = Http::get($url); 
+        // $response = Http::get($url);
         // $response = $response->json();
         // $this->token = $response['access_token'];
     }
@@ -99,24 +99,24 @@ class SocialMessages extends Controller
 
         // $url = "https://graph.facebook.com/oauth/access_token?client_id=1135220454605588&client_secret=85d5e99eca4a924916356a1e4cce4dee&grant_type=client_credentials";
         // $url = "https://graph.facebook.com/oauth?access_token=1135220454605588|85d5e99eca4a924916356a1e4cce4dee";
-        
-        // $response = Http::get($url); 
+
+        // $response = Http::get($url);
 
         // $response = $response->json();
 
         // $url = "https://graph.facebook.com/accounts?access_token=1135220454605588|".$response['access_token'];
-        // $response = Http::get($url); 
+        // $response = Http::get($url);
         // $response = $response->json();
         // dd($response);
 
 
-        // $appsecret_proof= hash_hmac('sha256', $response['access_token'].'|'.time(), "85d5e99eca4a924916356a1e4cce4dee"); 
+        // $appsecret_proof= hash_hmac('sha256', $response['access_token'].'|'.time(), "85d5e99eca4a924916356a1e4cce4dee");
         // dd($response, $appsecret_proof);
         //84858e85298a19ed947a3d316ecbc552
         // $urlPage = "https://graph.facebook.com/me?access_token=1135220454605588|84858e85298a19ed947a3d316ecbc552" ;
         // $urlPage = "https://graph.facebook.com/1135220454605588/accounts?access_token=".$response['access_token'] ;
 
-        // $response = Http::get($urlPage); 
+        // $response = Http::get($urlPage);
 
         // $response = $response->json();
 
@@ -127,8 +127,8 @@ class SocialMessages extends Controller
     public function getAccounts()
     {
         $url = $this->urlBase . $this->version . $this->urlaccounts . "?access_token=" . $this->token;
-        
-        $response = Http::get($url); 
+
+        $response = Http::get($url);
 
         $response = $response->collect();
 
@@ -149,7 +149,7 @@ class SocialMessages extends Controller
 
             $url = $this->urlBase . $this->version . $this->urlconversations . $this->queryConversations;
 
-            $response = Http::get($url); 
+            $response = Http::get($url);
 
             $response = $response->collect();
 
@@ -172,11 +172,11 @@ class SocialMessages extends Controller
 
     public function nextPage($urlNext)
     {
-        
-        $response = Http::get($urlNext); 
+
+        $response = Http::get($urlNext);
 
         $response = $response->collect();
-        
+
         if(isset($response['error'])){
             dd('Error',$response['error']);
             return;
@@ -205,11 +205,11 @@ class SocialMessages extends Controller
     {
         try {
             $url = $this->urlBase . $this->version . "/" . $conversation_id . "?fields=messages{id,message}&access_token=" . $this->pageAccessToken;
-       
-            $response = Http::get($url); 
+
+            $response = Http::get($url);
 
             $response = $response->collect();
-            
+
             if(isset($response['error'])){
                 dd('Error',$response['error']);
                 return;
@@ -247,7 +247,7 @@ class SocialMessages extends Controller
                 'recipient' => "{id:".$data['from_id']."}",
                 'message' => "{'text':'" . $data['message'] . "'}",
                 'messaging_type' => 'RESPONSE'
-            ]); 
+            ]);
 
             if(isset($response['error'])){
                 dd('Error',$response['error']);
@@ -259,7 +259,7 @@ class SocialMessages extends Controller
 
             dd($th->getMessage());
         }
-        
+
     }
 }
 

@@ -40,7 +40,7 @@ class Conversations extends Model
         $this->pageId = $socialMessages->account['id'];
 
         $conversations = $socialMessages->getConversations();
-        
+
         // Obtener las conversaciones del caché
         // $conversations = Cache::get('conversations', []);
 
@@ -60,16 +60,16 @@ class Conversations extends Model
 
     public function sendMessage($message)
     {
-       
+
         $socialMessages = new SocialMessages();
-        
+
         $socialMessages->sendMessage([
                 'from_id' => $this->from_id,
                 'message' => $message
         ]);
 
-        
-        
+
+
     }
 
     // protected function sushiShouldCache()

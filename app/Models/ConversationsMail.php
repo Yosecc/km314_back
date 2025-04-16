@@ -33,16 +33,32 @@ class ConversationsMail extends Model
 
     public function getRows()
     {
-
-//         $service = new EmailService();
-//         $messages = $service->getInboxEmails();
-// // dd($messages);
-
         $messages = Cache::get('messagesMail');
 
         if(!isset($messages)){
             return [];
         }
         return $messages->toArray();
+    }
+
+    public function messageMoveTrash()
+    {
+        // dd($this);
+        $EmailService = new EmailService();
+
+        $EmailService->moveToTrash($this->id);
+
+        $messages = Cache::get('messagesMail');
+
+        if (isset($messages)) {
+            $messages = $messages->reject(function ($message) {
+                return $message['id'] === $this->id;
+            });
+
+            Cache::put('messagesMail', $messages);
+        }
+
+        $this->delete();
+        // $this->deleteFromSushi();
     }
 }
