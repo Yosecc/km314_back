@@ -156,6 +156,18 @@ class EmailService extends Controller
         // Desconectar el cliente
         $this->client->disconnect();
     }
+
+    public function markRead($message_id)
+    {
+        $folder = $this->client->getFolder('INBOX');
+        $message = $folder->query()->getMessageByUid($message_id);
+
+        $message->setFlag('Seen');
+
+        $this->client->disconnect();
+    }
+
+
     // $status = $client->isConnected();
 
     // $folders = $client->getFolders($hierarchical = true);

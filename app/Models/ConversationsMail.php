@@ -61,4 +61,25 @@ class ConversationsMail extends Model
         $this->delete();
         // $this->deleteFromSushi();
     }
+
+    public function markRead()
+    {
+
+        $messages = Cache::get('messagesMail');
+
+        if (isset($messages)) {
+            $messages = $messages->map(function ($message) {
+                if ($message['id'] === $this->id) {
+                    $message['leido'] = 1;
+                }
+                return $message;
+            });
+
+            Cache::put('messagesMail', $messages);
+        }
+
+        $this->update([
+            'leido' => 1
+        ]);
+    }
 }

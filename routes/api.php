@@ -38,7 +38,6 @@ Route::get('/facebook_webhook', [\App\Http\Controllers\SocialController::class, 
 Route::get('/recover_messages_mail', function () {
     $service = new EmailService();
     $messages = $service->getInboxEmails();
-
     // Almacenar los mensajes en caché por 35 minutos
     Cache::put('messagesMail', $messages, now()->addMinutes(35));
 

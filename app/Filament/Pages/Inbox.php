@@ -92,7 +92,7 @@ class Inbox extends Page implements HasForms, HasTable
                     ->color('danger')
                     ->icon('heroicon-o-trash')
                     ->requiresConfirmation()
-                    ->action(fn (ConversationsMail $record) => $record->moveTrash())
+                    ->action(fn (ConversationsMail $record) => $record->messageMoveTrash())
             ]);
     }
 
@@ -137,13 +137,31 @@ class Inbox extends Page implements HasForms, HasTable
             IconColumn::make('leido')
                 ->label('')
                 ->boolean()
-                ->falseIcon('heroicon-o-information-circle')
-                ->falseColor('warning'),
+                ->falseIcon('heroicon-m-envelope')
+                ->falseColor('warning')
+                ->trueIcon('heroicon-m-envelope-open')
+                ->trueColor('grey'),
+
             TextColumn::make('from')
-                ->icon('heroicon-m-envelope')
-                ->copyable()
-                ->copyMessage('Email address copied')
-                ->copyMessageDuration(1500)
+                ->formatStateUsing(function (string $state, $record){
+
+                    $string = $state;
+                    $mpa = MessageProfileAssignments::where('message_id', $record->id)
+                            ->where('type', 'mail')
+                            ->first();
+
+                            if($mpa){
+                                $user = User::find($mpa->user_id);
+                                $string .= ' Asignado a: ' .$user->name;
+                            }
+                    return $string;
+                })
+                ->color(function($record){
+                    $mpa = MessageProfileAssignments::where('message_id', $record->id)
+                            ->where('type', 'mail')->first();
+
+                    return $mpa ? 'info' : 'grey';
+                })
                 ->description(fn (ConversationsMail $record): string => $record->subject),
             TextColumn::make('date')->dateTime()
         ];

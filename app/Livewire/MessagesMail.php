@@ -2,11 +2,12 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use App\Mail\SendMessageMail;
-use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\EmailService;
+use App\Mail\SendMessageMail;
+use App\Models\ConversationsMail;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Mail;
+use Livewire\Component;
 
 class MessagesMail extends Component
 {
@@ -25,6 +26,9 @@ class MessagesMail extends Component
 
         $service = new EmailService();
         $this->messages = $service->getHilo($this->record['id']);
+        $service->markRead($this->record['id']);
+        $con = ConversationsMail::where('id', $this->record['id'])->first();
+        $con->markRead();
 
     }
 
@@ -42,7 +46,7 @@ class MessagesMail extends Component
         // dd($data);
         try {
             Mail::to($this->record['from'])->send(new SendMessageMail($data));
-            
+
             $service = new EmailService();
             $service->newMessage($data);
 
