@@ -8,6 +8,7 @@ use Webklex\PHPIMAP\Message;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use Illuminate\Support\Facades\Cache;
 
 class EmailService extends Controller
 {
@@ -27,6 +28,7 @@ class EmailService extends Controller
 
             $messages = $messages->map(function($message){
                 $attribute = $message->getAttributes();
+                // dd([$message,$attribute]);
 
                 $from = isset($message->getFrom()[0]) ? $message->getFrom()[0]->mail : '';
                 $subject = isset($message->getSubject()[0]) ? $message->getSubject()[0] : '';
@@ -62,13 +64,28 @@ class EmailService extends Controller
 
         return $this->perpareMessages($messages);
     }
+    public function getInboxAssigned()
+    {
+        // Obtener la bandeja de entrada
+        $folder = $this->client->getFolderByPath('INBOX.Assigned');
+        // Obtener los mensajes
+        $messages = $folder->messages()->setFetchOrderDesc()->all()->limit($limit = 100)->get();
 
-    public function getHilo($message_id)
+        $this->client->disconnect();
+
+        return $this->perpareMessages($messages);
+    }
+
+    public function getHilo($message_id, $isAssigned)
     {
         // $client = Client::account('default');
         // $client->connect();
 
-        $folder = $this->client->getFolder('INBOX');
+        if($isAssigned){
+            $folder = $this->client->getFolderByPath('INBOX.Assigned');
+        }else{
+            $folder = $this->client->getFolder('INBOX');
+        }
 
         // Recuperar un mensaje
         $message = $folder->query()->getMessageByUid($message_id);
@@ -156,10 +173,29 @@ class EmailService extends Controller
         // Desconectar el cliente
         $this->client->disconnect();
     }
-
-    public function markRead($message_id)
+    public function moveToAssigned($message_id)
     {
         $folder = $this->client->getFolder('INBOX');
+        $message = $folder->query()->getMessageByUid($message_id);
+
+        // Mover el mensaje a la papelera
+        $message->move('INBOX.Assigned');
+
+        // $messagesAssigned = $this->getInboxAssigned();
+        // Almacenar los mensajes en caché por 35 minutos
+        // Cache::put('messagesAssigned', $messagesAssigned, now()->addMinutes(35));
+
+        // Desconectar el cliente
+        $this->client->disconnect();
+    }
+    public function markRead($message_id, $isAssigned = false)
+    {
+        if($isAssigned){
+            $folder = $this->client->getFolderByPath('INBOX.Assigned');
+        }else{
+            $folder = $this->client->getFolder('INBOX');
+        }
+
         $message = $folder->query()->getMessageByUid($message_id);
 
         $message->setFlag('Seen');

@@ -39,7 +39,7 @@ class Inbox extends Page implements HasForms, HasTable
 
 
         if( auth()->user()->hasRole('super_admin') ){
-           $query = ConversationsMail::query()->orderBy('id', 'desc');
+           $query = ConversationsMail::query()->orderBy('date', 'desc');
         }else{
             $mpa = MessageProfileAssignments::where('user_id', auth()->user()->id)
                 ->where('type', 'mail')->get();
@@ -60,7 +60,10 @@ class Inbox extends Page implements HasForms, HasTable
                     ->modalHeading(fn (ConversationsMail $record) => $record['subject'] . " (".$record['from'].")" )
                     ->modalContent(fn (ConversationsMail $record): View => view(
                         'filament.pages.actions.messagesMail',
-                        ['record' => $record],
+                        [
+                            'record' => $record,
+                            'isAssigned' => MessageProfileAssignments::where('message_id', $record->message_id)->where('type', 'mail')->exists(),
+                        ],
                     ))
                     ->stickyModalFooter()
                     ->stickyModalHeader()
@@ -75,11 +78,13 @@ class Inbox extends Page implements HasForms, HasTable
                     ])
                     ->action(function (array $data, ConversationsMail $record): void {
 
-                       MessageProfileAssignments::create([
+                        MessageProfileAssignments::create([
                             'user_id' => $data['user_id'],
-                            'message_id' => $record['id'],
+                            'message_id' => $record['message_id'],
                             'type' => 'mail',
                         ]);
+
+                        $record->moveAssigned();
 
                         $recipient = User::find( $data['user_id']);
 
@@ -99,8 +104,22 @@ class Inbox extends Page implements HasForms, HasTable
     // Método para renderizar la tabla de Facebook
     public function tableFacebook(): Table
     {
+
+        if( auth()->user()->hasRole('super_admin') ){
+            $query = Conversations::query()->orderBy('last_message_created_time','desc');
+        }else{
+            $mpa = MessageProfileAssignments::where('user_id', auth()->user()->id)
+                ->where('type', 'facebook')->get();
+
+            $messagesIds = $mpa->pluck('message_id')->toArray();
+            $query = Conversations::query()
+                ->whereIn('id', $messagesIds)
+                // ->orderBy('id', 'desc')
+                ;
+
+        }
         return Table::make($this)
-            ->query(Conversations::query()->orderBy('last_message_created_time','desc'))
+            ->query($query)
             ->columns($this->camposTableFacebook())
             ->actions([
                 Action::make('Mensajes')
@@ -112,15 +131,37 @@ class Inbox extends Page implements HasForms, HasTable
                     ->stickyModalFooter()
                     ->stickyModalHeader()
                     ->modalSubmitAction(false)
-                    ->slideOver()
+                    ->slideOver(),
+                Action::make('Asignar')
+                    ->form([
+                        Select::make('user_id')
+                            ->label('Usuario')
+                            ->options(User::query()->pluck('name', 'id'))
+                            ->required(),
+                    ])
+                    ->action(function (array $data, Conversations $record): void {
+
+                       MessageProfileAssignments::create([
+                            'user_id' => $data['user_id'],
+                            'message_id' => $record['id'],
+                            'type' => 'facebook',
+                        ]);
+
+                        $recipient = User::find( $data['user_id']);
+
+                        Notification::make()
+                            ->title('Nuevo Mensaje Asignado')
+                            ->sendToDatabase($recipient);
+                    }),
             ]);
     }
 
     public function tableInstagram(): Table
     {
+
         return Table::make($this)
             ->query(Activities::query())
-            ->columns($this->camposTableInstagram());
+            ->columns(components: $this->camposTableInstagram());
     }
 
     public function camposTableInstagram()
@@ -135,18 +176,18 @@ class Inbox extends Page implements HasForms, HasTable
     {
         return [
             IconColumn::make('leido')
-                ->label('')
+                ->label(label: '')
                 ->boolean()
                 ->falseIcon('heroicon-m-envelope')
                 ->falseColor('warning')
                 ->trueIcon('heroicon-m-envelope-open')
                 ->trueColor('grey'),
-
             TextColumn::make('from')
+                ->searchable()
                 ->formatStateUsing(function (string $state, $record){
 
                     $string = $state;
-                    $mpa = MessageProfileAssignments::where('message_id', $record->id)
+                    $mpa = MessageProfileAssignments::where('message_id', $record->message_id)
                             ->where('type', 'mail')
                             ->first();
 
@@ -157,7 +198,7 @@ class Inbox extends Page implements HasForms, HasTable
                     return $string;
                 })
                 ->color(function($record){
-                    $mpa = MessageProfileAssignments::where('message_id', $record->id)
+                    $mpa = MessageProfileAssignments::where('message_id', $record->message_id)
                             ->where('type', 'mail')->first();
 
                     return $mpa ? 'info' : 'grey';
@@ -172,8 +213,29 @@ class Inbox extends Page implements HasForms, HasTable
     {
         return [
             // TextColumn::make('id'),
-            TextColumn::make('from_name'),
-            TextColumn::make('last_message_created_time')->dateTime()
+            TextColumn::make('from_name')
+            ->label('Nombre')
+            ->description(function (string $state, $record){
+
+                $string = '';
+                $mpa = MessageProfileAssignments::where('message_id', $record->id)
+                        ->where('type', 'facebook')
+                        ->first();
+
+                        if($mpa){
+                            $user = User::find($mpa->user_id);
+                            $string .= ' Asignado a: ' .$user->name;
+                        }
+
+                return $string;
+            })
+            ->color(function($record){
+                $mpa = MessageProfileAssignments::where('message_id', $record->id)
+                        ->where('type', 'facebook')->first();
+
+                return $mpa ? 'info' : 'grey';
+            }),
+            TextColumn::make('last_message_created_time')->label('Fecha')->dateTime()
         ];
     }
 

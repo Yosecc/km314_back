@@ -1,1 +1,1 @@
-@livewire('messages-mail',['record'=>$record])
+@livewire('messages-mail',['record'=>$record , 'isAssigned'=>$isAssigned])

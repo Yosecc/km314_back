@@ -33,7 +33,10 @@ class ConversationsMail extends Model
 
     public function getRows()
     {
-        $messages = Cache::get('messagesMail');
+        $messages = Cache::get('messagesMail') ?? collect();
+        $messagesAssigned = Cache::get('messagesAssigned') ?? collect();
+
+        $messages = $messages->merge($messagesAssigned);
 
         if(!isset($messages)){
             return [];
@@ -81,5 +84,13 @@ class ConversationsMail extends Model
         $this->update([
             'leido' => 1
         ]);
+    }
+
+    public function moveAssigned()
+    {
+        $EmailService = new EmailService();
+
+        $EmailService->moveToAssigned($this->id);
+
     }
 }

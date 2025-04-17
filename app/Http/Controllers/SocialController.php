@@ -28,7 +28,7 @@ class SocialController extends Controller
 
         $value = Cache::store('file')->put('access_token', $accessToken);
         // $this->facebook->getPages($accessToken);
-       
+
         return redirect()->route('filament.admin.pages.messages');
     }
 
@@ -39,7 +39,7 @@ class SocialController extends Controller
 
         $mode = $request['hub_mode'];
         $challenge = $request['hub_challenge'];
-        $token = $request['hub_verify_token']; 
+        $token = $request['hub_verify_token'];
 
         // if($mode && $token){
             // if($mode == 'subscribe' && $token == 'TOKENWEBHOOK'){

@@ -43,17 +43,16 @@ class Conversations extends Model
 
         // Obtener las conversaciones del caché
         // $conversations = Cache::get('conversations', []);
-
         // Mapea los datos del caché para que se ajusten a la estructura esperada
         return collect($conversations)->map(function ($conversation) {
             return [
                 'id' => $conversation['id'],
-                'from_name' => $conversation['participants']['data'][0]['name'],
-                'from_id' => $conversation['participants']['data'][0]['id'],
-                'to_name' => $conversation['participants']['data'][1]['name'],
-                'to_id' => $conversation['participants']['data'][1]['id'],
-                'last_message_id' => $conversation['messages']['data'][0]['id'],
-                'last_message_created_time' => $conversation['messages']['data'][0]['created_time'],
+                'from_name' => $conversation['participants']['data'][0]['name'] ?? '',
+                'from_id' => $conversation['participants']['data'][0]['id'] ?? '',
+                'to_name' => $conversation['participants']['data'][1]['name'] ?? '',
+                'to_id' => $conversation['participants']['data'][1]['id'] ?? '',
+                'last_message_id' => $conversation['messages']['data'][0]['id'] ?? '',
+                'last_message_created_time' => $conversation['messages']['data'][0]['created_time'] ?? '',
             ];
         })->toArray(); // Convertimos la colección en array
     }

@@ -17,16 +17,22 @@ class MessagesMail extends Component
 
     public $newMessage;
 
+    public $isAssigned;
+
     // public $service;
 
-    public function mount($record)
+    public function mount($record, $isAssigned)
     {
 
         $this->record = $record;
+        $this->isAssigned = $isAssigned;
 
         $service = new EmailService();
-        $this->messages = $service->getHilo($this->record['id']);
-        $service->markRead($this->record['id']);
+        
+        $this->messages = $service->getHilo($this->record['id'], $this->isAssigned);
+        
+        $service->markRead($this->record['id'], $this->isAssigned);
+
         $con = ConversationsMail::where('id', $this->record['id'])->first();
         $con->markRead();
 
