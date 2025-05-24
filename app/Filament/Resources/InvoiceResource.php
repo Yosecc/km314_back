@@ -62,11 +62,10 @@ class InvoiceResource extends Resource
                     ->format('Y-m-01')
                     ->disabled(fn ($context) => $context === 'edit')
                     ->rules([
-                        function (Get $get) {
-                            return function ($attribute, $value, $fail) use ($get) {
+                        function (Get $get, $context) {
+                            return function ($attribute, $value, $fail) use ($get, $context) {
                                 // Solo validar duplicados al crear
-                                $isEdit = request()->routeIs('filament.admin.resources.invoices.edit');
-                                if ($isEdit) return;
+                                if ($context !== 'create') return;
                                 $ownerId = $get('owner_id');
                                 $loteId = $get('lote_id');
                                 $period = $value;
