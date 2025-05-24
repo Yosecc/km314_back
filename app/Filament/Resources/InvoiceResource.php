@@ -79,6 +79,8 @@ class InvoiceResource extends Resource
                             };
                         }
                     ]),
+                DatePicker::make('due_date')->label('Fecha de vencimiento')
+                    ->required(),
                 TextInput::make('total')
                     ->numeric()
                     ->readOnly()
@@ -93,7 +95,7 @@ class InvoiceResource extends Resource
                         'vencida' => 'Vencida',
                     ])->required(),
             ])
-            ->columns(1)
+            ->columns(2)
             ->live();
     }
 
