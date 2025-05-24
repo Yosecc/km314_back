@@ -43,12 +43,16 @@ class InvoiceResource extends Resource
                     ->required(),
                 Select::make('lote_id')
                     ->label('Lote')
-                    ->getOptionLabelFromRecordUsing(fn (Lote $record) => "{$record->sector->name} {$record->lote_id}")
                     ->options(function (Get $get) {
                         $ownerId = $get('owner_id');
                         if (!$ownerId) return [];
-                            $lotes = Lote::where('owner_id', $ownerId)->get();
-                        return  $lotes->pluck('id', 'id');
+                        $lotes = Lote::where('owner_id', $ownerId)->get();
+                        // Cambia el orden de los argumentos para que el label sea el valor mostrado
+                        return $lotes->mapWithKeys(function ($lote) {
+                            return [
+                                $lote->id => "{$lote->sector->name} {$lote->lote_id}"
+                            ];
+                        });
                     })
                     ->required()
                     ->disabled(fn (Get $get) => !$get('owner_id')),
