@@ -49,7 +49,7 @@ class PaymentResource extends Resource
                             ->get()
                             ->mapWithKeys(fn($inv) => [
                                 $inv->id => "#{$inv->id} - Periodo: " . \Carbon\Carbon::parse($inv->period)->format('m/Y') . " - Lote: {$inv->lote->getNombre()} - Monto: {$inv->total}"
-                            ])
+
                             ])->toArray();
                                 // dd($invoices);
                             return $invoices;
