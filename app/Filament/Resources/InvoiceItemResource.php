@@ -129,15 +129,16 @@ class InvoiceItemResource extends Resource
                 ->searchable()
                 ->limit(40)
                 ->label('Descripción'),
-            TextColumn::make('amount')
-                ->money('ARS')
-                ->label('Monto')
-                ->sortable(),
+
             TextColumn::make('is_fixed')
                 ->formatStateUsing(fn ($state) => $state ? 'Fijo' : 'Variable')
                 ->badge()
                 ->color(fn ($state) => $state ? 'success' : 'warning')
                 ->label('Tipo'),
+                TextColumn::make('amount')
+                ->money('ARS')
+                ->label('Monto')
+                ->sortable(),
         ];
         if ($context === 'relation') {
             unset($columns[1]); // Quita 'invoice.id'
