@@ -48,7 +48,8 @@ class PaymentResource extends Resource
                             ->where('status', 'pendiente')
                             ->get()
                             ->mapWithKeys(fn($inv) => [
-                                $inv->id => "#{$inv->id} - Lote: {$inv->lote->getNombre()} - Monto: {$inv->total}"
+                                $inv->id => "#{$inv->id} - Periodo: " . \Carbon\Carbon::parse($inv->period)->format('m/Y') . " - Lote: {$inv->lote->getNombre()} - Monto: {$inv->total}"
+                            ])
                             ])->toArray();
                                 // dd($invoices);
                             return $invoices;
