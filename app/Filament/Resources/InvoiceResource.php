@@ -109,7 +109,9 @@ class InvoiceResource extends Resource
             ->columns([
                 TextColumn::make('public_identifier')->sortable(),
                 TextColumn::make('owner.first_name')->label('Propietario'),
-                TextColumn::make('lote.id')->label('Lote'),
+                TextColumn::make('lote')
+                    ->formatStateUsing(fn ($record) => $record->lote?->getNombre() ?? 'Sin lote')
+                    ->label('Lote'),
                 TextColumn::make('period')->date('F Y')->label('Periodo'),
                 TextColumn::make('total')->numeric()->label('Total'),
                 TextColumn::make('status')
