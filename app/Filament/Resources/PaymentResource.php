@@ -48,27 +48,26 @@ class PaymentResource extends Resource
                             ->where('status', 'pendiente')
                             ->get()
                             ->mapWithKeys(fn($inv) => [
-                                $inv->id => "#{$inv->id} - Periodo: " . \Carbon\Carbon::parse($inv->period)->format('m/Y') . " - Lote: {$inv->lote->getNombre()} - Monto: {$inv->total}"
+                                $inv->id => "#{$inv->public_identifier} - Periodo: " . \Carbon\Carbon::parse($inv->period)->format('m/Y') . " - Lote: {$inv->lote->getNombre()} - Monto: {$inv->total}"
 
                             ])->toArray();
-                                // dd($invoices);
-                            return $invoices;
+                        return $invoices;
                     })
                     ->required()
-                    ->disabled(fn ($get) => !$get('owner_id')),
-                TextInput::make('amount')
-                    ->numeric()
-                    ->label('Monto a pagar')
-                    ->required()
-                    ->afterStateHydrated(function ($component, $state, $record, $get) {
-                        $invoiceId = $get('invoice_id');
-                        if ($invoiceId) {
-                            $invoice = \App\Models\Invoice::find($invoiceId);
+                    ->disabled(fn ($get) => !$get('owner_id'))
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if ($state) {
+                            $invoice = \App\Models\Invoice::find($state);
                             if ($invoice) {
-                                $component->state($invoice->total);
+                                $set('amount', $invoice->total);
                             }
                         }
                     }),
+                TextInput::make('amount')
+                    ->numeric()
+                    ->label('Monto a pagar')
+                    ->required(),
                 DatePicker::make('payment_date')->required(),
                 TextInput::make('method'),
                 TextInput::make('notes'),

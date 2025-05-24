@@ -50,7 +50,7 @@ class InvoiceResource extends Resource
                         // Cambia el orden de los argumentos para que el label sea el valor mostrado
                         return $lotes->mapWithKeys(function ($lote) {
                             return [
-                                $lote->id => "{$lote->sector->name} {$lote->lote_id}"
+                                $lote->id => "{$lote->getNombre()}"
                             ];
                         });
                     })
