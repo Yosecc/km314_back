@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Filament\Resources\PaymentResource\RelationManagers;
+use App\Models\Owner;
 use App\Models\Payment;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -34,6 +35,8 @@ class PaymentResource extends Resource
                 Select::make('owner_id')
                     ->relationship('owner', 'first_name')
                     ->label('Propietario')
+                    ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                    ->searchable(['first_name', 'last_name'])
                     ->live()
                     ->required(),
                 Select::make('invoice_id')
@@ -41,12 +44,14 @@ class PaymentResource extends Resource
                     ->options(function ($get) {
                         $ownerId = $get('owner_id');
                         if (!$ownerId) return [];
-                        return \App\Models\Invoice::where('owner_id', $ownerId)
+                        $invoices = \App\Models\Invoice::where('owner_id', $ownerId)
                             ->where('status', 'pendiente')
                             ->get()
                             ->mapWithKeys(fn($inv) => [
                                 $inv->id => "#{$inv->id} - Lote: {$inv->lote_id} - Monto: {$inv->total}"
                             ])->toArray();
+                                dd($invoices);
+                            return $invoices;
                     })
                     ->searchable()
                     ->required()
