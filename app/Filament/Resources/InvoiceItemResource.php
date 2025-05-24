@@ -29,66 +29,13 @@ class InvoiceItemResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Select::make('invoice_id')
-                    ->label('Factura')
-                    ->options(function () {
-                        return \App\Models\Invoice::with(['owner', 'lote'])->get()->mapWithKeys(function ($invoice) {
-                            $owner = $invoice->owner?->nombres() ?? 'Sin propietario';
-                            $lote = $invoice->lote?->getNombre() ?? $invoice->lote_id;
-                            return [$invoice->id => "#{$invoice->id} - {$owner} - Lote: {$lote}"];
-                        })->toArray();
-                    })
-                    ->searchable()
-                    ->required(),
-                Select::make('is_fixed')
-                    ->options([
-                        1 => 'Fijo',
-                        0 => 'Variable',
-                    ])
-                    ->required()
-                    ->live(),
-                Select::make('expense_concept_id')
-                    ->label('Concepto fijo')
-                    ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
-                    ->visible(fn ($get) => $get('is_fixed') == 1)
-                    ->required(fn ($get) => $get('is_fixed') == 1)
-                    ->afterStateUpdated(function ($state, callable $set) {
-                        if ($state) {
-                            $concept = \App\Models\ExpenseConcept::find($state);
-                            if ($concept) {
-                                $set('description', $concept->name);
-                            }
-                        }
-                    }),
-                TextInput::make('description')
-                    ->label('Descripción')
-                    ->visible(fn ($get) => $get('is_fixed') != 1)
-                    ->required(fn ($get) => $get('is_fixed') != 1),
-                TextInput::make('amount')->numeric()->required(),
-            ]);
+            ->schema(self::getFormSchema());
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                TextColumn::make('id')->sortable(),
-                TextColumn::make('invoice.id')->label('Factura'),
-                TextColumn::make('description')
-                    ->searchable()
-                    ->limit(40)
-                    ->label('Descripción'),
-                TextColumn::make('amount')
-                    ->money('ARS')
-                    ->label('Monto')
-                    ->sortable(),
-                TextColumn::make('is_fixed')
-                    ->formatStateUsing(fn ($state) => $state ? 'Fijo' : 'Variable')
-                    ->badge()
-                    ->color(fn ($state) => $state ? 'success' : 'warning')
-                    ->label('Tipo'),
-            ])
+            ->columns(self::getTableColumns())
             ->filters([
                 //
             ])
@@ -116,5 +63,86 @@ class InvoiceItemResource extends Resource
             'create' => Pages\CreateInvoiceItem::route('/create'),
             'edit' => Pages\EditInvoiceItem::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Devuelve el schema del formulario para InvoiceItem.
+     * Si $context es 'relation', omite el campo 'invoice_id'.
+     */
+    public static function getFormSchema($context = null): array
+    {
+        $fields = [
+            Select::make('invoice_id')
+                ->label('Factura')
+                ->options(function () {
+                    return \App\Models\Invoice::with(['owner', 'lote'])->get()->mapWithKeys(function ($invoice) {
+                        $owner = $invoice->owner?->nombres() ?? 'Sin propietario';
+                        $lote = $invoice->lote?->getNombre() ?? $invoice->lote_id;
+                        return [$invoice->id => "#{$invoice->id} - {$owner} - Lote: {$lote}"];
+                    })->toArray();
+                })
+                ->searchable()
+                ->required(),
+            Select::make('is_fixed')
+                ->options([
+                    1 => 'Fijo',
+                    0 => 'Variable',
+                ])
+                ->required()
+                ->live(),
+            Select::make('expense_concept_id')
+                ->label('Concepto fijo')
+                ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
+                ->visible(fn ($get) => $get('is_fixed') == 1)
+                ->required(fn ($get) => $get('is_fixed') == 1)
+                ->afterStateUpdated(function ($state, callable $set) {
+                    if ($state) {
+                        $concept = \App\Models\ExpenseConcept::find($state);
+                        if ($concept) {
+                            $set('description', $concept->name);
+                        }
+                    }
+                }),
+            TextInput::make('description')
+                ->label('Descripción')
+                ->visible(fn ($get) => $get('is_fixed') != 1)
+                ->required(fn ($get) => $get('is_fixed') != 1),
+            TextInput::make('amount')->numeric()->required(),
+        ];
+        // Si es para el relation manager, omite el campo de factura
+        if ($context === 'relation') {
+            array_shift($fields); // Quita 'invoice_id'
+        }
+        return $fields;
+    }
+
+    /**
+     * Devuelve las columnas de la tabla para InvoiceItem.
+     * Si $context es 'relation', omite la columna de factura.
+     */
+    public static function getTableColumns($context = null): array
+    {
+        $columns = [
+            TextColumn::make('id')->sortable(),
+            TextColumn::make('invoice.id')->label('Factura'),
+            TextColumn::make('description')
+                ->searchable()
+                ->limit(40)
+                ->label('Descripción'),
+            TextColumn::make('amount')
+                ->money('ARS')
+                ->label('Monto')
+                ->sortable(),
+            TextColumn::make('is_fixed')
+                ->formatStateUsing(fn ($state) => $state ? 'Fijo' : 'Variable')
+                ->badge()
+                ->color(fn ($state) => $state ? 'success' : 'warning')
+                ->label('Tipo'),
+        ];
+        if ($context === 'relation') {
+            unset($columns[1]); // Quita 'invoice.id'
+            $columns = array_values($columns); // Reindexa
+        }
+        return $columns;
     }
 }
