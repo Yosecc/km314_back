@@ -53,7 +53,7 @@ class PaymentResource extends Resource
                                 // dd($invoices);
                             return $invoices;
                     })
-                    ->searchable()
+
                     ->required()
                     ->disabled(fn ($get) => !$get('owner_id')),
                 TextInput::make('amount')
