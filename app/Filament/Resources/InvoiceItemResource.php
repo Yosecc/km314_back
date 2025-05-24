@@ -123,7 +123,7 @@ class InvoiceItemResource extends Resource
     public static function getTableColumns($context = null): array
     {
         $columns = [
-            TextColumn::make('id')->sortable(),
+            TextColumn::make('id')->visible(false)->sortable(),
             TextColumn::make('invoice.id')->label('Factura'),
             TextColumn::make('description')
                 ->searchable()
@@ -135,7 +135,7 @@ class InvoiceItemResource extends Resource
                 ->badge()
                 ->color(fn ($state) => $state ? 'success' : 'warning')
                 ->label('Tipo'),
-                TextColumn::make('amount')
+            TextColumn::make('amount')
                 ->money('ARS')
                 ->label('Monto')
                 ->sortable(),
