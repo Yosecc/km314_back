@@ -52,7 +52,15 @@ class InvoiceItemResource extends Resource
                     ->label('Concepto fijo')
                     ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
                     ->visible(fn ($get) => $get('is_fixed') == 1)
-                    ->required(fn ($get) => $get('is_fixed') == 1),
+                    ->required(fn ($get) => $get('is_fixed') == 1)
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if ($state) {
+                            $concept = \App\Models\ExpenseConcept::find($state);
+                            if ($concept) {
+                                $set('description', $concept->name);
+                            }
+                        }
+                    }),
                 TextInput::make('description')
                     ->label('Descripción')
                     ->visible(fn ($get) => $get('is_fixed') != 1)
