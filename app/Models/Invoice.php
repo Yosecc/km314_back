@@ -13,6 +13,7 @@ class Invoice extends Model
         'due_date',
         'total',
         'status',
+        'public_identifier',
     ];
 
     protected static function booted()
@@ -21,6 +22,13 @@ class Invoice extends Model
             if (empty($invoice->due_date) && !empty($invoice->period)) {
                 $days = (int) env('INVOICE_DUE_DAYS', 10);
                 $invoice->due_date = \Carbon\Carbon::parse($invoice->period)->addDays($days);
+            }
+            // Generar identificador único público
+            if (empty($invoice->public_identifier)) {
+                do {
+                    $identifier = strtoupper(bin2hex(random_bytes(5)));
+                } while (self::where('public_identifier', $identifier)->exists());
+                $invoice->public_identifier = $identifier;
             }
         });
     }
