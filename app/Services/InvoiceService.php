@@ -24,10 +24,13 @@ class InvoiceService
         foreach ($owners as $owner) {
             foreach ($owner->lotes as $lote) {
                 DB::transaction(function () use ($owner, $lote, $period) {
+                    $dueDays = (int) env('INVOICE_DUE_DAYS', 10);
+                    $dueDate = Carbon::parse($period)->addDays($dueDays);
                     $invoice = Invoice::create([
                         'owner_id' => $owner->id,
                         'lote_id' => $lote->id,
                         'period' => $period,
+                        'due_date' => $dueDate,
                         'total' => 0,
                         'status' => 'pendiente',
                     ]);

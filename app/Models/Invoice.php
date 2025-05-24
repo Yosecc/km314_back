@@ -10,6 +10,7 @@ class Invoice extends Model
         'owner_id',
         'lote_id',
         'period',
+        'due_date',
         'total',
         'status',
     ];
