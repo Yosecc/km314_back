@@ -147,12 +147,15 @@ class InvoiceService
     /**
      * Actualiza el estado de cuenta del propietario.
      */
-    public function updateAccountStatus($ownerId, $invoiced, $paid, $lastInvoiceId = null, $lastPaymentId = null)
+    public function updateAccountStatus($ownerId, $invoiced = 0, $paid = 0, $lastInvoiceId = null, $lastPaymentId = null)
     {
         $account = AccountStatus::firstOrCreate(['owner_id' => $ownerId]);
-        $account->total_invoiced += $invoiced;
-        $account->total_paid += $paid;
-        $account->balance = $account->total_paid - $account->total_invoiced;
+        // Recalcular totales reales
+        $totalInvoiced = \App\Models\Invoice::where('owner_id', $ownerId)->sum('total');
+        $totalPaid = \App\Models\Payment::where('owner_id', $ownerId)->sum('amount');
+        $account->total_invoiced = $totalInvoiced;
+        $account->total_paid = $totalPaid;
+        $account->balance = $totalPaid - $totalInvoiced;
         if ($lastInvoiceId) $account->last_invoice_id = $lastInvoiceId;
         if ($lastPaymentId) $account->last_payment_id = $lastPaymentId;
         $account->save();

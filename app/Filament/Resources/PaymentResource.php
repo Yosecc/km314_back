@@ -68,7 +68,9 @@ class PaymentResource extends Resource
                     ->numeric()
                     ->label('Monto a pagar')
                     ->required(),
-                DatePicker::make('payment_date')->required(),
+                DatePicker::make('payment_date')
+                    ->required()
+                    ->default(now()),
                 TextInput::make('method'),
                 TextInput::make('notes'),
             ]);
