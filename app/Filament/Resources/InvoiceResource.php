@@ -83,7 +83,8 @@ class InvoiceResource extends Resource
                     ->numeric()
                     ->readOnly()
                     ->label('Total (suma de ítems)')
-                    ->default(0),
+                    ->default(0)
+                    ->dehydrated(true),
                 Select::make('status')
                     ->options([
                         'pendiente' => 'Pendiente',
