@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class AccountStatusResource extends Resource
 {
     protected static ?string $model = AccountStatus::class;
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-list';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationGroup = 'Administración contable';
     protected static ?string $label = 'Estado de Cuenta';
     protected static ?string $pluralLabel = 'Estados de Cuenta';
