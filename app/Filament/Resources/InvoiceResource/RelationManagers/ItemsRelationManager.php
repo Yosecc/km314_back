@@ -24,6 +24,15 @@ class ItemsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         // Reutiliza las columnas DRY desde InvoiceItemResource, omitiendo la columna de factura
-        return $table->columns(\App\Filament\Resources\InvoiceItemResource::getTableColumns('relation'));
+        return $table
+                ->columns(\App\Filament\Resources\InvoiceItemResource::getTableColumns('relation'))
+                ->actions([
+                    Tables\Actions\EditAction::make(),
+                ])
+                ->bulkActions([
+                    Tables\Actions\BulkActionGroup::make([
+                        Tables\Actions\DeleteBulkAction::make(),
+                    ]),
+                ]);
     }
 }
