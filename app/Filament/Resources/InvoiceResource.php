@@ -11,6 +11,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
@@ -41,14 +42,14 @@ class InvoiceResource extends Resource
                     ->required(),
                 Select::make('lote_id')
                     ->label('Lote')
-                    ->options(function ($get) {
+                    ->options(function (Get $get) {
                         $ownerId = $get('owner_id');
                         if (!$ownerId) return [];
                         return \App\Models\Lote::where('owner_id', $ownerId)->pluck('id', 'id');
                     })
                     ->searchable()
                     ->required()
-                    ->disabled(fn ($get) => !$get('owner_id')),
+                    ->disabled(fn (Get $get) => !$get('owner_id')),
                 DatePicker::make('period')->required(),
                 TextInput::make('total')
                     ->numeric()
