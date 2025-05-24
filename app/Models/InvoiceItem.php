@@ -11,10 +11,16 @@ class InvoiceItem extends Model
         'description',
         'amount',
         'is_fixed',
+        'expense_concept_id',
     ];
 
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function expenseConcept()
+    {
+        return $this->belongsTo(\App\Models\ExpenseConcept::class);
     }
 }
