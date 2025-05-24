@@ -2,16 +2,15 @@
 
 namespace App\Models;
 
-use Sushi\Sushi;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Database\Eloquent\Model;
 use App\Http\Controllers\SocialMessages;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Sushi\Sushi;
 
-class Conversations extends Model
+class ConversationsInstagram extends Model
 {
     use Sushi;
 
-    // Deshabilitar las timestamps, ya que no estamos usando una base de datos real
     public $timestamps = false;
 
     protected $fillable = ['id','from_name','from_id','to_name','to_id','last_message_id','last_message_created_time'];
@@ -33,15 +32,12 @@ class Conversations extends Model
         'last_message_created_time' => 'string',
     ];
 
-    // El método rows() es requerido para devolver los datos que quieres manejar en memoria
     public function getRows()
     {
         $socialMessages = new SocialMessages();
-        $this->pageId = $socialMessages->account['id'];
+        // $this->pageId = $socialMessages->account['id'];
 
-        $conversations = $socialMessages->getConversations();
-
-        // dd('se paso');
+        $conversations = $socialMessages->getConversationsInstagram();
 
         // Obtener las conversaciones del caché
         // $conversations = Cache::get('conversations', []);
@@ -59,22 +55,4 @@ class Conversations extends Model
         })->toArray(); // Convertimos la colección en array
     }
 
-    public function sendMessage($message)
-    {
-
-        $socialMessages = new SocialMessages();
-
-        $socialMessages->sendMessage([
-                'from_id' => $this->from_id,
-                'message' => $message
-        ]);
-
-
-
-    }
-
-    // protected function sushiShouldCache()
-    // {
-    //     return true;
-    // }
 }
