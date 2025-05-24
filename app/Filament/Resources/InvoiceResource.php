@@ -56,7 +56,10 @@ class InvoiceResource extends Resource
                     })
                     ->required()
                     ->disabled(fn (Get $get) => !$get('owner_id')),
-                DatePicker::make('period')->required(),
+                DatePicker::make('period')
+                    ->required()
+                    ->displayFormat('F Y')
+                    ->format('Y-m-01'),
                 TextInput::make('total')
                     ->numeric()
                     ->readOnly()
@@ -68,6 +71,25 @@ class InvoiceResource extends Resource
                         'pagada' => 'Pagada',
                         'vencida' => 'Vencida',
                     ])->required(),
+            ])
+            ->rules([
+                function ($get) {
+                    return function ($attribute, $value, $fail) use ($get) {
+                        $ownerId = $get('owner_id');
+                        $loteId = $get('lote_id');
+                        $period = $get('period');
+                        if ($ownerId && $loteId && $period) {
+                            $exists = \App\Models\Invoice::where('owner_id', $ownerId)
+                                ->where('lote_id', $loteId)
+                                ->whereYear('period', \Carbon\Carbon::parse($period)->year)
+                                ->whereMonth('period', \Carbon\Carbon::parse($period)->month)
+                                ->exists();
+                            if ($exists) {
+                                $fail('Ya existe una factura para este propietario, lote y periodo.');
+                            }
+                        }
+                    };
+                },
             ]);
     }
 
