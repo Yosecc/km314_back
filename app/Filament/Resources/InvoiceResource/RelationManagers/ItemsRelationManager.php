@@ -9,6 +9,7 @@ use App\Filament\Resources\InvoiceItemResource;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\Summarizers\Sum;
 
 class ItemsRelationManager extends RelationManager
 {
@@ -24,8 +25,17 @@ class ItemsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         // Reutiliza las columnas DRY desde InvoiceItemResource, omitiendo la columna de factura
+        $columns = \App\Filament\Resources\InvoiceItemResource::getTableColumns('relation');
+        // Agregar el resumen solo a la columna 'amount'
+        foreach ($columns as &$column) {
+            if (method_exists($column, 'getName') && $column->getName() === 'amount') {
+                $column = $column->summarize([
+                    Sum::make()->money('ARS')->label('Total'),
+                ]);
+            }
+        }
         return $table
-                ->columns(\App\Filament\Resources\InvoiceItemResource::getTableColumns('relation'))
+                ->columns($columns)
                 ->headerActions([
                     Tables\Actions\CreateAction::make(),
                 ])
