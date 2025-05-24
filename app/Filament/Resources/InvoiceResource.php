@@ -90,7 +90,18 @@ class InvoiceResource extends Resource
                         'pagada' => 'Pagada',
                         'vencida' => 'Vencida',
                     ])->required(),
-            ]);
+            ])
+            ->columns(1)
+            ->live()
+            ->afterMount(function ($component, $record) {
+                // Escuchar el evento para refrescar el total
+                $component->getLivewire()->on('refreshInvoiceTotal', function () use ($component, $record) {
+                    if ($record) {
+                        $total = $record->items()->sum('amount');
+                        $component->fill(['total' => $total]);
+                    }
+                });
+            });
     }
 
     public static function table(Table $table): Table

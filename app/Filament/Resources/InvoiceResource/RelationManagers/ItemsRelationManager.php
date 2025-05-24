@@ -38,4 +38,18 @@ class ItemsRelationManager extends RelationManager
                     ]),
                 ]);
     }
+
+    // Emitir evento al crear, editar o eliminar un ítem
+    protected function afterCreate(): void
+    {
+        $this->emitUp('refreshInvoiceTotal');
+    }
+    protected function afterEdit(): void
+    {
+        $this->emitUp('refreshInvoiceTotal');
+    }
+    protected function afterDelete(): void
+    {
+        $this->emitUp('refreshInvoiceTotal');
+    }
 }
