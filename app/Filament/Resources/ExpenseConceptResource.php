@@ -21,14 +21,18 @@ class ExpenseConceptResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Conceptos de gastos de mantenimiento';
-    protected static ?string $label = 'concepto de gasto de mantenimiento';
-    protected static ?string $navigationGroup = 'Administracion Contable';
+    protected static ?string $navigationGroup = 'Administración contable';
+    protected static ?string $label = 'Gasto fijo';
+    protected static ?string $pluralLabel = 'Gastos fijos';
 
-    
     public static function getPluralModelLabel(): string
     {
-        return 'Conceptos de gastos de mantenimiento';
+        return 'Gastos fijos';
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
     }
 
     public static function form(Form $form): Form
@@ -49,7 +53,7 @@ class ExpenseConceptResource extends Resource
                             ->maxLength(255),
                     ])
                     ->columns(2),
-                
+
                 Forms\Components\Toggle::make('status')
                     ->required(),
             ]) ->columns(1);
