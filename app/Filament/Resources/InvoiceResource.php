@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\InvoiceResource\Pages;
 use App\Filament\Resources\InvoiceResource\RelationManagers;
 use App\Models\Invoice;
+use App\Models\Owner;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -33,6 +34,8 @@ class InvoiceResource extends Resource
             ->schema([
                 Select::make('owner_id')
                     ->relationship('owner', 'first_name')
+                    ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                    ->searchable(['first_name', 'last_name'])
                     ->label('Propietario')
                     ->live()
                     ->required(),
