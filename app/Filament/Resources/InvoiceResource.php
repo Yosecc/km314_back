@@ -40,14 +40,14 @@ class InvoiceResource extends Resource
                     ->searchable(['first_name', 'last_name'])
                     ->label('Propietario')
                     ->live()
-                    ->required(),
+                    ->required()
+                    ->disabled(fn ($context) => $context === 'edit'),
                 Select::make('lote_id')
                     ->label('Lote')
                     ->options(function (Get $get) {
                         $ownerId = $get('owner_id');
                         if (!$ownerId) return [];
                         $lotes = Lote::where('owner_id', $ownerId)->get();
-                        // Cambia el orden de los argumentos para que el label sea el valor mostrado
                         return $lotes->mapWithKeys(function ($lote) {
                             return [
                                 $lote->id => "{$lote->getNombre()}"
@@ -55,14 +55,18 @@ class InvoiceResource extends Resource
                         });
                     })
                     ->required()
-                    ->disabled(fn (Get $get) => !$get('owner_id')),
+                    ->disabled(fn ($context) => $context === 'edit' || !$context),
                 DatePicker::make('period')
                     ->required()
                     ->displayFormat('F Y')
                     ->format('Y-m-01')
+                    ->disabled(fn ($context) => $context === 'edit')
                     ->rules([
                         function (Get $get) {
                             return function ($attribute, $value, $fail) use ($get) {
+                                // Solo validar duplicados al crear
+                                $isEdit = request()->routeIs('filament.admin.resources.invoices.edit');
+                                if ($isEdit) return;
                                 $ownerId = $get('owner_id');
                                 $loteId = $get('lote_id');
                                 $period = $value;
@@ -80,13 +84,13 @@ class InvoiceResource extends Resource
                         }
                     ]),
                 DatePicker::make('due_date')->label('Fecha de vencimiento')
-                    ->required(),
+                    ->required()
+                    ->minDate(fn (Get $get) => $get('period')),
                 TextInput::make('total')
                     ->numeric()
                     ->readOnly()
                     ->label('Total (suma de ítems)')
                     ->default(0)
-                    ->visible(false)
                     ->dehydrated(true),
                 Select::make('status')
                     ->options([
