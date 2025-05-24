@@ -14,6 +14,24 @@ class InvoiceItem extends Model
         'expense_concept_id',
     ];
 
+    protected static function booted()
+    {
+        static::saved(function ($item) {
+            $invoice = $item->invoice;
+            if ($invoice) {
+                $invoice->total = $invoice->items()->sum('amount');
+                $invoice->save();
+            }
+        });
+        static::deleted(function ($item) {
+            $invoice = $item->invoice;
+            if ($invoice) {
+                $invoice->total = $invoice->items()->sum('amount');
+                $invoice->save();
+            }
+        });
+    }
+
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
