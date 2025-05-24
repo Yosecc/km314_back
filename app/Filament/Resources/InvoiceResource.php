@@ -97,7 +97,7 @@ class InvoiceResource extends Resource
     {
         return $table
             ->columns([
-                 TextColumn::make('id')->sortable(),
+                TextColumn::make('public_identifier')->sortable(),
                 TextColumn::make('owner.first_name')->label('Propietario'),
                 TextColumn::make('lote.id')->label('Lote'),
                 TextColumn::make('period')->date('F Y')->label('Periodo'),
@@ -117,6 +117,7 @@ class InvoiceResource extends Resource
                         default => 'gray',
                     }),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])
