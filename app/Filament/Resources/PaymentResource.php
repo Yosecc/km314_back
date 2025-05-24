@@ -48,7 +48,7 @@ class PaymentResource extends Resource
                             ->where('status', 'pendiente')
                             ->get()
                             ->mapWithKeys(fn($inv) => [
-                                $inv->id => "#{$inv->id} - Lote: {$inv->lote_id} - Monto: {$inv->total}"
+                                $inv->id => "#{$inv->id} - Lote: {$inv->lote->getNombre()} - Monto: {$inv->total}"
                             ])->toArray();
                                 // dd($invoices);
                             return $invoices;
