@@ -61,26 +61,14 @@ class InvoiceResource extends Resource
                     ->displayFormat('F Y')
                     // ->format('Y-m-01')
                     ->minDate(now()->startOfMonth())
-                    ->disabledDates(function () {
-                        // Deshabilita todos los días que no sean el 1 de cada mes
-                        $dates = [];
-                        $start = now()->startOfMonth();
-                        $end = now()->addYears(5)->endOfYear(); // Limita a 5 años en el futuro
-                        $current = $start->copy();
-                        while ($current->lte($end)) {
-                            // Agrega todos los días del mes excepto el 1
-                            $daysInMonth = $current->daysInMonth;
-                            for ($d = 2; $d <= $daysInMonth; $d++) {
-                                $dates[] = $current->copy()->day($d)->toDateString();
-                            }
-                            $current->addMonth();
-                        }
-                        return $dates;
-                    })
                     ->disabled(fn ($context) => $context === 'edit')
                     ->rules([
                         function (Get $get, $context) {
                             return function ($attribute, $value, $fail) use ($get, $context) {
+                                // Validar que el día seleccionado sea 1
+                                if ($value && \Carbon\Carbon::parse($value)->day !== 1) {
+                                    $fail('Debe seleccionar solo el 1 de cada mes.');
+                                }
                                 // Solo validar duplicados al crear
                                 if ($context !== 'create') return;
                                 $ownerId = $get('owner_id');
@@ -100,7 +88,7 @@ class InvoiceResource extends Resource
                         }
                     ]),
                 DatePicker::make('due_date')->label('Fecha de vencimiento')
-                    ->required()
+                    // ->required() // Ya no es requerido
                     ->minDate(fn (Get $get) => $get('period')),
                 TextInput::make('total')
                     ->numeric()
