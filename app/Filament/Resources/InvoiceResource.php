@@ -90,7 +90,8 @@ class InvoiceResource extends Resource
                     ->readOnly()
                     ->label('Total (suma de ítems)')
                     ->default(0)
-                    ->dehydrated(true),
+                    ->dehydrated(true)
+                    ->visible(false),
                 Select::make('status')
                     ->options([
                         'pendiente' => 'Pendiente',
