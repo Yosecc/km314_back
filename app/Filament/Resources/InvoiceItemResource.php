@@ -47,14 +47,21 @@ class InvoiceItemResource extends Resource
     {
         return $table
             ->columns([
-                 TextColumn::make('id')->sortable(),
+                TextColumn::make('id')->sortable(),
                 TextColumn::make('invoice.id')->label('Factura'),
-                TextColumn::make('description'),
-                TextColumn::make('amount')->numeric()->label('Monto'),
-                TextColumn::make('is_fixed')->enum([
-                    1 => 'Fijo',
-                    0 => 'Variable',
-                ]),
+                TextColumn::make('description')
+                    ->searchable()
+                    ->limit(40)
+                    ->label('Descripción'),
+                TextColumn::make('amount')
+                    ->money('ARS')
+                    ->label('Monto')
+                    ->sortable(),
+                TextColumn::make('is_fixed')
+                    ->formatStateUsing(fn ($state) => $state ? 'Fijo' : 'Variable')
+                    ->badge()
+                    ->color(fn ($state) => $state ? 'success' : 'warning')
+                    ->label('Tipo'),
             ])
             ->filters([
                 //

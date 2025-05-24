@@ -60,16 +60,18 @@ class InvoiceResource extends Resource
                 TextColumn::make('total')->numeric()->label('Total'),
                 TextColumn::make('status')
                     ->badge()
-                    ->enum([
+                    ->formatStateUsing(fn ($state) => match ($state) {
                         'pendiente' => 'Pendiente',
                         'pagada' => 'Pagada',
                         'vencida' => 'Vencida',
-                    ])
-                    ->colors([
-                        'secondary' => 'pendiente',
-                        'success' => 'pagada',
-                        'danger' => 'vencida',
-                    ]),
+                        default => $state,
+                    })
+                    ->color(fn ($state) => match ($state) {
+                        'pendiente' => 'gray',
+                        'pagada' => 'success',
+                        'vencida' => 'danger',
+                        default => 'gray',
+                    }),
             ])
             ->filters([
                 //
