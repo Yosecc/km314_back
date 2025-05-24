@@ -50,7 +50,7 @@ class PaymentResource extends Resource
                             ->mapWithKeys(fn($inv) => [
                                 $inv->id => "#{$inv->id} - Lote: {$inv->lote_id} - Monto: {$inv->total}"
                             ])->toArray();
-                                dd($invoices);
+                                // dd($invoices);
                             return $invoices;
                     })
                     ->searchable()
