@@ -92,16 +92,7 @@ class InvoiceResource extends Resource
                     ])->required(),
             ])
             ->columns(1)
-            ->live()
-            ->afterMount(function ($component, $record) {
-                // Escuchar el evento para refrescar el total
-                $component->getLivewire()->on('refreshInvoiceTotal', function () use ($component, $record) {
-                    if ($record) {
-                        $total = $record->items()->sum('amount');
-                        $component->fill(['total' => $total]);
-                    }
-                });
-            });
+            ->live();
     }
 
     public static function table(Table $table): Table
