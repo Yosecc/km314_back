@@ -59,7 +59,7 @@ class InvoiceResource extends Resource
                 DatePicker::make('period')
                     ->required()
                     ->displayFormat('F Y')
-                    ->format('Y-m-01')
+                    // ->format('Y-m-01')
                     ->disabled(fn ($context) => $context === 'edit')
                     ->rules([
                         function (Get $get, $context) {
