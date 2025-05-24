@@ -143,6 +143,11 @@ class SocialMessages extends Controller
 
     }
 
+    public function getConversationsInstagram()
+    {
+        dd('lleta');
+    }
+
     public function getConversations()
     {
         try {
