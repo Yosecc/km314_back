@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\InvoiceResource\Pages;
 use App\Filament\Resources\InvoiceResource\RelationManagers;
 use App\Models\Invoice;
+use App\Models\Lote;
 use App\Models\Owner;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -45,9 +46,9 @@ class InvoiceResource extends Resource
                     ->options(function (Get $get) {
                         $ownerId = $get('owner_id');
                         if (!$ownerId) return [];
-                        return \App\Models\Lote::where('owner_id', $ownerId)->pluck('id', 'id');
+                            $lotes = Lote::where('owner_id', $ownerId)->get();
+                        return  $lotes->pluck('id', 'id');
                     })
-                    ->searchable()
                     ->required()
                     ->disabled(fn (Get $get) => !$get('owner_id')),
                 DatePicker::make('period')->required(),
