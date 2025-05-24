@@ -110,6 +110,41 @@ class InvoiceService
     }
 
     /**
+     * Aplica un pago existente a las facturas y actualiza estados.
+     */
+    public function applyPayment(Payment $payment)
+    {
+        DB::transaction(function () use ($payment) {
+            $ownerId = $payment->owner_id;
+            $amount = $payment->amount;
+            $pendingInvoices = Invoice::where('owner_id', $ownerId)
+                ->where('status', 'pendiente')
+                ->orderBy('period')
+                ->get();
+            $remaining = $amount;
+            foreach ($pendingInvoices as $invoice) {
+                if ($remaining <= 0) break;
+                $toPay = min($invoice->total, $remaining);
+                // Registrar en tabla pivote
+                DB::table('invoice_payment')->insert([
+                    'invoice_id' => $invoice->id,
+                    'payment_id' => $payment->id,
+                    'amount' => $toPay,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                // Actualizar estado de la factura si se paga completa
+                if ($toPay == $invoice->total) {
+                    $invoice->update(['status' => 'pagada']);
+                }
+                $remaining -= $toPay;
+            }
+            // Actualizar estado de cuenta
+            $this->updateAccountStatus($ownerId, 0, $amount, null, $payment->id);
+        });
+    }
+
+    /**
      * Actualiza el estado de cuenta del propietario.
      */
     public function updateAccountStatus($ownerId, $invoiced, $paid, $lastInvoiceId = null, $lastPaymentId = null)

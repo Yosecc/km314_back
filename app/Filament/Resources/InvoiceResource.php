@@ -31,15 +31,28 @@ class InvoiceResource extends Resource
     {
         return $form
             ->schema([
-                //
-         Select::make('owner_id')
+                Select::make('owner_id')
                     ->relationship('owner', 'first_name')
+                    ->label('Propietario')
+                    ->live()
                     ->required(),
                 Select::make('lote_id')
-                    ->relationship('lote', 'id')
-                    ->required(),
+                    ->label('Lote')
+                    ->options(function ($get) {
+                        $ownerId = $get('owner_id');
+                        if (!$ownerId) return [];
+                        return \App\Models\Lote::where('owner_id', $ownerId)->pluck('id', 'id');
+                    })
+                    ->searchable()
+                    ->required()
+                    ->disabled(fn ($get) => !$get('owner_id')),
                 DatePicker::make('period')->required(),
-                TextInput::make('total')->numeric()->required(),
+                TextInput::make('total')
+                    ->numeric()
+                    ->readOnly()
+                    ->label('Total (suma de ítems)')
+                    ->dehydrated(false)
+                    ->default(fn ($record) => $record?->total),
                 Select::make('status')
                     ->options([
                         'pendiente' => 'Pendiente',

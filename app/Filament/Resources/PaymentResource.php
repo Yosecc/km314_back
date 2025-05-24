@@ -33,8 +33,37 @@ class PaymentResource extends Resource
             ->schema([
                 Select::make('owner_id')
                     ->relationship('owner', 'first_name')
+                    ->label('Propietario')
+                    ->live()
                     ->required(),
-                TextInput::make('amount')->numeric()->required(),
+                Select::make('invoice_id')
+                    ->label('Factura a pagar')
+                    ->options(function ($get) {
+                        $ownerId = $get('owner_id');
+                        if (!$ownerId) return [];
+                        return \App\Models\Invoice::where('owner_id', $ownerId)
+                            ->where('status', 'pendiente')
+                            ->get()
+                            ->mapWithKeys(fn($inv) => [
+                                $inv->id => "#{$inv->id} - Lote: {$inv->lote_id} - Monto: {$inv->total}"
+                            ])->toArray();
+                    })
+                    ->searchable()
+                    ->required()
+                    ->disabled(fn ($get) => !$get('owner_id')),
+                TextInput::make('amount')
+                    ->numeric()
+                    ->label('Monto a pagar')
+                    ->required()
+                    ->afterStateHydrated(function ($component, $state, $record, $get) {
+                        $invoiceId = $get('invoice_id');
+                        if ($invoiceId) {
+                            $invoice = \App\Models\Invoice::find($invoiceId);
+                            if ($invoice) {
+                                $component->state($invoice->total);
+                            }
+                        }
+                    }),
                 DatePicker::make('payment_date')->required(),
                 TextInput::make('method'),
                 TextInput::make('notes'),

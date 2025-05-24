@@ -30,16 +30,34 @@ class InvoiceItemResource extends Resource
     {
         return $form
             ->schema([
-                 Select::make('invoice_id')
-                    ->relationship('invoice', 'id')
+                Select::make('invoice_id')
+                    ->label('Factura')
+                    ->options(function () {
+                        return \App\Models\Invoice::with(['owner', 'lote'])->get()->mapWithKeys(function ($invoice) {
+                            $owner = $invoice->owner?->nombres() ?? 'Sin propietario';
+                            $lote = $invoice->lote?->getNombre() ?? $invoice->lote_id;
+                            return [$invoice->id => "#{$invoice->id} - {$owner} - Lote: {$lote}"];
+                        })->toArray();
+                    })
+                    ->searchable()
                     ->required(),
-                TextInput::make('description')->required(),
-                TextInput::make('amount')->numeric()->required(),
                 Select::make('is_fixed')
                     ->options([
                         1 => 'Fijo',
                         0 => 'Variable',
-                    ])->required(),
+                    ])
+                    ->required()
+                    ->live(),
+                Select::make('expense_concept_id')
+                    ->label('Concepto fijo')
+                    ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
+                    ->visible(fn ($get) => $get('is_fixed') == 1)
+                    ->required(fn ($get) => $get('is_fixed') == 1),
+                TextInput::make('description')
+                    ->label('Descripción')
+                    ->visible(fn ($get) => $get('is_fixed') != 1)
+                    ->required(fn ($get) => $get('is_fixed') != 1),
+                TextInput::make('amount')->numeric()->required(),
             ]);
     }
 
