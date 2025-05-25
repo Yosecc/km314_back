@@ -78,6 +78,7 @@ class PaymentResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultGroup('owner_id')
             ->columns([
                 TextColumn::make('id')->sortable(),
                 TextColumn::make('owner.first_name')->label('Propietario'),
