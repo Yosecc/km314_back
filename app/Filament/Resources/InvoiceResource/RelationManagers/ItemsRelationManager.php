@@ -38,6 +38,11 @@ class ItemsRelationManager extends RelationManager
                 ->columns($columns)
                 ->headerActions([
                     Tables\Actions\CreateAction::make(),
+                    Tables\Actions\Action::make('pdf')
+                        ->label('Imprimir PDF')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->url(fn ($livewire) => route('factura.pdf', $livewire->getOwnerRecord()->id))
+                        ->openUrlInNewTab(),
                 ])
                 ->actions([
                     Tables\Actions\EditAction::make(),
