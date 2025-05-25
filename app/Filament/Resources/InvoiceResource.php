@@ -20,7 +20,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Actions\Action;
-
+use Filament\Tables\Grouping\Group;
 class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
@@ -112,6 +112,18 @@ class InvoiceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->groups([
+                Group::make('owner.first_name')
+                     ->getTitleFromRecordUsing(fn (Invoice $record) => "{$record->owner->nombres()}")
+                     ->label('Propietario'),
+                Group::make('lote')
+                     ->getTitleFromRecordUsing(fn (Invoice $record) => "{$record->lote?->getNombre()}")
+                     ->label('Propietario'),
+            ])
+            ->defaultGroup(
+                Group::make('owner.first_name')
+                        ->getTitleFromRecordUsing(fn (Invoice $record) => "{$record->owner->nombres()}")
+            )
             ->columns([
                 TextColumn::make('public_identifier')->sortable(),
                 TextColumn::make('owner')->label('Propietario')
