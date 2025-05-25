@@ -83,7 +83,7 @@ class PaymentResource extends Resource
         //         ->getTitleFromRecordUsing(fn (Owner $record): string => ucfirst($record->nombres())),
         // ])
             ->defaultGroup(Group::make('owner_id')
-                ->getDescriptionFromRecordUsing(fn (Owner $record): string => ucfirst($record->nombres())))
+                ->getTitleFromRecordUsing(fn (Owner $record): string => ucfirst($record->nombres())))
             ->columns([
                 TextColumn::make('id')->sortable(),
                 TextColumn::make('owner.first_name')->label('Propietario'),
