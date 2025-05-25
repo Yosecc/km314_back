@@ -17,7 +17,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Filament\Tables\Grouping\Group;
 class PaymentResource extends Resource
 {
     protected static ?string $model = Payment::class;
@@ -78,7 +78,8 @@ class PaymentResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultGroup('owner_id')
+            ->defaultGroup(Group::make('owner')
+                ->getTitleFromRecordUsing(fn (Owner $record): string => ucfirst($record->nombres())))
             ->columns([
                 TextColumn::make('id')->sortable(),
                 TextColumn::make('owner.first_name')->label('Propietario'),
