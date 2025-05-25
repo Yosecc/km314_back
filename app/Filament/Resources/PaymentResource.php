@@ -80,6 +80,7 @@ class PaymentResource extends Resource
         return $table
             ->defaultGroup(
                 Group::make('owner.first_name')
+                        ->label('Propietario')
                         ->getTitleFromRecordUsing(fn (Payment $record) => "{$record->owner->nombres()}")
             )
             ->columns([
