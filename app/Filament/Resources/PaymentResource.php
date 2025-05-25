@@ -78,12 +78,12 @@ class PaymentResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-        ->groups([
-            Group::make('owner')
-                ->getTitleFromRecordUsing(fn (Owner $record): string => ucfirst($record->nombres())),
-        ])
-            // ->defaultGroup(Group::make('owner')
-            //     ->getTitleFromRecordUsing(fn (Owner $record): string => ucfirst($record->nombres())))
+        // ->groups([
+        //     Group::make('owner')
+        //         ->getTitleFromRecordUsing(fn (Owner $record): string => ucfirst($record->nombres())),
+        // ])
+            ->defaultGroup(Group::make('owner.first_name')
+                ->getTitleFromRecordUsing(fn (Owner $record): string => ucfirst($record->nombres())))
             ->columns([
                 TextColumn::make('id')->sortable(),
                 TextColumn::make('owner.first_name')->label('Propietario'),
