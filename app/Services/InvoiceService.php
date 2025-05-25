@@ -81,7 +81,7 @@ class InvoiceService
 
             // Aplicar pago a facturas pendientes
             $pendingInvoices = Invoice::where('owner_id', $ownerId)
-                ->where('status', 'pendiente')
+                ->whereIn('status', ['pendiente', 'vencida'])
                 ->orderBy('period')
                 ->get();
 
@@ -118,7 +118,7 @@ class InvoiceService
             $ownerId = $payment->owner_id;
             $amount = $payment->amount;
             $pendingInvoices = Invoice::where('owner_id', $ownerId)
-                ->where('status', 'pendiente')
+                ->whereIn('status', ['pendiente', 'vencida'])
                 ->orderBy('period')
                 ->get();
             $remaining = $amount;
