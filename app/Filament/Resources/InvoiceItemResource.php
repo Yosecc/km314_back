@@ -16,6 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Set;
+use Filament\Tables\Grouping\Group;
 class InvoiceItemResource extends Resource
 {
     protected static ?string $model = InvoiceItem::class;
@@ -35,6 +36,10 @@ class InvoiceItemResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultGroup(
+                Group::make('invoice.public_identifier')
+                        ->label('Factura')
+            )
             ->columns(self::getTableColumns())
             ->filters([
                 //
