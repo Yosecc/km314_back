@@ -45,11 +45,10 @@ class PaymentResource extends Resource
                         $ownerId = $get('owner_id');
                         if (!$ownerId) return [];
                         $invoices = \App\Models\Invoice::where('owner_id', $ownerId)
-                            ->where('status', 'pendiente')
+                            ->whereIn('status', ['pendiente', 'vencida'])
                             ->get()
                             ->mapWithKeys(fn($inv) => [
-                                $inv->id => "#{$inv->public_identifier} - Periodo: " . \Carbon\Carbon::parse($inv->period)->format('m/Y') . " - Lote: {$inv->lote->getNombre()} - Monto: {$inv->total}"
-
+                                $inv->id => "#{$inv->public_identifier} - Periodo: " . \Carbon\Carbon::parse($inv->period)->format('m/Y') . " - Lote: {$inv->lote?->getNombre()} - Monto: {$inv->total}"
                             ])->toArray();
                         return $invoices;
                     })
