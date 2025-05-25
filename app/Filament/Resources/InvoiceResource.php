@@ -116,7 +116,7 @@ class InvoiceResource extends Resource
                 Group::make('owner.first_name')
                      ->getTitleFromRecordUsing(fn (Invoice $record) => "{$record->owner->nombres()}")
                      ->label('Propietario'),
-                Group::make('lote')
+                Group::make('lote.lote_id')
                      ->getTitleFromRecordUsing(fn (Invoice $record) => "{$record->lote?->getNombre()}")
                      ->label('Lote'),
             ])
