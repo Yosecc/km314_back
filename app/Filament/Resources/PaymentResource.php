@@ -86,7 +86,7 @@ class PaymentResource extends Resource
             ->columns([
                 TextColumn::make('id')->sortable(),
                 TextColumn::make('owner.first_name')
-                    ->formatStateUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                    ->formatStateUsing(fn (Payment $record) => "{$record->owner->nombres()}")
                     ->label('Propietario'),
                 TextColumn::make('amount')->numeric()->label('Monto'),
                 TextColumn::make('payment_date')->date(),
