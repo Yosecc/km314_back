@@ -104,6 +104,7 @@ class InvoiceItemResource extends Resource
                     }
                 }),
             TextInput::make('description')
+                ->dehydrated(true)
                 ->label('Descripción')
                 ->visible(fn ($get) => $get('is_fixed') != 1)
                 ->required(fn ($get) => $get('is_fixed') != 1),
