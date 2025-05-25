@@ -133,8 +133,11 @@ class InvoiceService
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-                // Actualizar estado de la factura si se paga completa
-                if ($toPay == $invoice->total) {
+                // Calcular el total pagado acumulado para la factura
+                $pagado = DB::table('invoice_payment')
+                    ->where('invoice_id', $invoice->id)
+                    ->sum('amount');
+                if ($pagado >= $invoice->total) {
                     $invoice->update(['status' => 'pagada']);
                 }
                 $remaining -= $toPay;
