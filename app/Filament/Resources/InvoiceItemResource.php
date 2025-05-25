@@ -15,7 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Filament\Forms\Set;
 class InvoiceItemResource extends Resource
 {
     protected static ?string $model = InvoiceItem::class;
@@ -95,7 +95,7 @@ class InvoiceItemResource extends Resource
                 ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
                 ->visible(fn ($get) => $get('is_fixed') == 1)
                 ->required(fn ($get) => $get('is_fixed') == 1)
-                ->afterStateUpdated(function ($state, callable $set) {
+                ->afterStateUpdated(function ($state, Set $set) {
                     if ($state) {
                         $concept = \App\Models\ExpenseConcept::find($state);
                         if ($concept) {
