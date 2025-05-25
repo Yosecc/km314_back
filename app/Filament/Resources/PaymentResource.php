@@ -48,7 +48,7 @@ class PaymentResource extends Resource
                             ->whereIn('status', ['pendiente', 'vencida'])
                             ->get()
                             ->mapWithKeys(fn($inv) => [
-                                $inv->id => "#{$inv->public_identifier} - Periodo: " . \Carbon\Carbon::parse($inv->period)->format('m/Y') . " - Lote: {$inv->lote?->getNombre()} - Monto: {$inv->total}"
+                                $inv->id => "#{$inv->public_identifier} - Periodo: " . \Carbon\Carbon::parse($inv->period)->format('m/Y') . " - Lote: {$inv->lote?->getNombre()} - Monto: {$inv->total} - {$inv->status}"
                             ])->toArray();
                         return $invoices;
                     })
