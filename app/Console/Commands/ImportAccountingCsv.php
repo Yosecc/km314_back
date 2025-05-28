@@ -7,7 +7,6 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
 use Carbon\Carbon;
-use League\Csv\Reader;
 
 class ImportAccountingCsv extends Command
 {
@@ -25,12 +24,15 @@ class ImportAccountingCsv extends Command
             return 1;
         }
 
-        $csv = Reader::createFromPath($file, 'r');
-        $csv->setHeaderOffset(0);
-        $rows = iterator_to_array($csv->getRecords());
-
+        $handle = fopen($file, 'r');
+        if (!$handle) {
+            $this->error("No se pudo abrir el archivo: $file");
+            return 1;
+        }
+        $headers = fgetcsv($handle, 0, ';');
         $facturas = [];
-        foreach ($rows as $row) {
+        while (($row = fgetcsv($handle, 0, ';')) !== false) {
+            $row = array_combine($headers, $row);
             $fecha = trim($row['created_at'] ?? '');
             $desc = trim($row['description'] ?? '');
             $amount = floatval(str_replace([',', '.'], ['.', ''], $row['amount'] ?? '0'));
@@ -88,6 +90,7 @@ class ImportAccountingCsv extends Command
                 ]);
             }
         }
+        fclose($handle);
         $this->info('Importación finalizada.');
         return 0;
     }
