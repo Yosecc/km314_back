@@ -93,7 +93,7 @@ class PaymentResource extends Resource
                 TextColumn::make('method'),
                 TextColumn::make('notes'),
             ])
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort('payment_date', 'desc')
             ->filters([
                 //
             ])
