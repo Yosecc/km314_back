@@ -132,7 +132,7 @@ class InvoiceResource extends Resource
                 TextColumn::make('lote')
                     ->formatStateUsing(fn ($record) => $record->lote?->getNombre() ?? 'Sin lote')
                     ->label('Lote'),
-                TextColumn::make('period')->date('F Y')->label('Periodo'),
+                TextColumn::make('period')->date()->label('Periodo'),
                 TextColumn::make('total')->numeric()->label('Total'),
                 TextColumn::make('status')
                     ->badge()
@@ -149,7 +149,7 @@ class InvoiceResource extends Resource
                         default => 'gray',
                     }),
             ])
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort('period', 'desc')
             ->filters([
                 //
             ])
