@@ -10,7 +10,8 @@ class Kernel extends ConsoleKernel
 {
 
     protected $commands = [
-        RecoverMessagesEmails::class
+        RecoverMessagesEmails::class,
+        \App\Console\Commands\ImportAccountingCsv::class,
     ];
 
     /**
