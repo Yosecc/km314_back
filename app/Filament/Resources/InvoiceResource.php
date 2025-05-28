@@ -170,12 +170,28 @@ class InvoiceResource extends Resource
                             ->label('Archivo CSV')
                             ->acceptedFileTypes(['text/csv', 'text/plain', '.csv'])
                             ->required(),
-                        \Filament\Forms\Components\TextInput::make('owner_id')
-                            ->label('ID Propietario')
-                            ->required(),
-                        \Filament\Forms\Components\TextInput::make('lote_id')
-                            ->label('ID Lote')
-                            ->required(),
+
+                            Select::make('owner_id')
+                                ->options(Owner::all()->pluck('first_name', 'id'))
+                                ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                                ->searchable(['first_name', 'last_name'])
+                                ->label('Propietario')
+                                ->live()
+                                ->required(),
+                            Select::make('lote_id')
+                                ->label('Lote')
+                                ->options(function (Get $get) {
+                                    $ownerId = $get('owner_id');
+                                    if (!$ownerId) return [];
+                                    $lotes = Lote::where('owner_id', $ownerId)->get();
+                                    return $lotes->mapWithKeys(function ($lote) {
+                                        return [
+                                            $lote->id => "{$lote->getNombre()}"
+                                        ];
+                                    });
+                                })
+                                ->required()
+
                     ])
                     ->action(function (array $data) {
                         $path = $data['csv_file']->storeAs('import', $data['csv_file']->getClientOriginalName(), 'local');
