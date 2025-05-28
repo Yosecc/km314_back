@@ -67,8 +67,8 @@ class InvoiceResource extends Resource
                         function (Get $get, $context) {
                             return function ($attribute, $value, $fail) use ($get, $context) {
                                 // Validar que el día seleccionado sea 1
-                                if ($value && \Carbon\Carbon::parse($value)->day !== 1) {
-                                    $fail('Debe seleccionar solo el 1 de cada mes.');
+                                if ($value && \Carbon\Carbon::parse($value)->day !== 25) {
+                                    $fail('Debe seleccionar solo el 25 de cada mes.');
                                 }
                                 // Solo validar duplicados al crear
                                 if ($context !== 'create') return;
@@ -160,6 +160,35 @@ class InvoiceResource extends Resource
                     ->url(fn ($record) => route('factura.pdf', $record->id))
                     ->openUrlInNewTab(),
                 Tables\Actions\EditAction::make(),
+            ])
+            ->headerActions([
+                Action::make('importar-csv')
+                    ->label('Importar CSV')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->form([
+                        \Filament\Forms\Components\FileUpload::make('csv_file')
+                            ->label('Archivo CSV')
+                            ->acceptedFileTypes(['text/csv', 'text/plain', '.csv'])
+                            ->required(),
+                        \Filament\Forms\Components\TextInput::make('owner_id')
+                            ->label('ID Propietario')
+                            ->required(),
+                        \Filament\Forms\Components\TextInput::make('lote_id')
+                            ->label('ID Lote')
+                            ->required(),
+                    ])
+                    ->action(function (array $data) {
+                        $path = $data['csv_file']->storeAs('import', $data['csv_file']->getClientOriginalName(), 'local');
+                        \Artisan::call('import:accounting-csv', [
+                            'file' => storage_path('app/' . $path),
+                            'owner_id' => $data['owner_id'],
+                            'lote_id' => $data['lote_id'],
+                        ]);
+                        \Filament\Notifications\Notification::make()
+                            ->title('Importación ejecutada')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
