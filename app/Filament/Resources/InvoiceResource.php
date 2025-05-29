@@ -169,16 +169,16 @@ class InvoiceResource extends Resource
                         \Filament\Forms\Components\FileUpload::make('csv_file')
                             ->label('Archivo CSV')
                             ->acceptedFileTypes(['text/csv', 'text/plain', '.csv'])
-                            ->required(),
-
+                            ->required()
+                            ->preserveFilenames()
+                            ->disk('local')
+                            ->directory('import'),
                             Select::make('owner_id')
                                 ->options(
                                     Owner::all()->mapWithKeys(
                                         fn ($owner) => [$owner->id => "{$owner->nombres()}"]
                                     )
                                 )
-                                // ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
-
                                 ->label('Propietario')
                                 ->live()
                                 ->required(),
@@ -195,12 +195,12 @@ class InvoiceResource extends Resource
                                     });
                                 })
                                 ->required()
-
                     ])
                     ->action(function (array $data) {
-                        $path = $data['csv_file']->storeAs('import', $data['csv_file']->getClientOriginalName(), 'local');
+                        // $data['csv_file'] es la ruta relativa en storage/app/import/
+                        $path = storage_path('app/' . $data['csv_file']);
                         \Artisan::call('import:accounting-csv', [
-                            'file' => storage_path('app/' . $path),
+                            'file' => $path,
                             'owner_id' => $data['owner_id'],
                             'lote_id' => $data['lote_id'],
                         ]);
