@@ -67,6 +67,7 @@ class AccountStatusResource extends Resource
             'index' => Pages\ListAccountStatuses::route('/'),
             'create' => Pages\CreateAccountStatus::route('/create'),
             'edit' => Pages\EditAccountStatus::route('/{record}/edit'),
+            'view' => Pages\ViewAccountStatus::route('/{record}'),
         ];
     }
 }

@@ -238,6 +238,7 @@ class InvoiceResource extends Resource
                                     fn ($owner) => [$owner->id => $owner->nombres()]
                                 )
                             )
+                            ->searchable()
                             ->label('Propietario')
                             ->live()
                             ->required(),
