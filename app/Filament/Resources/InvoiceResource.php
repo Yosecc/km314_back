@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Grouping\Group;
+use Filament\Forms\Components\FileUpload;
 class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
@@ -166,13 +167,14 @@ class InvoiceResource extends Resource
                     ->label('Importar CSV')
                     ->icon('heroicon-o-arrow-up-tray')
                     ->form([
-                        \Filament\Forms\Components\FileUpload::make('csv_file')
+                        FileUpload::make('csv_file')
                             ->label('Archivo CSV')
-                            ->acceptedFileTypes(['text/csv', 'text/plain', '.csv'])
+                            // ->acceptedFileTypes(['text/csv', 'text/plain', '.csv'])
                             ->required()
                             ->preserveFilenames()
                             ->disk('local')
-                            ->directory('import'),
+                            ->directory('import')
+                            ,
                             Select::make('owner_id')
                                 ->options(
                                     Owner::all()->mapWithKeys(
