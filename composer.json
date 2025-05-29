@@ -9,7 +9,7 @@
         "aymanalhattami/filament-page-with-sidebar": "^2.5",
         "barryvdh/laravel-dompdf": "*",
         "bezhansalleh/filament-shield": "^3.2",
-        "calebporzio/sushi": "^2.5",
+        "calebporzio/sushi": "*",
         "facebook/graph-sdk": "^5.1",
         "filament/filament": "^3.2",
         "guzzlehttp/guzzle": "^7.2",
