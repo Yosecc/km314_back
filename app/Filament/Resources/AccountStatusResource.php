@@ -32,17 +32,17 @@ class AccountStatusResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
-    {
-        return $infolist
-            ->schema([
-                Infolists\Components\TextEntry::make('owner.first_name')
-                    ->label('Propietario'),
-                Infolists\Components\TextEntry::make('balance'),
-                Infolists\Components\TextEntry::make('total_invoiced')
-                    ->columnSpanFull(),
-            ]);
-    }
+    // public static function infolist(Infolist $infolist): Infolist
+    // {
+    //     return $infolist
+    //         ->schema([
+    //             Infolists\Components\TextEntry::make('owner.first_name')
+    //                 ->label('Propietario'),
+    //             Infolists\Components\TextEntry::make('balance'),
+    //             Infolists\Components\TextEntry::make('total_invoiced')
+    //                 ->columnSpanFull(),
+    //         ]);
+    // }
 
     public static function table(Table $table): Table
     {
