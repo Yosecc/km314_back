@@ -259,9 +259,12 @@ class InvoiceResource extends Resource
                     ->action(function (array $data) {
                         $ownerId = $data['owner_id'];
                         $loteId = $data['lote_id'];
-                        // Eliminar pagos
-                        $pagos = \App\Models\Payment::where('owner_id', $ownerId)->get();
-                        foreach ($pagos as $p) { $p->delete(); }
+                        // Eliminar primero de la tabla pivote invoice_payment
+                        $payments = \App\Models\Payment::where('owner_id', $ownerId)->get();
+                        foreach ($payments as $p) {
+                            \DB::table('invoice_payment')->where('payment_id', $p->id)->delete();
+                            $p->delete();
+                        }
                         // Eliminar items y facturas
                         $facturas = \App\Models\Invoice::where('owner_id', $ownerId)->where('lote_id', $loteId)->get();
                         foreach ($facturas as $factura) {
