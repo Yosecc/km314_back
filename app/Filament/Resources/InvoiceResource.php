@@ -169,7 +169,7 @@ class InvoiceResource extends Resource
                     ->form([
                         FileUpload::make('csv_file')
                             ->label('Archivo CSV')
-                            // ->acceptedFileTypes(['text/csv', 'text/plain', '.csv'])
+                            ->acceptedFileTypes(['text/csv', 'text/plain', '.csv'])
                             ->required()
                             ->preserveFilenames()
                             ->disk('local')
