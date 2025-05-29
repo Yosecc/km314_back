@@ -259,9 +259,10 @@ class InvoiceResource extends Resource
                     ->action(function (array $data) {
                         $ownerId = $data['owner_id'];
                         $loteId = $data['lote_id'];
-                        // Eliminar primero de la tabla pivote invoice_payment
+                        // Eliminar referencias en account_statuses
                         $payments = \App\Models\Payment::where('owner_id', $ownerId)->get();
                         foreach ($payments as $p) {
+                            \DB::table('account_statuses')->where('last_payment_id', $p->id)->update(['last_payment_id' => null]);
                             \DB::table('invoice_payment')->where('payment_id', $p->id)->delete();
                             $p->delete();
                         }
