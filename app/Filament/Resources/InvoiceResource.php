@@ -178,7 +178,7 @@ class InvoiceResource extends Resource
                                     )
                                 )
                                 // ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
-                                ->searchable(['first_name', 'last_name'])
+                                // ->searchable(['first_name', 'last_name'])
                                 ->label('Propietario')
                                 ->live()
                                 ->required(),
