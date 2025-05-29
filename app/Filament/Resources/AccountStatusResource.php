@@ -14,7 +14,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\NumberColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 class AccountStatusResource extends Resource
 {
     protected static ?string $model = AccountStatus::class;
@@ -28,6 +29,18 @@ class AccountStatusResource extends Resource
         return $form
             ->schema([
                 //
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\TextEntry::make('owner.first_name')
+                    ->label('Propietario'),
+                Infolists\Components\TextEntry::make('balance'),
+                Infolists\Components\TextEntry::make('total_invoiced')
+                    ->columnSpanFull(),
             ]);
     }
 
