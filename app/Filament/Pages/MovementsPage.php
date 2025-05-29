@@ -33,9 +33,8 @@ class MovementsPage extends Page implements Tables\Contracts\HasTable
             ]);
     }
 
-    protected function getMovementsQuery(): Builder
+    protected function getMovementsQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        // Ejemplo: unir facturas y pagos en una sola consulta usando unionAll
         $invoices = \App\Models\Invoice::query()
             ->selectRaw("period as fecha, 'Factura' as tipo, CONCAT(public_identifier, ' ', IFNULL((SELECT GROUP_CONCAT(description SEPARATOR ' + ') FROM invoice_items WHERE invoice_id = invoices.id), '')) as descripcion, total as monto")
             ->whereNotNull('owner_id');
@@ -44,6 +43,12 @@ class MovementsPage extends Page implements Tables\Contracts\HasTable
             ->selectRaw("payment_date as fecha, 'Pago' as tipo, notes as descripcion, amount as monto")
             ->whereNotNull('owner_id');
 
-        return $invoices->unionAll($payments);
+        $union = $invoices->unionAll($payments);
+
+        // Creamos un modelo Eloquent dinámico para envolver la subconsulta
+        return (new \App\Models\Invoice())
+            ->newQuery()
+            ->fromSub($union, 'movimientos')
+            ->select('*');
     }
 }
