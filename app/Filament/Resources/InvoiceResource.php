@@ -154,6 +154,7 @@ class InvoiceResource extends Resource
             ->defaultSort('period', 'desc')
             ->filters([
                 SelectFilter::make('owner_id')
+                    ->searchable()
                     ->options(
                         Owner::all()->mapWithKeys(
                             fn ($owner) => [$owner->id => "{$owner->nombres()}"]
