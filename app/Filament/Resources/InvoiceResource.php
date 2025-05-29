@@ -172,8 +172,12 @@ class InvoiceResource extends Resource
                             ->required(),
 
                             Select::make('owner_id')
-                                ->options(Owner::get()->pluck('first_name', 'id'))
-                                ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                                ->options(
+                                    Owner::all()->mapWithKeys(
+                                        fn ($owner) => [$owner->id => "{$owner->nombres()}"]
+                                    )
+                                )
+                                // ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
                                 ->searchable(['first_name', 'last_name'])
                                 ->label('Propietario')
                                 ->live()
