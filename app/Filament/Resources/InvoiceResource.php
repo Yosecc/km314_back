@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Grouping\Group;
 use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Filters\SelectFilter;
 class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
@@ -152,7 +153,12 @@ class InvoiceResource extends Resource
             ])
             ->defaultSort('period', 'desc')
             ->filters([
-                //
+                SelectFilter::make('owner_id')
+                    ->options(
+                        Owner::all()->mapWithKeys(
+                            fn ($owner) => [$owner->id => "{$owner->nombres()}"]
+                        )
+                    )
             ])
             ->actions([
                 Action::make('pdf')

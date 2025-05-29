@@ -44,8 +44,8 @@ class ImportAccountingCsv extends Command
                 $punitorio = self::parseImporte($row['punitorio'] ?? '0');
                 $pago = self::parseImporte($row['pago'] ?? '0');
 
-                // Ítem de factura
-                if (stripos($desc, 'cuota mant') !== false || stripos($desc, 'cuota mantenimiento') !== false) {
+                // Ítem de factura (más flexible: busca 'cuota' y 'mant' en cualquier orden)
+                if (preg_match('/cuota.*mant|mant.*cuota/i', $desc)) {
                     $periodo = \Carbon\Carbon::createFromFormat('d/m/Y', $fecha)->startOfMonth();
                     // Buscar o crear factura para ese periodo
                     $factura = Invoice::firstOrCreate([
@@ -78,7 +78,7 @@ class ImportAccountingCsv extends Command
                     $facturas[$periodo->format('Y-m')] = $factura;
                 }
                 // Pagos
-                if (stripos($desc, 'pago') !== false && $pago > 0) {
+                elseif (stripos($desc, 'pago') !== false && $pago > 0) {
                     // Buscar la factura más cercana anterior o igual a la fecha del pago
                     $factura = null;
                     foreach ($facturas as $key => $f) {
@@ -92,6 +92,17 @@ class ImportAccountingCsv extends Command
                         'payment_date' => \Carbon\Carbon::createFromFormat('d/m/Y', $fecha),
                         'method' => 'Migración CSV',
                         'notes' => $desc,
+                    ]);
+                } else {
+                    // Log de fila ignorada
+                    \Log::info('[ImportAccountingCsv] Fila ignorada', [
+                        'linea' => $linea,
+                        'desc' => $desc,
+                        'fecha' => $fecha,
+                        'amount' => $amount,
+                        'punitorio' => $punitorio,
+                        'pago' => $pago,
+                        'row' => $row
                     ]);
                 }
             } catch (\Throwable $e) {
