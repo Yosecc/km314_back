@@ -5,7 +5,7 @@ namespace App\Filament\Resources\AccountStatusResource\Widgets;
 use Filament\Widgets\Widget;
 use Illuminate\Contracts\View\View;
 use Filament\Widgets\TableWidget as BaseWidget;
-class MovementsTableWidget extends BaseWidget
+class MovementsTableWidget extends Widget
 {
     public ?object $record = null;
 
