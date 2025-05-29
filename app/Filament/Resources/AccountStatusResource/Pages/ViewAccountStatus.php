@@ -5,7 +5,7 @@ namespace App\Filament\Resources\AccountStatusResource\Pages;
 use App\Filament\Resources\AccountStatusResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
-use App\Filament\Widgets\MovementsTableWidget;
+use App\Filament\Resources\AccountStatusResource\Widgets\MovementsTableWidget;
 
 class ViewAccountStatus extends ViewRecord
 {
