@@ -201,8 +201,6 @@ class InvoiceResource extends Resource
                     ->action(function (array $data) {
                         // $data['csv_file'] es la ruta relativa en storage/app/import/
                         $path = storage_path('app/' . $data['csv_file']);
-
-
                         try {
                             \Artisan::call('import:accounting-csv', [
                                 'file' => $path,
@@ -220,6 +218,52 @@ class InvoiceResource extends Resource
                         }
                         \Filament\Notifications\Notification::make()
                             ->title('Importación ejecutada')
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('eliminar-importacion')
+                    ->label('Eliminar importación (migración)')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->form([
+                        Select::make('owner_id')
+                            ->options(
+                                Owner::all()->mapWithKeys(
+                                    fn ($owner) => [$owner->id => $owner->nombres()]
+                                )
+                            )
+                            ->label('Propietario')
+                            ->live()
+                            ->required(),
+                        Select::make('lote_id')
+                            ->label('Lote')
+                            ->options(function (Get $get) {
+                                $ownerId = $get('owner_id');
+                                if (!$ownerId) return [];
+                                $lotes = Lote::where('owner_id', $ownerId)->get();
+                                return $lotes->mapWithKeys(function ($lote) {
+                                    return [
+                                        $lote->id => $lote->getNombre()
+                                    ];
+                                });
+                            })
+                            ->required(),
+                    ])
+                    ->requiresConfirmation()
+                    ->action(function (array $data) {
+                        $ownerId = $data['owner_id'];
+                        $loteId = $data['lote_id'];
+                        // Eliminar pagos
+                        $pagos = \App\Models\Payment::where('owner_id', $ownerId)->get();
+                        foreach ($pagos as $p) { $p->delete(); }
+                        // Eliminar items y facturas
+                        $facturas = \App\Models\Invoice::where('owner_id', $ownerId)->where('lote_id', $loteId)->get();
+                        foreach ($facturas as $factura) {
+                            $factura->items()->delete();
+                            $factura->delete();
+                        }
+                        \Filament\Notifications\Notification::make()
+                            ->title('Importación eliminada')
                             ->success()
                             ->send();
                     }),
