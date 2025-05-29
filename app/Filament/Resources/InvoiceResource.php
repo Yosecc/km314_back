@@ -201,11 +201,23 @@ class InvoiceResource extends Resource
                     ->action(function (array $data) {
                         // $data['csv_file'] es la ruta relativa en storage/app/import/
                         $path = storage_path('app/' . $data['csv_file']);
-                        \Artisan::call('import:accounting-csv', [
-                            'file' => $path,
-                            'owner_id' => $data['owner_id'],
-                            'lote_id' => $data['lote_id'],
-                        ]);
+
+
+                        try {
+                            \Artisan::call('import:accounting-csv', [
+                                'file' => $path,
+                                'owner_id' => $data['owner_id'],
+                                'lote_id' => $data['lote_id'],
+                            ]);
+                        } catch (\Exception $e) {
+                            \Log::info($e->getMessage());
+                            \Filament\Notifications\Notification::make()
+                                ->title('Error al importar')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                            return;
+                        }
                         \Filament\Notifications\Notification::make()
                             ->title('Importación ejecutada')
                             ->success()
