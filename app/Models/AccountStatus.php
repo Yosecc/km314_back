@@ -29,4 +29,14 @@ class AccountStatus extends Model
     {
         return $this->belongsTo(Payment::class, 'last_payment_id');
     }
+
+    public function invoices()
+    {
+        return $this->hasMany(\App\Models\Invoice::class, 'owner_id', 'owner_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(\App\Models\Payment::class, 'owner_id', 'owner_id');
+    }
 }
