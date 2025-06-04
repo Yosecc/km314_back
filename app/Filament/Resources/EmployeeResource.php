@@ -82,12 +82,6 @@ class EmployeeResource extends Resource
                             'Owner' => 'Propietario',
                         ])
                         ->default(fn(Get $get) => $get('model_origen') ?? (Auth::user()->hasRole('owner') && Auth::user()->owner_id ? 'Owner' : null))
-                        ->readOnly(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return true;
-                            }
-                            return false;
-                        })
                         ->dehydrated(true)
                         ->visible(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
