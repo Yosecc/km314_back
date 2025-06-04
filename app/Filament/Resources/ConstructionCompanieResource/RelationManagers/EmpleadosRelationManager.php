@@ -4,6 +4,8 @@ namespace App\Filament\Resources\ConstructionCompanieResource\RelationManagers;
 
 use App\Models\ConstructionCompanie;
 use Filament\Forms;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
@@ -14,6 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class EmpleadosRelationManager extends RelationManager
 {
@@ -54,7 +57,7 @@ class EmpleadosRelationManager extends RelationManager
                     ->displayFormat('d/m/Y')
                     ->live(),
 
-                Forms\Components\TextInput::make('user_id')->default(Auth::user()->id),
+                Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
 
                 Forms\Components\Hidden::make('model_origen')->default('ConstructionCompanie'),
 
@@ -93,6 +96,57 @@ class EmpleadosRelationManager extends RelationManager
                     ->defaultItems(0)
                     ->columns(2)
                     ->columnSpanFull(),
+
+                Forms\Components\Repeater::make('horarios')
+                    ->relationship()
+                    ->schema([
+                        // employee_id
+                        Forms\Components\Select::make('day_of_week')
+                            ->label(__("Día"))
+                            //->unique(ignoreRecord: true)
+                            ->options([
+                                'Domingo' => 'Domingo', 'Lunes' => 'Lunes', 'Martes' => 'Martes', 'Miercoles' => 'Miercoles', 'Jueves' => 'Jueves', 'Viernes' => 'Viernes', 'Sabado' => 'Sabado'
+                            ]),
+                        Forms\Components\TimePicker::make('start_time')->label(__("Hora de entrada")),
+                        Forms\Components\TimePicker::make('end_time')->label(__("Hora de salida")),
+                    ])
+                    ->defaultItems(0)
+                    ->columns(3)
+                    ->columnSpanFull(),
+
+                Forms\Components\Repeater::make('files')
+                    ->relationship()
+                    ->label('Documentos')
+                    ->schema([
+
+                        Forms\Components\TextInput::make('name')->label('Descripción'),
+                        DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento'),
+                        Forms\Components\FileUpload::make('file')
+                            ->label('Archivo')
+                            ->storeFileNamesIn('attachment_file_names')
+                            ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                return $file ? $file->getClientOriginalName() : $record->file;
+                            })
+                            ->disabled(function($context, Get $get){
+                                return $context == 'edit' ? true:false;
+                            }),
+
+                        Actions::make([
+                            Action::make('open_file')
+                                ->label('Abrir archivo')
+                                ->icon('heroicon-m-eye')
+                                ->url(function ($record, $context) {
+                                    return Storage::url($record->file);
+                                 })
+                                ->openUrlInNewTab(),
+                        ])
+                        ->visible(function($record){
+                            return $record ? true : false;
+                        }),
+                    ])
+                    ->defaultItems(0)
+                    ->columns(1)
+                    ->columnSpanFull()
             ]);
     }
 
