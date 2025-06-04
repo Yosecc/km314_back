@@ -54,39 +54,45 @@ class EmpleadosRelationManager extends RelationManager
                     ->displayFormat('d/m/Y')
                     ->live(),
 
+                Forms\Components\TextInput::make('user_id')->default(Auth::user()->id),
 
-
-                Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-
-                Forms\Components\Hidden::make('model_origen')
-                    // ->label('Compañía de origen')
-                    // ->options([
-                    //     'ConstructionCompanie' => 'Compañías De Construcciones',
-                    //     'Employee' => 'KM314'
-                    // ])
-                    ->default('ConstructionCompanie')
-
-                    // ->dehydrated()
-                    // ->visible(false)
-                    // ->live()
-                    ,
+                Forms\Components\Hidden::make('model_origen')->default('ConstructionCompanie'),
 
                 Forms\Components\Hidden::make('model_origen_id')
                     ->label(__(''))
                     ->default(function (RelationManager $livewire) {
                         return $livewire->getOwnerRecord()->id;
+                    }),
+
+                 Forms\Components\Repeater::make('autos')
+                    ->relationship()
+                    ->mutateRelationshipDataBeforeFillUsing(function ($record, $data) {
+                        // dd($record->autos, $data);
+                        $data['model'] = $record->autos->where('id', $data['id'])->first()->model;
+                        return $data;
                     })
-                    // ->options(function(){
-                    //     return ConstructionCompanie::get()->pluck('name','id')->toArray();
-                    // })
-                    // ->disabled(function(Get $get){
-                    //     return $get('model_origen') == 'ConstructionCompanie' ? false:true;
-                    // })
-                    // ->visible(function(Get $get){
-                    //     return $get('model_origen') == 'ConstructionCompanie' ? true:false;
-                    // })
-                    // ->live()
-                    ,
+                    ->schema([
+                        Forms\Components\TextInput::make('marca')
+                            ->label(__("general.Marca"))
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('modelo')
+                            ->label(__("general.Modelo"))
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('patente')
+                            ->label(__("general.Patente"))
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('color')
+                            ->label(__("general.Color"))
+                            ->maxLength(255),
+                        Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+                            // ->maxLength(255),
+                        Forms\Components\Hidden::make('model')
+                            ->default('Employee')
+                            // ->maxLength(255),
+                    ])
+                    ->defaultItems(0)
+                    ->columns(2)
+                    ->columnSpanFull(),
             ]);
     }
 
