@@ -381,25 +381,21 @@ class InvoiceConfigResource extends Resource
                                             ->live()
                                             ->options(function (Get $get) {
 
-
-
-                                                // if($get('lote_type_id')) {
-                                                //     $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
-                                                // }
-                                                // Obtener lotes ya asignados a grupos para deshabilitarlos en el select
+                                                // Obtener todos los lotes asignados a grupos
                                                 $config = $get('../../../../config');
                                                 $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
                                                 $grupos = $bloque['data']['groups'] ?? [];
                                                 $lotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
 
-                                                $lotes = Lote::whereNotIn('id',$lotesEnGrupos)->get();
+                                                // Traer solo los lotes que NO están en ningún grupo
+                                                $query = Lote::query()->whereNotIn('id', $lotesEnGrupos);
 
-
-                                                if($get('lote_type_id')) {
-                                                    $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
+                                                // Si hay filtro por tipo, aplicarlo
+                                                if ($get('lote_type_id')) {
+                                                    $query->where('lote_type_id', $get('lote_type_id'));
                                                 }
-                                                // Solo retornar id => nombre, sin estructura 'label' ni 'disabled'
-                                                return $lotes->mapWithKeys(function ($lote) {
+
+                                                return $query->get()->mapWithKeys(function ($lote) {
                                                     return [
                                                         $lote->id => $lote->getNombre()
                                                     ];
