@@ -48,7 +48,7 @@ class InvoiceConfigResource extends Resource
                 Wizard::make([
                     Wizard\Step::make('info')
                     ->label('Resumen de la configuración')
-                    ->description('Configura los parámetros básicos y los items de facturación para este mes.')
+                    // ->description('Configura los parámetros básicos y los items de facturación para este mes.')
                     ->schema([
                         Grid::make()
                             ->columns(3)
@@ -91,7 +91,7 @@ class InvoiceConfigResource extends Resource
                             ->helperText('Porcentaje de interés moratorio aplicado a facturas vencidas.'),
                     ]),
                     Wizard\Step::make('step_config')
-                        ->label('Configuración de Facturación')
+                        ->label('Items & Facturas')
                         ->schema([
                            Forms\Components\Builder::make('config')
                             ->label('Configuración de Facturación')
