@@ -253,7 +253,7 @@ class InvoiceConfigResource extends Resource
                                     ->required()
                             ])
                             ->maxItems(1)
-                            ->columns(1),
+                            ->columns(3),
 
 
                     ])
