@@ -154,9 +154,16 @@ class InvoiceConfigResource extends Resource
                                             ->label('Personaliza los items de facturación a grupos propietarios/lotes.')
                                             ->schema([
                                                 Grid::make('grupo_grid')->schema([
+
                                                     Fieldset::make('lotes')
                                                         ->label('Selecciona los lotes para este grupo')
                                                         ->schema([
+
+                                                            TextInput::make('name')
+                                                                ->label('Nombre del grupo')
+                                                                ->helperText('Define un nombre descriptivo para este grupo de lotes.')
+                                                                ->required()
+                                                                ->live(onBlur: true),
 
                                                             Select::make('lote_type_id')
                                                                 ->label(__("general.LoteType"))
@@ -284,7 +291,8 @@ class InvoiceConfigResource extends Resource
                                             ->collapsible()
                                             ->columns(2)
                                             ->addActionLabel('Agrega grupo de Facturas/lotes')
-                                            ->columns(2),
+                                            ->columns(2)
+                                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
                                     ])
                                     ->maxItems(1)
                                     ->columns(1),
