@@ -98,83 +98,81 @@ class InvoiceConfigResource extends Resource
                                 Repeater::make(name: 'groups')
                                     ->label('Personaliza los items de facturación a grupos propietarios/lotes.')
                                     ->schema([
-                                        Grid::make()
-                                            ->columns(2)
-                                            ->schema([
-                                                Fieldset::make('lotes')
-                                                    ->label('Selecciona los lotes para este grupo')
-                                                    ->schema([
-                                                        Select::make('lote_type_id')
-                                                            ->label(__("general.LoteType"))
-                                                            ->live()
-                                                            ->options(function () {
-                                                                $lotes = loteType::get();
-                                                                return $lotes->mapWithKeys(function ($lote) {
-                                                                    return [
-                                                                        $lote->id => "{$lote->name}"
-                                                                    ];
-                                                                });
-                                                            }),
-                                                        Select::make('lotes_id')
-                                                            ->label('Lote')
-                                                            ->multiple()
-                                                            ->live()
-                                                            ->options(function (Get $get) {
+                                        Grid::make('grupo_grid')->schema([
+                                            Fieldset::make('lotes')
+                                                ->label('Selecciona los lotes para este grupo')
+                                                ->schema([
+                                                    Select::make('lote_type_id')
+                                                        ->label(__("general.LoteType"))
+                                                        ->live()
+                                                        ->options(function () {
+                                                            $lotes = loteType::get();
+                                                            return $lotes->mapWithKeys(function ($lote) {
+                                                                return [
+                                                                    $lote->id => "{$lote->name}"
+                                                                ];
+                                                            });
+                                                        }),
+                                                    Select::make('lotes_id')
+                                                        ->label('Lote')
+                                                        ->multiple()
+                                                        ->live()
+                                                        ->options(function (Get $get) {
 
-                                                                $lotes = Lote::get();
+                                                            $lotes = Lote::get();
 
-                                                                if($get('lote_type_id')) {
-                                                                    $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
-                                                                }
-                                                                return $lotes->mapWithKeys(function ($lote) {
-                                                                    return [
-                                                                        $lote->id => "{$lote->getNombre()}"
-                                                                    ];
-                                                                });
-                                                            })
-                                                            ->required(),
-                                                    ])
-                                                    ->columns(1),
-                                                Fieldset::make('items_invoice')
-                                                    ->label('Items de Factura')
-                                                    ->schema([
+                                                            if($get('lote_type_id')) {
+                                                                $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
+                                                            }
+                                                            return $lotes->mapWithKeys(function ($lote) {
+                                                                return [
+                                                                    $lote->id => "{$lote->getNombre()}"
+                                                                ];
+                                                            });
+                                                        })
+                                                        ->required(),
+                                                ])
+                                                ->columnSpan(1),
+                                            Fieldset::make('items_invoice')
+                                                ->label('Items de Factura')
+                                                ->schema([
 
-                                                        Repeater::make(name: 'items')
-                                                            ->label('Configura los items que se incluirán en la factura mensual. Puedes definir items fijos o variables.')
-                                                            ->schema([
-                                                                Select::make('is_fixed')
-                                                                    ->options([
-                                                                        1 => 'Fijo',
-                                                                        0 => 'Variable',
-                                                                    ])
-                                                                    ->required()
-                                                                    ->live(),
-                                                                Select::make('expense_concept_id')
-                                                                    ->label('Concepto fijo')
-                                                                    ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
-                                                                    ->visible(fn ($get) => $get('is_fixed') == 1)
-                                                                    ->required(fn ($get) => $get('is_fixed') == 1)
-                                                                    ->live()
-                                                                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                                                                        if ($state) {
-                                                                            $concept = \App\Models\ExpenseConcept::find($state);
-                                                                            if ($concept) {
-                                                                                $set('description', $concept->name);
-                                                                            }
+                                                    Repeater::make(name: 'items')
+                                                        ->label('Configura los items que se incluirán en la factura mensual. Puedes definir items fijos o variables.')
+                                                        ->schema([
+                                                            Select::make('is_fixed')
+                                                                ->options([
+                                                                    1 => 'Fijo',
+                                                                    0 => 'Variable',
+                                                                ])
+                                                                ->required()
+                                                                ->live(),
+                                                            Select::make('expense_concept_id')
+                                                                ->label('Concepto fijo')
+                                                                ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
+                                                                ->visible(fn ($get) => $get('is_fixed') == 1)
+                                                                ->required(fn ($get) => $get('is_fixed') == 1)
+                                                                ->live()
+                                                                ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                                                    if ($state) {
+                                                                        $concept = \App\Models\ExpenseConcept::find($state);
+                                                                        if ($concept) {
+                                                                            $set('description', $concept->name);
                                                                         }
-                                                                    }),
-                                                                TextInput::make('description')
-                                                                    ->label('Descripción')
-                                                                    ->live()
-                                                                    ->required(fn ($get) => $get('is_fixed') != 1),
-                                                                TextInput::make('amount')->numeric()->required(),
-                                                            ])
-                                                            ->addActionLabel('Agrega Item de factura')
-                                                            ->columns(2)
+                                                                    }
+                                                                }),
+                                                            TextInput::make('description')
+                                                                ->label('Descripción')
+                                                                ->live()
+                                                                ->required(fn ($get) => $get('is_fixed') != 1),
+                                                            TextInput::make('amount')->numeric()->required(),
+                                                        ])
+                                                        ->addActionLabel('Agrega Item de factura')
+                                                        ->columns(2)
 
-                                                    ])
-                                                    ->columns(1),
-                                            ])
+                                                ])
+                                                ->columnSpan(1),
+                                        ])->columns(2),
                                     ])
                                     ->afterStateHydrated(function ($state, Set $set, Get $get) {
                                         // Si el array de grupos está vacío o solo tiene grupos vacíos, copiamos los ítems globales a cada grupo
