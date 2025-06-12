@@ -46,43 +46,40 @@ class InvoiceConfigResource extends Resource
 
 
                         Forms\Components\Builder\Block::make('items_invoice')
-                            ->label('Ítem de factura')
+                            ->label('Configura los items a cobrarse en esta facturación mensual')
                             ->schema([
 
-
-
-                                    Repeater::make(name: 'items')
-                                        ->schema([
-                                            Select::make('is_fixed')
-                                                ->options([
-                                                    1 => 'Fijo',
-                                                    0 => 'Variable',
-                                                ])
-                                                ->required()
-                                                ->live(),
-                                            Select::make('expense_concept_id')
-                                                ->label('Concepto fijo')
-                                                ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
-                                                ->visible(fn ($get) => $get('is_fixed') == 1)
-                                                ->required(fn ($get) => $get('is_fixed') == 1)
-                                                ->live()
-                                                ->afterStateUpdated(function ($state, Set $set) {
-                                                    if ($state) {
-                                                        $concept = \App\Models\ExpenseConcept::find($state);
-                                                        if ($concept) {
-                                                            $set('description', $concept->name);
-                                                        }
+                                Repeater::make(name: 'items')
+                                    ->label('')
+                                    ->schema([
+                                        Select::make('is_fixed')
+                                            ->options([
+                                                1 => 'Fijo',
+                                                0 => 'Variable',
+                                            ])
+                                            ->required()
+                                            ->live(),
+                                        Select::make('expense_concept_id')
+                                            ->label('Concepto fijo')
+                                            ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
+                                            ->visible(fn ($get) => $get('is_fixed') == 1)
+                                            ->required(fn ($get) => $get('is_fixed') == 1)
+                                            ->live()
+                                            ->afterStateUpdated(function ($state, Set $set) {
+                                                if ($state) {
+                                                    $concept = \App\Models\ExpenseConcept::find($state);
+                                                    if ($concept) {
+                                                        $set('description', $concept->name);
                                                     }
-                                                }),
-                                            TextInput::make('description')
-                                                ->label('Descripción')
-                                                ->live()
-                                                ->required(fn ($get) => $get('is_fixed') != 1),
-                                            TextInput::make('amount')->numeric()->required(),
-                                        ])
-                                        ->columns(2),
-
-
+                                                }
+                                            }),
+                                        TextInput::make('description')
+                                            ->label('Descripción')
+                                            ->live()
+                                            ->required(fn ($get) => $get('is_fixed') != 1),
+                                        TextInput::make('amount')->numeric()->required(),
+                                    ])
+                                    ->columns(3),
 
                             ])
                             ->columns(1),
@@ -90,7 +87,7 @@ class InvoiceConfigResource extends Resource
 
                     ])
                     ->minItems(1)
-                    ->addActionLabel('Agregar ítem')
+                    ->addActionLabel('Agregar bloque de configuracion')
                     ->blockNumbers(false)
                     ->columnSpanFull(),
 
