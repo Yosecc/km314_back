@@ -189,7 +189,7 @@ class InvoiceConfigResource extends Resource
                                             // dd('-.-',, $state,$get('../../../config'),);
                                             $global = collect($get('../../../config'))->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
 
-                                            $state = collect($state)->map(function ($group) use ($set, $get) {
+                                            $state = collect($state['data'])->map(function ($group) use ($set, $get) {
                                                 if (isset($group['items'])) {
                                                     $group['items'] = $global['data']['items'] ?? [];
                                                 }
