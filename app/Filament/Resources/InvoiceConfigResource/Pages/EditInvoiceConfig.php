@@ -21,7 +21,7 @@ class EditInvoiceConfig extends EditRecord
                 ->color('success')
                 ->visible(fn($record) => $record->status === 'Borrador')
                 ->requiresConfirmation()
-                ->action(function ($record, $livewire) {
+                ->action(function ($record) {
                     $record->status = 'Aprobado';
                     $record->aprobe_user_id = auth()->id();
                     $record->aprobe_date = now();
@@ -30,7 +30,7 @@ class EditInvoiceConfig extends EditRecord
                         ->title('Configuración aprobada')
                         ->success()
                         ->send();
-                    $livewire->redirect(request()->fullUrl());
+                    return redirect(request()->fullUrl());
                 }),
         ];
     }
