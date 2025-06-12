@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InvoiceConfig extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'period',
@@ -15,7 +16,8 @@ class InvoiceConfig extends Model
         'config',
         'expiration_date',
         'second_expiration_date',
-        'punitive'
+        'punitive',
+        'status',
     ];
 
     protected $casts = [
@@ -24,6 +26,17 @@ class InvoiceConfig extends Model
         'expiration_date' => 'date',
         'second_expiration_date' => 'date',
         'fecha_creacion' => 'date',
-        'punitive' => 'integer'
+        'punitive' => 'integer',
+        'status' => 'string', // Enum, pero casteado como string para Eloquent
     ];
+
+    // Opcional: método para obtener el label del status
+    public function getStatusLabelAttribute()
+    {
+        return match($this->status) {
+            'borrador' => 'Borrador',
+            'procesado' => 'Procesado',
+            default => ucfirst($this->status),
+        };
+    }
 }

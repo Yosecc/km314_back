@@ -52,6 +52,11 @@ class InvoiceConfigResource extends Resource
                         Grid::make()
                             ->columns(4)
                             ->schema([
+
+                                /**
+                                 * CANTIDAD DE FACTURAS TODO
+                                 * debe registrarse y guardarse en el json. cuantas facturas
+                                 */
                                 Fieldset::make('Facturas')
                                     ->columns(1)
                                     ->columnSpan(1)
@@ -167,8 +172,9 @@ class InvoiceConfigResource extends Resource
                                     ->columns(1)
                                     ->schema([
                                         Forms\Components\Placeholder::make('fechas_control')
-                                            ->label('Fechas de control')
+                                            ->label('')
                                             ->extraAttributes(['style' => 'font-size: 1.2rem;'])
+                                            ->helperText('La fecha de ejecución es la fecha en la que se generarán las facturas. El periodo de facturación es el mes y año correspondiente a las facturas generadas.')
                                             ->content(function (Get $get) {
                                                 $period = $get('period');
                                                 $fechaCreacion = $get('fecha_creacion');
@@ -177,6 +183,30 @@ class InvoiceConfigResource extends Resource
                                                 return new \Illuminate\Support\HtmlString(
                                                     '<div><strong>Periodo de facturación:</strong> ' . $periodStr . '</div>' .
                                                     '<div><strong>Fecha de ejecución:</strong> ' . $fechaCreacionStr . '</div>'
+                                                );
+                                            }),
+                                    ]),
+                                Fieldset::make('Estado')
+                                    ->columnSpan(1)
+                                    ->columns(1)
+                                    ->extraAttributes([
+                                        // Puedes personalizar el fondo aquí, por ejemplo:
+                                        'class' => 'bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700',
+                                        'style' => 'padding: 1rem;'
+                                    ])
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('status')
+                                            ->label('')
+                                            ->extraAttributes(['style' => 'font-size: 1.2rem;'])
+                                            ->content(function (Get $get) {
+                                                $status = $get('status');
+                                                $labels = [
+                                                    'borrador' => ['label' => 'Borrador', 'color' => 'bg-gray-400 text-white'],
+                                                    'procesado' => ['label' => 'Procesado', 'color' => 'bg-green-600 text-white'],
+                                                ];
+                                                $info = $labels[$status] ?? ['label' => ucfirst($status), 'color' => 'bg-primary-600 text-white'];
+                                                return new \Illuminate\Support\HtmlString(
+                                                    "<span class='px-3 py-1 rounded-full text-sm font-semibold {$info['color']}'>{$info['label']}</span>"
                                                 );
                                             }),
                                     ]),
