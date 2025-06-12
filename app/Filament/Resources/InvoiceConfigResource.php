@@ -186,7 +186,7 @@ class InvoiceConfigResource extends Resource
                                         ])
                                         ->afterStateHydrated(function ($state, Set $set, Get $get) {
                                             // Si no hay items y existen items globales, los copiamos
-                                            dd('--',$get('../../../config'));
+                                            // dd('-.-',$get('../../config'));
                                             if (empty($state) || count($state) === 0) {
                                                 $builder = $get('../../../../config');
                                                 if (is_array($builder)) {
