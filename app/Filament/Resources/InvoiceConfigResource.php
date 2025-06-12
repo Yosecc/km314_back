@@ -79,6 +79,7 @@ class InvoiceConfigResource extends Resource
                                             ->required(fn ($get) => $get('is_fixed') != 1),
                                         TextInput::make('amount')->numeric()->required(),
                                     ])
+
                                     ->columns(3),
 
                             ])
