@@ -330,13 +330,42 @@ class InvoiceConfigResource extends Resource
                                     ->maxItems(1)
                                     ->columns(1),
 
-                                // Forms\Components\Builder\Block::make('params_general_invoices')
-                                //     ->label('Parametros generales de facturación')
-                                //     ->schema([
+                                Forms\Components\Builder\Block::make('exclude_lotes')
+                                    ->label('Excluir Lotes')
+                                    ->description('Selecciona lotes que no deben ser incluidos en la facturación mensual. Estos lotes no recibirán facturas')
+                                    ->schema([
+                                        Select::make('lote_type_id')
+                                            ->label(__("general.LoteType"))
+                                            ->live()
+                                            ->options(function () {
+                                                $lotes = loteType::get();
+                                                return $lotes->mapWithKeys(function ($lote) {
+                                                    return [
+                                                        $lote->id => "{$lote->name}"
+                                                    ];
+                                                });
+                                            }),
+                                        Select::make('lotes_id')
+                                            ->label('Lote')
+                                            ->multiple()
+                                            ->live()
+                                            ->options(function (Get $get) {
 
-                                //     ])
-                                //     ->maxItems(1)
-                                //     ->columns(3),
+                                                $lotes = Lote::get();
+
+                                                if($get('lote_type_id')) {
+                                                    $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
+                                                }
+                                                return $lotes->mapWithKeys(function ($lote) {
+                                                    return [
+                                                        $lote->id => "{$lote->getNombre()}"
+                                                    ];
+                                                });
+                                            })
+                                            ->required(),
+                                    ])
+                                    ->maxItems(1)
+                                    ->columns(3),
 
 
                             ])
