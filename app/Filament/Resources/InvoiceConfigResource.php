@@ -21,6 +21,8 @@ use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Infolists\Components\Grid as GridInfoList;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -44,6 +46,19 @@ class InvoiceConfigResource extends Resource
             ->schema([
 
                 Wizard::make([
+                    Wizard\Step::make('info')
+                    ->label('Información General')
+                    ->schema([
+                        GridInfoList::make([
+                            'default' => 3,
+                        ])
+                        ->schema([
+                            TextEntry::make('name'),
+                            TextEntry::make('name'),
+                            TextEntry::make('name'),
+                            TextEntry::make('name'),
+                        ])
+                    ]),
                     Wizard\Step::make('step_basic_params')
                     ->label('Parámetros Básicos')
                     ->schema([
