@@ -78,7 +78,7 @@ class InvoiceConfigResource extends Resource
                                     ->schema([
                                         Select::make('is_fixed')
                                             ->label('Tipo de item')
-                                            ->helperText('Selecciona si el item es fijo o variable. Los items fijos se toman de los conceptos de gastos predefinidos.')
+                                            // ->helperText('Selecciona si el item es fijo o variable. Los items fijos se toman de los conceptos de gastos predefinidos.')
                                             ->options([
                                                 1 => 'Fijo',
                                                 0 => 'Variable',
@@ -170,7 +170,7 @@ class InvoiceConfigResource extends Resource
                                                         ->schema([
                                                             Select::make('is_fixed')
                                                                 ->label('Tipo de item')
-                                                                ->helperText('Selecciona si el item es fijo o variable. Los items fijos se toman de los conceptos de gastos predefinidos.')
+                                                                // ->helperText('Selecciona si el item es fijo o variable. Los items fijos se toman de los conceptos de gastos predefinidos.')
                                                                 ->options([
                                                                     1 => 'Fijo',
                                                                     0 => 'Variable',
