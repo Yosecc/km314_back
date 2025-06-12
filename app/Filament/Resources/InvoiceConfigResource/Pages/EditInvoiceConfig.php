@@ -30,7 +30,6 @@ class EditInvoiceConfig extends EditRecord
                         ->title('Configuración aprobada')
                         ->success()
                         ->send();
-                    return redirect(request()->fullUrl());
                 }),
         ];
     }
