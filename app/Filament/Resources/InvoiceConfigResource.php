@@ -53,6 +53,7 @@ class InvoiceConfigResource extends Resource
                             ->columns(4)
                             ->schema([
                                 Fieldset::make('Label')
+                                    ->columns(1)
                                     ->columnSpan(1)
                                     ->schema([
                                         Forms\Components\Placeholder::make('total_lotes_con_owner')
@@ -63,6 +64,7 @@ class InvoiceConfigResource extends Resource
                                     ]),
                                 Fieldset::make('Label')
                                     ->columnSpan(1)
+                                    ->columns(1)
                                     ->schema([
                                     Forms\Components\Placeholder::make('total_grupos')
                                         ->label('Cantidad de grupos Personalizados')
@@ -74,6 +76,11 @@ class InvoiceConfigResource extends Resource
                                             return count($grupos);
                                     }),
                                 ]),
+                                Fieldset::make('Label')
+                                    ->columnSpan(1)
+                                    ->columns(1)
+                                    ->schema([
+
                                 // En el resumen visual, quitamos los totales de la tabla y los mostramos en campos separados arriba.
                                 Forms\Components\Placeholder::make('total_lotes_en_grupos_personalizados')
                                     ->label('Total de lotes en grupos personalizados')
@@ -85,6 +92,12 @@ class InvoiceConfigResource extends Resource
                                         $totalLotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->count();
                                         return $totalLotesEnGrupos;
                                     }),
+                                    ]),
+Fieldset::make('Label')
+                                    ->columnSpan(1)
+                                    ->columns(1)
+                                    ->schema([
+
                                 Forms\Components\Placeholder::make('total_lotes_excluidos')
                                     ->label('Total de lotes excluidos')
                                     ->content(function (Get $get) {
@@ -94,6 +107,11 @@ class InvoiceConfigResource extends Resource
                                         $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
                                         return is_array($excluidos) ? count($excluidos) : 0;
                                     }),
+                                     ]),
+                                     Fieldset::make('Label')
+                                    ->columnSpan(1)
+                                    ->columns(1)
+                                    ->schema([
                                 Forms\Components\Placeholder::make('total_lotes_generales')
                                     ->label('Total de lotes a los que se aplican ítems generales')
                                     ->content(function (Get $get) {
@@ -109,6 +127,8 @@ class InvoiceConfigResource extends Resource
                                         $lotesGenerales = array_diff($totalLotesConOwner, $totalLotesEnGrupos, $totalLotesExcluidos);
                                         return count($lotesGenerales);
                                     }),
+
+                                     ]),
                                 Forms\Components\Placeholder::make('resumen_grupos')
                                     ->label('Grupos y lotes personalizados')
                                     ->content(function (Get $get) {
