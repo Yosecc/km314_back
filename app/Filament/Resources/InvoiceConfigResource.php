@@ -74,8 +74,12 @@ class InvoiceConfigResource extends Resource
                                             collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray(),
                                             is_array($excluidos) ? $excluidos : []
                                         )))->get()->keyBy('id');
-                                        $html = '<table style="margin-left:1em; border-collapse:collapse; width:100%">';
-                                        $html .= '<thead><tr><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Grupo</th><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px; width: 160px">Cantidad de lotes</th><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Lotes</th></tr></thead><tbody>';
+                                        $html = '<table class="min-w-full divide-y divide-gray-200 border border-gray-300 rounded-lg overflow-hidden text-sm">';
+                                        $html .= '<thead class="bg-gray-50"><tr>';
+                                        $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 border-b">Grupo</th>';
+                                        $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 border-b w-40">Cantidad de lotes</th>';
+                                        $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 border-b">Lotes</th>';
+                                        $html .= '</tr></thead><tbody class="bg-white">';
                                         foreach ($grupos as $i => $grupo) {
                                             $nombre = $grupo['name'] ?? 'Grupo '.($i+1);
                                             $lotes = $grupo['lotes_id'] ?? [];
@@ -86,9 +90,9 @@ class InvoiceConfigResource extends Resource
                                                 })->implode(', ');
                                                 $lotesList = $nombres;
                                             } else {
-                                                $lotesList = '<em>Sin lotes</em>';
+                                                $lotesList = '<em class="text-gray-400">Sin lotes</em>';
                                             }
-                                            $html .= "<tr><td style='padding:4px;'><strong>{$nombre}</strong></td><td style='padding:4px;'>{$cantidadLotes}</td><td style='padding:4px;'>{$lotesList}</td></tr>";
+                                            $html .= "<tr><td class='px-4 py-2 border-b'><strong>{$nombre}</strong></td><td class='px-4 py-2 border-b'>{$cantidadLotes}</td><td class='px-4 py-2 border-b'>{$lotesList}</td></tr>";
                                         }
                                         // Fila de excluidos
                                         $cantidadExcluidos = is_array($excluidos) ? count($excluidos) : 0;
@@ -96,7 +100,7 @@ class InvoiceConfigResource extends Resource
                                             $nombresExcluidos = collect($excluidos)->map(function($id) use ($allLotes) {
                                                 return $allLotes[$id]->getNombre() ?? $id;
                                             })->implode(', ');
-                                            $html .= "<tr style='background:#ffeaea;'><td style='padding:4px;'><strong>Excluidos</strong></td><td style='padding:4px;'>{$cantidadExcluidos}</td><td style='padding:4px;'>{$nombresExcluidos}</td></tr>";
+                                            $html .= "<tr class='bg-red-50'><td class='px-4 py-2 border-b'><strong>Excluidos</strong></td><td class='px-4 py-2 border-b'>{$cantidadExcluidos}</td><td class='px-4 py-2 border-b'>{$nombresExcluidos}</td></tr>";
                                         }
                                         $html .= '</tbody></table>';
                                         return new \Illuminate\Support\HtmlString($html);
