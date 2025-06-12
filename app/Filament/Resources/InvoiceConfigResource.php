@@ -401,16 +401,6 @@ class InvoiceConfigResource extends Resource
                                                     ];
                                                 });
                                             })
-                                            ->beforeStateUpdated(function ($state, Set $set, Get $get) {
-                                                // Si se selecciona un lote que ya está en un grupo, mostrar mensaje de error
-                                                $config = $get('../../../../config');
-                                                $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
-                                                $grupos = $bloque['data']['groups'] ?? [];
-                                                $lotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
-                                                if (is_array($state) && count(array_intersect($state, $lotesEnGrupos)) > 0) {
-                                                    throw new \Exception('No puedes seleccionar lotes que ya están asignados a un grupo. Si necesitas excluir uno, primero quítalo del grupo.');
-                                                }
-                                            })
                                             ->required()
                                             ->helperText('No puedes seleccionar lotes que ya están asignados a un grupo. Si necesitas excluir uno, primero quítalo del grupo.')
 
