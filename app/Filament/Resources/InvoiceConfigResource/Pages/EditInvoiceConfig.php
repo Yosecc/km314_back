@@ -14,14 +14,14 @@ class EditInvoiceConfig extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            // Actions\DeleteAction::make(),
             Actions\Action::make('aprobar')
                 ->label('Aprobar')
                 ->icon('heroicon-m-check')
                 ->color('success')
                 ->visible(fn($record) => $record->status === 'Borrador')
                 ->requiresConfirmation()
-                ->action(function ($record) {
+                ->action(function ($record, $livewire) {
                     $record->status = 'Aprobado';
                     $record->aprobe_user_id = auth()->id();
                     $record->aprobe_date = now();
@@ -30,6 +30,7 @@ class EditInvoiceConfig extends EditRecord
                         ->title('Configuración aprobada')
                         ->success()
                         ->send();
+                    $livewire->redirect(request()->fullUrl());
                 }),
         ];
     }
