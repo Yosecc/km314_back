@@ -186,8 +186,8 @@ class InvoiceConfigResource extends Resource
                                         ])
                                         ->afterStateHydrated(function ($state, Set $set, Get $get) {
                                             // Si no hay items y existen items globales, los copiamos
-                                            // Buscar el bloque con 'type' => 'items_invoice'
-                                            $global = collect($state)->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
+                                            // dd('-.-',, $state,$get('../../../config'),);
+                                            $global = collect($get('../../../config'))->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
                                             dd( $global );
                                             // if (empty($state) || count($state) === 0) {
                                             //     $builder = $get('../../../../config');
