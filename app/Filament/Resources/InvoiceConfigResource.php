@@ -201,7 +201,7 @@ class InvoiceConfigResource extends Resource
 
                                         // ];
                                         $map = [
-                                            'Borrador' => 'background-color: rgb(207, 110, 6); color: white; border-color: rgb(37,99, 235);',
+                                            'Borrador' => 'background-color: rgb(207, 110, 6); color: white; border-color: rgb(207,110, 6);',
                                             'Procesado' => 'background-color: rgb(34,197,94); color: white; border-color: rgb(34,197,94);',
                                             'Aprobado' => 'background-color: rgb(59,130,246); color: white; border-color: rgb(59,130,246);',
                                         ];
@@ -214,17 +214,10 @@ class InvoiceConfigResource extends Resource
                                     ->schema([
                                         Forms\Components\Placeholder::make('status')
                                             ->label('')
-                                            ->extraAttributes(['style' => 'font-size: 1.2rem;'])
+                                            ->extraAttributes(['style' => 'font-size: 1.875rem;','class'=> 'fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white'])
                                             ->content(function (Get $get) {
                                                 $status = $get('status');
-                                                $labels = [
-                                                    'borrador' => ['label' => 'Borrador', 'color' => 'bg-gray-400 text-white'],
-                                                    'procesado' => ['label' => 'Procesado', 'color' => 'bg-green-600 text-white'],
-                                                ];
-                                                $info = $labels[$status] ?? ['label' => ucfirst($status), 'color' => 'bg-primary-600 text-white'];
-                                                return new \Illuminate\Support\HtmlString(
-                                                    "<span class='px-3 py-1 rounded-full text-sm font-semibold {$info['color']}'>{$info['label']}</span>"
-                                                );
+                                                return $status;
                                             }),
                                     ]),
                             ]),
