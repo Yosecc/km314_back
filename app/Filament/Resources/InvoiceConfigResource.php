@@ -85,6 +85,19 @@ class InvoiceConfigResource extends Resource
                             ])
                             ->columns(1),
 
+                        Forms\Components\Builder\Block::make('custom_items_invoices')
+                            ->label('Grupos de Facturas')
+                            ->schema([
+                                Repeater::make(name: 'groups')
+                                        ->label('Personaliza los items de facturación a grupos propietarios/lotes.')
+                                        ->schema([
+
+                                        ])
+                                    ->addActionLabel('Agrega Item de factura')
+                                    ->columns(4),
+                            ])
+                            ->columns(1),
+
 
                     ])
                     ->minItems(1)
