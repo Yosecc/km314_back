@@ -189,6 +189,7 @@ class InvoiceConfigResource extends Resource
                                             }),
                                     ]),
                                 Fieldset::make('Estado')
+                                    ->label('')
                                     ->columnSpan(1)
                                     ->columns(1)
                                     ->extraAttributes(function (Get $get) {
@@ -201,9 +202,9 @@ class InvoiceConfigResource extends Resource
 
                                         // ];
                                         $map = [
-                                            'Borrador' => 'background-color: rgb(207, 110, 6); color: white; border-color: rgb(207,110, 6);',
-                                            'Procesado' => 'background-color: rgb(34,197,94); color: white; border-color: rgb(34,197,94);',
-                                            'Aprobado' => 'background-color: rgb(59,130,246); color: white; border-color: rgb(59,130,246);',
+                                            'Borrador' => 'background-color: rgb(207, 110, 6); color: white; border-color: rgb(207,110, 6); height:100%',
+                                            'Procesado' => 'background-color: rgb(34,197,94); color: white; border-color: rgb(34,197,94); height:100%',
+                                            'Aprobado' => 'background-color: rgb(59,130,246); color: white; border-color: rgb(59,130,246); height:100%',
                                         ];
 
                                         return [
