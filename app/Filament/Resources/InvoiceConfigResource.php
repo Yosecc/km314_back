@@ -53,7 +53,7 @@ class InvoiceConfigResource extends Resource
                             ->columns(1)
                             ->schema([
                                 Forms\Components\Placeholder::make('total_grupos')
-                                    ->label('Cantidad de grupos de facturación')
+                                    ->label('Cantidad de grupos Personalizados')
                                     ->content(function (Get $get) {
                                         $config = $get('config');
                                         if (!is_array($config)) return '0';
@@ -62,19 +62,20 @@ class InvoiceConfigResource extends Resource
                                         return count($grupos);
                                     }),
                                 Forms\Components\Placeholder::make('resumen_grupos')
-                                    ->label('Grupos y lotes configurados')
+                                    ->label('Grupos y lotes personalizados')
                                     ->content(function (Get $get) {
                                         $config = $get('config');
                                         if (!is_array($config)) return new \Illuminate\Support\HtmlString('Sin grupos');
                                         $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
                                         $grupos = $bloque['data']['groups'] ?? [];
                                         if (empty($grupos)) return new \Illuminate\Support\HtmlString('Sin grupos');
-                                        $allLotes = \App\Models\Lote::whereIn('id', collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray())->get()->keyBy('id');
+                                        $allLotes = Lote::whereIn('id', collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray())->get()->keyBy('id');
                                         $html = '<ul style="margin-left:1em">';
                                         foreach ($grupos as $i => $grupo) {
                                             $nombre = $grupo['name'] ?? 'Grupo '.($i+1);
                                             $lotes = $grupo['lotes_id'] ?? [];
-                                            if (is_array($lotes) && count($lotes) > 0) {
+                                            $cantidadLotes = is_array($lotes) ? count($lotes) : 0;
+                                            if ($cantidadLotes > 0) {
                                                 $nombres = collect($lotes)->map(function($id) use ($allLotes) {
                                                     return $allLotes[$id]->getNombre() ?? $id;
                                                 })->implode(', ');
@@ -82,13 +83,18 @@ class InvoiceConfigResource extends Resource
                                             } else {
                                                 $lotesList = '<em>Sin lotes</em>';
                                             }
-                                            $html .= "<li><strong>{$nombre}</strong>: {$lotesList}</li>";
+                                            $html .= "<li><strong>{$nombre}</strong> ({$cantidadLotes} lotes): {$lotesList}</li>";
                                         }
                                         $html .= '</ul>';
                                         return new \Illuminate\Support\HtmlString($html);
                                     })
                                     ->extraAttributes(['style' => 'font-size:1em'])
                                     ->columnSpanFull(),
+                                Forms\Components\Placeholder::make('total_lotes_con_owner')
+                                    ->label('Total de lotes con propietario asignado')
+                                    ->content(function () {
+                                        return Lote::whereNotNull('owner_id')->count();
+                                    }),
                             ]),
                     ]),
                     Wizard\Step::make('step_basic_params')
