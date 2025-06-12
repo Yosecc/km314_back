@@ -74,12 +74,12 @@ class InvoiceConfigResource extends Resource
                                             collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray(),
                                             is_array($excluidos) ? $excluidos : []
                                         )))->get()->keyBy('id');
-                                        $html = '<table class="min-w-full divide-y divide-gray-200 border border-gray-300 rounded-lg overflow-hidden text-sm">';
-                                        $html .= '<thead class="bg-gray-50"><tr>';
-                                        $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 border-b">Grupo</th>';
-                                        $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 border-b w-40">Cantidad de lotes</th>';
-                                        $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 border-b">Lotes</th>';
-                                        $html .= '</tr></thead><tbody class="bg-white">';
+                                        $html = '<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden text-sm">';
+                                        $html .= '<thead class="bg-gray-50 dark:bg-gray-800"><tr>';
+                                        $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200 border-b dark:border-gray-700">Grupo</th>';
+                                        $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200 border-b dark:border-gray-700 w-40">Cantidad de lotes</th>';
+                                        $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200 border-b dark:border-gray-700">Lotes</th>';
+                                        $html .= '</tr></thead><tbody class="bg-white dark:bg-gray-900">';
                                         foreach ($grupos as $i => $grupo) {
                                             $nombre = $grupo['name'] ?? 'Grupo '.($i+1);
                                             $lotes = $grupo['lotes_id'] ?? [];
@@ -90,9 +90,9 @@ class InvoiceConfigResource extends Resource
                                                 })->implode(', ');
                                                 $lotesList = $nombres;
                                             } else {
-                                                $lotesList = '<em class="text-gray-400">Sin lotes</em>';
+                                                $lotesList = '<em class="text-gray-400 dark:text-gray-500">Sin lotes</em>';
                                             }
-                                            $html .= "<tr><td class='px-4 py-2 border-b'><strong>{$nombre}</strong></td><td class='px-4 py-2 border-b'>{$cantidadLotes}</td><td class='px-4 py-2 border-b'>{$lotesList}</td></tr>";
+                                            $html .= "<tr><td class='px-4 py-2 border-b dark:border-gray-700'><strong>{$nombre}</strong></td><td class='px-4 py-2 border-b dark:border-gray-700'>{$cantidadLotes}</td><td class='px-4 py-2 border-b dark:border-gray-700'>{$lotesList}</td></tr>";
                                         }
                                         // Fila de excluidos
                                         $cantidadExcluidos = is_array($excluidos) ? count($excluidos) : 0;
@@ -100,7 +100,7 @@ class InvoiceConfigResource extends Resource
                                             $nombresExcluidos = collect($excluidos)->map(function($id) use ($allLotes) {
                                                 return $allLotes[$id]->getNombre() ?? $id;
                                             })->implode(', ');
-                                            $html .= "<tr class='bg-red-50'><td class='px-4 py-2 border-b'><strong>Excluidos</strong></td><td class='px-4 py-2 border-b'>{$cantidadExcluidos}</td><td class='px-4 py-2 border-b'>{$nombresExcluidos}</td></tr>";
+                                            $html .= "<tr class='bg-red-50 dark:bg-red-900'><td class='px-4 py-2 border-b dark:border-gray-700'><strong>Excluidos</strong></td><td class='px-4 py-2 border-b dark:border-gray-700'>{$cantidadExcluidos}</td><td class='px-4 py-2 border-b dark:border-gray-700'>{$nombresExcluidos}</td></tr>";
                                         }
                                         $html .= '</tbody></table>';
                                         return new \Illuminate\Support\HtmlString($html);
