@@ -68,8 +68,12 @@ class InvoiceConfigResource extends Resource
                                         if (!is_array($config)) return new \Illuminate\Support\HtmlString('Sin grupos');
                                         $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
                                         $grupos = $bloque['data']['groups'] ?? [];
-                                        if (empty($grupos)) return new \Illuminate\Support\HtmlString('Sin grupos');
-                                        $allLotes = Lote::whereIn('id', collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray())->get()->keyBy('id');
+                                        $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
+                                        $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
+                                        $allLotes = Lote::whereIn('id', array_unique(array_merge(
+                                            collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray(),
+                                            is_array($excluidos) ? $excluidos : []
+                                        )))->get()->keyBy('id');
                                         $html = '<table style="margin-left:1em; border-collapse:collapse; width:100%">';
                                         $html .= '<thead><tr><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Grupo</th><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px; width: 160px">Cantidad de lotes</th><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Lotes</th></tr></thead><tbody>';
                                         foreach ($grupos as $i => $grupo) {
@@ -85,6 +89,14 @@ class InvoiceConfigResource extends Resource
                                                 $lotesList = '<em>Sin lotes</em>';
                                             }
                                             $html .= "<tr><td style='padding:4px;'><strong>{$nombre}</strong></td><td style='padding:4px;'>{$cantidadLotes}</td><td style='padding:4px;'>{$lotesList}</td></tr>";
+                                        }
+                                        // Fila de excluidos
+                                        $cantidadExcluidos = is_array($excluidos) ? count($excluidos) : 0;
+                                        if ($cantidadExcluidos > 0) {
+                                            $nombresExcluidos = collect($excluidos)->map(function($id) use ($allLotes) {
+                                                return $allLotes[$id]->getNombre() ?? $id;
+                                            })->implode(', ');
+                                            $html .= "<tr style='background:#ffeaea;'><td style='padding:4px;'><strong>Excluidos</strong></td><td style='padding:4px;'>{$cantidadExcluidos}</td><td style='padding:4px;'>{$nombresExcluidos}</td></tr>";
                                         }
                                         $html .= '</tbody></table>';
                                         return new \Illuminate\Support\HtmlString($html);
