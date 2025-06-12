@@ -297,6 +297,8 @@ class InvoiceConfigResource extends Resource
 
 
                             ])
+                            ->collapsed(fn ($context) => $context === 'edit')
+                            ->cloneable()
                             ->minItems(1)
                             ->maxItems(3)
                             ->collapsible()
