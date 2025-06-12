@@ -100,9 +100,19 @@ class InvoiceConfigResource extends Resource
                                             $nombresExcluidos = collect($excluidos)->map(function($id) use ($allLotes) {
                                                 return $allLotes[$id]->getNombre() ?? $id;
                                             })->implode(', ');
-                                            $html .= "<tr class='bg-red-50 dark:bg-red-900'><td class='px-4 py-2 border-b dark:border-gray-700'><strong>Excluidos</strong></td><td class='px-4 py-2 border-b dark:border-gray-700'>{$cantidadExcluidos}</td><td class='px-4 py-2 border-b dark:border-gray-700'>{$nombresExcluidos}</td></tr>";
+                                            $html .= "<tr class='bg-red-50 dark:bg-red-900'><td class='px-4 py-2 border-b dark:border-gray-700'><strong>Excluidos</strong></td><td class='px-4 py-2 border-b dark:border-gray-700'>-{$cantidadExcluidos}</td><td class='px-4 py-2 border-b dark:border-gray-700'>{$nombresExcluidos}</td></tr>";
                                         }
                                         $html .= '</tbody></table>';
+                                        // En el resumen visual, mostrar el total de lotes en grupos y el total de lotes a los que se aplican los ítems generales
+                                        // Justo después de la tabla, antes de return new HtmlString($html):
+                                        $totalLotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->count();
+                                        $totalLotesConOwner = Lote::whereNotNull('owner_id')->count();
+                                        $totalLotesGenerales = $totalLotesConOwner - $totalLotesEnGrupos;
+                                        $html .= '<tfoot><tr><td colspan="3" class="px-4 py-2 text-right text-xs text-gray-500 dark:text-gray-400">';
+                                        $html .= 'Total de lotes en grupos: <span class="font-semibold">' . $totalLotesEnGrupos . '</span><br>';
+                                        $html .= 'Total de lotes con propietario: <span class="font-semibold">' . $totalLotesConOwner . '</span><br>';
+                                        $html .= 'Total de lotes a los que se aplican ítems generales: <span class="font-semibold">' . $totalLotesGenerales . '</span>';
+                                        $html .= '</td></tr></tfoot>';
                                         return new \Illuminate\Support\HtmlString($html);
                                     })
                                     ->extraAttributes(['style' => 'font-size:1em'])
@@ -378,7 +388,22 @@ class InvoiceConfigResource extends Resource
                                                     ];
                                                 });
                                             })
-                                            ->required(),
+                                            ->required()
+                                            ->rule(function (Get $get) {
+                                                return function ($attribute, $value, $fail) use ($get) {
+                                                    // Obtener los lotes de los grupos
+                                                    $config = $get('../../../../config');
+                                                    $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                                    $grupos = $bloque['data']['groups'] ?? [];
+                                                    $lotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
+                                                    $lotesExcluidos = is_array($value) ? $value : [];
+                                                    $enGrupos = array_intersect($lotesEnGrupos, $lotesExcluidos);
+                                                    if (count($enGrupos) > 0) {
+                                                        $nombres = Lote::whereIn('id', $enGrupos)->pluck('name')->implode(', ');
+                                                        $fail('No puedes excluir lotes que ya están asignados a un grupo: ' . $nombres);
+                                                    }
+                                                };
+                                            }),
                                     ])
                                     ->maxItems(1)
                                     ->columns(3),
