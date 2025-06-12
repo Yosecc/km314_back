@@ -255,8 +255,6 @@ class InvoiceConfigResource extends Resource
                            Forms\Components\Builder::make('config')
                             ->label('Configuración de Facturación')
                             ->blocks([
-                                TextInput::make('count_lotes')->default(Lote::whereNotNull('owner_id')->count()),
-
                                 Forms\Components\Builder\Block::make('items_invoice')
                                     ->label('Items de Factura')
                                     ->schema([
