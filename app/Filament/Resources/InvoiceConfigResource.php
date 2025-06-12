@@ -52,7 +52,7 @@ class InvoiceConfigResource extends Resource
                         Grid::make()
                             ->columns(4)
                             ->schema([
-                                Fieldset::make('Lotes Facturables')
+                                Fieldset::make('Lotes')
                                     ->columns(1)
                                     ->columnSpan(1)
                                     ->schema([
@@ -78,7 +78,7 @@ class InvoiceConfigResource extends Resource
                                                 return count($grupos);
                                         }),
                                     ]),
-                                Fieldset::make('Lotes en grupos personalizados')
+                                Fieldset::make('Facturas personalizadas')
                                     ->columnSpan(1)
                                     ->columns(1)
                                     ->schema([
@@ -109,27 +109,7 @@ class InvoiceConfigResource extends Resource
                                                 return is_array($excluidos) ? count($excluidos) : 0;
                                             }),
                                      ]),
-                                // Fieldset::make('Facturaciones')
-                                //     ->columnSpan(1)
-                                //     ->columns(1)
-                                //     ->schema([
-                                //         Forms\Components\Placeholder::make('total_lotes_generales')
-                                //             ->label('Total de lotes a los que se aplican ítems generales')
-                                //             ->content(function (Get $get) {
-                                //                 $config = $get('config');
-                                //                 if (!is_array($config)) return '0';
-                                //                 $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
-                                //                 $grupos = $bloque['data']['groups'] ?? [];
-                                //                 $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
-                                //                 $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
-                                //                 $totalLotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
-                                //                 $totalLotesConOwner = \App\Models\Lote::whereNotNull('owner_id')->pluck('id')->toArray();
-                                //                 $totalLotesExcluidos = is_array($excluidos) ? $excluidos : [];
-                                //                 $lotesGenerales = array_diff($totalLotesConOwner, $totalLotesEnGrupos, $totalLotesExcluidos);
-                                //                 return count($lotesGenerales);
-                                //             }),
 
-                                //     ]),
                                 Forms\Components\Placeholder::make('resumen_grupos')
                                     ->label('Grupos y lotes personalizados')
                                     ->content(function (Get $get) {
@@ -176,40 +156,81 @@ class InvoiceConfigResource extends Resource
                                     })
                                     ->extraAttributes(['style' => 'font-size:1em'])
                                     ->columnSpanFull(),
+                                // Fieldset::make('Facturas simples')
+                                //     ->columnSpan(1)
+                                //     ->columns(1)
+                                //     ->schema([
+                                //         Forms\Components\Placeholder::make('total_lotes_generales')
+                                //             ->label('')
+                                //             ->extraAttributes(['style' => 'font-size: 1.875rem;','class'=> 'fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white'])
+                                //             ->content(function (Get $get) {
+                                //                 $config = $get('config');
+                                //                 if (!is_array($config)) return '0';
+                                //                 $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                //                 $grupos = $bloque['data']['groups'] ?? [];
+                                //                 $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
+                                //                 $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
+                                //                 $totalLotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
+                                //                 $totalLotesConOwner = \App\Models\Lote::whereNotNull('owner_id')->pluck('id')->toArray();
+                                //                 $totalLotesExcluidos = is_array($excluidos) ? $excluidos : [];
+                                //                 $lotesGenerales = array_diff($totalLotesConOwner, $totalLotesEnGrupos, $totalLotesExcluidos);
+                                //                 return count($lotesGenerales);
+                                //             }),
+
+                                //     ]),
+                                 Fieldset::make('Facturas totales')
+                                    ->columnSpan(1)
+                                    ->columns(1)
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('total_facturas_a_crear')
+                                            ->label('')
+                                            ->extraAttributes(['style' => 'font-size: 1.875rem;','class'=> 'fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white'])
+                                            ->content(function (Get $get) {
+                                                // Total de lotes con propietario menos los excluidos
+                                                $totalLotesConOwner = \App\Models\Lote::whereNotNull('owner_id')->pluck('id')->toArray();
+                                                $config = $get('config');
+                                                if (!is_array($config)) return '0';
+                                                $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
+                                                $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
+                                                $totalLotesExcluidos = is_array($excluidos) ? $excluidos : [];
+                                                $facturas = array_diff($totalLotesConOwner, $totalLotesExcluidos);
+                                                return count($facturas);
+                                            }),
+                                    ]),
                             ]),
                     ]),
                     Wizard\Step::make('step_basic_params')
-                    ->label('Parámetros Básicos')
-                    ->schema([
-                        DatePicker::make('period')
-                            ->label('Periodo de Facturación')
-                            ->required()
-                            ->displayFormat('F Y')
-                            ->helperText('Selecciona el mes y año de la facturación.'),
-                        DatePicker::make('fecha_creacion')
-                            ->label('Fecha de Ejecución')
-                            ->required()
-                            ->displayFormat('d/m/Y')
-                            ->helperText('Fecha en la que se ejecutará esta configuración y se generarán las facturas.'),
-                        DatePicker::make('expiration_date')
-                            ->label('Vencimiento Principal')
-                            ->required()
-                            ->displayFormat('d/m/Y')
-                            ->helperText('Fecha de vencimiento principal de las facturas generadas.'),
-                        DatePicker::make('second_expiration_date')
-                            ->label('Segundo Vencimiento')
-                            ->required()
-                            ->displayFormat('d/m/Y')
-                            ->helperText('Segunda fecha de vencimiento para pagos fuera de término.'),
-                        TextInput::make('punitive')
-                            ->label('Interés Moratorio (%)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(100)
-                            ->step(0.01)
-                            ->required()
-                            ->helperText('Porcentaje de interés moratorio aplicado a facturas vencidas.'),
-                    ]),
+                        ->label('Parámetros Básicos')
+                        ->schema([
+                            DatePicker::make('period')
+                                ->label('Periodo de Facturación')
+                                ->required()
+                                ->displayFormat('F Y')
+                                ->helperText('Selecciona el mes y año de la facturación.'),
+                            DatePicker::make('fecha_creacion')
+                                ->label('Fecha de Ejecución')
+                                ->required()
+                                ->displayFormat('d/m/Y')
+                                ->helperText('Fecha en la que se ejecutará esta configuración y se generarán las facturas.'),
+                            DatePicker::make('expiration_date')
+                                ->label('Vencimiento Principal')
+                                ->required()
+                                ->displayFormat('d/m/Y')
+                                ->helperText('Fecha de vencimiento principal de las facturas generadas.'),
+                            DatePicker::make('second_expiration_date')
+                                ->label('Segundo Vencimiento')
+                                ->required()
+                                ->displayFormat('d/m/Y')
+                                ->helperText('Segunda fecha de vencimiento para pagos fuera de término.'),
+                            TextInput::make('punitive')
+                                ->label('Interés Moratorio (%)')
+                                ->numeric()
+                                ->minValue(0)
+                                ->maxValue(100)
+                                ->step(0.01)
+                                ->required()
+                                ->helperText('Porcentaje de interés moratorio aplicado a facturas vencidas.'),
+                        ]),
                     Wizard\Step::make('step_config')
                         ->label('Items & Facturas')
                         ->schema([
