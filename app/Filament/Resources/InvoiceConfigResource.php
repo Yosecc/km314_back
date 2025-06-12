@@ -53,22 +53,27 @@ class InvoiceConfigResource extends Resource
                             ->columns(4)
                             ->schema([
                                 Fieldset::make('Label')
-                                ->schema([
-                                    Forms\Components\Placeholder::make('total_lotes_con_owner')
-                                        ->label('Total de lotes registrados')
-                                        ->content(function () {
-                                            return Lote::whereNotNull('owner_id')->count();
-                                        })
-                                ]),
-                                Forms\Components\Placeholder::make('total_grupos')
-                                    ->label('Cantidad de grupos Personalizados')
-                                    ->content(function (Get $get) {
-                                        $config = $get('config');
-                                        if (!is_array($config)) return '0';
-                                        $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
-                                        $grupos = $bloque['data']['groups'] ?? [];
-                                        return count($grupos);
+                                    ->columnSpan(1)
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('total_lotes_con_owner')
+                                            ->label('Total de lotes registrados')
+                                            ->content(function () {
+                                                return Lote::whereNotNull('owner_id')->count();
+                                            })
+                                    ]),
+                                Fieldset::make('Label')
+                                    ->columnSpan(1)
+                                    ->schema([
+                                    Forms\Components\Placeholder::make('total_grupos')
+                                        ->label('Cantidad de grupos Personalizados')
+                                        ->content(function (Get $get) {
+                                            $config = $get('config');
+                                            if (!is_array($config)) return '0';
+                                            $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                            $grupos = $bloque['data']['groups'] ?? [];
+                                            return count($grupos);
                                     }),
+                                ]),
                                 // En el resumen visual, quitamos los totales de la tabla y los mostramos en campos separados arriba.
                                 Forms\Components\Placeholder::make('total_lotes_en_grupos_personalizados')
                                     ->label('Total de lotes en grupos personalizados')
