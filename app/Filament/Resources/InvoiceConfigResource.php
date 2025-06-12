@@ -184,6 +184,19 @@ class InvoiceConfigResource extends Resource
                                                 ->columns(1)
 
                                         ])
+                                        ->afterStateHydrated(function ($state, Set $set, Get $get) {
+                                            // Si no hay items y existen items globales, los copiamos
+                                            dd('--',$get('../../../../config'));
+                                            if (empty($state) || count($state) === 0) {
+                                                $builder = $get('../../../../config');
+                                                if (is_array($builder)) {
+                                                    $global = collect($builder)->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
+                                                    if ($global && isset($global['data']['items']) && is_array($global['data']['items'])) {
+                                                        $set('items', $global['data']['items']);
+                                                    }
+                                                }
+                                            }
+                                        })
                                         ->columns(2)
 
                                     ->addActionLabel('Agrega grupo de lotes')
