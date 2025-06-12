@@ -52,6 +52,11 @@ class InvoiceConfigResource extends Resource
                         Grid::make()
                             ->columns(1)
                             ->schema([
+                                Forms\Components\Placeholder::make('total_lotes_con_owner')
+                                    ->label('Total de lotes registrados')
+                                    ->content(function () {
+                                        return Lote::whereNotNull('owner_id')->count();
+                                    }),
                                 Forms\Components\Placeholder::make('total_grupos')
                                     ->label('Cantidad de grupos Personalizados')
                                     ->content(function (Get $get) {
@@ -59,6 +64,27 @@ class InvoiceConfigResource extends Resource
                                         if (!is_array($config)) return '0';
                                         $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
                                         $grupos = $bloque['data']['groups'] ?? [];
+                                        return count($grupos);
+                                    }),
+                                Forms\Components\Placeholder::make('total_lotes_grupos')
+                                    ->label('Cantidad de grupos Personalizados')
+                                    ->content(function (Get $get) {
+                                        $config = $get('config');
+                                        if (!is_array($config)) return '0';
+                                        $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                        $grupos = $bloque['data']['groups'] ?? [];
+                                        foreach ($grupos as $i => $grupo) {
+                                            $nombre = $grupo['name'] ?? 'Grupo '.($i+1);
+                                            $lotes = $grupo['lotes_id'] ?? [];
+                                            $cantidadLotes = is_array($lotes) ? count($lotes) : 0;
+                                            if ($cantidadLotes > 0) {
+                                                $nombres = collect($lotes)->map(function($id) use ($allLotes) {
+                                                    return $allLotes[$id]->getNombre() ?? $id;
+                                                })->implode(', ');
+                                            }
+
+                                        }
+
                                         return count($grupos);
                                     }),
                                 Forms\Components\Placeholder::make('resumen_grupos')
@@ -103,20 +129,41 @@ class InvoiceConfigResource extends Resource
                                             $html .= "<tr class='bg-red-50 dark:bg-red-900'><td class='px-4 py-2 border-b dark:border-gray-700'><strong>Excluidos</strong></td><td class='px-4 py-2 border-b dark:border-gray-700'>-{$cantidadExcluidos}</td><td class='px-4 py-2 border-b dark:border-gray-700'>{$nombresExcluidos}</td></tr>";
                                         }
                                         $html .= '</tbody></table>';
-                                        // En el resumen visual, mostrar el total de lotes en grupos y el total de lotes a los que se aplican los ítems generales
-                                        // Justo después de la tabla, antes de return new HtmlString($html):
-                                        $totalLotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
-                                        $totalLotesConOwner = Lote::whereNotNull('owner_id')->pluck('id')->toArray();
-                                        $totalLotesExcluidos = is_array($excluidos) ? $excluidos : [];
-                                        // Lotes generales = con owner - en grupos - excluidos
-                                        $lotesGenerales = array_diff($totalLotesConOwner, $totalLotesEnGrupos, $totalLotesExcluidos);
-                                        $totalLotesGenerales = count($lotesGenerales);
-                                        $html .= '<tfoot><tr><td colspan="3" class="px-4 py-2 text-right text-xs text-gray-500 dark:text-gray-400">';
-                                        $html .= 'Total de lotes en grupos: <span class="font-semibold">' . count($totalLotesEnGrupos) . '</span><br>';
-                                        $html .= 'Total de lotes con propietario: <span class="font-semibold">' . count($totalLotesConOwner) . '</span><br>';
-                                        $html .= 'Total de lotes excluidos: <span class="font-semibold">' . count($totalLotesExcluidos) . '</span><br>';
-                                        $html .= 'Total de lotes a los que se aplican ítems generales: <span class="font-semibold">' . $totalLotesGenerales . '</span>';
-                                        $html .= '</td></tr></tfoot>';
+                                        // En el resumen visual, quitamos los totales de la tabla y los mostramos en campos separados arriba.
+                                        Forms\Components\Placeholder::make('total_lotes_grupos')
+                                            ->label('Total de lotes en grupos personalizados')
+                                            ->content(function (Get $get) {
+                                                $config = $get('config');
+                                                if (!is_array($config)) return '0';
+                                                $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                                $grupos = $bloque['data']['groups'] ?? [];
+                                                $totalLotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->count();
+                                                return $totalLotesEnGrupos;
+                                            }),
+                                        Forms\Components\Placeholder::make('total_lotes_excluidos')
+                                            ->label('Total de lotes excluidos')
+                                            ->content(function (Get $get) {
+                                                $config = $get('config');
+                                                if (!is_array($config)) return '0';
+                                                $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
+                                                $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
+                                                return is_array($excluidos) ? count($excluidos) : 0;
+                                            }),
+                                        Forms\Components\Placeholder::make('total_lotes_generales')
+                                            ->label('Total de lotes a los que se aplican ítems generales')
+                                            ->content(function (Get $get) {
+                                                $config = $get('config');
+                                                if (!is_array($config)) return '0';
+                                                $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                                $grupos = $bloque['data']['groups'] ?? [];
+                                                $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
+                                                $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
+                                                $totalLotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
+                                                $totalLotesConOwner = \App\Models\Lote::whereNotNull('owner_id')->pluck('id')->toArray();
+                                                $totalLotesExcluidos = is_array($excluidos) ? $excluidos : [];
+                                                $lotesGenerales = array_diff($totalLotesConOwner, $totalLotesEnGrupos, $totalLotesExcluidos);
+                                                return count($lotesGenerales);
+                                            }),
                                         return new \Illuminate\Support\HtmlString($html);
                                     })
                                     ->extraAttributes(['style' => 'font-size:1em'])
