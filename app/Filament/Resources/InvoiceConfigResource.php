@@ -48,20 +48,32 @@ class InvoiceConfigResource extends Resource
                 Wizard::make([
                     Wizard\Step::make('info')
                     ->label('Resumen de la configuración')
-                    // ->description('Configura los parámetros básicos y los items de facturación para este mes.')
                     ->schema([
                         Grid::make()
-                            ->columns(3)
+                            ->columns(1)
                             ->schema([
-                                Forms\Components\Placeholder::make('total_grupos')
-                                    ->label('Cantidad de grupos de facturación')
+                                Forms\Components\Placeholder::make('resumen_grupos')
+                                    ->label('Grupos y lotes configurados')
                                     ->content(function (Get $get) {
                                         $config = $get('config');
-                                        if (!is_array($config)) return '0';
+                                        if (!is_array($config)) return 'Sin grupos';
                                         $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
                                         $grupos = $bloque['data']['groups'] ?? [];
-                                        return count($grupos);
-                                    }),
+                                        if (empty($grupos)) return 'Sin grupos';
+                                        $html = '<ul style="margin-left:1em">';
+                                        foreach ($grupos as $i => $grupo) {
+                                            $nombre = $grupo['name'] ?? 'Grupo '.($i+1);
+                                            $lotes = $grupo['lotes_id'] ?? [];
+                                            $lotesList = is_array($lotes) && count($lotes) > 0
+                                                ? implode(', ', $lotes)
+                                                : '<em>Sin lotes</em>';
+                                            $html .= "<li><strong>{$nombre}</strong>: {$lotesList}</li>";
+                                        }
+                                        $html .= '</ul>';
+                                        return $html;
+                                    })
+                                    ->extraAttributes(['style' => 'font-size:1em'])
+                                    ->columnSpanFull(),
                             ]),
                     ]),
                     Wizard\Step::make('step_basic_params')
@@ -162,7 +174,6 @@ class InvoiceConfigResource extends Resource
                                                             TextInput::make('name')
                                                                 ->label('Nombre del grupo')
                                                                 ->helperText('Define un nombre descriptivo para este grupo de lotes.')
-                                                                ->required()
                                                                 ->live(onBlur: true),
 
                                                             Select::make('lote_type_id')
