@@ -8,6 +8,7 @@ use App\Models\InvoiceConfig;
 use App\Models\Lote;
 use App\Models\loteType;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
@@ -175,6 +176,26 @@ class InvoiceConfigResource extends Resource
 
                                     ->addActionLabel('Agrega grupo de lotes')
                                     ->columns(2),
+                            ])
+                            ->columns(1),
+
+                        Forms\Components\Builder\Block::make('params_general_invoices')
+                            ->label('Parametros generales de facturación')
+                            ->schema([
+                                DatePicker::make('expiration_date')
+                                    ->label('Fecha de vencimiento')
+                                    ->required()
+                                    ->displayFormat('d/m/Y')
+                                    ->helperText('Fecha de vencimiento de las facturas generadas.'),
+                                DatePicker::make('second_expiration_date')
+                                    ->label('Segunda fecha de vencimiento')
+                                    ->required()
+                                    ->displayFormat('d/m/Y')
+                                    ->helperText('Segunda fecha de vencimiento de las facturas generadas.'),
+                                TextInput::make('punitive')
+                                    ->label('Interés moratorio')
+                                    ->helperText('Porcentaje de interés moratorio aplicado a las facturas vencidas.')
+                                    ->numeric()
                             ])
                             ->columns(1),
 
