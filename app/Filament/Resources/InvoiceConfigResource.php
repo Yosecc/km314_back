@@ -71,7 +71,7 @@ class InvoiceConfigResource extends Resource
                                         if (empty($grupos)) return new \Illuminate\Support\HtmlString('Sin grupos');
                                         $allLotes = Lote::whereIn('id', collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray())->get()->keyBy('id');
                                         $html = '<table style="margin-left:1em; border-collapse:collapse; width:100%">';
-                                        $html .= '<thead><tr><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Grupo</th><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Cantidad de lotes</th><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Lotes</th></tr></thead><tbody>';
+                                        $html .= '<thead><tr><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Grupo</th><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px; width: 160px">Cantidad de lotes</th><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Lotes</th></tr></thead><tbody>';
                                         foreach ($grupos as $i => $grupo) {
                                             $nombre = $grupo['name'] ?? 'Grupo '.($i+1);
                                             $lotes = $grupo['lotes_id'] ?? [];
@@ -383,6 +383,7 @@ class InvoiceConfigResource extends Resource
                         ]),
 
                 ])
+                ->skippable(fn ($context) => $context === 'edit')
                 ->columnSpanFull(),
             ]);
     }
