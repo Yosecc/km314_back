@@ -121,7 +121,7 @@ class InvoiceConfigResource extends Resource
                                     ]),
 
                                 Forms\Components\Placeholder::make('resumen_grupos')
-                                    ->label('Grupos y lotes personalizados')
+                                    ->label('Facturas personalizadas')
                                     ->content(function (Get $get) {
                                         $config = $get('config');
                                         if (!is_array($config)) return new \Illuminate\Support\HtmlString('Sin grupos');
@@ -191,11 +191,20 @@ class InvoiceConfigResource extends Resource
                                 Fieldset::make('Estado')
                                     ->columnSpan(1)
                                     ->columns(1)
-                                    ->extraAttributes([
-                                        // Puedes personalizar el fondo aquí, por ejemplo:
-                                        'class' => 'bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700',
-                                        'style' => 'padding: 1rem;'
-                                    ])
+                                    ->extraAttributes(function (Get $get) {
+                                        $status = $get('status');
+                                        $base = 'rounded-lg border';
+                                        $map = [
+                                            'Borrador' => $base.' border-gray-300 bg-gray-100 dark:bg-gray-800',
+                                            'Procesado' => $base.' border-green-600 bg-green-100 dark:bg-green-900',
+                                            'Aprobado' => $base.' border-green-600 bg-primary-600 dark:bg-primary-900',
+
+                                        ];
+                                        return [
+                                            'class' => $map[$status] ?? ($base.' '),
+                                            'style' => 'padding: 1rem;'
+                                        ];
+                                    })
                                     ->schema([
                                         Forms\Components\Placeholder::make('status')
                                             ->label('')

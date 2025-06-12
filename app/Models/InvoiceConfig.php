@@ -34,8 +34,9 @@ class InvoiceConfig extends Model
     public function getStatusLabelAttribute()
     {
         return match($this->status) {
-            'borrador' => 'Borrador',
-            'procesado' => 'Procesado',
+            'Borrador' => 'Borrador',
+            'Aprobado' => 'Aprobado',
+            'Procesado' => 'Procesado',
             default => ucfirst($this->status),
         };
     }
