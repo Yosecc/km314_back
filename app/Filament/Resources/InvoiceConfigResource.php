@@ -35,23 +35,30 @@ class InvoiceConfigResource extends Resource
                 Forms\Components\DatePicker::make('fecha_creacion')
                     ->label('Fecha de ejecución')
                     ->required(),
-                Forms\Components\Repeater::make('config')
+                Forms\Components\Builder::make('config')
                     ->label('Configuración de ítems')
-                    ->schema([
-                        Forms\Components\TextInput::make('description')
-                            ->label('Descripción')
-                            ->required(),
-                        Forms\Components\TextInput::make('amount')
-                            ->label('Monto')
-                            ->numeric()
-                            ->required(),
-                        Forms\Components\Toggle::make('is_fixed')
-                            ->label('¿Es fijo?')
-                            ->default(true),
+                    ->blocks([
+                        Forms\Components\Builder\Block::make('items')
+                            ->label('Ítem de factura')
+                            ->schema([
+
+                                Forms\Components\TextInput::make('description')
+                                    ->label('Descripción')
+                                    ->required(),
+                                Forms\Components\TextInput::make('amount')
+                                    ->label('Monto')
+                                    ->numeric()
+                                    ->required(),
+                                Forms\Components\Toggle::make('is_fixed')
+                                    ->label('¿Es fijo?')
+                                    ->default(true),
+                            ])
+                            ->columns(3),
+                        // Puedes agregar más bloques aquí si lo necesitas en el futuro
                     ])
-                    ->defaultItems(1)
                     ->minItems(1)
-                    ->columns(3)
+                    ->addActionLabel('Agregar ítem')
+                    ->blockNumbers(false),
             ]);
     }
 
