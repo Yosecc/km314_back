@@ -332,7 +332,7 @@ class InvoiceConfigResource extends Resource
 
                                 Forms\Components\Builder\Block::make('exclude_lotes')
                                     ->label('Excluir Lotes')
-                                    ->description('Selecciona lotes que no deben ser incluidos en la facturación mensual. Estos lotes no recibirán facturas')
+                                    // ->description('Selecciona lotes que no deben ser incluidos en la facturación mensual. Estos lotes no recibirán facturas')
                                     ->schema([
                                         Select::make('lote_type_id')
                                             ->label(__("general.LoteType"))
