@@ -9,6 +9,12 @@ class InvoiceConfig extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'period',
+        'fecha_creacion',
+        'config',
+    ];
+
     protected $casts = [
         'config' => 'array',
         'period' => 'date',
