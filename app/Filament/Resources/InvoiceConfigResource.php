@@ -389,12 +389,10 @@ $html .= '</td></tr></tfoot>';
                                                 $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
                                                 $grupos = $bloque['data']['groups'] ?? [];
                                                 $lotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
-                                                return $lotes->mapWithKeys(function ($lote) use ($lotesEnGrupos) {
+                                                // Solo retornar id => nombre, sin estructura 'label' ni 'disabled'
+                                                return $lotes->mapWithKeys(function ($lote) {
                                                     return [
-                                                        $lote->id => [
-                                                            'label' => $lote->getNombre(),
-                                                            'disabled' => in_array($lote->id, $lotesEnGrupos),
-                                                        ]
+                                                        $lote->id => $lote->getNombre()
                                                     ];
                                                 });
                                             })
