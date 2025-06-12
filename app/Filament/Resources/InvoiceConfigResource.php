@@ -170,11 +170,10 @@ class InvoiceConfigResource extends Resource
                                                 ])
                                                 ->columns(1)
 
-
                                         ])
                                         ->columns(2)
 
-                                    ->addActionLabel('Agrega Item de factura')
+                                    ->addActionLabel('Agrega grupo de lotes')
                                     ->columns(2),
                             ])
                             ->columns(1),
@@ -198,8 +197,21 @@ class InvoiceConfigResource extends Resource
                 Tables\Columns\TextColumn::make('period')->label('Periodo')->date('F Y'),
                 Tables\Columns\TextColumn::make('fecha_creacion')->label('Fecha de ejecución')->date(),
                 Tables\Columns\TextColumn::make('config')
-                    ->label('Configuración')
-                    ->formatStateUsing(fn($state) => is_array($state) ? count($state).' ítems' : 'Sin configuración'),
+                    ->label('Resumen configuración')
+                    ->formatStateUsing(function($state) {
+                        if (!is_array($state)) return 'Sin configuración';
+                        $bloques = collect($state);
+                        $resumen = [];
+                        foreach ($bloques as $bloque) {
+                            if (($bloque['type'] ?? null) === 'items_invoice') {
+                                $resumen[] = 'Global: '.(isset($bloque['data']['items']) ? count($bloque['data']['items']) : 0).' ítems';
+                            } elseif (($bloque['type'] ?? null) === 'custom_items_invoices') {
+                                $grupos = $bloque['data']['groups'] ?? [];
+                                $resumen[] = 'Grupos: '.count($grupos);
+                            }
+                        }
+                        return implode(' | ', $resumen);
+                    }),
                 Tables\Columns\TextColumn::make('created_at')->label('Creado')->dateTime()->sortable(),
             ])
             ->filters([
