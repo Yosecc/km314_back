@@ -94,6 +94,7 @@ class InvoiceConfigResource extends Resource
 
                         Forms\Components\Builder\Block::make('custom_items_invoices')
                             ->label('Grupos de Facturas')
+
                             ->schema([
 
                                 Repeater::make(name: 'groups')
@@ -103,10 +104,7 @@ class InvoiceConfigResource extends Resource
                                             Fieldset::make('lotes')
                                                 ->label('Selecciona los lotes para este grupo')
                                                 ->schema([
-                                                    TextInput::make('name')
-                                                        ->label('Nombre del grupo')
-                                                        ->helperText('Nombre referencial para este grupo de lotes. (No aparecerá en la factura).')
-                                                        ->live(onBlur: true),
+
                                                     Select::make('lote_type_id')
                                                         ->label(__("general.LoteType"))
                                                         ->live()
