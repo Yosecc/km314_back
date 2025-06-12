@@ -289,12 +289,8 @@ class InvoiceConfigResource extends Resource
                             ->columnSpanFull(),
                         ]),
 
-                    ]),
-
-
-
-
-
+                ])
+                ->columnSpanFull(),
             ]);
     }
 
