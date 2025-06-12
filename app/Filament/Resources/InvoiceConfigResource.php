@@ -5,12 +5,15 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\InvoiceConfigResource\Pages;
 use App\Filament\Resources\InvoiceConfigResource\RelationManagers;
 use App\Models\InvoiceConfig;
+use App\Models\Lote;
+use App\Models\loteType;
 use Filament\Forms;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -92,6 +95,34 @@ class InvoiceConfigResource extends Resource
                                         ->label('Personaliza los items de facturación a grupos propietarios/lotes.')
                                         ->schema([
 
+                                            Select::make('lote_type_id')
+                                                ->label(__("general.LoteType"))
+                                                ->live()
+                                                ->options(function () {
+                                                    $lotes = loteType::get();
+                                                    return $lotes->mapWithKeys(function ($lote) {
+                                                        return [
+                                                            $lote->id => "{$lote->name}"
+                                                        ];
+                                                    });
+                                                }),
+                                            Select::make('lote_id')
+                                                ->label('Lote')
+                                                ->live()
+                                                ->options(function (Get $get) {
+
+                                                    $lotes = Lote::get();
+
+                                                    if($get('lote_type_id')) {
+                                                        $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
+                                                    }
+                                                    return $lotes->mapWithKeys(function ($lote) {
+                                                        return [
+                                                            $lote->id => "{$lote->getNombre()}"
+                                                        ];
+                                                    });
+                                                })
+                                                ->required(),
                                         ])
                                     ->addActionLabel('Agrega Item de factura')
                                     ->columns(4),
