@@ -46,7 +46,8 @@ class InvoiceConfigResource extends Resource
 
 
                         Forms\Components\Builder\Block::make('items_invoice')
-                            ->label('Configura los items a cobrarse en esta facturación mensual')
+                            ->label('Items de Factura')
+                            ->description('Configura los items que se incluirán en la factura mensual. Puedes definir items fijos o variables.')
                             ->schema([
 
                                 Repeater::make(name: 'items')
@@ -79,7 +80,6 @@ class InvoiceConfigResource extends Resource
                                             ->required(fn ($get) => $get('is_fixed') != 1),
                                         TextInput::make('amount')->numeric()->required(),
                                     ])
-
                                     ->columns(3),
 
                             ])
