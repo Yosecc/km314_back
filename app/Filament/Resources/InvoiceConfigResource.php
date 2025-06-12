@@ -19,6 +19,11 @@ class InvoiceConfigResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+
+    protected static ?string $navigationGroup = 'Administración contable';
+    protected static ?string $label = 'Facturación Mensual';
+    protected static ?string $pluralLabel = 'Facturaciónes Mensuales';
+
     public static function form(Form $form): Form
     {
         return $form
