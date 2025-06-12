@@ -70,7 +70,8 @@ class InvoiceConfigResource extends Resource
                                         $grupos = $bloque['data']['groups'] ?? [];
                                         if (empty($grupos)) return new \Illuminate\Support\HtmlString('Sin grupos');
                                         $allLotes = Lote::whereIn('id', collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray())->get()->keyBy('id');
-                                        $html = '<ul style="margin-left:1em">';
+                                        $html = '<table style="margin-left:1em; border-collapse:collapse; width:100%">';
+                                        $html .= '<thead><tr><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Grupo</th><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Cantidad de lotes</th><th style="text-align:left; border-bottom:1px solid #ccc; padding:4px;">Lotes</th></tr></thead><tbody>';
                                         foreach ($grupos as $i => $grupo) {
                                             $nombre = $grupo['name'] ?? 'Grupo '.($i+1);
                                             $lotes = $grupo['lotes_id'] ?? [];
@@ -83,9 +84,9 @@ class InvoiceConfigResource extends Resource
                                             } else {
                                                 $lotesList = '<em>Sin lotes</em>';
                                             }
-                                            $html .= "<li><strong>{$nombre}</strong> ({$cantidadLotes} lotes): {$lotesList}</li>";
+                                            $html .= "<tr><td style='padding:4px;'><strong>{$nombre}</strong></td><td style='padding:4px;'>{$cantidadLotes}</td><td style='padding:4px;'>{$lotesList}</td></tr>";
                                         }
-                                        $html .= '</ul>';
+                                        $html .= '</tbody></table>';
                                         return new \Illuminate\Support\HtmlString($html);
                                     })
                                     ->extraAttributes(['style' => 'font-size:1em'])
