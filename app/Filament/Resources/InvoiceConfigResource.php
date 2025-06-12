@@ -280,6 +280,8 @@ class InvoiceConfigResource extends Resource
                                                     }
                                                 }
                                             })
+                                            ->collapsed(fn ($context) => $context === 'edit')
+                                            ->collapsible()
                                             ->columns(2)
                                             ->addActionLabel('Agrega grupo de Facturas/lotes')
                                             ->columns(2),
