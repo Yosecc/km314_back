@@ -6,6 +6,7 @@ use App\Filament\Resources\InvoiceConfigResource\Pages;
 use App\Filament\Resources\InvoiceConfigResource\RelationManagers;
 use App\Models\InvoiceConfig;
 use Filament\Forms;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -38,46 +39,51 @@ class InvoiceConfigResource extends Resource
                 Forms\Components\DatePicker::make('fecha_creacion')
                     ->label('Fecha de ejecución')
                     ->required(),
-                Forms\Components\Builder::make('config')
-                    ->label('Configuración de ítems')
-                    ->blocks([
-                        Forms\Components\Builder\Block::make('items')
-                            ->label('Ítem de factura')
-                            ->schema([
 
-                                 Select::make('is_fixed')
-                                    ->options([
-                                        1 => 'Fijo',
-                                        0 => 'Variable',
+                Section::make('Configuración de Facturación')
+                    ->description('Configura los items a cobrarse en esta facturación mensual')
+                    ->schema([
+                        Forms\Components\Builder::make('config')
+                            ->label('Configuración de ítems')
+                            ->blocks([
+                                Forms\Components\Builder\Block::make('items')
+                                    ->label('Ítem de factura')
+                                    ->schema([
+
+                                        Select::make('is_fixed')
+                                            ->options([
+                                                1 => 'Fijo',
+                                                0 => 'Variable',
+                                            ])
+                                            ->required()
+                                            ->live(),
+                                        Select::make('expense_concept_id')
+                                            ->label('Concepto fijo')
+                                            ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
+                                            ->visible(fn ($get) => $get('is_fixed') == 1)
+                                            ->required(fn ($get) => $get('is_fixed') == 1)
+                                            ->live()
+                                            ->afterStateUpdated(function ($state, Set $set) {
+                                                if ($state) {
+                                                    $concept = \App\Models\ExpenseConcept::find($state);
+                                                    if ($concept) {
+                                                        $set('description', $concept->name);
+                                                    }
+                                                }
+                                            }),
+                                        TextInput::make('description')
+                                            ->label('Descripción')
+                                            ->live()
+                                            ->required(fn ($get) => $get('is_fixed') != 1),
+                                        TextInput::make('amount')->numeric()->required(),
                                     ])
-                                    ->required()
-                                    ->live(),
-                                Select::make('expense_concept_id')
-                                    ->label('Concepto fijo')
-                                    ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
-                                    ->visible(fn ($get) => $get('is_fixed') == 1)
-                                    ->required(fn ($get) => $get('is_fixed') == 1)
-                                    ->live()
-                                    ->afterStateUpdated(function ($state, Set $set) {
-                                        if ($state) {
-                                            $concept = \App\Models\ExpenseConcept::find($state);
-                                            if ($concept) {
-                                                $set('description', $concept->name);
-                                            }
-                                        }
-                                    }),
-                                TextInput::make('description')
-                                    ->label('Descripción')
-                                    ->live()
-                                    ->required(fn ($get) => $get('is_fixed') != 1),
-                                TextInput::make('amount')->numeric()->required(),
+                                    ->columns(3),
+                                // Puedes agregar más bloques aquí si lo necesitas en el futuro
                             ])
-                            ->columns(3),
-                        // Puedes agregar más bloques aquí si lo necesitas en el futuro
-                    ])
-                    ->minItems(1)
-                    ->addActionLabel('Agregar ítem')
-                    ->blockNumbers(false),
+                            ->minItems(1)
+                            ->addActionLabel('Agregar ítem')
+                            ->blockNumbers(false),
+                    ]),
             ]);
     }
 
