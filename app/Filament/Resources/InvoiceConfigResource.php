@@ -151,7 +151,7 @@ class InvoiceConfigResource extends Resource
                                                                 ->visible(fn ($get) => $get('is_fixed') == 1)
                                                                 ->required(fn ($get) => $get('is_fixed') == 1)
                                                                 ->live()
-                                                                ->afterStateUpdated(function ($state, Set $set) {
+                                                                ->afterStateUpdated(function ($state, Set $set, Get $get) {
                                                                     if ($state) {
                                                                         $concept = \App\Models\ExpenseConcept::find($state);
                                                                         if ($concept) {
@@ -166,8 +166,19 @@ class InvoiceConfigResource extends Resource
                                                             TextInput::make('amount')->numeric()->required(),
                                                         ])
                                                         ->addActionLabel('Agrega Item de factura')
-                                                        ->columns(2),
-
+                                                        ->columns(2)
+                                                        ->afterStateHydrated(function ($state, Set $set, Get $get) {
+                                                            // Si no hay items y existen items globales, los copiamos
+                                                            if (empty($state) || count($state) === 0) {
+                                                                $builder = $get('../../../../config');
+                                                                if (is_array($builder)) {
+                                                                    $global = collect($builder)->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
+                                                                    if ($global && isset($global['data']['items']) && is_array($global['data']['items'])) {
+                                                                        $set('items', $global['data']['items']);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }),
                                                 ])
                                                 ->columns(1)
 
