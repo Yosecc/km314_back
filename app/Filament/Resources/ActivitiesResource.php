@@ -138,15 +138,26 @@ class ActivitiesResource extends Resource
 
     public static function searchOwnerFamily($dni, $type , $ids = [], $owner_id)
     {
-        $data = OwnerFamily::where('dni','like','%'.$dni.'%')->limit(10)->get();
+        // Buscar familiares por DNI
+        $dniMatches = OwnerFamily::where('dni','like','%'.$dni.'%')->get();
+        $ownerIds = $dniMatches->pluck('owner_id')->unique()->filter();
+
+        // Si hay coincidencias por DNI, traer toda la familia de esos owner_id
+        if ($dniMatches->count() > 0) {
+            $data = OwnerFamily::whereIn('owner_id', $ownerIds)->get();
+        } else if ($owner_id != 0) {
+            $data = OwnerFamily::where('owner_id', $owner_id)->get();
+        } else if (count($ids)) {
+            $data = OwnerFamily::whereIn('id', $ids)->get();
+        } else {
+            $data = collect();
+        }
 
         $mapeo = function($people) use ($type){
-
             if($type == 'option'){
                 $people['texto'] = $people['first_name']. ' '.$people['last_name'];
                 $people['texto'].= ' - ' .$people['parentage'] ;
             }else{
-                // dd($people->familiarPrincipal);
                 $people['texto'] = $people->dni;
                 $people['texto'] .= ' - Familiar de: '.$people->familiarPrincipal->first_name . " " . $people->familiarPrincipal->last_name ;
             }
@@ -154,16 +165,7 @@ class ActivitiesResource extends Resource
             return $people;
         };
 
-        if(count($ids)){
-            $data = OwnerFamily::whereIn('id', $ids)->get()->map($mapeo);
-        }
-
-        if($owner_id!=0){
-            $data = OwnerFamily::where('owner_id', $owner_id)->get()->map($mapeo);
-        }
-
         $data = $data->map($mapeo);
-
         return $data->pluck('texto','id')->toArray();
 
     }
