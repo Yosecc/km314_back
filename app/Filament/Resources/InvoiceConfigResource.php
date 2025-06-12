@@ -380,7 +380,6 @@ $html .= '</td></tr></tfoot>';
                                             ->multiple()
                                             ->live()
                                             ->options(function (Get $get) {
-
                                                 $lotes = Lote::get();
                                                 if($get('lote_type_id')) {
                                                     $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
