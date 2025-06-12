@@ -53,9 +53,15 @@ class InvoiceConfigResource extends Resource
                         Grid::make()
                             ->columns(3)
                             ->schema([
-                                TextInput::make('name')->label('Nombre 1'),
-                                TextInput::make('name2')->label('Nombre 2'),
-                                TextInput::make('name3')->label('Nombre 3'),
+                                Forms\Components\Placeholder::make('total_grupos')
+                                    ->label('Cantidad de grupos de facturación')
+                                    ->content(function (Get $get) {
+                                        $config = $get('config');
+                                        if (!is_array($config)) return '0';
+                                        $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                        $grupos = $bloque['data']['groups'] ?? [];
+                                        return count($grupos);
+                                    }),
                             ]),
                     ]),
                     Wizard\Step::make('step_basic_params')
@@ -96,7 +102,6 @@ class InvoiceConfigResource extends Resource
                            Forms\Components\Builder::make('config')
                             ->label('Configuración de Facturación')
                             ->blocks([
-
 
                                 Forms\Components\Builder\Block::make('items_invoice')
                                     ->label('Items de Factura')
