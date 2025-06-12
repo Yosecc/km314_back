@@ -186,16 +186,18 @@ class InvoiceConfigResource extends Resource
                                         ])
                                         ->afterStateHydrated(function ($state, Set $set, Get $get) {
                                             // Si no hay items y existen items globales, los copiamos
-                                            dd('-.-',$get('../../../config'), $state,$get('../../config'),);
-                                            if (empty($state) || count($state) === 0) {
-                                                $builder = $get('../../../../config');
-                                                if (is_array($builder)) {
-                                                    $global = collect($builder)->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
-                                                    if ($global && isset($global['data']['items']) && is_array($global['data']['items'])) {
-                                                        $set('items', $global['data']['items']);
-                                                    }
-                                                }
-                                            }
+                                            // Buscar el bloque con 'type' => 'items_invoice'
+                                            $global = collect($state)->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
+                                            dd( $global );
+                                            // if (empty($state) || count($state) === 0) {
+                                            //     $builder = $get('../../../../config');
+                                            //     if (is_array($builder)) {
+                                            //         $global = collect($builder)->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
+                                            //         if ($global && isset($global['data']['items']) && is_array($global['data']['items'])) {
+                                            //             $set('items', $global['data']['items']);
+                                            //         }
+                                            //     }
+                                            // }
                                         })
                                         ->columns(2)
 
