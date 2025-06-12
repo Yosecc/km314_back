@@ -8,6 +8,7 @@ use App\Models\InvoiceConfig;
 use App\Models\Lote;
 use App\Models\loteType;
 use Filament\Forms;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Grid;
@@ -90,11 +91,11 @@ class InvoiceConfigResource extends Resource
                                     ->columns(4),
 
                             ])
+                            ->maxItems(1)
                             ->columns(1),
 
                         Forms\Components\Builder\Block::make('custom_items_invoices')
                             ->label('Grupos de Facturas')
-
                             ->schema([
 
                                 Repeater::make(name: 'groups')
@@ -229,6 +230,7 @@ class InvoiceConfigResource extends Resource
                                     ->addActionLabel('Agrega grupo de Facturas/lotes')
                                     ->columns(2),
                             ])
+                            ->maxItems(1)
                             ->columns(1),
 
                         Forms\Components\Builder\Block::make('params_general_invoices')
@@ -250,13 +252,19 @@ class InvoiceConfigResource extends Resource
                                     ->numeric()
                                     ->required()
                             ])
+                            ->maxItems(1)
                             ->columns(1),
 
 
                     ])
                     ->minItems(1)
+                    ->maxItems(3)
+                    ->collapsible()
                     ->addActionLabel('Agregar bloque de configuracion')
                     ->blockNumbers(false)
+                    ->deleteAction(
+                        fn (Action $action) => $action->requiresConfirmation(),
+                    )
                     ->columnSpanFull(),
 
 
