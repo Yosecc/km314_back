@@ -382,17 +382,25 @@ $html .= '</td></tr></tfoot>';
                                             ->options(function (Get $get) {
 
                                                 $lotes = Lote::get();
-
                                                 if($get('lote_type_id')) {
                                                     $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
                                                 }
-                                                return $lotes->mapWithKeys(function ($lote) {
+                                                // Obtener lotes ya asignados a grupos para deshabilitarlos en el select
+                                                $config = $get('../../../../config');
+                                                $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                                $grupos = $bloque['data']['groups'] ?? [];
+                                                $lotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
+                                                return $lotes->mapWithKeys(function ($lote) use ($lotesEnGrupos) {
                                                     return [
-                                                        $lote->id => "{$lote->getNombre()}"
+                                                        $lote->id => [
+                                                            'label' => $lote->getNombre(),
+                                                            'disabled' => in_array($lote->id, $lotesEnGrupos),
+                                                        ]
                                                     ];
                                                 });
                                             })
                                             ->required()
+                                            ->helperText('No puedes seleccionar lotes que ya están asignados a un grupo. Si necesitas excluir uno, primero quítalo del grupo.')
                                             ->rule(function (Get $get) {
                                                 return function ($attribute, $value, $fail) use ($get) {
                                                     // Obtener los lotes de los grupos
