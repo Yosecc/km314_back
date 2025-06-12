@@ -18,6 +18,8 @@ class InvoiceConfig extends Model
         'second_expiration_date',
         'punitive',
         'status',
+        'aprobe_user_id',
+        'aprobe_date'
     ];
 
     protected $casts = [

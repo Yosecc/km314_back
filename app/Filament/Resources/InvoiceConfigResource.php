@@ -23,6 +23,7 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Infolists\Components\Grid as GridInfoList;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -195,18 +196,11 @@ class InvoiceConfigResource extends Resource
                                     ->extraAttributes(function (Get $get) {
                                         $status = $get('status');
                                         $base = 'rounded-lg border';
-                                        // $map = [
-                                        //     'Borrador' => $base.' border-gray-300 bg-gray-100 dark:bg-gray-800',
-                                        //     'Procesado' => $base.' border-green-600 bg-green-100 dark:bg-green-900',
-                                        //     'Aprobado' => $base.' border-green-600 bg-primary-600 dark:bg-primary-900',
-
-                                        // ];
                                         $map = [
                                             'Borrador' => 'background-color: rgb(207, 110, 6); color: white; border-color: rgb(207,110, 6); height:100%',
                                             'Procesado' => 'background-color: rgb(34,197,94); color: white; border-color: rgb(34,197,94); height:100%',
                                             'Aprobado' => 'background-color: rgb(59,130,246); color: white; border-color: rgb(59,130,246); height:100%',
                                         ];
-
                                         return [
                                             // 'class' => $map[$status] ?? ($base.' '),
                                             'style' => $map[$status] ?? 'background-color: rgb(76, 76, 76); color: white; border-color: rgb(66, 66, 66);',
@@ -220,6 +214,23 @@ class InvoiceConfigResource extends Resource
                                                 $status = $get('status');
                                                 return $status;
                                             }),
+                                        Action::make('change_status')
+                                            ->icon('heroicon-m-check')
+                                            ->color('success')
+                                            ->requiresConfirmation()
+                                            ->label('Aprobar')
+                                            ->visible(fn ($context, $record) => $context === 'edit' && $record && $record->status === 'Borrador')
+                                            ->action(function ($record, Set $set) {
+                                                $record->status = 'Aprobado';
+                                                $record->aprobe_user_id = auth()->id();
+                                                $record->aprobe_date = now();
+                                                $record->save();
+
+                                                Notification::make()
+                                                    ->title('Configuración aprobada')
+                                                    ->success()
+                                                    ->send();
+                                            })
                                     ]),
                             ]),
                     ]),
@@ -552,6 +563,18 @@ class InvoiceConfigResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('aprobar')
+                    ->label('Aprobar')
+                    ->icon('heroicon-m-check')
+                    ->color('success')
+                    ->visible(fn($record) => $record->status !== 'Aprobado')
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->status = 'Aprobado';
+                        $record->aprobe_user_id = auth()->id();
+                        $record->aprobe_date = now();
+                        $record->save();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
