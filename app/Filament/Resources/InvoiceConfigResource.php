@@ -392,7 +392,10 @@ class InvoiceConfigResource extends Resource
                                                 $grupos = $bloque['data']['groups'] ?? [];
                                                 $lotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
 
+                                                if($lotesEnGrupos){
                                                 dd($lotesEnGrupos);
+
+                                                }
 
                                                 if($get('lote_type_id')) {
                                                     $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
