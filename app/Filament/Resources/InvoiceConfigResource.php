@@ -145,9 +145,10 @@ class InvoiceConfigResource extends Resource
                                             $cantidadLotes = is_array($lotes) ? count($lotes) : 0;
                                             if ($cantidadLotes > 0) {
                                                 $nombres = collect($lotes)->map(function($id) use ($allLotes) {
-                                                    return $allLotes[$id]->getNombre() ?? $id;
-                                                })->implode(', ');
-                                                $lotesList = $nombres;
+                                                    $nombreLote = $allLotes[$id]->getNombre() ?? $id;
+                                                    return "<span class='inline-block rounded-full bg-blue-100 dark:bg-blue-700 text-blue-800 dark:text-blue-100 px-3 py-1 text-xs font-semibold mr-1 mb-1'>{$nombreLote}</span>";
+                                                })->implode(' ');
+                                                $lotesList = "<div class='flex flex-wrap gap-1'>{$nombres}</div>";
                                             } else {
                                                 $lotesList = '<em class="text-gray-400 dark:text-gray-500">Sin lotes</em>';
                                             }
@@ -157,9 +158,10 @@ class InvoiceConfigResource extends Resource
                                         $cantidadExcluidos = is_array($excluidos) ? count($excluidos) : 0;
                                         if ($cantidadExcluidos > 0) {
                                             $nombresExcluidos = collect($excluidos)->map(function($id) use ($allLotes) {
-                                                return $allLotes[$id]->getNombre() ?? $id;
-                                            })->implode(', ');
-                                            $html .= "<tr class='bg-red-50 dark:bg-red-900'><td class='px-4 py-2 border-b dark:border-gray-700'><strong>Excluidos</strong></td><td class='px-4 py-2 border-b dark:border-gray-700'>-{$cantidadExcluidos}</td><td class='px-4 py-2 border-b dark:border-gray-700'>{$nombresExcluidos}</td></tr>";
+                                                $nombreLote = $allLotes[$id]->getNombre() ?? $id;
+                                                return "<span class='inline-block rounded-full bg-red-100 dark:bg-red-700 text-red-800 dark:text-red-100 px-3 py-1 text-xs font-semibold mr-1 mb-1'>{$nombreLote}</span>";
+                                            })->implode(' ');
+                                            $html .= "<tr class='bg-red-50 dark:bg-red-900'><td class='px-4 py-2 border-b dark:border-gray-700'><strong>Excluidos</strong></td><td class='px-4 py-2 border-b dark:border-gray-700'>-{$cantidadExcluidos}</td><td class='px-4 py-2 border-b dark:border-gray-700'><div class='flex flex-wrap gap-1'>{$nombresExcluidos}</div></td></tr>";
                                         }
                                         $html .= '</tbody></table>';
                                         return new \Illuminate\Support\HtmlString($html);
