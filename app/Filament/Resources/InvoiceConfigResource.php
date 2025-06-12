@@ -188,6 +188,15 @@ class InvoiceConfigResource extends Resource
                                             // Si no hay items y existen items globales, los copiamos
                                             // dd('-.-',, $state,$get('../../../config'),);
                                             $global = collect($get('../../../config'))->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
+
+                                            $state = collect($state)->map(function ($group) use ($set, $get) {
+                                                if (isset($group['items'])) {
+                                                    $group['items'] = $global['data']['items'] ?? [];
+                                                }
+
+                                                return $group;
+                                            })->toArray();
+
                                             dd( $global , $state);
                                             // if (empty($state) || count($state) === 0) {
                                             //     $builder = $get('../../../../config');
