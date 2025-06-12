@@ -47,7 +47,8 @@ class InvoiceConfigResource extends Resource
 
                 Wizard::make([
                     Wizard\Step::make('info')
-                    ->label('Información General')
+                    ->label('Resumen de la configuración')
+                    ->description('Configura los parámetros básicos y los items de facturación para este mes.')
                     ->schema([
                         Grid::make()
                             ->columns(3)
