@@ -52,83 +52,84 @@ class InvoiceConfigResource extends Resource
                         Grid::make()
                             ->columns(4)
                             ->schema([
-                                Fieldset::make('Label')
+                                Fieldset::make('Lotes Facturables')
                                     ->columns(1)
                                     ->columnSpan(1)
                                     ->schema([
                                         Forms\Components\Placeholder::make('total_lotes_con_owner')
-                                            ->label('Total de lotes registrados')
+                                            ->label('')
+                                            ->extraAttributes(['style' => 'font-size: 1.875rem;','class'=> 'fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white'])
                                             ->content(function () {
                                                 return Lote::whereNotNull('owner_id')->count();
                                             })
                                     ]),
-                                Fieldset::make('Label')
+                                Fieldset::make('Grupos Personalizados')
                                     ->columnSpan(1)
                                     ->columns(1)
                                     ->schema([
-                                    Forms\Components\Placeholder::make('total_grupos')
-                                        ->label('Cantidad de grupos Personalizados')
-                                        ->content(function (Get $get) {
-                                            $config = $get('config');
-                                            if (!is_array($config)) return '0';
-                                            $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
-                                            $grupos = $bloque['data']['groups'] ?? [];
-                                            return count($grupos);
-                                    }),
-                                ]),
-                                Fieldset::make('Label')
-                                    ->columnSpan(1)
-                                    ->columns(1)
-                                    ->schema([
-
-                                // En el resumen visual, quitamos los totales de la tabla y los mostramos en campos separados arriba.
-                                Forms\Components\Placeholder::make('total_lotes_en_grupos_personalizados')
-                                    ->label('Total de lotes en grupos personalizados')
-                                    ->content(function (Get $get) {
-                                        $config = $get('config');
-                                        if (!is_array($config)) return '0';
-                                        $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
-                                        $grupos = $bloque['data']['groups'] ?? [];
-                                        $totalLotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->count();
-                                        return $totalLotesEnGrupos;
-                                    }),
+                                        Forms\Components\Placeholder::make('total_grupos')
+                                            ->label('')
+                                            ->extraAttributes(['style' => 'font-size: 1.875rem;','class'=> 'fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white'])
+                                            ->content(function (Get $get) {
+                                                $config = $get('config');
+                                                if (!is_array($config)) return '0';
+                                                $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                                $grupos = $bloque['data']['groups'] ?? [];
+                                                return count($grupos);
+                                        }),
                                     ]),
-Fieldset::make('Label')
+                                Fieldset::make('Lotes en grupos personalizados')
                                     ->columnSpan(1)
                                     ->columns(1)
                                     ->schema([
-
-                                Forms\Components\Placeholder::make('total_lotes_excluidos')
-                                    ->label('Total de lotes excluidos')
-                                    ->content(function (Get $get) {
-                                        $config = $get('config');
-                                        if (!is_array($config)) return '0';
-                                        $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
-                                        $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
-                                        return is_array($excluidos) ? count($excluidos) : 0;
-                                    }),
-                                     ]),
-                                     Fieldset::make('Label')
+                                        Forms\Components\Placeholder::make('total_lotes_en_grupos_personalizados')
+                                            ->label('')
+                                            ->extraAttributes(['style' => 'font-size: 1.875rem;','class'=> 'fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white'])
+                                            ->content(function (Get $get) {
+                                                $config = $get('config');
+                                                if (!is_array($config)) return '0';
+                                                $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                                $grupos = $bloque['data']['groups'] ?? [];
+                                                $totalLotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->count();
+                                                return $totalLotesEnGrupos;
+                                            }),
+                                    ]),
+                                Fieldset::make('Lotes excluidos')
                                     ->columnSpan(1)
                                     ->columns(1)
                                     ->schema([
-                                Forms\Components\Placeholder::make('total_lotes_generales')
-                                    ->label('Total de lotes a los que se aplican ítems generales')
-                                    ->content(function (Get $get) {
-                                        $config = $get('config');
-                                        if (!is_array($config)) return '0';
-                                        $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
-                                        $grupos = $bloque['data']['groups'] ?? [];
-                                        $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
-                                        $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
-                                        $totalLotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
-                                        $totalLotesConOwner = \App\Models\Lote::whereNotNull('owner_id')->pluck('id')->toArray();
-                                        $totalLotesExcluidos = is_array($excluidos) ? $excluidos : [];
-                                        $lotesGenerales = array_diff($totalLotesConOwner, $totalLotesEnGrupos, $totalLotesExcluidos);
-                                        return count($lotesGenerales);
-                                    }),
-
+                                        Forms\Components\Placeholder::make('total_lotes_excluidos')
+                                            ->label('')
+                                            ->extraAttributes(['style' => 'font-size: 1.875rem;','class'=> 'fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white'])
+                                            ->content(function (Get $get) {
+                                                $config = $get('config');
+                                                if (!is_array($config)) return '0';
+                                                $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
+                                                $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
+                                                return is_array($excluidos) ? count($excluidos) : 0;
+                                            }),
                                      ]),
+                                // Fieldset::make('Facturaciones')
+                                //     ->columnSpan(1)
+                                //     ->columns(1)
+                                //     ->schema([
+                                //         Forms\Components\Placeholder::make('total_lotes_generales')
+                                //             ->label('Total de lotes a los que se aplican ítems generales')
+                                //             ->content(function (Get $get) {
+                                //                 $config = $get('config');
+                                //                 if (!is_array($config)) return '0';
+                                //                 $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                //                 $grupos = $bloque['data']['groups'] ?? [];
+                                //                 $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
+                                //                 $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
+                                //                 $totalLotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
+                                //                 $totalLotesConOwner = \App\Models\Lote::whereNotNull('owner_id')->pluck('id')->toArray();
+                                //                 $totalLotesExcluidos = is_array($excluidos) ? $excluidos : [];
+                                //                 $lotesGenerales = array_diff($totalLotesConOwner, $totalLotesEnGrupos, $totalLotesExcluidos);
+                                //                 return count($lotesGenerales);
+                                //             }),
+
+                                //     ]),
                                 Forms\Components\Placeholder::make('resumen_grupos')
                                     ->label('Grupos y lotes personalizados')
                                     ->content(function (Get $get) {
