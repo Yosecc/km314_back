@@ -47,11 +47,10 @@ class InvoiceConfigResource extends Resource
 
                         Forms\Components\Builder\Block::make('items_invoice')
                             ->label('Items de Factura')
-                            ->description('Configura los items que se incluirán en la factura mensual. Puedes definir items fijos o variables.')
                             ->schema([
 
                                 Repeater::make(name: 'items')
-                                    ->label('')
+                                    ->label('Configura los items que se incluirán en la factura mensual. Puedes definir items fijos o variables.')
                                     ->schema([
                                         Select::make('is_fixed')
                                             ->options([
