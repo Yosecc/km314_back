@@ -133,6 +133,7 @@ class InvoiceConfigResource extends Resource
 
 
                                         ])
+                                        ->columns(2)
                                     ->addActionLabel('Agrega Item de factura')
                                     ->columns(2),
                             ])
