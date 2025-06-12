@@ -12,6 +12,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -131,7 +132,13 @@ class InvoiceConfigResource extends Resource
                                                             });
                                                         })
                                                         ->required(),
+                                                    RichEditor::make(name: 'observations')
+                                                        ->label('Observaciones')
+                                                        ->helperText('Agrega observaciones o notas personalizadas para este grupo. Estas aparecerán en la factura mensual correspondiente.')
+                                                        ->live()
+                                                        ->columnSpanFull(),
                                                 ])
+                                                ->columns(1)
                                                 ->columnSpan(1),
                                             Fieldset::make('items_invoice')
                                                 ->label('Items de Factura')
@@ -171,8 +178,9 @@ class InvoiceConfigResource extends Resource
                                                         ->columns(2)
 
                                                 ])
-                                                ->columnSpan(1),
-                                        ])->columns(2),
+                                                ->columns(1)
+                                                ->columnSpan(2),
+                                        ])->columns(3),
                                     ])
                                     ->afterStateHydrated(function ($state, Set $set, Get $get) {
                                         // Si el array de grupos está vacío o solo tiene grupos vacíos, copiamos los ítems globales a cada grupo
@@ -238,6 +246,7 @@ class InvoiceConfigResource extends Resource
                                     ->label('Interés moratorio')
                                     ->helperText('Porcentaje de interés moratorio aplicado a las facturas vencidas.')
                                     ->numeric()
+                                    ->required()
                             ])
                             ->columns(1),
 
