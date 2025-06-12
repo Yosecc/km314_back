@@ -10,6 +10,7 @@ use App\Models\loteType;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -93,10 +94,14 @@ class InvoiceConfigResource extends Resource
                         Forms\Components\Builder\Block::make('custom_items_invoices')
                             ->label('Grupos de Facturas')
                             ->schema([
-                                Repeater::make(name: 'groups')
-                                        ->label('Personaliza los items de facturación a grupos propietarios/lotes.')
-                                        ->schema([
 
+                                Repeater::make(name: 'groups')
+                                    ->label('Personaliza los items de facturación a grupos propietarios/lotes.')
+                                    ->schema([
+                                        Grid::make([
+                                            'default' => 2,
+                                        ])
+                                        ->schema([
                                             Fieldset::make('lotes')
                                                 ->label('Selecciona los lotes para este grupo')
                                                 ->schema([
@@ -167,50 +172,54 @@ class InvoiceConfigResource extends Resource
                                                         ])
                                                         ->addActionLabel('Agrega Item de factura')
                                                         ->columns(2)
-                                                        ->afterStateHydrated(function ($state, Set $set, Get $get) {
-                                                            // Si no hay items y existen items globales, los copiamos
-                                                            if (empty($state) || count($state) === 0) {
-                                                                dd($get('../../../../config'));
-                                                                $builder = $get('../../../../config');
-                                                                if (is_array($builder)) {
-                                                                    $global = collect($builder)->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
-                                                                    if ($global && isset($global['data']['items']) && is_array($global['data']['items'])) {
-                                                                        $set('items', $global['data']['items']);
-                                                                    }
-                                                                }
-                                                            }
-                                                        }),
+
                                                 ])
                                                 ->columns(1)
-
                                         ])
-                                        ->afterStateHydrated(function ($state, Set $set, Get $get) {
-                                            // Si no hay items y existen items globales, los copiamos
-                                            // dd('-.-',, $state,$get('../../../config'),);
-                                            $global = collect($get('../../../config'))->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
-
-                                            $state = collect($state['data'])->map(function ($group) use ($set, $get) {
-                                                if (isset($group['items'])) {
-                                                    $group['items'] = $global['data']['items'] ?? [];
+                                    ])
+                                    ->afterStateHydrated(function ($state, Set $set, Get $get) {
+                                        // Si el array de grupos está vacío o solo tiene grupos vacíos, copiamos los ítems globales a cada grupo
+                                        $global = collect($get('../../../config'))->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
+                                        if ($global && isset($global['data']['items']) && is_array($global['data']['items'])) {
+                                            $itemsGlobales = $global['data']['items'];
+                                            $grupos = is_array($state) ? $state : [];
+                                            $cambio = false;
+                                            $nuevosGrupos = collect($grupos)->map(function ($grupo) use ($itemsGlobales, &$cambio) {
+                                                $items = $grupo['items'] ?? [];
+                                                $itemsVacios = empty($items) || collect($items)->every(fn($item) => collect($item)->filter()->isEmpty());
+                                                if ($itemsVacios) {
+                                                    $grupo['items'] = $itemsGlobales;
+                                                    $cambio = true;
                                                 }
-
-                                                return $group;
+                                                return $grupo;
                                             })->toArray();
-
-                                            dd( $global , $state);
-                                            // if (empty($state) || count($state) === 0) {
-                                            //     $builder = $get('../../../../config');
-                                            //     if (is_array($builder)) {
-                                            //         $global = collect($builder)->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
-                                            //         if ($global && isset($global['data']['items']) && is_array($global['data']['items'])) {
-                                            //             $set('items', $global['data']['items']);
-                                            //         }
-                                            //     }
-                                            // }
-                                        })
-                                        ->columns(2)
-
-                                    ->addActionLabel('Agrega grupo de lotes')
+                                            if ($cambio) {
+                                                $set('groups', $nuevosGrupos);
+                                            }
+                                        }
+                                    })
+                                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                        $global = collect($get('../../../config'))->first(fn($b) => ($b['type'] ?? null) === 'items_invoice');
+                                        if ($global && isset($global['data']['items']) && is_array($global['data']['items'])) {
+                                            $itemsGlobales = $global['data']['items'];
+                                            $grupos = is_array($state) ? $state : [];
+                                            $cambio = false;
+                                            $nuevosGrupos = collect($grupos)->map(function ($grupo) use ($itemsGlobales, &$cambio) {
+                                                $items = $grupo['items'] ?? [];
+                                                $itemsVacios = empty($items) || collect($items)->every(fn($item) => collect($item)->filter()->isEmpty());
+                                                if ($itemsVacios) {
+                                                    $grupo['items'] = $itemsGlobales;
+                                                    $cambio = true;
+                                                }
+                                                return $grupo;
+                                            })->toArray();
+                                            if ($cambio) {
+                                                $set('groups', $nuevosGrupos);
+                                            }
+                                        }
+                                    })
+                                    ->columns(2)
+                                    ->addActionLabel('Agrega grupo de Facturas/lotes')
                                     ->columns(2),
                             ])
                             ->columns(1),
