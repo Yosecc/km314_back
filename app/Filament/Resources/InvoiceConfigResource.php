@@ -52,11 +52,14 @@ class InvoiceConfigResource extends Resource
                         Grid::make()
                             ->columns(4)
                             ->schema([
-                                Forms\Components\Placeholder::make('total_lotes_con_owner')
-                                    ->label('Total de lotes registrados')
-                                    ->content(function () {
-                                        return Lote::whereNotNull('owner_id')->count();
-                                    }),
+                                Fieldset::make('Label')
+                                ->schema([
+                                    Forms\Components\Placeholder::make('total_lotes_con_owner')
+                                        ->label('Total de lotes registrados')
+                                        ->content(function () {
+                                            return Lote::whereNotNull('owner_id')->count();
+                                        })
+                                ]),
                                 Forms\Components\Placeholder::make('total_grupos')
                                     ->label('Cantidad de grupos Personalizados')
                                     ->content(function (Get $get) {
@@ -66,7 +69,7 @@ class InvoiceConfigResource extends Resource
                                         $grupos = $bloque['data']['groups'] ?? [];
                                         return count($grupos);
                                     }),
-                            // En el resumen visual, quitamos los totales de la tabla y los mostramos en campos separados arriba.
+                                // En el resumen visual, quitamos los totales de la tabla y los mostramos en campos separados arriba.
                                 Forms\Components\Placeholder::make('total_lotes_en_grupos_personalizados')
                                     ->label('Total de lotes en grupos personalizados')
                                     ->content(function (Get $get) {
