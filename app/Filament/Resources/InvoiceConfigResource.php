@@ -49,15 +49,13 @@ class InvoiceConfigResource extends Resource
                     Wizard\Step::make('info')
                     ->label('Información General')
                     ->schema([
-                        GridInfoList::make([
-                            'default' => 3,
-                        ])
-                        ->schema([
-                            TextEntry::make('name'),
-                            TextEntry::make('name'),
-                            TextEntry::make('name'),
-                            TextEntry::make('name'),
-                        ])
+                        Grid::make()
+                            ->columns(3)
+                            ->schema([
+                                TextInput::make('name')->label('Nombre 1'),
+                                TextInput::make('name2')->label('Nombre 2'),
+                                TextInput::make('name3')->label('Nombre 3'),
+                            ]),
                     ]),
                     Wizard\Step::make('step_basic_params')
                     ->label('Parámetros Básicos')
