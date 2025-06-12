@@ -381,21 +381,19 @@ class InvoiceConfigResource extends Resource
                                             ->live()
                                             ->options(function (Get $get) {
 
-                                                $lotes = Lote::get();
 
-                                                if($get('lote_type_id')) {
-                                                    $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
-                                                }
+
+                                                // if($get('lote_type_id')) {
+                                                //     $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
+                                                // }
                                                 // Obtener lotes ya asignados a grupos para deshabilitarlos en el select
                                                 $config = $get('../../../../config');
                                                 $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
                                                 $grupos = $bloque['data']['groups'] ?? [];
                                                 $lotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
 
-                                                if($lotesEnGrupos){
-                                                dd($lotesEnGrupos);
+                                                $lotes = Lote::whereNotIn('id',$lotesEnGrupos)->get();
 
-                                                }
 
                                                 if($get('lote_type_id')) {
                                                     $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
