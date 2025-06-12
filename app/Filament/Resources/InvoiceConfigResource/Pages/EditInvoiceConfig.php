@@ -15,6 +15,22 @@ class EditInvoiceConfig extends EditRecord
     {
         return [
             Actions\DeleteAction::make(),
+            Actions\Action::make('aprobar')
+                ->label('Aprobar')
+                ->icon('heroicon-m-check')
+                ->color('success')
+                ->visible(fn($record) => $record->status === 'Borrador')
+                ->requiresConfirmation()
+                ->action(function ($record) {
+                    $record->status = 'Aprobado';
+                    $record->aprobe_user_id = auth()->id();
+                    $record->aprobe_date = now();
+                    $record->save();
+                    \Filament\Notifications\Notification::make()
+                        ->title('Configuración aprobada')
+                        ->success()
+                        ->send();
+                }),
         ];
     }
 

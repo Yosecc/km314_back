@@ -214,23 +214,6 @@ class InvoiceConfigResource extends Resource
                                                 $status = $get('status');
                                                 return $status;
                                             }),
-                                        Action::make('change_status')
-                                            ->icon('heroicon-m-check')
-                                            ->color('success')
-                                            ->requiresConfirmation()
-                                            ->label('Aprobar')
-                                            ->visible(fn ($context, $record) => $context === 'edit' && $record && $record->status === 'Borrador')
-                                            ->action(function ($record, Set $set) {
-                                                $record->status = 'Aprobado';
-                                                $record->aprobe_user_id = auth()->id();
-                                                $record->aprobe_date = now();
-                                                $record->save();
-
-                                                Notification::make()
-                                                    ->title('Configuración aprobada')
-                                                    ->success()
-                                                    ->send();
-                                            })
                                     ]),
                             ]),
                     ]),
