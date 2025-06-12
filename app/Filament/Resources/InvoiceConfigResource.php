@@ -194,15 +194,21 @@ class InvoiceConfigResource extends Resource
                                     ->extraAttributes(function (Get $get) {
                                         $status = $get('status');
                                         $base = 'rounded-lg border';
-                                        $map = [
-                                            'Borrador' => $base.' border-gray-300 bg-gray-100 dark:bg-gray-800',
-                                            'Procesado' => $base.' border-green-600 bg-green-100 dark:bg-green-900',
-                                            'Aprobado' => $base.' border-green-600 bg-primary-600 dark:bg-primary-900',
+                                        // $map = [
+                                        //     'Borrador' => $base.' border-gray-300 bg-gray-100 dark:bg-gray-800',
+                                        //     'Procesado' => $base.' border-green-600 bg-green-100 dark:bg-green-900',
+                                        //     'Aprobado' => $base.' border-green-600 bg-primary-600 dark:bg-primary-900',
 
+                                        // ];
+                                        $map = [
+                                            'Borrador' => 'background-color: rgb(207, 110, 6); color: white; border-color: rgb(37,99, 235);',
+                                            'Procesado' => 'background-color: rgb(34,197,94); color: white; border-color: rgb(34,197,94);',
+                                            'Aprobado' => 'background-color: rgb(59,130,246); color: white; border-color: rgb(59,130,246);',
                                         ];
+
                                         return [
-                                            'class' => $map[$status] ?? ($base.' '),
-                                            'style' => 'padding: 1rem;'
+                                            // 'class' => $map[$status] ?? ($base.' '),
+                                            'style' => $map[$status] ?? 'background-color: rgb(76, 76, 76); color: white; border-color: rgb(66, 66, 66);',
                                         ];
                                     })
                                     ->schema([
