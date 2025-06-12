@@ -40,63 +40,59 @@ class InvoiceConfigResource extends Resource
                 Forms\Components\DatePicker::make('fecha_creacion')
                     ->label('Fecha de ejecución')
                     ->required(),
+                Forms\Components\Builder::make('config')
+                    ->label('Configuración de Facturación')
+                    ->blocks([
 
 
-                        Forms\Components\Builder::make('config')
-                            ->label('Configuración de Facturación')
-                            ->blocks([
+                        Forms\Components\Builder\Block::make('items_invoice')
+                            ->label('Ítem de factura')
+                            ->schema([
 
 
-                                Forms\Components\Builder\Block::make('items_invoice')
-                                    ->label('Ítem de factura')
-                                    ->schema([
 
-
- Section::make('')
-                    ->description('Configura los items a cobrarse en esta facturación mensual')
-                    ->schema([
-
-                                            Repeater::make(name: 'items')
-                                                ->schema([
-                                                    Select::make('is_fixed')
-                                                        ->options([
-                                                            1 => 'Fijo',
-                                                            0 => 'Variable',
-                                                        ])
-                                                        ->required()
-                                                        ->live(),
-                                                    Select::make('expense_concept_id')
-                                                        ->label('Concepto fijo')
-                                                        ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
-                                                        ->visible(fn ($get) => $get('is_fixed') == 1)
-                                                        ->required(fn ($get) => $get('is_fixed') == 1)
-                                                        ->live()
-                                                        ->afterStateUpdated(function ($state, Set $set) {
-                                                            if ($state) {
-                                                                $concept = \App\Models\ExpenseConcept::find($state);
-                                                                if ($concept) {
-                                                                    $set('description', $concept->name);
-                                                                }
-                                                            }
-                                                        }),
-                                                    TextInput::make('description')
-                                                        ->label('Descripción')
-                                                        ->live()
-                                                        ->required(fn ($get) => $get('is_fixed') != 1),
-                                                    TextInput::make('amount')->numeric()->required(),
+                                    Repeater::make(name: 'items')
+                                        ->schema([
+                                            Select::make('is_fixed')
+                                                ->options([
+                                                    1 => 'Fijo',
+                                                    0 => 'Variable',
                                                 ])
-                                                ->columns(2),
+                                                ->required()
+                                                ->live(),
+                                            Select::make('expense_concept_id')
+                                                ->label('Concepto fijo')
+                                                ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
+                                                ->visible(fn ($get) => $get('is_fixed') == 1)
+                                                ->required(fn ($get) => $get('is_fixed') == 1)
+                                                ->live()
+                                                ->afterStateUpdated(function ($state, Set $set) {
+                                                    if ($state) {
+                                                        $concept = \App\Models\ExpenseConcept::find($state);
+                                                        if ($concept) {
+                                                            $set('description', $concept->name);
+                                                        }
+                                                    }
+                                                }),
+                                            TextInput::make('description')
+                                                ->label('Descripción')
+                                                ->live()
+                                                ->required(fn ($get) => $get('is_fixed') != 1),
+                                            TextInput::make('amount')->numeric()->required(),
+                                        ])
+                                        ->columns(2),
 
-
- ]),
-                                    ])
-                                    ->columns(1),
 
 
                             ])
-                            ->minItems(1)
-                            ->addActionLabel('Agregar ítem')
-                            ->blockNumbers(false),
+                            ->columns(1),
+
+
+                    ])
+                    ->minItems(1)
+                    ->addActionLabel('Agregar ítem')
+                    ->blockNumbers(false)
+                    ->columnSpanFull(),
 
 
 
