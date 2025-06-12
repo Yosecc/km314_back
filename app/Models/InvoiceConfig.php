@@ -13,11 +13,17 @@ class InvoiceConfig extends Model
         'period',
         'fecha_creacion',
         'config',
+        'expiration_date',
+        'second_expiration_date',
+        'punitive'
     ];
 
     protected $casts = [
         'config' => 'array',
         'period' => 'date',
+        'expiration_date' => 'date',
+        'second_expiration_date' => 'date',
         'fecha_creacion' => 'date',
+        'punitive' => 'integer'
     ];
 }

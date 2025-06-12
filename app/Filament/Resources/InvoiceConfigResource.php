@@ -47,6 +47,22 @@ class InvoiceConfigResource extends Resource
                     ->displayFormat('F Y'),
                 Forms\Components\DatePicker::make('fecha_creacion')
                     ->label('Fecha de ejecución')
+                    ->helperText('Fecha en la que se ejecutará esta configuración de facturación y se generarán las facturas correspondientes.')
+                    ->required(),
+                DatePicker::make('expiration_date')
+                    ->label('Fecha de vencimiento')
+                    ->required()
+                    ->displayFormat('d/m/Y')
+                    ->helperText('Fecha de vencimiento de las facturas generadas.'),
+                DatePicker::make('second_expiration_date')
+                    ->label('Segunda fecha de vencimiento')
+                    ->required()
+                    ->displayFormat('d/m/Y')
+                    ->helperText('Segunda fecha de vencimiento de las facturas generadas.'),
+                TextInput::make('punitive')
+                    ->label('Interés moratorio')
+                    ->helperText('Porcentaje de interés moratorio aplicado a las facturas vencidas.')
+                    ->numeric()
                     ->required(),
                 Forms\Components\Builder::make('config')
                     ->label('Configuración de Facturación')
@@ -236,21 +252,7 @@ class InvoiceConfigResource extends Resource
                         Forms\Components\Builder\Block::make('params_general_invoices')
                             ->label('Parametros generales de facturación')
                             ->schema([
-                                DatePicker::make('expiration_date')
-                                    ->label('Fecha de vencimiento')
-                                    ->required()
-                                    ->displayFormat('d/m/Y')
-                                    ->helperText('Fecha de vencimiento de las facturas generadas.'),
-                                DatePicker::make('second_expiration_date')
-                                    ->label('Segunda fecha de vencimiento')
-                                    ->required()
-                                    ->displayFormat('d/m/Y')
-                                    ->helperText('Segunda fecha de vencimiento de las facturas generadas.'),
-                                TextInput::make('punitive')
-                                    ->label('Interés moratorio')
-                                    ->helperText('Porcentaje de interés moratorio aplicado a las facturas vencidas.')
-                                    ->numeric()
-                                    ->required()
+
                             ])
                             ->maxItems(1)
                             ->columns(3),
