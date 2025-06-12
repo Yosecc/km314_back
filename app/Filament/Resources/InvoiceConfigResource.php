@@ -6,7 +6,10 @@ use App\Filament\Resources\InvoiceConfigResource\Pages;
 use App\Filament\Resources\InvoiceConfigResource\RelationManagers;
 use App\Models\InvoiceConfig;
 use Filament\Forms;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -42,16 +45,32 @@ class InvoiceConfigResource extends Resource
                             ->label('Ítem de factura')
                             ->schema([
 
-                                Forms\Components\TextInput::make('description')
+                                 Select::make('is_fixed')
+                                    ->options([
+                                        1 => 'Fijo',
+                                        0 => 'Variable',
+                                    ])
+                                    ->required()
+                                    ->live(),
+                                Select::make('expense_concept_id')
+                                    ->label('Concepto fijo')
+                                    ->options(\App\Models\ExpenseConcept::pluck('name', 'id'))
+                                    ->visible(fn ($get) => $get('is_fixed') == 1)
+                                    ->required(fn ($get) => $get('is_fixed') == 1)
+                                    ->live()
+                                    ->afterStateUpdated(function ($state, Set $set) {
+                                        if ($state) {
+                                            $concept = \App\Models\ExpenseConcept::find($state);
+                                            if ($concept) {
+                                                $set('description', $concept->name);
+                                            }
+                                        }
+                                    }),
+                                TextInput::make('description')
                                     ->label('Descripción')
-                                    ->required(),
-                                Forms\Components\TextInput::make('amount')
-                                    ->label('Monto')
-                                    ->numeric()
-                                    ->required(),
-                                Forms\Components\Toggle::make('is_fixed')
-                                    ->label('¿Es fijo?')
-                                    ->default(true),
+                                    ->live()
+                                    ->required(fn ($get) => $get('is_fixed') != 1),
+                                TextInput::make('amount')->numeric()->required(),
                             ])
                             ->columns(3),
                         // Puedes agregar más bloques aquí si lo necesitas en el futuro
