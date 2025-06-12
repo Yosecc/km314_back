@@ -380,9 +380,8 @@ class InvoiceConfigResource extends Resource
                                             ->multiple()
                                             ->live()
                                             ->options(function (Get $get) {
-
-                                                // Obtener todos los lotes asignados a grupos
-                                                $config = $get('../../../../config');
+                                                // Obtener todos los lotes asignados a grupos personalizados
+                                                $config = $get('../../../config');
                                                 $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
                                                 $grupos = $bloque['data']['groups'] ?? [];
                                                 $lotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
@@ -402,7 +401,7 @@ class InvoiceConfigResource extends Resource
                                                 });
                                             })
                                             ->required()
-                                            ->helperText('No puedes seleccionar lotes que ya están asignados a un grupo. Si necesitas excluir uno, primero quítalo del grupo.')
+                                            ->helperText('Solo puedes excluir lotes que no estén en ningún grupo personalizado.')
 
                                     ])
                                     ->maxItems(1)
