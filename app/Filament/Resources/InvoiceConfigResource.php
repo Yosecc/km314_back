@@ -52,25 +52,40 @@ class InvoiceConfigResource extends Resource
                         Grid::make()
                             ->columns(1)
                             ->schema([
+                                Forms\Components\Placeholder::make('total_grupos')
+                                    ->label('Cantidad de grupos de facturación')
+                                    ->content(function (Get $get) {
+                                        $config = $get('config');
+                                        if (!is_array($config)) return '0';
+                                        $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
+                                        $grupos = $bloque['data']['groups'] ?? [];
+                                        return count($grupos);
+                                    }),
                                 Forms\Components\Placeholder::make('resumen_grupos')
                                     ->label('Grupos y lotes configurados')
                                     ->content(function (Get $get) {
                                         $config = $get('config');
-                                        if (!is_array($config)) return 'Sin grupos';
+                                        if (!is_array($config)) return new \Illuminate\Support\HtmlString('Sin grupos');
                                         $bloque = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
                                         $grupos = $bloque['data']['groups'] ?? [];
-                                        if (empty($grupos)) return 'Sin grupos';
+                                        if (empty($grupos)) return new \Illuminate\Support\HtmlString('Sin grupos');
+                                        $allLotes = \App\Models\Lote::whereIn('id', collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray())->get()->keyBy('id');
                                         $html = '<ul style="margin-left:1em">';
                                         foreach ($grupos as $i => $grupo) {
                                             $nombre = $grupo['name'] ?? 'Grupo '.($i+1);
                                             $lotes = $grupo['lotes_id'] ?? [];
-                                            $lotesList = is_array($lotes) && count($lotes) > 0
-                                                ? implode(', ', $lotes)
-                                                : '<em>Sin lotes</em>';
+                                            if (is_array($lotes) && count($lotes) > 0) {
+                                                $nombres = collect($lotes)->map(function($id) use ($allLotes) {
+                                                    return $allLotes[$id]->getNombre() ?? $id;
+                                                })->implode(', ');
+                                                $lotesList = $nombres;
+                                            } else {
+                                                $lotesList = '<em>Sin lotes</em>';
+                                            }
                                             $html .= "<li><strong>{$nombre}</strong>: {$lotesList}</li>";
                                         }
                                         $html .= '</ul>';
-                                        return $html;
+                                        return new \Illuminate\Support\HtmlString($html);
                                     })
                                     ->extraAttributes(['style' => 'font-size:1em'])
                                     ->columnSpanFull(),
