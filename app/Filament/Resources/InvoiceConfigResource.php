@@ -106,8 +106,9 @@ class InvoiceConfigResource extends Resource
                                                         ];
                                                     });
                                                 }),
-                                            Select::make('lote_id')
+                                            Select::make('lotes_id')
                                                 ->label('Lote')
+                                                 ->multiple()
                                                 ->live()
                                                 ->options(function (Get $get) {
 
