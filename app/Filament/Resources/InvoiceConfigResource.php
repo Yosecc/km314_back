@@ -41,17 +41,21 @@ class InvoiceConfigResource extends Resource
                     ->label('Fecha de ejecución')
                     ->required(),
 
+
                         Forms\Components\Builder::make('config')
                             ->label('Configuración de Facturación')
                             ->blocks([
 
+
                                 Forms\Components\Builder\Block::make('items_invoice')
-                                    // ->label('Ítem de factura')
+                                    ->label('Ítem de factura')
                                     ->schema([
 
-                                    Section::make('Ítem de factura')
-                                        ->description('Configura los items a cobrarse en esta facturación mensual')
-                                        ->schema([
+
+ Section::make('')
+                    ->description('Configura los items a cobrarse en esta facturación mensual')
+                    ->schema([
+
                                             Repeater::make(name: 'items')
                                                 ->schema([
                                                     Select::make('is_fixed')
@@ -83,8 +87,11 @@ class InvoiceConfigResource extends Resource
                                                 ])
                                                 ->columns(2),
 
-                                        ])
-                                        ->columns(1),
+
+ ]),
+                                    ])
+                                    ->columns(1),
+
 
                             ])
                             ->minItems(1)
@@ -92,7 +99,7 @@ class InvoiceConfigResource extends Resource
                             ->blockNumbers(false),
 
 
-                    ]),
+
             ]);
     }
 
