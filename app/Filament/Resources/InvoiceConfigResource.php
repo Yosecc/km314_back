@@ -113,7 +113,7 @@ class InvoiceConfigResource extends Resource
                                             ->extraAttributes(['style' => 'font-size: 1.875rem;','class'=> 'fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white'])
                                             ->content(function (Get $get) {
                                                 // Total de lotes con propietario menos los excluidos
-                                                $totalLotesConOwner = \App\Models\Lote::whereNotNull('owner_id')->pluck('id')->toArray();
+                                                $totalLotesConOwner = \App\Models\Lote::whereNotNull('owner_id')->where('is_facturable', true)->pluck('id')->toArray();
                                                 $config = $get('config');
                                                 if (!is_array($config)) return '0';
                                                 $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
@@ -136,7 +136,7 @@ class InvoiceConfigResource extends Resource
                                         $allLotes = Lote::whereIn('id', array_unique(array_merge(
                                             collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray(),
                                             is_array($excluidos) ? $excluidos : []
-                                        )))->get()->keyBy('id');
+                                        )))->where('is_facturable', true)->get()->keyBy('id');
                                         $html = '<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden text-sm">';
                                         $html .= '<thead class="bg-gray-50 dark:bg-gray-800"><tr>';
                                         $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200 border-b dark:border-gray-700">Grupo</th>';
@@ -338,7 +338,7 @@ class InvoiceConfigResource extends Resource
                                                                 ->live()
                                                                 ->options(function (Get $get) {
 
-                                                                    $lotes = Lote::get();
+                                                                    $lotes = Lote::get()->where('is_facturable', true);
 
                                                                     if($get('lote_type_id')) {
                                                                         $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
@@ -479,7 +479,7 @@ class InvoiceConfigResource extends Resource
                                                 $lotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
 
                                                 // Traer solo los lotes que NO están en ningún grupo
-                                                $query = Lote::query()->whereNotIn('id', $lotesEnGrupos);
+                                                $query = Lote::query()->whereNotIn('id', $lotesEnGrupos)->where('is_facturable', true);
 
                                                 // Si hay filtro por tipo, aplicarlo
                                                 if ($get('lote_type_id')) {
