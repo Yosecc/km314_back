@@ -112,15 +112,15 @@ class InvoiceConfigResource extends Resource
                                             ->label('')
                                             ->extraAttributes(['style' => 'font-size: 1.875rem;','class'=> 'fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white'])
                                             ->content(function (Get $get) {
-                                                // Total de lotes con propietario menos los excluidos
-                                                $totalLotesConOwner = \App\Models\Lote::whereNotNull('owner_id')->where('is_facturable', true)->pluck('id')->toArray();
                                                 $config = $get('config');
-                                                if (!is_array($config)) return '0';
+                                                if (!is_array($config)) return 0;
+                                                $other = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'other_properties');
+                                                $facturasCount = $other['facturas_count'] ?? 0;
+                                                // Excluidos
                                                 $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
                                                 $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
-                                                $totalLotesExcluidos = is_array($excluidos) ? $excluidos : [];
-                                                $facturas = array_diff($totalLotesConOwner, $totalLotesExcluidos);
-                                                return count($facturas);
+                                                $totalExcluidos = is_array($excluidos) ? count($excluidos) : 0;
+                                                return $facturasCount - $totalExcluidos;
                                             }),
                                     ]),
 
