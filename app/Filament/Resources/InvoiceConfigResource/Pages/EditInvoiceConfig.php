@@ -68,7 +68,6 @@ class EditInvoiceConfig extends EditRecord
                         }),
                     \Filament\Forms\Components\Select::make('lotes_id')
                         ->label('Lote')
-                        ->multiple()
                         ->live()
                         ->options(function (\Filament\Forms\Get $get) {
                             $lotes = \App\Models\Lote::get()->where('is_facturable', true);
@@ -86,12 +85,26 @@ class EditInvoiceConfig extends EditRecord
                 ->modalHeading('Ver borrador de factura')
                 ->modalSubmitActionLabel('Ver borrador')
                 ->action(function (array $data, $record) {
-                    // Aquí puedes procesar los datos seleccionados y mostrar el borrador real
+                    $loteId = $data['lotes_id'] ?? null;
+                    if (empty($loteId)) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Selecciona un lote')
+                            ->danger()
+                            ->send();
+                        return;
+                    }
+                    $previewKey = 'invoice_preview_' . uniqid();
+                    session([$previewKey => [
+                        'invoice_config_id' => $record->id,
+                        'lotes_id' => [$loteId], // Guardar como array para compatibilidad
+                    ]]);
+                    $url = route('invoice.preview', ['key' => $previewKey]);
                     \Filament\Notifications\Notification::make()
-                        ->title('Borrador de factura')
-                        ->body('Aquí se mostraría el borrador de la factura para los lotes seleccionados.')
-                        ->info()
+                        ->title('Vista previa de factura')
+                        ->body('Se abrirá una nueva ventana con el borrador de la factura seleccionada.')
+                        ->success()
                         ->send();
+                    echo "<script>window.open('{$url}', '_blank');</script>";
                 }),
         ];
     }
