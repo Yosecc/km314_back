@@ -69,7 +69,14 @@ class InvoiceConfigResource extends Resource
                                                 $config = $get('config');
                                                 if (!is_array($config)) return 0;
                                                 $other = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'other_properties');
-                                                return $other['facturas_count'] ?? 0;
+                                                // Compatibilidad: buscar en ['data']['facturas_count'] y en ['facturas_count']
+                                                $facturasCount = 0;
+                                                if (isset($other['data']) && is_array($other['data']) && isset($other['data']['facturas_count'])) {
+                                                    $facturasCount = $other['data']['facturas_count'];
+                                                } elseif (isset($other['facturas_count'])) {
+                                                    $facturasCount = $other['facturas_count'];
+                                                }
+                                                return is_numeric($facturasCount) ? (int)$facturasCount : 0;
                                             })
                                     ]),
 
@@ -147,7 +154,7 @@ class InvoiceConfigResource extends Resource
                                         $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200 border-b dark:border-gray-700">Lotes</th>';
                                         $html .= '</tr></thead><tbody class="bg-white dark:bg-gray-900">';
                                         foreach ($grupos as $i => $grupo) {
-                                            $nombre = $grupo['name'] ?? 'Grupo '.($i+1);
+                                            $nombre = $grupo['name'] ?? 'Grupo ';
                                             $lotes = $grupo['lotes_id'] ?? [];
                                             $cantidadLotes = is_array($lotes) ? count($lotes) : 0;
                                             if ($cantidadLotes > 0) {
