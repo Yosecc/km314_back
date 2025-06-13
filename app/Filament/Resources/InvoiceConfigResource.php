@@ -120,6 +120,9 @@ class InvoiceConfigResource extends Resource
                                                 $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
                                                 $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
                                                 $totalExcluidos = is_array($excluidos) ? count($excluidos) : 0;
+                                                // Asegurar que ambos sean numéricos
+                                                $facturasCount = is_numeric($facturasCount) ? (int)$facturasCount : 0;
+                                                $totalExcluidos = is_numeric($totalExcluidos) ? (int)$totalExcluidos : 0;
                                                 return $facturasCount - $totalExcluidos;
                                             }),
                                     ]),
