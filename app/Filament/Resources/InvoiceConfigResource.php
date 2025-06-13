@@ -249,17 +249,20 @@ class InvoiceConfigResource extends Resource
                                 ->label('Fecha de Ejecución')
                                 ->required()
                                 ->displayFormat('d/m/Y')
-                                ->helperText('Fecha en la que se ejecutará esta configuración y se generarán las facturas.'),
+                                ->helperText('Fecha en la que se ejecutará esta configuración y se generarán las facturas.')
+                                ->rule('after_or_equal:period'),
                             DatePicker::make('expiration_date')
                                 ->label('Vencimiento Principal')
                                 ->required()
                                 ->displayFormat('d/m/Y')
-                                ->helperText('Fecha de vencimiento principal de las facturas generadas.'),
+                                ->helperText('Fecha de vencimiento principal de las facturas generadas.')
+                                ->rule('after_or_equal:fecha_creacion'),
                             DatePicker::make('second_expiration_date')
                                 ->label('Segundo Vencimiento')
                                 ->required()
                                 ->displayFormat('d/m/Y')
-                                ->helperText('Segunda fecha de vencimiento para pagos fuera de término.'),
+                                ->helperText('Segunda fecha de vencimiento para pagos fuera de término.')
+                                ->rule('after_or_equal:expiration_date'),
                             TextInput::make('punitive')
                                 ->label('Interés Moratorio (%)')
                                 ->numeric()
