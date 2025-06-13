@@ -49,6 +49,50 @@ class EditInvoiceConfig extends EditRecord
                         ->success()
                         ->send();
                 }),
+            Actions\Action::make('ver_borrador')
+                ->label('Ver borrador de factura')
+                ->icon('heroicon-m-eye')
+                ->color('info')
+                ->visible(fn($record) => true)
+                ->form([
+                    \Filament\Forms\Components\Select::make('lote_type_id')
+                        ->label(__('general.LoteType'))
+                        ->live()
+                        ->options(function () {
+                            $lotes = \App\Models\loteType::get();
+                            return $lotes->mapWithKeys(function ($lote) {
+                                return [
+                                    $lote->id => $lote->name
+                                ];
+                            });
+                        }),
+                    \Filament\Forms\Components\Select::make('lotes_id')
+                        ->label('Lote')
+                        ->multiple()
+                        ->live()
+                        ->options(function (\Filament\Forms\Get $get) {
+                            $lotes = \App\Models\Lote::get()->where('is_facturable', true);
+                            if ($get('lote_type_id')) {
+                                $lotes = $lotes->where('lote_type_id', $get('lote_type_id'));
+                            }
+                            return $lotes->mapWithKeys(function ($lote) {
+                                return [
+                                    $lote->id => $lote->getNombre()
+                                ];
+                            });
+                        })
+                        ->required(),
+                ])
+                ->modalHeading('Ver borrador de factura')
+                ->modalSubmitActionLabel('Ver borrador')
+                ->action(function (array $data, $record) {
+                    // Aquí puedes procesar los datos seleccionados y mostrar el borrador real
+                    \Filament\Notifications\Notification::make()
+                        ->title('Borrador de factura')
+                        ->body('Aquí se mostraría el borrador de la factura para los lotes seleccionados.')
+                        ->info()
+                        ->send();
+                }),
         ];
     }
 
