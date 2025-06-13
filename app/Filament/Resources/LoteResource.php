@@ -93,6 +93,9 @@ class LoteResource extends Resource
                     ->label(__("Observaciones"))
                     ->columnSpanFull(),
 
+                Forms\Components\Toggle::make('is_facturable')
+                    ->label(__('¿Es facturable?'))
+                    ->inline(false),
 
             ]);
     }
@@ -125,6 +128,8 @@ class LoteResource extends Resource
                     ->label(__("Teléfono"))
                     ->sortable(),
 
+                Tables\Columns\ToggleColumn::make('is_facturable')
+                    ->label(__('¿Facturable?')),
             ])
             ->filters([
                 SelectFilter::make('loteStatus')
@@ -134,6 +139,13 @@ class LoteResource extends Resource
                 SelectFilter::make('owner')
                     ->label(__('Propietario'))
                     ->relationship('owner', 'first_name'),
+
+                SelectFilter::make('is_facturable')
+                    ->label(__('¿Facturable?'))
+                    ->options([
+                        1 => __('Sí'),
+                        0 => __('No'),
+                    ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
