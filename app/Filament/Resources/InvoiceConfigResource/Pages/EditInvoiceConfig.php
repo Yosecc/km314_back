@@ -101,18 +101,10 @@ class EditInvoiceConfig extends EditRecord
                     $url = route('invoice.preview', ['key' => $previewKey]);
                     \Filament\Notifications\Notification::make()
                         ->title('Vista previa de factura')
-                        ->body('Se abrirá una nueva ventana con el borrador de la factura seleccionada.')
+                        ->body('Haz clic <a href="' . $url . '" target="_blank" style="color:#2563eb;text-decoration:underline;">aquí</a> para ver el borrador de la factura seleccionada en una nueva ventana.')
                         ->success()
                         ->send();
-                    return ['open_url' => $url];
-                })
-                ->after(function ($result) {
-                    if (isset($result['open_url'])) {
-                        \Filament\Facades\Filament::registerRenderHook(
-                            'scripts.end',
-                            fn () => "<script>window.open('{$result['open_url']}', '_blank');</script>"
-                        );
-                    }
+                    return null;
                 }),
         ];
     }
