@@ -154,6 +154,24 @@ class LoteResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('marcar_facturables')
+                        ->label(__('Marcar como facturables'))
+                        ->icon('heroicon-o-currency-dollar')
+                        ->action(function (\Illuminate\Support\Collection $records) {
+                            foreach ($records as $record) {
+                                $record->is_facturable = true;
+                                $record->save();
+                            }
+                        }),
+                    Tables\Actions\BulkAction::make('desmarcar_facturables')
+                        ->label(__('Desmarcar como facturables'))
+                        ->icon('heroicon-o-x-circle')
+                        ->action(function (\Illuminate\Support\Collection $records) {
+                            foreach ($records as $record) {
+                                $record->is_facturable = false;
+                                $record->save();
+                            }
+                        }),
                 ]),
             ]);
     }
