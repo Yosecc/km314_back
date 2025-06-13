@@ -23,6 +23,7 @@ class Lote extends Model
         'contrafrente',
         'lado_uno',
         'lado_dos',
+        'is_facturable'
     ];
     protected $with = ['sector','loteStatus','loteType'];
 

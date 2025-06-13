@@ -62,11 +62,14 @@ class InvoiceConfigResource extends Resource
                                     ->columns(1)
                                     ->columnSpan(1)
                                     ->schema([
-                                        Forms\Components\Placeholder::make('total_lotes_con_owner')
+                                        Forms\Components\Placeholder::make('total_facturas_guardadas')
                                             ->label('')
                                             ->extraAttributes(['style' => 'font-size: 1.875rem;','class'=> 'fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white'])
-                                            ->content(function () {
-                                                return Lote::whereNotNull('owner_id')->count();
+                                            ->content(function (Get $get) {
+                                                $config = $get('config');
+                                                if (!is_array($config)) return 0;
+                                                $other = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'other_properties');
+                                                return $other['facturas_count'] ?? 0;
                                             })
                                     ]),
 
@@ -197,9 +200,9 @@ class InvoiceConfigResource extends Resource
                                         $status = $get('status');
                                         $base = 'rounded-lg border';
                                         $map = [
-                                            'Borrador' => 'background-color: rgb(207, 110, 6); color: white; border-color: rgb(207,110, 6); height:100%',
-                                            'Procesado' => 'background-color: rgb(34,197,94); color: white; border-color: rgb(34,197,94); height:100%',
-                                            'Aprobado' => 'background-color: rgb(59,130,246); color: white; border-color: rgb(59,130,246); height:100%',
+                                            'Borrador' => 'background-color: rgb(207, 110, 6); color: white; border-color: rgb(207,110, 6); ',
+                                            'Procesado' => 'background-color: rgb(34,197,94); color: white; border-color: rgb(34,197,94); ',
+                                            'Aprobado' => 'background-color: rgb(59,130,246); color: white; border-color: rgb(59,130,246); ',
                                         ];
                                         return [
                                             // 'class' => $map[$status] ?? ($base.' '),

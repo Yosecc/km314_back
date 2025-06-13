@@ -34,22 +34,26 @@ class EditInvoiceConfig extends EditRecord
         ];
     }
 
-    // protected function mutateFormDataBeforeSave(array $data): array
-    // {
-    //     // Validación de lotes excluidos vs lotes en grupos
-    //     $config = $data['config'] ?? [];
-    //     $bloqueGrupos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
-    //     $grupos = $bloqueGrupos['data']['groups'] ?? [];
-    //     $lotesEnGrupos = collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray();
-    //     $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
-    //     $lotesExcluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
-    //     $enAmbos = array_intersect($lotesEnGrupos, $lotesExcluidos);
-    //     if (count($enAmbos) > 0) {
-    //         $nombres = \App\Models\Lote::whereIn('id', $enAmbos)->pluck('lote_id')->implode(', ');
-    //         throw ValidationException::withMessages([
-    //             'config' => 'No puedes excluir lotes que ya están asignados a un grupo: ' . $nombres
-    //         ]);
-    //     }
-    //     return $data;
-    // }
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $facturasCount = \App\Models\Lote::where('is_facturable', true)->whereNotNull('owner_id')->count();
+        $config = $data['config'] ?? [];
+        // Eliminar cualquier bloque previo de 'other_properties'
+        $config = array_values(array_filter($config, function($block) {
+            return !(
+                is_array($block)
+                && isset($block['type'])
+                && $block['type'] === 'other_properties'
+            );
+        }));
+        // Agregar el bloque actualizado al final
+        $config[] = [
+            'type' => 'other_properties',
+            'data' => [
+                'facturas_count' => (string) $facturasCount,
+            ],
+        ];
+        $data['config'] = $config;
+        return $data;
+    }
 }
