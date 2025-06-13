@@ -122,7 +122,13 @@ class InvoiceConfigResource extends Resource
                                                 $config = $get('config');
                                                 if (!is_array($config)) return 0;
                                                 $other = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'other_properties');
-                                                $facturasCount = $other['facturas_count'] ?? 0;
+                                                // Compatibilidad: buscar en ['data']['facturas_count'] y en ['facturas_count']
+                                                $facturasCount = 0;
+                                                if (isset($other['data']) && is_array($other['data']) && isset($other['data']['facturas_count'])) {
+                                                    $facturasCount = $other['data']['facturas_count'];
+                                                } elseif (isset($other['facturas_count'])) {
+                                                    $facturasCount = $other['facturas_count'];
+                                                }
                                                 // Excluidos
                                                 $bloqueExcluidos = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'exclude_lotes');
                                                 $excluidos = $bloqueExcluidos['data']['lotes_id'] ?? [];
