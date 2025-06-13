@@ -137,7 +137,7 @@ class InvoiceConfigResource extends Resource
                                             collect($grupos)->pluck('lotes_id')->flatten()->unique()->toArray(),
                                             is_array($excluidos) ? $excluidos : []
                                         )))->where('is_facturable', true)->get()->keyBy('id');
-                                        $html = '<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden text-sm">';
+                                        $html = '<table style="width:100%" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden text-sm">';
                                         $html .= '<thead class="bg-gray-50 dark:bg-gray-800"><tr>';
                                         $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200 border-b dark:border-gray-700">Grupo</th>';
                                         $html .= '<th class="px-4 py-2 text-left font-semibold text-gray-700 dark:text-gray-200 border-b dark:border-gray-700 w-40">Cantidad de lotes</th>';
