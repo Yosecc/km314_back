@@ -26,6 +26,7 @@ class InvoicePdfController extends Controller
         $period = $invoiceConfig->period ?? ($config['period'] ?? now());
         $due_date = $invoiceConfig->expiration_date ?? ($config['expiration_date'] ?? now()->addDays(10));
         $items = collect();
+        $observations = null;
         // Buscar si el lote está en algún grupo personalizado
         $custom = collect($config)->first(fn($b) => ($b['type'] ?? null) === 'custom_items_invoices');
         $foundGroup = false;
@@ -33,6 +34,7 @@ class InvoicePdfController extends Controller
             foreach ($custom['data']['groups'] as $grupo) {
                 if (in_array($lote->id, $grupo['lotes_id'] ?? [])) {
                     $items = collect($grupo['items'] ?? []);
+                    $observations = $grupo['observations'] ?? null;
                     $foundGroup = true;
                     break;
                 }
@@ -59,6 +61,7 @@ class InvoicePdfController extends Controller
             'status' => 'borrador',
             'items' => $items,
             'total' => $total,
+            'observations' => $observations,
         ];
     }
 

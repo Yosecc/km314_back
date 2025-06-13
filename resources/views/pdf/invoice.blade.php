@@ -20,6 +20,12 @@
         <p><strong>Periodo:</strong> {{ \Carbon\Carbon::parse($invoice->period)->format('F Y') }}</p>
         <p><strong>Fecha de vencimiento:</strong> {{ \Carbon\Carbon::parse($invoice->due_date)->format('d/m/Y') }}</p>
         <p><strong>Estado:</strong> {{ ucfirst($invoice->status) }}</p>
+        @if(isset($invoice->observations) && $invoice->observations)
+            <div style="margin-top: 10px; padding: 10px; background: #f9fafb; border-left: 4px solid #2563eb;">
+                <strong>Observaciones:</strong>
+                <div>{!! $invoice->observations !!}</div>
+            </div>
+        @endif
     </div>
     <table class="items">
         <thead>
