@@ -91,12 +91,12 @@ class EditInvoiceConfig extends EditRecord
                             ->title('Selecciona un lote')
                             ->danger()
                             ->send();
-                        return;
+                        return null;
                     }
                     $previewKey = 'invoice_preview_' . uniqid();
                     session([$previewKey => [
                         'invoice_config_id' => $record->id,
-                        'lotes_id' => [$loteId], // Guardar como array para compatibilidad
+                        'lotes_id' => [$loteId],
                     ]]);
                     $url = route('invoice.preview', ['key' => $previewKey]);
                     \Filament\Notifications\Notification::make()
@@ -104,7 +104,15 @@ class EditInvoiceConfig extends EditRecord
                         ->body('Se abrirá una nueva ventana con el borrador de la factura seleccionada.')
                         ->success()
                         ->send();
-                    echo "<script>window.open('{$url}', '_blank');</script>";
+                    return ['open_url' => $url];
+                })
+                ->after(function ($result) {
+                    if (isset($result['open_url'])) {
+                        \Filament\Facades\Filament::registerRenderHook(
+                            'scripts.end',
+                            fn () => "<script>window.open('{$result['open_url']}', '_blank');</script>"
+                        );
+                    }
                 }),
         ];
     }
