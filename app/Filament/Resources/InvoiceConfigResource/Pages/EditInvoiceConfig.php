@@ -21,6 +21,8 @@ class EditInvoiceConfig extends EditRecord
                 ->color('success')
                 ->visible(fn($record) => $record->status === 'Borrador')
                 ->requiresConfirmation()
+                ->modalHeading('¿Aprobar configuración?')
+                ->modalDescription('Una vez que la configuración sea aprobada, no se podrán realizar más modificaciones. ¿Deseas continuar?')
                 ->action(function ($record) {
                     $record->status = 'Aprobado';
                     $record->aprobe_user_id = auth()->id();
