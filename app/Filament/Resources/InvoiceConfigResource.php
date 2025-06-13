@@ -536,7 +536,11 @@ class InvoiceConfigResource extends Resource
                 ])
                 ->skippable(fn ($context) => $context === 'edit')
                 ->columnSpanFull()
-                // ->disabled(fn (Get $get) => ($get('status') !== 'Borrador' || $get('status') === '' || $get('status') === null) ),
+                ->disabled(function (Get $get) {
+                    dd($get('status'));
+                    // ($get('status') !== 'Borrador' || $get('status') === '' || $get('status') === null)
+                        return false;
+                } ),
             ]);
     }
 
