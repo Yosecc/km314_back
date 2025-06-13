@@ -212,6 +212,7 @@ class InvoiceConfigResource extends Resource
                                             ->extraAttributes(['style' => 'font-size: 1.875rem;','class'=> 'fi-wi-stats-overview-stat-value text-3xl font-semibold tracking-tight text-gray-950 dark:text-white'])
                                             ->content(function (Get $get) {
                                                 $status = $get('status');
+                                                $status = $status == null ? 'Pendiente' : $status;
                                                 return $status;
                                             }),
                                     ]),
@@ -255,6 +256,7 @@ class InvoiceConfigResource extends Resource
                            Forms\Components\Builder::make('config')
                             ->label('Configuración de Facturación')
                             ->blocks([
+
                                 Forms\Components\Builder\Block::make('items_invoice')
                                     ->label('Items de Factura')
                                     ->schema([
