@@ -24,6 +24,22 @@ class EditInvoiceConfig extends EditRecord
                 ->modalHeading('¿Aprobar configuración?')
                 ->modalDescription('Una vez que la configuración sea aprobada, no se podrán realizar más modificaciones. ¿Deseas continuar?')
                 ->action(function ($record) {
+                    // Validar que no exista otro aprobado en el mismo periodo
+                    $periodo = $record->periodo ?? ($record->config['periodo'] ?? null);
+                    if (!$periodo) {
+                        throw ValidationException::withMessages([
+                            'periodo' => 'No se pudo determinar el periodo de la configuración.'
+                        ]);
+                    }
+                    $yaExiste = \App\Models\InvoiceConfig::where('status', 'Aprobado')
+                        ->where('periodo', $periodo)
+                        ->where('id', '!=', $record->id)
+                        ->exists();
+                    if ($yaExiste) {
+                        throw ValidationException::withMessages([
+                            'periodo' => 'Ya existe una configuración aprobada para este periodo. Solo puede haber una por periodo.'
+                        ]);
+                    }
                     $record->status = 'Aprobado';
                     $record->aprobe_user_id = auth()->id();
                     $record->aprobe_date = now();

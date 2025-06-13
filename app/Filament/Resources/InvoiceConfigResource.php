@@ -578,6 +578,24 @@ class InvoiceConfigResource extends Resource
                         $record->aprobe_date = now();
                         $record->save();
                     }),
+                Tables\Actions\Action::make('duplicar')
+                    ->label('Duplicar')
+                    ->icon('heroicon-m-document-duplicate')
+                    ->color('gray')
+                    ->action(function ($record, $livewire) {
+                        $nuevo = $record->replicate();
+                        $nuevo->status = 'Borrador';
+                        $nuevo->aprobe_user_id = null;
+                        $nuevo->aprobe_date = null;
+                        $nuevo->created_at = now();
+                        $nuevo->updated_at = now();
+                        $nuevo->save();
+                        // Si hay relaciones o campos especiales, duplicar aquí
+                        // Redirigir a la edición del nuevo registro
+                        return redirect(static::getUrl('edit', ['record' => $nuevo->getKey()]));
+                    })
+                    ->requiresConfirmation()
+                    ->visible(fn($record) => true),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
