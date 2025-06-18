@@ -298,6 +298,13 @@ class Main extends Controller
     {
         $owner = Owner::where('id', $request->user()->owner->id)->first();
 
+        $owner = $owner->toArray();
+        array_walk($owner, function (&$value) {
+            if (is_null($value)) {
+                $value = "";
+            }
+        });
+
         return response()->json( $owner  , 200);
     }
 }
