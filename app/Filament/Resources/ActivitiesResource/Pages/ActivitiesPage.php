@@ -114,7 +114,7 @@ class ActivitiesPage extends CreateRecord
 
                         if(!$employee->isFormularios()){
                             Notification::make()
-                                ->title('El empleado '.$employee->first_name.' '.$employee->last_name.' requiere permisos del propietario.')
+                                ->title('El empleado '.$employee->first_name.' '.$employee->last_name.' requiere un formulario. El propietario debe actualizar o crear un formulario para este empleado.')
                                 ->danger()
                                 ->send();
 
