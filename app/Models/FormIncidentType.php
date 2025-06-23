@@ -10,6 +10,8 @@ class FormIncidentType extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $fillable = ['name'];
+
     public function questions()
     {
         return $this->hasMany(FormIncidentQuestion::class);
