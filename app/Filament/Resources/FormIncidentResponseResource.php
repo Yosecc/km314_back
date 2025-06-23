@@ -63,83 +63,108 @@ class FormIncidentResponseResource extends Resource
                 Forms\Components\Hidden::make('questions_structure'),
                 Forms\Components\Repeater::make('answers')
                     ->label('Respuestas')
-                    ->schema([
-                        Forms\Components\Hidden::make('question_id'),
-                        Forms\Components\Placeholder::make('pregunta')
-                            ->label('Pregunta')
-                            ->content(function (callable $get, $state) {
-                                $questions = $get('../../questions_structure') ?? [];
-                                $q = collect($questions)->firstWhere('id', $get('question_id'));
-                                return $q['question'] ?? '';
-                            }),
-                        Forms\Components\Placeholder::make('respuesta')
-                            ->label('Respuesta')
-                            ->content(function (callable $get, $state) {
-                                $questions = $get('../../questions_structure') ?? [];
-                                $q = collect($questions)->firstWhere('id', $get('question_id'));
-                                $answer = $get('answer');
-                                if (($q['type'] ?? null) === 'seleccion_multiple' && is_array($answer)) {
-                                    $options = $q['options'] ?? [];
-                                    if (is_string($options) && !empty($options)) {
-                                        $options = json_decode($options, true) ?? [];
-                                    } elseif (!is_array($options)) {
-                                        $options = [];
-                                    }
-                                    \Log::info('[DEBUG Filament seleccion_multiple]', [
-                                        'answer' => $answer,
-                                        'options' => $options,
-                                        'is_list' => array_is_list($options),
-                                        'labels' => collect($answer)->map(fn($val) => $options[$val] ?? $val)->toArray(),
-                                        'question_id' => $get('question_id'),
-                                        'question' => $q['question'] ?? null,
-                                    ]);
-                                    $labels = collect($answer)->map(fn($val) => $options[$val] ?? $val)->toArray();
-                                    return implode(', ', $labels);
-                                }
-                                if (($q['type'] ?? null) === 'si_no') {
-                                    return $answer === 'si' ? 'Sí' : ($answer === 'no' ? 'No' : $answer);
-                                }
-                                if (($q['type'] ?? null) === 'seleccion_unica') {
-                                    $options = $q['options'] ?? [];
-                                    if (is_string($options) && !empty($options)) {
-                                        $options = json_decode($options, true) ?? [];
-                                    } elseif (!is_array($options)) {
-                                        $options = [];
-                                    }
-                                    // Log solo después de definir $options
-                                    \Log::info('[DEBUG Filament seleccion_unica]', [
-                                        'answer' => $answer,
-                                        'options' => $options,
-                                        'is_list' => array_is_list($options),
-                                        'result_list' => (array_is_list($options) && isset($options[(int)$answer])) ? $options[(int)$answer] : null,
-                                        'result_assoc' => (!array_is_list($options)) ? collect($options)->first(fn($label, $key) => (string)$key === (string)$answer) : null,
-                                        'question_id' => $get('question_id'),
-                                        'question' => $q['question'] ?? null,
-                                    ]);
-                                    if (array_is_list($options)) {
-                                        return isset($options[(int)$answer]) ? $options[(int)$answer] : $answer;
-                                    } else {
-                                        foreach ($options as $key => $label) {
-                                            if ((string)$key === (string)$answer) {
-                                                return $label;
+                    ->schema(function () use ($isEdit) {
+                        if ($isEdit) {
+                            // Solo mostrar como texto en edición
+                            return [
+                                Forms\Components\Hidden::make('question_id'),
+                                Forms\Components\Placeholder::make('pregunta')
+                                    ->label('Pregunta')
+                                    ->content(function (callable $get) {
+                                        $questions = $get('../../questions_structure') ?? [];
+                                        $q = collect($questions)->firstWhere('id', $get('question_id'));
+                                        return $q['question'] ?? '';
+                                    }),
+                                Forms\Components\Placeholder::make('respuesta')
+                                    ->label('Respuesta')
+                                    ->content(function (callable $get) {
+                                        $questions = $get('../../questions_structure') ?? [];
+                                        $q = collect($questions)->firstWhere('id', $get('question_id'));
+                                        $answer = $get('answer');
+                                        if (($q['type'] ?? null) === 'seleccion_multiple' && is_array($answer)) {
+                                            $options = $q['options'] ?? [];
+                                            if (is_string($options) && !empty($options)) {
+                                                $options = json_decode($options, true) ?? [];
+                                            } elseif (!is_array($options)) {
+                                                $options = [];
+                                            }
+                                            $labels = collect($answer)->map(fn($val) => $options[$val] ?? $val)->toArray();
+                                            return implode(', ', $labels);
+                                        }
+                                        if (($q['type'] ?? null) === 'si_no') {
+                                            return $answer === 'si' ? 'Sí' : ($answer === 'no' ? 'No' : $answer);
+                                        }
+                                        if (($q['type'] ?? null) === 'seleccion_unica') {
+                                            $options = $q['options'] ?? [];
+                                            if (is_string($options) && !empty($options)) {
+                                                $options = json_decode($options, true) ?? [];
+                                            } elseif (!is_array($options)) {
+                                                $options = [];
+                                            }
+                                            if (array_is_list($options)) {
+                                                return isset($options[(int)$answer]) ? $options[(int)$answer] : $answer;
+                                            } else {
+                                                foreach ($options as $key => $label) {
+                                                    if ((string)$key === (string)$answer) {
+                                                        return $label;
+                                                    }
+                                                }
+                                                return $answer;
                                             }
                                         }
                                         return $answer;
+                                    }),
+                            ];
+                        }
+                        // Modo creación: inputs interactivos
+                        return [
+                            Forms\Components\Hidden::make('question_id'),
+                            Forms\Components\Placeholder::make('pregunta')
+                                ->label('Pregunta')
+                                ->content(function (callable $get) {
+                                    $questions = $get('../../questions_structure') ?? [];
+                                    $q = collect($questions)->firstWhere('id', $get('question_id'));
+                                    return $q['question'] ?? '';
+                                }),
+                            Forms\Components\TextInput::make('answer')
+                                ->label('Respuesta')
+                                ->required(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['required'] ?? false))
+                                ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'abierta'),
+                            Forms\Components\Radio::make('answer')
+                                ->label('Respuesta')
+                                ->options(['si' => 'Sí', 'no' => 'No'])
+                                ->required(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['required'] ?? false))
+                                ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'si_no'),
+                            Forms\Components\Select::make('answer')
+                                ->label('Respuesta')
+                                ->options(function (callable $get) {
+                                    $q = collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'));
+                                    $options = $q['options'] ?? [];
+                                    if (is_string($options) && !empty($options)) {
+                                        $options = json_decode($options, true) ?? [];
+                                    } elseif (!is_array($options)) {
+                                        $options = [];
                                     }
-                                }
-                                // Depuración temporal: mostrar valores en el log de Laravel
-                                // \Log::info('[DEBUG Filament respuesta]', [
-                                //     'answer' => $answer,
-                                //     'options' => $options,
-                                //     'is_list' => array_is_list($options),
-                                //     'result_list' => isset($options[(int)$answer]) ? $options[(int)$answer] : null,
-                                //     'result_assoc' => collect($options)->first(fn($label, $key) => (string)$key === (string)$answer),
-                                //     'question_id' => $get('question_id'),
-                                //     'question' => $q['question'] ?? null,
-                                // ]);
-                                return $answer;
-                            }),
-                    ])
+                                    return $options;
+                                })
+                                ->required(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['required'] ?? false))
+                                ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'seleccion_unica'),
+                            Forms\Components\CheckboxList::make('answer')
+                                ->label('Respuesta')
+                                ->options(function (callable $get) {
+                                    $q = collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'));
+                                    $options = $q['options'] ?? [];
+                                    if (is_string($options) && !empty($options)) {
+                                        $options = json_decode($options, true) ?? [];
+                                    } elseif (!is_array($options)) {
+                                        $options = [];
+                                    }
+                                    return $options;
+                                })
+                                ->required(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['required'] ?? false))
+                                ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'seleccion_multiple'),
+                        ];
+                    })
                     ->columnSpanFull()
                     ->createItemButtonLabel(false)
                     ->disableItemDeletion()
