@@ -6,6 +6,8 @@ use App\Filament\Resources\FormIncidentResponseResource\Pages;
 use App\Filament\Resources\FormIncidentResponseResource\RelationManagers;
 use App\Models\FormIncidentResponse;
 use Filament\Forms;
+use Filament\Forms\Components\Builder as BuilderJSON;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -35,13 +37,24 @@ class FormIncidentResponseResource extends Resource
                     ->required(),
                 Forms\Components\DatePicker::make('date')
                     ->label('Fecha')
-                    ->required(),
+                    ->required()
+                    ->default(now()),
                 Forms\Components\TimePicker::make('time')
                     ->label('Hora')
-                    ->nullable(),
-                Forms\Components\Textarea::make('answers')
-                    ->label('Respuestas (JSON)')
-                    ->required(),
+                    ->nullable()
+                    ->default(now()->format('H:i')),
+
+                BuilderJSON::make('answers')
+                    ->blocks([
+                        BuilderJSON\Block::make('heading')
+                            ->schema([
+                                TextInput::make('content')
+                                    ->label('Heading')
+                                    ->required(),
+
+                            ])
+                            ->columns(2),
+                    ])
             ]);
     }
 
