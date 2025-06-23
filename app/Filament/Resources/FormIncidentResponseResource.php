@@ -99,15 +99,13 @@ class FormIncidentResponseResource extends Resource
                                     } elseif (!is_array($options)) {
                                         $options = [];
                                     }
-                                    // Si las opciones son array asociativo, buscar por valor
+                                    // Si las opciones son array asociativo, buscar por clave estricta
                                     if (array_is_list($options)) {
                                         // Opciones tipo ["Opción A", "Opción B"]
-                                        return $options[$answer] ?? $answer;
+                                        return isset($options[(int)$answer]) ? $options[(int)$answer] : $answer;
                                     } else {
                                         // Opciones tipo ["a" => "Opción A", "b" => "Opción B"] o [0 => "Opción A", 1 => "Opción B"]
-                                        return collect($options)
-                                            ->filter(fn($label, $key) => (string)$key === (string)$answer)
-                                            ->first() ?? $answer;
+                                        return $options[$answer] ?? $answer;
                                     }
                                 }
                                 return $answer;
