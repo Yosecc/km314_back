@@ -79,13 +79,20 @@ class FormIncidentResponseResource extends Resource
                                 $q = collect($questions)->firstWhere('id', $get('question_id'));
                                 $answer = $get('answer');
                                 if (($q['type'] ?? null) === 'seleccion_multiple' && is_array($answer)) {
-                                    // Mostrar los labels de las opciones seleccionadas
                                     $options = $q['options'] ?? [];
                                     if (is_string($options) && !empty($options)) {
                                         $options = json_decode($options, true) ?? [];
                                     } elseif (!is_array($options)) {
                                         $options = [];
                                     }
+                                    \Log::info('[DEBUG Filament seleccion_multiple]', [
+                                        'answer' => $answer,
+                                        'options' => $options,
+                                        'is_list' => array_is_list($options),
+                                        'labels' => collect($answer)->map(fn($val) => $options[$val] ?? $val)->toArray(),
+                                        'question_id' => $get('question_id'),
+                                        'question' => $q['question'] ?? null,
+                                    ]);
                                     $labels = collect($answer)->map(fn($val) => $options[$val] ?? $val)->toArray();
                                     return implode(', ', $labels);
                                 }
@@ -99,15 +106,37 @@ class FormIncidentResponseResource extends Resource
                                     } elseif (!is_array($options)) {
                                         $options = [];
                                     }
-                                    // Si las opciones son array asociativo, buscar por clave estricta
+                                    // Log solo después de definir $options
+                                    \Log::info('[DEBUG Filament seleccion_unica]', [
+                                        'answer' => $answer,
+                                        'options' => $options,
+                                        'is_list' => array_is_list($options),
+                                        'result_list' => (array_is_list($options) && isset($options[(int)$answer])) ? $options[(int)$answer] : null,
+                                        'result_assoc' => (!array_is_list($options)) ? collect($options)->first(fn($label, $key) => (string)$key === (string)$answer) : null,
+                                        'question_id' => $get('question_id'),
+                                        'question' => $q['question'] ?? null,
+                                    ]);
                                     if (array_is_list($options)) {
-                                        // Opciones tipo ["Opción A", "Opción B"]
                                         return isset($options[(int)$answer]) ? $options[(int)$answer] : $answer;
                                     } else {
-                                        // Opciones tipo ["a" => "Opción A", "b" => "Opción B"] o [0 => "Opción A", 1 => "Opción B"]
-                                        return $options[$answer] ?? $answer;
+                                        foreach ($options as $key => $label) {
+                                            if ((string)$key === (string)$answer) {
+                                                return $label;
+                                            }
+                                        }
+                                        return $answer;
                                     }
                                 }
+                                // Depuración temporal: mostrar valores en el log de Laravel
+                                \Log::info('[DEBUG Filament respuesta]', [
+                                    'answer' => $answer,
+                                    'options' => $options,
+                                    'is_list' => array_is_list($options),
+                                    'result_list' => isset($options[(int)$answer]) ? $options[(int)$answer] : null,
+                                    'result_assoc' => collect($options)->first(fn($label, $key) => (string)$key === (string)$answer),
+                                    'question_id' => $get('question_id'),
+                                    'question' => $q['question'] ?? null,
+                                ]);
                                 return $answer;
                             }),
                     ])
