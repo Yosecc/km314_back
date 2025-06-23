@@ -128,15 +128,15 @@ class FormIncidentResponseResource extends Resource
                                     }
                                 }
                                 // Depuración temporal: mostrar valores en el log de Laravel
-                                \Log::info('[DEBUG Filament respuesta]', [
-                                    'answer' => $answer,
-                                    'options' => $options,
-                                    'is_list' => array_is_list($options),
-                                    'result_list' => isset($options[(int)$answer]) ? $options[(int)$answer] : null,
-                                    'result_assoc' => collect($options)->first(fn($label, $key) => (string)$key === (string)$answer),
-                                    'question_id' => $get('question_id'),
-                                    'question' => $q['question'] ?? null,
-                                ]);
+                                // \Log::info('[DEBUG Filament respuesta]', [
+                                //     'answer' => $answer,
+                                //     'options' => $options,
+                                //     'is_list' => array_is_list($options),
+                                //     'result_list' => isset($options[(int)$answer]) ? $options[(int)$answer] : null,
+                                //     'result_assoc' => collect($options)->first(fn($label, $key) => (string)$key === (string)$answer),
+                                //     'question_id' => $get('question_id'),
+                                //     'question' => $q['question'] ?? null,
+                                // ]);
                                 return $answer;
                             }),
                     ])
