@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('form_incident_question_category_question', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('form_incident_question_id');
-            $table->unsignedBigInteger('form_incident_category_question_id');
+            $table->unsignedBigInteger('question_id');
+            $table->unsignedBigInteger('category_id');
             $table->timestamps();
 
-            $table->foreign('form_incident_question_id', 'fiqcc_question_id_fk')
+            $table->foreign('question_id', 'fiqcc_qid_fk')
                 ->references('id')->on('form_incident_questions')->onDelete('cascade');
-            $table->foreign('form_incident_category_question_id', 'fiqcc_category_id_fk')
+            $table->foreign('category_id', 'fiqcc_cid_fk')
                 ->references('id')->on('form_incident_category_questions')->onDelete('cascade');
         });
     }
