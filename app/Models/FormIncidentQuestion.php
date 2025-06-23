@@ -24,6 +24,12 @@ class FormIncidentQuestion extends Model
     }
     public function categories()
     {
-        return $this->belongsToMany(FormIncidentCategoryQuestion::class, 'form_incident_question_category_question');
+        // Especifico los nombres personalizados de las columnas de la tabla pivote
+        return $this->belongsToMany(
+            FormIncidentCategoryQuestion::class,
+            'form_incident_question_category_question',
+            'question_id', // columna local en la pivote
+            'category_id'  // columna relacionada en la pivote
+        );
     }
 }
