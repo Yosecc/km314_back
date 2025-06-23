@@ -14,7 +14,11 @@ return new class extends Migration
         Schema::create('form_incident_questions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('form_incident_type_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('form_incident_category_question_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('form_incident_category_question_id');
+            $table->foreign('form_incident_category_question_id', 'ficq_fk')
+                ->references('id')
+                ->on('form_incident_category_questions')
+                ->cascadeOnDelete();
             $table->string('question');
             $table->enum('type', ['si_no', 'abierta', 'seleccion_unica', 'seleccion_multiple']);
             $table->json('options')->nullable();
