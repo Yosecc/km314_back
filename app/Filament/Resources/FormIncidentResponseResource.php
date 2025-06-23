@@ -30,7 +30,8 @@ class FormIncidentResponseResource extends Resource
                 Forms\Components\Select::make('form_incident_type_id')
                     ->label('Tipo de formulario')
                     ->relationship('type', 'name')
-                    ->required(),
+                    ->required()
+                    ->reactive(),
                 Forms\Components\Select::make('user_id')
                     ->label('Usuario')
                     ->relationship('user', 'name')
@@ -44,17 +45,31 @@ class FormIncidentResponseResource extends Resource
                     ->nullable()
                     ->default(now()->format('H:i')),
 
-                BuilderJSON::make('answers')
-                    ->blocks([
-                        BuilderJSON\Block::make('heading')
-                            ->schema([
-                                TextInput::make('content')
-                                    ->label('Heading')
-                                    ->required(),
-
-                            ])
-                            ->columns(2),
-                    ])
+                Forms\Components\Repeater::make('answers')
+                    ->label('Respuestas')
+                    ->schema(function (callable $get) {
+                        $typeId = $get('form_incident_type_id');
+                        if (!$typeId) return [];
+                        $questions = \App\Models\FormIncidentQuestion::whereHas('types', function($q) use ($typeId) {
+                            $q->where('form_incident_type_id', $typeId);
+                        })->orderBy('order')->get();
+                        return $questions->map(function($question) {
+                            $input = match ($question->type) {
+                                'si_no' => Forms\Components\Select::make('answer')->options(['si' => 'Sí', 'no' => 'No'])->required(),
+                                'abierta' => Forms\Components\TextInput::make('answer')->required(),
+                                'seleccion_unica' => Forms\Components\Select::make('answer')->options(json_decode($question->options, true) ?? [])->required(),
+                                'seleccion_multiple' => Forms\Components\CheckboxList::make('answer')->options(json_decode($question->options, true) ?? [])->required(),
+                                default => Forms\Components\TextInput::make('answer'),
+                            };
+                            return Forms\Components\Fieldset::make('Pregunta: ' . strip_tags($question->question))
+                                ->schema([
+                                    Forms\Components\Hidden::make('question_id')->default($question->id),
+                                    $input,
+                                ]);
+                        })->toArray();
+                    })
+                    ->columnSpanFull()
+                    ->reactive(),
             ]);
     }
 
