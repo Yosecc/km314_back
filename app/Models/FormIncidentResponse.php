@@ -18,6 +18,9 @@ class FormIncidentResponse extends Model
         'answers',
     ];
 
+    protected $casts = [
+    'answers' => 'array',
+];
     public function type()
     {
         return $this->belongsTo(FormIncidentType::class, 'form_incident_type_id');
