@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateFormIncidentResponse extends CreateRecord
 {
     protected static string $resource = FormIncidentResponseResource::class;
+
+    protected function getCreatedNotificationRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('view', ['record' => $this->record]);
+    }
 }

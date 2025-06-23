@@ -189,7 +189,8 @@ class FormIncidentResponseResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
+                // Tables\Actions\EditAction::make(), // Eliminada la acción de editar
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -210,7 +211,8 @@ class FormIncidentResponseResource extends Resource
         return [
             'index' => Pages\ListFormIncidentResponses::route('/'),
             'create' => Pages\CreateFormIncidentResponse::route('/create'),
-            'edit' => Pages\EditFormIncidentResponse::route('/{record}/edit'),
+            'view' => Pages\ViewFormIncidentResponse::route('/{record}'),
+            // 'edit' => Pages\EditFormIncidentResponse::route('/{record}/edit'), // Eliminada la ruta de edición
         ];
     }
 }
