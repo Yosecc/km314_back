@@ -36,13 +36,13 @@ class FormIncidentResponseResource extends Resource
                     ->label('Usuario')
                     ->relationship('user', 'name')
                     ->required(),
-                Forms\Components\DatePicker::make('date')
+                Forms\Components\Hidden::make('date')
                     ->label('Fecha')
                     ->required()
                     ->default(now()),
-                Forms\Components\TimePicker::make('time')
+                Forms\Components\Hidden::make('time')
                     ->label('Hora')
-                    ->nullable()
+                    ->required()
                     ->default(now()->format('H:i')),
 
                 Forms\Components\Repeater::make('answers')
