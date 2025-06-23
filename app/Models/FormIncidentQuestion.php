@@ -18,6 +18,10 @@ class FormIncidentQuestion extends Model
         'order',
     ];
 
+    protected $casts = [
+        'options' => 'array',
+    ];
+
     public function types()
     {
         return $this->belongsToMany(FormIncidentType::class, 'form_incident_question_type');

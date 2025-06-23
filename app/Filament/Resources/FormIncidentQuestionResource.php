@@ -12,7 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Filament\Forms\Components\TagsInput;
 class FormIncidentQuestionResource extends Resource
 {
     protected static ?string $model = FormIncidentQuestion::class;
@@ -35,7 +35,7 @@ class FormIncidentQuestionResource extends Resource
                     ->relationship('categories', 'name')
                     ->multiple()
                     ->required(),
-                Forms\Components\TextInput::make('question')
+                Forms\Components\MarkdownEditor::make('question')
                     ->label('Pregunta')
                     ->required(),
                 Forms\Components\Select::make('type')
@@ -46,10 +46,14 @@ class FormIncidentQuestionResource extends Resource
                         'seleccion_unica' => 'Selección única',
                         'seleccion_multiple' => 'Selección múltiple',
                     ])
+                    ->live()
                     ->required(),
-                Forms\Components\Textarea::make('options')
-                    ->label('Opciones (JSON, solo para selección)')
+
+                Forms\Components\TagsInput::make('options')
+                    ->label('Opciones')
                     ->rows(2)
+                    ->live()
+                    ->visible(fn (Forms\Get $get) => in_array($get('type'), ['seleccion_unica', 'seleccion_multiple']))
                     ->nullable(),
                 Forms\Components\Toggle::make('required')
                     ->label('¿Respuesta obligatoria?')
