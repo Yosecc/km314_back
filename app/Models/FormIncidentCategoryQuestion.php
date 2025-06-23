@@ -14,6 +14,6 @@ class FormIncidentCategoryQuestion extends Model
 
     public function questions()
     {
-        return $this->hasMany(FormIncidentQuestion::class, 'form_incident_category_question_id');
+        return $this->belongsToMany(FormIncidentQuestion::class, 'form_incident_question_category_question');
     }
 }

@@ -25,13 +25,15 @@ class FormIncidentQuestionResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('form_incident_type_id')
-                    ->label('Tipo de formulario')
-                    ->relationship('type', 'name')
+                Forms\Components\Select::make('types')
+                    ->label('Tipos de formulario')
+                    ->relationship('types', 'name')
+                    ->multiple()
                     ->required(),
-                Forms\Components\Select::make('form_incident_category_question_id')
-                    ->label('Categoría')
-                    ->relationship('category', 'name')
+                Forms\Components\Select::make('categories')
+                    ->label('Categorías')
+                    ->relationship('categories', 'name')
+                    ->multiple()
                     ->required(),
                 Forms\Components\TextInput::make('question')
                     ->label('Pregunta')
@@ -66,6 +68,8 @@ class FormIncidentQuestionResource extends Resource
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('question')->label('Pregunta')->searchable(),
                 Tables\Columns\TextColumn::make('type')->label('Tipo'),
+                Tables\Columns\TextColumn::make('types.name')->label('Tipos')->limit(2),
+                Tables\Columns\TextColumn::make('categories.name')->label('Categorías')->limit(2),
                 Tables\Columns\IconColumn::make('required')->label('Obligatoria'),
                 Tables\Columns\TextColumn::make('order')->label('Orden'),
                 Tables\Columns\TextColumn::make('created_at')->label('Creado')->dateTime()->sortable(),

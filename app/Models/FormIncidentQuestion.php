@@ -11,8 +11,6 @@ class FormIncidentQuestion extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'form_incident_type_id',
-        'form_incident_category_question_id',
         'question',
         'type',
         'options',
@@ -20,13 +18,12 @@ class FormIncidentQuestion extends Model
         'order',
     ];
 
-    public function type()
+    public function types()
     {
-        return $this->belongsTo(FormIncidentType::class, 'form_incident_type_id');
+        return $this->belongsToMany(FormIncidentType::class, 'form_incident_question_type');
     }
-
-    public function category()
+    public function categories()
     {
-        return $this->belongsTo(FormIncidentCategoryQuestion::class, 'form_incident_category_question_id');
+        return $this->belongsToMany(FormIncidentCategoryQuestion::class, 'form_incident_question_category_question');
     }
 }
