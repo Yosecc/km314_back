@@ -114,7 +114,6 @@ class FormIncidentResponseResource extends Resource
                     ->createItemButtonLabel(false)
                     ->disableItemDeletion()
                     ->disableItemCreation()
-                    ->disableReordering()
                     ->reactive(),
             ]);
     }
