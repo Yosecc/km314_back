@@ -54,11 +54,17 @@ class FormIncidentResponseResource extends Resource
                             $q->where('form_incident_type_id', $typeId);
                         })->orderBy('order')->get();
                         return $questions->map(function($question) {
+                            $options = $question->options;
+                            if (is_string($options) && !empty($options)) {
+                                $options = json_decode($options, true) ?? [];
+                            } elseif (!is_array($options)) {
+                                $options = [];
+                            }
                             $input = match ($question->type) {
                                 'si_no' => Forms\Components\Select::make('answer')->options(['si' => 'Sí', 'no' => 'No'])->required(),
                                 'abierta' => Forms\Components\TextInput::make('answer')->required(),
-                                'seleccion_unica' => Forms\Components\Select::make('answer')->options(json_decode($question->options, true) ?? [])->required(),
-                                'seleccion_multiple' => Forms\Components\CheckboxList::make('answer')->options(json_decode($question->options, true) ?? [])->required(),
+                                'seleccion_unica' => Forms\Components\Select::make('answer')->options($options)->required(),
+                                'seleccion_multiple' => Forms\Components\CheckboxList::make('answer')->options($options)->required(),
                                 default => Forms\Components\TextInput::make('answer'),
                             };
                             return Forms\Components\Fieldset::make('Pregunta: ' . strip_tags($question->question))
