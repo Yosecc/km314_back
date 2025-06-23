@@ -66,7 +66,7 @@ class FormIncidentQuestionResource extends Resource
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('question')->label('Pregunta')->searchable(),
                 Tables\Columns\TextColumn::make('type')->label('Tipo'),
-                Tables\Columns\TextColumn::make('required')->label('Obligatoria')->boolean(),
+                Tables\Columns\IconColumn::make('required')->label('Obligatoria'),
                 Tables\Columns\TextColumn::make('order')->label('Orden'),
                 Tables\Columns\TextColumn::make('created_at')->label('Creado')->dateTime()->sortable(),
             ])
