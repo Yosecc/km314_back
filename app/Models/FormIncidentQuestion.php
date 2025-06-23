@@ -10,6 +10,16 @@ class FormIncidentQuestion extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $fillable = [
+        'form_incident_type_id',
+        'form_incident_category_question_id',
+        'question',
+        'type',
+        'options',
+        'required',
+        'order',
+    ];
+
     public function type()
     {
         return $this->belongsTo(FormIncidentType::class, 'form_incident_type_id');
