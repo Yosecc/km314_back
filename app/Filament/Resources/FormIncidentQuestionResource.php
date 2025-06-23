@@ -51,7 +51,6 @@ class FormIncidentQuestionResource extends Resource
 
                 Forms\Components\TagsInput::make('options')
                     ->label('Opciones')
-                    ->rows(2)
                     ->live()
                     ->visible(fn (Forms\Get $get) => in_array($get('type'), ['seleccion_unica', 'seleccion_multiple']))
                     ->nullable(),
