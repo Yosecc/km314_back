@@ -79,7 +79,15 @@ class FormIncidentResponseResource extends Resource
                                 $q = collect($questions)->firstWhere('id', $get('question_id'));
                                 $answer = $get('answer');
                                 if (($q['type'] ?? null) === 'seleccion_multiple' && is_array($answer)) {
-                                    return implode(', ', $answer);
+                                    // Mostrar los labels de las opciones seleccionadas
+                                    $options = $q['options'] ?? [];
+                                    if (is_string($options) && !empty($options)) {
+                                        $options = json_decode($options, true) ?? [];
+                                    } elseif (!is_array($options)) {
+                                        $options = [];
+                                    }
+                                    $labels = collect($answer)->map(fn($val) => $options[$val] ?? $val)->toArray();
+                                    return implode(', ', $labels);
                                 }
                                 if (($q['type'] ?? null) === 'si_no') {
                                     return $answer === 'si' ? 'Sí' : ($answer === 'no' ? 'No' : $answer);
