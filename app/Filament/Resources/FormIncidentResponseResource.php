@@ -61,7 +61,7 @@ class FormIncidentResponseResource extends Resource
                                 $options = [];
                             }
                             $input = match ($question->type) {
-                                'si_no' => Forms\Components\Select::make('answer')->options(['si' => 'Sí', 'no' => 'No'])->required(),
+                                'si_no' => Forms\Components\Radio::make('answer')->options(['si' => 'Sí', 'no' => 'No'])->required(),
                                 'abierta' => Forms\Components\TextInput::make('answer')->required(),
                                 'seleccion_unica' => Forms\Components\Select::make('answer')->options($options)->required(),
                                 'seleccion_multiple' => Forms\Components\CheckboxList::make('answer')->options($options)->required(),
