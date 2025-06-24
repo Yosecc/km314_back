@@ -45,8 +45,7 @@ class FormIncidentTypeResource extends Resource
             ])
             ->columns(1)
             ->statePath('data')
-            ->inlineLabel(false)
-            ->description('Gestione los diferentes tipos de formularios de incidentes disponibles en el sistema.');
+            ->inlineLabel(false);
     }
 
     public static function table(Table $table): Table

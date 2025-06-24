@@ -44,8 +44,7 @@ class FormIncidentCategoryQuestionResource extends Resource
                     ->maxLength(255),
             ])
             ->statePath('data')
-            ->inlineLabel(false)
-            ->description('Gestione las categorías para organizar las preguntas de los formularios de incidentes.');
+            ->inlineLabel(false);
     }
 
     public static function table(Table $table): Table

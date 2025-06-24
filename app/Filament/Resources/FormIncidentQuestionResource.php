@@ -87,8 +87,7 @@ class FormIncidentQuestionResource extends Resource
                     ->nullable(),
             ])
             ->statePath('data')
-            ->inlineLabel(false)
-            ->description('Gestione las preguntas disponibles para los formularios de incidentes.');
+            ->inlineLabel(false);
     }
 
     public static function table(Table $table): Table

@@ -192,8 +192,7 @@ class FormIncidentResponseResource extends Resource
                     ->disabled($isEdit),
             ])
             ->statePath('data')
-            ->inlineLabel(false)
-            ->description('Complete el formulario de incidente respondiendo cada pregunta. Solo se permite la creación y visualización de respuestas.');
+            ->inlineLabel(false);
     }
 
     public static function table(Table $table): Table
