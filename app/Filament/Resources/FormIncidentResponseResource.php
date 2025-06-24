@@ -93,7 +93,7 @@ class FormIncidentResponseResource extends Resource
                                     ->content(function (callable $get) {
                                         $questions = $get('../../questions_structure') ?? [];
                                         $q = collect($questions)->firstWhere('id', $get('question_id'));
-                                        return new HtmlString($q['question'] ?? '')
+                                        return new HtmlString($q['question'] ?? '');
                                         // return $q['question'] ?? '';
                                     }),
                                 Forms\Components\Placeholder::make('respuesta')
