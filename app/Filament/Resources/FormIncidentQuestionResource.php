@@ -88,7 +88,6 @@ class FormIncidentQuestionResource extends Resource
             ])
             ->statePath('data')
             ->inlineLabel(false)
-            ->modelLabel('Pregunta de incidente')
             ->description('Gestione las preguntas disponibles para los formularios de incidentes.');
     }
 

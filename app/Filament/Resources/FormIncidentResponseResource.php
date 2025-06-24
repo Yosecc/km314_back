@@ -193,7 +193,6 @@ class FormIncidentResponseResource extends Resource
             ])
             ->statePath('data')
             ->inlineLabel(false)
-            ->modelLabel('Respuesta de incidente')
             ->description('Complete el formulario de incidente respondiendo cada pregunta. Solo se permite la creación y visualización de respuestas.');
     }
 

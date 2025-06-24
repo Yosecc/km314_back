@@ -45,7 +45,6 @@ class FormIncidentCategoryQuestionResource extends Resource
             ])
             ->statePath('data')
             ->inlineLabel(false)
-            ->modelLabel('Categoría de pregunta')
             ->description('Gestione las categorías para organizar las preguntas de los formularios de incidentes.');
     }
 

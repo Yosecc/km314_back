@@ -46,7 +46,6 @@ class FormIncidentTypeResource extends Resource
             ->columns(1)
             ->statePath('data')
             ->inlineLabel(false)
-            ->modelLabel('Tipo de formulario')
             ->description('Gestione los diferentes tipos de formularios de incidentes disponibles en el sistema.');
     }
 
