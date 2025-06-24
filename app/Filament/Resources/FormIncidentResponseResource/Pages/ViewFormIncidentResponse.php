@@ -61,7 +61,7 @@ class ViewFormIncidentResponse extends ViewRecord
                             $value = implode(', ', $labels);
                         }
                         return TextEntry::make('q_' . $ans['question_id'])
-                            ->label($label)
+                            ->label(new \Illuminate\Support\HtmlString($label))
                             ->default($value);
                     })->toArray()
                 ),
