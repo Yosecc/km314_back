@@ -51,7 +51,7 @@ class FormIncidentQuestionResource extends Resource
                     ->relationship('categories', 'name')
                     ->multiple()
                     ->required(),
-                Forms\Components\MarkdownEditor::make('question')
+                Forms\Components\RichEditor::make('question')
                     ->label('Pregunta')
                     ->placeholder('Ingrese el texto de la pregunta')
                     ->helperText('Redacte la pregunta que se mostrará en el formulario de incidente.')
