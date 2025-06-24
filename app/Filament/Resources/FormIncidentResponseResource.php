@@ -14,6 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\HtmlString;
 
 class FormIncidentResponseResource extends Resource
 {
@@ -78,8 +79,9 @@ class FormIncidentResponseResource extends Resource
                     ->default(now()->format('H:i')),
                 Forms\Components\Hidden::make('questions_structure'),
                 Forms\Components\Repeater::make('answers')
-                    ->label('Respuestas')
+                    ->label('Lista de Preguntas')
                     ->helperText('Responda cada pregunta del formulario de incidente.')
+                    ->reorderable(false)
                     ->schema(function () use ($isEdit) {
                         if ($isEdit) {
                             // Solo mostrar como texto en edición
@@ -87,10 +89,12 @@ class FormIncidentResponseResource extends Resource
                                 Forms\Components\Hidden::make('question_id'),
                                 Forms\Components\Placeholder::make('pregunta')
                                     ->label('Pregunta')
+
                                     ->content(function (callable $get) {
                                         $questions = $get('../../questions_structure') ?? [];
                                         $q = collect($questions)->firstWhere('id', $get('question_id'));
-                                        return $q['question'] ?? '';
+                                        return new HtmlString($q['question'] ?? '')
+                                        // return $q['question'] ?? '';
                                     }),
                                 Forms\Components\Placeholder::make('respuesta')
                                     ->label('Respuesta')
