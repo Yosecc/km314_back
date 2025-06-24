@@ -95,11 +95,11 @@ class FormIncidentQuestionResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
-                Tables\Columns\TextColumn::make('question')->label('Pregunta')->searchable(),
+                Tables\Columns\TextColumn::make('question')->label('Pregunta')->limit(20)->searchable(),
                 Tables\Columns\TextColumn::make('type')->label('Tipo de respuesta'),
-                Tables\Columns\TextColumn::make('types.name')->label('Tipos de formulario')->limit(2),
-                Tables\Columns\TextColumn::make('categories.name')->label('Categorías')->limit(2),
-                Tables\Columns\IconColumn::make('required')->label('Obligatoria'),
+                Tables\Columns\TextColumn::make('types.name')->label('Tipos de formulario'),
+                Tables\Columns\TextColumn::make('categories.name')->label('Categorías'),
+                Tables\Columns\IconColumn::make('required')->label('Obligatoria')->boolean(),
                 Tables\Columns\TextColumn::make('order')->label('Orden'),
                 Tables\Columns\TextColumn::make('created_at')->label('Fecha de creación')->dateTime()->sortable(),
             ])
