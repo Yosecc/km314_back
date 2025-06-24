@@ -21,7 +21,19 @@ class FormIncidentResponseResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationLabel = 'Respuestas de incidentes';
+    protected static ?string $label = 'Respuesta de incidente';
     protected static ?string $navigationGroup = 'Formularios de Incidentes';
+
+    public static function getPluralModelLabel(): string
+    {
+        return 'Respuestas de incidentes';
+    }
+
+    public static function getModelLabel(): string
+    {
+        return 'Respuesta de incidente';
+    }
 
     public static function form(Form $form): Form
     {
@@ -30,6 +42,8 @@ class FormIncidentResponseResource extends Resource
             ->schema([
                 Forms\Components\Select::make('form_incident_type_id')
                     ->label('Tipo de formulario')
+                    ->placeholder('Seleccione el tipo de formulario')
+                    ->helperText('Seleccione el tipo de formulario de incidente para mostrar las preguntas correspondientes.')
                     ->relationship('type', 'name')
                     ->required()
                     ->reactive()
@@ -49,6 +63,8 @@ class FormIncidentResponseResource extends Resource
                     ->disabled($isEdit),
                 Forms\Components\Select::make('user_id')
                     ->label('Usuario')
+                    ->placeholder('Seleccione el usuario que responde')
+                    ->helperText('Seleccione el usuario que está respondiendo el formulario de incidente.')
                     ->relationship('user', 'name')
                     ->required()
                     ->disabled($isEdit),
@@ -63,6 +79,7 @@ class FormIncidentResponseResource extends Resource
                 Forms\Components\Hidden::make('questions_structure'),
                 Forms\Components\Repeater::make('answers')
                     ->label('Respuestas')
+                    ->helperText('Responda cada pregunta del formulario de incidente.')
                     ->schema(function () use ($isEdit) {
                         if ($isEdit) {
                             // Solo mostrar como texto en edición
@@ -128,6 +145,7 @@ class FormIncidentResponseResource extends Resource
                                 }),
                             Forms\Components\TextInput::make('answer')
                                 ->label('Respuesta')
+                                ->placeholder('Ingrese su respuesta')
                                 ->required(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['required'] ?? false))
                                 ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'abierta'),
                             Forms\Components\Radio::make('answer')
@@ -137,6 +155,7 @@ class FormIncidentResponseResource extends Resource
                                 ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'si_no'),
                             Forms\Components\Select::make('answer')
                                 ->label('Respuesta')
+                                ->placeholder('Seleccione una opción')
                                 ->options(function (callable $get) {
                                     $q = collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'));
                                     $options = $q['options'] ?? [];
@@ -171,32 +190,38 @@ class FormIncidentResponseResource extends Resource
                     ->disableItemCreation()
                     ->reactive()
                     ->disabled($isEdit),
-            ]);
+            ])
+            ->statePath('data')
+            ->inlineLabel(false)
+            ->modelLabel('Respuesta de incidente')
+            ->description('Complete el formulario de incidente respondiendo cada pregunta. Solo se permite la creación y visualización de respuestas.');
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')->sortable(),
+                Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 Tables\Columns\TextColumn::make('form_incident_type_id')->label('Tipo de formulario'),
                 Tables\Columns\TextColumn::make('user_id')->label('Usuario'),
                 Tables\Columns\TextColumn::make('date')->label('Fecha')->date(),
                 Tables\Columns\TextColumn::make('time')->label('Hora')->time(),
-                Tables\Columns\TextColumn::make('created_at')->label('Creado')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('created_at')->label('Fecha de creación')->dateTime()->sortable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make()->label('Ver'),
                 // Tables\Actions\EditAction::make(), // Eliminada la acción de editar
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()->label('Eliminar seleccionados'),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('No hay respuestas de incidentes')
+            ->emptyStateDescription('Cree una nueva respuesta para comenzar.');
     }
 
     public static function getRelations(): array
