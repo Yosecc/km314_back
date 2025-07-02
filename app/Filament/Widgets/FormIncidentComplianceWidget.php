@@ -12,6 +12,8 @@ class FormIncidentComplianceWidget extends Widget
 
     protected int | string | array $columnSpan = 'full';
 
+     protected static ?int $sort = -97;
+
     public function getViewData(): array
     {
         $complianceService = new FormIncidentComplianceService();
