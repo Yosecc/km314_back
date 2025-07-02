@@ -62,4 +62,17 @@ class CreateFormIncidentResponse extends CreateRecord
             ]);
         }
     }
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        // Remover campos que no van a la base de datos
+        unset($data['questions_structure']);
+
+        // Asegurar que answers es un array válido
+        if (!isset($data['answers']) || !is_array($data['answers'])) {
+            $data['answers'] = [];
+        }
+
+        return $data;
+    }
 }
