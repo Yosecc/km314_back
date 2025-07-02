@@ -89,9 +89,15 @@ class FormIncidentResponseResource extends Resource
                     ->label('Lista de Preguntas')
                     ->helperText('Responda cada pregunta del formulario de incidente.')
                     ->reorderable(false)
+                    ->defaultItems(0)
                     ->itemLabel(function (array $state): ?string {
                         // Agregar etiqueta única para cada item del repeater
                         return isset($state['question_id']) ? 'Pregunta #' . $state['question_id'] : null;
+                    })
+                    ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
+                        // Asegurar que cada respuesta tenga una clave única
+                        $data['id'] = uniqid();
+                        return $data;
                     })
                     ->schema(function () use ($isEdit) {
                         if ($isEdit) {
@@ -194,13 +200,10 @@ class FormIncidentResponseResource extends Resource
                                 })
                                 ->required(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['required'] ?? false))
                                 ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'seleccion_unica'),
-                            Forms\Components\Group::make()
-                                ->schema(function (callable $get) {
+                            Forms\Components\CheckboxList::make('answer')
+                                ->label('Respuesta')
+                                ->options(function (callable $get) {
                                     $q = collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'));
-                                    if (($q['type'] ?? null) !== 'seleccion_multiple') {
-                                        return [];
-                                    }
-                                    
                                     $options = $q['options'] ?? [];
                                     if (is_string($options) && !empty($options)) {
                                         $options = json_decode($options, true) ?? [];
@@ -208,44 +211,11 @@ class FormIncidentResponseResource extends Resource
                                         $options = [];
                                     }
 
-                                    // Asegurar que las opciones tengan claves únicas
-                                    if (array_is_list($options)) {
-                                        $associativeOptions = [];
-                                        foreach ($options as $index => $option) {
-                                            $associativeOptions[(string)$index] = $option;
-                                        }
-                                        $options = $associativeOptions;
-                                    }
-
-                                    $checkboxes = [];
-                                    foreach ($options as $key => $label) {
-                                        $checkboxes[] = Forms\Components\Checkbox::make("answer_option_{$key}")
-                                            ->label($label)
-                                            ->live()
-                                            ->afterStateUpdated(function ($state, callable $set, callable $get) use ($key) {
-                                                $currentAnswer = $get('answer') ?? [];
-                                                if (!is_array($currentAnswer)) {
-                                                    $currentAnswer = [];
-                                                }
-                                                
-                                                if ($state) {
-                                                    // Agregar la opción si está marcada
-                                                    if (!in_array($key, $currentAnswer)) {
-                                                        $currentAnswer[] = $key;
-                                                    }
-                                                } else {
-                                                    // Remover la opción si está desmarcada
-                                                    $currentAnswer = array_values(array_filter($currentAnswer, fn($item) => $item !== $key));
-                                                }
-                                                
-                                                $set('answer', $currentAnswer);
-                                            });
-                                    }
-                                    
-                                    return $checkboxes;
+                                    return $options;
                                 })
-                                ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'seleccion_multiple'),
-                            Forms\Components\Hidden::make('answer')
+                                ->columns(1)
+                                ->bulkToggleable(false)
+                                ->required(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['required'] ?? false))
                                 ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'seleccion_multiple'),
                         ];
                     })
