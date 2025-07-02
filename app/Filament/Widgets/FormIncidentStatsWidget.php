@@ -16,7 +16,7 @@ class FormIncidentStatsWidget extends BaseWidget
     {
         $user = Auth::user();
         $today = now()->toDateString();
-        
+
         // Contar formularios respondidos hoy por el usuario
         $todayCount = FormIncidentResponse::where('user_id', $user->id)
             ->where('date', $today)
@@ -68,10 +68,10 @@ class FormIncidentStatsWidget extends BaseWidget
         $user = Auth::user();
         $today = now()->toDateString();
         $cacheKey = "form_stats_viewed_{$user->id}_{$today}";
-        
+
         // Marcar como visto por 24 horas
         Cache::put($cacheKey, true, now()->addDay());
-        
+
         // Refrescar el widget
         $this->dispatch('$refresh');
     }
@@ -83,8 +83,7 @@ class FormIncidentStatsWidget extends BaseWidget
         $cacheKey = "form_stats_viewed_{$user->id}_{$today}";
         $isViewed = Cache::get($cacheKey, false);
 
-        // Solo mostrar el botón si es admin y no ha sido visto
-        if (!$isViewed && $user->hasRole('super_admin')) {
+        if (!$isViewed) {
             return [
                 \Filament\Actions\Action::make('markViewed')
                     ->label('Marcar como visto')
