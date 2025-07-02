@@ -194,10 +194,13 @@ class FormIncidentResponseResource extends Resource
                                 })
                                 ->required(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['required'] ?? false))
                                 ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'seleccion_unica'),
-                            Forms\Components\CheckboxList::make('answer')
-                                ->label('Respuesta')
-                                ->options(function (callable $get) {
+                            Forms\Components\Group::make()
+                                ->schema(function (callable $get) {
                                     $q = collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'));
+                                    if (($q['type'] ?? null) !== 'seleccion_multiple') {
+                                        return [];
+                                    }
+                                    
                                     $options = $q['options'] ?? [];
                                     if (is_string($options) && !empty($options)) {
                                         $options = json_decode($options, true) ?? [];
@@ -207,19 +210,42 @@ class FormIncidentResponseResource extends Resource
 
                                     // Asegurar que las opciones tengan claves únicas
                                     if (array_is_list($options)) {
-                                        // Si es un array indexado, convertir a array asociativo con strings
                                         $associativeOptions = [];
                                         foreach ($options as $index => $option) {
                                             $associativeOptions[(string)$index] = $option;
                                         }
-                                        return $associativeOptions;
+                                        $options = $associativeOptions;
                                     }
 
-                                    return $options;
+                                    $checkboxes = [];
+                                    foreach ($options as $key => $label) {
+                                        $checkboxes[] = Forms\Components\Checkbox::make("answer_option_{$key}")
+                                            ->label($label)
+                                            ->live()
+                                            ->afterStateUpdated(function ($state, callable $set, callable $get) use ($key) {
+                                                $currentAnswer = $get('answer') ?? [];
+                                                if (!is_array($currentAnswer)) {
+                                                    $currentAnswer = [];
+                                                }
+                                                
+                                                if ($state) {
+                                                    // Agregar la opción si está marcada
+                                                    if (!in_array($key, $currentAnswer)) {
+                                                        $currentAnswer[] = $key;
+                                                    }
+                                                } else {
+                                                    // Remover la opción si está desmarcada
+                                                    $currentAnswer = array_values(array_filter($currentAnswer, fn($item) => $item !== $key));
+                                                }
+                                                
+                                                $set('answer', $currentAnswer);
+                                            });
+                                    }
+                                    
+                                    return $checkboxes;
                                 })
-                                ->columns(1)
-                                ->gridDirection('row')
-                                ->required(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['required'] ?? false))
+                                ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'seleccion_multiple'),
+                            Forms\Components\Hidden::make('answer')
                                 ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'seleccion_multiple'),
                         ];
                     })
