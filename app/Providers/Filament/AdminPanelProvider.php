@@ -7,6 +7,8 @@ use App\Filament\Resources\ActivitiesResource\Widgets\UltimasActividades;
 use App\Filament\Resources\FormControlResource\Widgets\FormControlStats;
 use App\Filament\Widgets\EmpleadosEnElBarrio;
 use App\Filament\Widgets\Entry;
+use App\Filament\Widgets\FormIncidentComplianceWidget;
+use App\Filament\Widgets\FormIncidentStatsWidget;
 use App\Filament\Widgets\InquilinosEnElBarrio;
 use App\Filament\Widgets\Personas;
 use App\Filament\Widgets\PropietariosEnElBarrio;
@@ -72,6 +74,8 @@ class AdminPanelProvider extends PanelProvider
                 UltimasActividades::class,
                 IncidentesStats::class,
                 FormControlStats::class,
+                FormIncidentComplianceWidget::class,
+                FormIncidentStatsWidget::class,
                 // Personas::class,
                 // PropietariosEnElBarrio::class,
                 // EmpleadosEnElBarrio::class,
