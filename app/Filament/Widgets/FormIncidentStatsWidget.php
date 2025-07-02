@@ -83,7 +83,8 @@ class FormIncidentStatsWidget extends BaseWidget
         $cacheKey = "form_stats_viewed_{$user->id}_{$today}";
         $isViewed = Cache::get($cacheKey, false);
 
-        if (!$isViewed) {
+        // Solo mostrar el botón si es admin y no ha sido visto
+        if (!$isViewed && $user->hasRole('super_admin')) {
             return [
                 \Filament\Actions\Action::make('markViewed')
                     ->label('Marcar como visto')
