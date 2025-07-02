@@ -73,20 +73,6 @@ class FormIncidentResponseResource extends Resource
                         })->toArray());
                     })
                     ->disabled($isEdit),
-                Forms\Components\Hidden::make('user_id')
-                    ->default(auth()->id())
-                    ->dehydrated()
-                    ->required(),
-                Forms\Components\Hidden::make('date')
-                    ->label('Fecha')
-                    ->default(now()->toDateString())
-                    ->dehydrated()
-                    ->required(),
-                Forms\Components\Hidden::make('time')
-                    ->label('Hora')
-                    ->default(now()->format('H:i'))
-                    ->dehydrated()
-                    ->required(),
                 Forms\Components\Hidden::make('questions_structure'),
                 Forms\Components\Repeater::make('answers')
                     ->label('Lista de Preguntas')

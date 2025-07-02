@@ -65,6 +65,11 @@ class CreateFormIncidentResponse extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        // Agregar campos obligatorios que no están llegando
+        $data['user_id'] = auth()->id();
+        $data['date'] = now()->toDateString();
+        $data['time'] = now()->format('H:i');
+
         // Remover campos que no van a la base de datos
         unset($data['questions_structure']);
 
