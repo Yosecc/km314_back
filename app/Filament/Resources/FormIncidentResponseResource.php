@@ -22,18 +22,18 @@ class FormIncidentResponseResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Respuestas de incidentes';
-    protected static ?string $label = 'Respuesta de incidente';
+    protected static ?string $navigationLabel = 'Formulario de incidencias';
+    protected static ?string $label = 'Formulario de incidencias';
     protected static ?string $navigationGroup = 'Formularios de Incidentes';
 
     public static function getPluralModelLabel(): string
     {
-        return 'Respuestas de incidentes';
+        return 'Formulario de incidencias';
     }
 
     public static function getModelLabel(): string
     {
-        return 'Respuesta de incidente';
+        return 'Formulario de incidencias';
     }
 
     public static function form(Form $form): Form
@@ -240,7 +240,7 @@ class FormIncidentResponseResource extends Resource
                     Tables\Actions\DeleteBulkAction::make()->label('Eliminar seleccionados'),
                 ]),
             ])
-            ->emptyStateHeading('No tienes respuestas de formularios')
+            ->emptyStateHeading('No tienes formularios de incidencias')
             ->emptyStateDescription('Completa un formulario obligatorio para comenzar.');
     }
 
