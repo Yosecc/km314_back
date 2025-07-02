@@ -19,31 +19,38 @@ class SocialController extends Controller
 
     public function redirectToProvider()
     {
-        return redirect($this->facebook->redirectTo());
+        // Redirección a Facebook deshabilitada temporalmente
+        // return redirect($this->facebook->redirectTo());
+
+        // Retorna una respuesta simple en lugar de redirigir
+        return response('Facebook login temporalmente deshabilitado', 200);
     }
 
     public function handleProviderCallback(Request $request)
     {
-        $accessToken = $this->facebook->handleCallback();
-
-        $value = Cache::store('file')->put('access_token', $accessToken);
+        // Callback de Facebook deshabilitado temporalmente
+        // $accessToken = $this->facebook->handleCallback();
+        // $value = Cache::store('file')->put('access_token', $accessToken);
         // $this->facebook->getPages($accessToken);
+        // return redirect()->route('filament.admin.pages.messages');
 
-        return redirect()->route('filament.admin.pages.messages');
+        // Retorna una respuesta simple en lugar de redirigir
+        return response('Facebook callback temporalmente deshabilitado', 200);
     }
 
     public function facebook_webhook(Request $request)
     {
-        \Log::debug($request->all());
-        $request = $request->all();
+        // Webhook deshabilitado temporalmente
+        // \Log::debug($request->all());
+        // $request = $request->all();
 
-        $mode = $request['hub_mode'];
-        $challenge = $request['hub_challenge'];
-        $token = $request['hub_verify_token'];
+        // $mode = $request['hub_mode'];
+        // $challenge = $request['hub_challenge'];
+        // $token = $request['hub_verify_token'];
 
         // if($mode && $token){
             // if($mode == 'subscribe' && $token == 'TOKENWEBHOOK'){
-                return response($challenge,200);
+                return response($request->input('hub_challenge'),200);
         //     }else{
         //         return response()->json('Invalid token',403);
         //     }
@@ -52,11 +59,15 @@ class SocialController extends Controller
 
     public function facebook_webhook_post(Request $request)
     {
-        \Log::debug($request->all());
-        if ($request->body['object'] === "page") {
-            // Returns a '200 OK' response to all requests
-            return response("EVENT_RECEIVED", 200);
-        }
+        // Webhook POST deshabilitado temporalmente
+        // \Log::debug($request->all());
+        // if ($request->body['object'] === "page") {
+        //     // Returns a '200 OK' response to all requests
+        //     return response("EVENT_RECEIVED", 200);
+        // }
+
+        // Solo retorna 200 OK para no romper Facebook
+        return response("OK", 200);
     }
 
 }
