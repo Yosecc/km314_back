@@ -14,86 +14,47 @@ class FormIncidentStatsWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        $user = Auth::user();
-        $today = now()->toDateString();
-
-        // Contar formularios respondidos hoy por el usuario
-        $todayCount = FormIncidentResponse::where('user_id', $user->id)
-            ->where('date', $today)
+        // Contar formularios sin leer de hoy
+        $unreadTodayCount = FormIncidentResponse::unread()
+            ->where('date', now()->toDateString())
             ->count();
 
-        // Contar formularios de esta semana
-        $weekCount = FormIncidentResponse::where('user_id', $user->id)
+        // Contar formularios sin leer de esta semana
+        $unreadWeekCount = FormIncidentResponse::unread()
             ->whereBetween('date', [now()->startOfWeek(), now()->endOfWeek()])
             ->count();
 
-        // Contar total de formularios del usuario
-        $totalCount = FormIncidentResponse::where('user_id', $user->id)->count();
-
-        // Verificar si ya fue marcado como visto hoy
-        $cacheKey = "form_stats_viewed_{$user->id}_{$today}";
-        $isViewed = Cache::get($cacheKey, false);
+        // Contar total de formularios sin leer
+        $totalUnreadCount = FormIncidentResponse::unread()->count();
 
         return [
-            Stat::make('Formularios Hoy', $todayCount)
-                ->description($todayCount > 0 ? '¡Buen trabajo!' : 'Ningún formulario completado hoy')
-                ->descriptionIcon($todayCount > 0 ? 'heroicon-m-check-circle' : 'heroicon-m-clock')
-                ->color($todayCount > 0 ? 'success' : 'gray')
-                ->chart([7, 4, 6, 8, 3, 5, $todayCount]) // Datos simulados para el gráfico
-                ->extraAttributes([
-                    'class' => $isViewed ? 'opacity-60' : '',
-                ]),
+            Stat::make('Sin leer hoy', $unreadTodayCount)
+                ->description($unreadTodayCount > 0 ? 'Formularios pendientes de revisar' : 'Todos los formularios de hoy revisados')
+                ->descriptionIcon($unreadTodayCount > 0 ? 'heroicon-m-exclamation-circle' : 'heroicon-m-check-circle')
+                ->color($unreadTodayCount > 0 ? 'warning' : 'success')
+                ->chart([12, 8, 15, 10, 6, 9, $unreadTodayCount]),
 
-            Stat::make('Esta Semana', $weekCount)
-                ->description('Formularios completados')
+            Stat::make('Sin leer esta semana', $unreadWeekCount)
+                ->description('Formularios pendientes')
                 ->descriptionIcon('heroicon-m-calendar-days')
-                ->color('info'),
+                ->color($unreadWeekCount > 0 ? 'warning' : 'success'),
 
-            Stat::make('Total', $totalCount)
-                ->description('Todos tus formularios')
+            Stat::make('Total sin leer', $totalUnreadCount)
+                ->description('Todos los formularios pendientes')
                 ->descriptionIcon('heroicon-m-document-text')
-                ->color('primary'),
+                ->color($totalUnreadCount > 0 ? 'danger' : 'success'),
         ];
     }
 
     public static function canView(): bool
     {
-        // Solo mostrar si el usuario tiene formularios obligatorios asignados
+        // Solo mostrar a usuarios que sean super_admin
         $user = Auth::user();
-        return $user && $user->formIncidentRequirements()->active()->exists();
-    }
-
-    public function markAsViewed(): void
-    {
-        $user = Auth::user();
-        $today = now()->toDateString();
-        $cacheKey = "form_stats_viewed_{$user->id}_{$today}";
-
-        // Marcar como visto por 24 horas
-        Cache::put($cacheKey, true, now()->addDay());
-
-        // Refrescar el widget
-        $this->dispatch('$refresh');
+        return $user && $user->hasRole('super_admin');
     }
 
     protected function getHeaderActions(): array
     {
-        $user = Auth::user();
-        $today = now()->toDateString();
-        $cacheKey = "form_stats_viewed_{$user->id}_{$today}";
-        $isViewed = Cache::get($cacheKey, false);
-
-        if (!$isViewed) {
-            return [
-                \Filament\Actions\Action::make('markViewed')
-                    ->label('Marcar como visto')
-                    ->icon('heroicon-o-eye')
-                    ->color('gray')
-                    ->size('sm')
-                    ->action('markAsViewed')
-            ];
-        }
-
         return [];
     }
 }

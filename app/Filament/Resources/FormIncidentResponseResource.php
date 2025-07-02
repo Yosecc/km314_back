@@ -215,33 +215,85 @@ class FormIncidentResponseResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $isAdmin = auth()->user()->hasRole('super_admin');
+
         return $table
-            ->query(function () {
-                // Solo mostrar las respuestas del usuario autenticado
-                return FormIncidentResponse::where('user_id', auth()->id());
+            ->query(function () use ($isAdmin) {
+                if ($isAdmin) {
+                    // Admin ve todos los formularios
+                    return FormIncidentResponse::query();
+                } else {
+                    // Usuario normal solo ve los suyos
+                    return FormIncidentResponse::where('user_id', auth()->id());
+                }
             })
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 Tables\Columns\TextColumn::make('type.name')->label('Tipo de formulario'),
-                // Tables\Columns\TextColumn::make('user.name')->label('Usuario'), // Quitamos esto ya que solo ve las suyas
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Usuario')
+                    ->visible($isAdmin), // Solo visible para admin
                 Tables\Columns\TextColumn::make('date')->label('Fecha')->date(),
                 Tables\Columns\TextColumn::make('time')->label('Hora')->time(),
+                Tables\Columns\IconColumn::make('read_at')
+                    ->label('Estado')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('warning')
+                    ->getStateUsing(fn ($record) => !is_null($record->read_at))
+                    ->visible($isAdmin), // Solo visible para admin
                 Tables\Columns\TextColumn::make('created_at')->label('Fecha de creación')->dateTime()->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\Filter::make('unread')
+                    ->label('Sin leer')
+                    ->query(fn (Builder $query) => $query->unread())
+                    ->visible($isAdmin),
+                Tables\Filters\Filter::make('read')
+                    ->label('Leídos')
+                    ->query(fn (Builder $query) => $query->read())
+                    ->visible($isAdmin),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()->label('Ver'),
-                // Tables\Actions\EditAction::make(), // Eliminada la acción de editar
+                Tables\Actions\Action::make('markAsRead')
+                    ->label('Marcar como leído')
+                    ->icon('heroicon-o-check')
+                    ->color('success')
+                    ->visible(fn ($record) => $isAdmin && is_null($record->read_at))
+                    ->action(function ($record) {
+                        $record->markAsRead();
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('Marcar formulario como leído')
+                    ->modalDescription('¿Está seguro de que desea marcar este formulario como leído?')
+                    ->modalSubmitActionLabel('Sí, marcar como leído'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()->label('Eliminar seleccionados'),
+                    Tables\Actions\BulkAction::make('markAllAsRead')
+                        ->label('Marcar seleccionados como leídos')
+                        ->icon('heroicon-o-check')
+                        ->color('success')
+                        ->visible($isAdmin)
+                        ->action(function ($records) {
+                            foreach ($records as $record) {
+                                if (is_null($record->read_at)) {
+                                    $record->markAsRead();
+                                }
+                            }
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Marcar formularios como leídos')
+                        ->modalDescription('¿Está seguro de que desea marcar los formularios seleccionados como leídos?')
+                        ->modalSubmitActionLabel('Sí, marcar como leídos'),
                 ]),
             ])
-            ->emptyStateHeading('No tienes formularios de incidencias')
-            ->emptyStateDescription('Completa un formulario obligatorio para comenzar.');
+            ->emptyStateHeading($isAdmin ? 'No hay formularios de incidencias' : 'No tienes formularios de incidencias')
+            ->emptyStateDescription($isAdmin ? 'No se han enviado formularios aún.' : 'Completa un formulario obligatorio para comenzar.');
     }
 
     public static function getRelations(): array

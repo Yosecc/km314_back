@@ -16,11 +16,13 @@ class FormIncidentResponse extends Model
         'date',
         'time',
         'answers',
+        'read_at',
     ];
 
     protected $casts = [
-    'answers' => 'array',
-];
+        'answers' => 'array',
+        'read_at' => 'datetime',
+    ];
     public function type()
     {
         return $this->belongsTo(FormIncidentType::class, 'form_incident_type_id');
@@ -29,5 +31,37 @@ class FormIncidentResponse extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Marcar el formulario como leído
+     */
+    public function markAsRead()
+    {
+        $this->update(['read_at' => now()]);
+    }
+
+    /**
+     * Verificar si el formulario ha sido leído
+     */
+    public function isRead(): bool
+    {
+        return !is_null($this->read_at);
+    }
+
+    /**
+     * Scope para formularios no leídos
+     */
+    public function scopeUnread($query)
+    {
+        return $query->whereNull('read_at');
+    }
+
+    /**
+     * Scope para formularios leídos
+     */
+    public function scopeRead($query)
+    {
+        return $query->whereNotNull('read_at');
     }
 }
