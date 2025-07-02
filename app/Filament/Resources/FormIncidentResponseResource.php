@@ -89,15 +89,9 @@ class FormIncidentResponseResource extends Resource
                     ->label('Lista de Preguntas')
                     ->helperText('Responda cada pregunta del formulario de incidente.')
                     ->reorderable(false)
-                    ->defaultItems(0)
                     ->itemLabel(function (array $state): ?string {
                         // Agregar etiqueta única para cada item del repeater
                         return isset($state['question_id']) ? 'Pregunta #' . $state['question_id'] : null;
-                    })
-                    ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
-                        // Asegurar que cada respuesta tenga una clave única
-                        $data['id'] = uniqid();
-                        return $data;
                     })
                     ->schema(function () use ($isEdit) {
                         if ($isEdit) {
