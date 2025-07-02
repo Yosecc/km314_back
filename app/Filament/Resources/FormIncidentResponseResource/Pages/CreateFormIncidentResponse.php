@@ -38,4 +38,28 @@ class CreateFormIncidentResponse extends CreateRecord
 
         return $data;
     }
+
+    public function mount(): void
+    {
+        parent::mount();
+        
+        // Si hay un form_incident_type_id en la URL, cargar las preguntas después del montaje
+        $formTypeId = request()->query('form_incident_type_id');
+        if ($formTypeId) {
+            $questions = FormIncidentQuestion::whereHas('types', function($q) use ($formTypeId) {
+                $q->where('form_incident_type_id', $formTypeId);
+            })->orderBy('order')->get(['id', 'question', 'type', 'options', 'required']);
+
+            $this->form->fill([
+                'form_incident_type_id' => $formTypeId,
+                'questions_structure' => $questions->toArray(),
+                'answers' => $questions->map(function($q) {
+                    return [
+                        'question_id' => $q->id,
+                        'answer' => null,
+                    ];
+                })->toArray(),
+            ]);
+        }
+    }
 }
