@@ -49,9 +49,11 @@ class UserResource extends Resource
                 })
                 ->live(),
                 Forms\Components\TextInput::make('name')
+                    ->label('Nombre completo')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
+                    ->label('Correo electrónico')
                     ->email()
                     ->unique(
                         table: 'users', // Nombre de la tabla
@@ -65,6 +67,7 @@ class UserResource extends Resource
                     ->dehydrated() // ensures the value is sent to the model
                     ->hidden(),
                 Forms\Components\TextInput::make('password')
+                    ->label('Contraseña')
                     ->password()
                     ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                     ->dehydrated(fn ($state) => filled($state))
@@ -74,10 +77,11 @@ class UserResource extends Resource
                     })
                     ->maxLength(255),
                     Forms\Components\Select::make('roles')
-                    ->relationship('roles', 'name')
-                    ->multiple()
-                    ->preload()
-                    ->searchable(),
+                        ->label('Roles')
+                        ->relationship('roles', 'name')
+                        ->multiple()
+                        ->preload()
+                        ->searchable(),
 
             ]);
     }
