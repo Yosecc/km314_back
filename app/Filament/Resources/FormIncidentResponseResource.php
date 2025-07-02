@@ -44,8 +44,15 @@ class FormIncidentResponseResource extends Resource
                 Forms\Components\Select::make('form_incident_type_id')
                     ->label('Tipo de formulario')
                     ->placeholder('Seleccione el tipo de formulario')
-                    ->helperText('Seleccione el tipo de formulario de incidente para mostrar las preguntas correspondientes.')
-                    ->relationship('type', 'name')
+                    ->helperText('Solo se muestran los formularios que tienes asignados como obligatorios.')
+                    ->options(function () {
+                        // Solo mostrar formularios que el usuario tiene asignados como obligatorios
+                        return \App\Models\FormIncidentUserRequirement::active()
+                            ->forUser(auth()->id())
+                            ->with('formIncidentType')
+                            ->get()
+                            ->pluck('formIncidentType.name', 'form_incident_type_id');
+                    })
                     ->required()
                     ->reactive()
                     ->afterStateUpdated(function ($state, callable $set) use ($isEdit) {
@@ -62,13 +69,9 @@ class FormIncidentResponseResource extends Resource
                         })->toArray());
                     })
                     ->disabled($isEdit),
-                Forms\Components\Select::make('user_id')
-                    ->label('Usuario')
-                    ->placeholder('Seleccione el usuario que responde')
-                    ->helperText('Seleccione el usuario que está respondiendo el formulario de incidente.')
-                    ->relationship('user', 'name')
-                    ->required()
-                    ->disabled($isEdit),
+                Forms\Components\Hidden::make('user_id')
+                    ->default(auth()->id())
+                    ->required(),
                 Forms\Components\Hidden::make('date')
                     ->label('Fecha')
                     ->required()
@@ -201,10 +204,14 @@ class FormIncidentResponseResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(function () {
+                // Solo mostrar las respuestas del usuario autenticado
+                return FormIncidentResponse::where('user_id', auth()->id());
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
-                Tables\Columns\TextColumn::make('form_incident_type_id')->label('Tipo de formulario'),
-                Tables\Columns\TextColumn::make('user_id')->label('Usuario'),
+                Tables\Columns\TextColumn::make('type.name')->label('Tipo de formulario'),
+                // Tables\Columns\TextColumn::make('user.name')->label('Usuario'), // Quitamos esto ya que solo ve las suyas
                 Tables\Columns\TextColumn::make('date')->label('Fecha')->date(),
                 Tables\Columns\TextColumn::make('time')->label('Hora')->time(),
                 Tables\Columns\TextColumn::make('created_at')->label('Fecha de creación')->dateTime()->sortable(),
@@ -221,8 +228,8 @@ class FormIncidentResponseResource extends Resource
                     Tables\Actions\DeleteBulkAction::make()->label('Eliminar seleccionados'),
                 ]),
             ])
-            ->emptyStateHeading('No hay respuestas de incidentes')
-            ->emptyStateDescription('Cree una nueva respuesta para comenzar.');
+            ->emptyStateHeading('No tienes respuestas de formularios')
+            ->emptyStateDescription('Completa un formulario obligatorio para comenzar.');
     }
 
     public static function getRelations(): array
