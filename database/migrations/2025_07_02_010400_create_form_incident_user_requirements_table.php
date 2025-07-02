@@ -22,9 +22,9 @@ return new class extends Migration
             $table->text('notes')->nullable(); // Notas adicionales
             $table->timestamps();
 
-            // Índices para búsquedas rápidas
-            $table->index(['user_id', 'is_active']);
-            $table->index(['form_incident_type_id', 'is_active']);
+            // Índices para búsquedas rápidas con nombres cortos
+            $table->index(['user_id', 'is_active'], 'fiur_user_active_idx');
+            $table->index(['form_incident_type_id', 'is_active'], 'fiur_type_active_idx');
         });
     }
 
