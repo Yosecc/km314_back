@@ -20,7 +20,7 @@ class CreateFormIncidentResponse extends CreateRecord
     {
         // Si viene un form_incident_type_id en la URL, pre-cargar las preguntas
         $formTypeId = request()->query('form_incident_type_id');
-        
+
         if ($formTypeId) {
             $questions = FormIncidentQuestion::whereHas('types', function($q) use ($formTypeId) {
                 $q->where('form_incident_type_id', $formTypeId);
@@ -42,7 +42,7 @@ class CreateFormIncidentResponse extends CreateRecord
     public function mount(): void
     {
         parent::mount();
-        
+
         // Si hay un form_incident_type_id en la URL, cargar las preguntas después del montaje
         $formTypeId = request()->query('form_incident_type_id');
         if ($formTypeId) {

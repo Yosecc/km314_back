@@ -89,6 +89,10 @@ class FormIncidentResponseResource extends Resource
                     ->label('Lista de Preguntas')
                     ->helperText('Responda cada pregunta del formulario de incidente.')
                     ->reorderable(false)
+                    ->itemLabel(function (array $state): ?string {
+                        // Agregar etiqueta única para cada item del repeater
+                        return isset($state['question_id']) ? 'Pregunta #' . $state['question_id'] : null;
+                    })
                     ->schema(function () use ($isEdit) {
                         if ($isEdit) {
                             // Solo mostrar como texto en edición
@@ -115,7 +119,19 @@ class FormIncidentResponseResource extends Resource
                                             } elseif (!is_array($options)) {
                                                 $options = [];
                                             }
-                                            $labels = collect($answer)->map(fn($val) => $options[$val] ?? $val)->toArray();
+
+                                            // Asegurar que tenemos un array asociativo para mapear
+                                            if (array_is_list($options)) {
+                                                $associativeOptions = [];
+                                                foreach ($options as $index => $option) {
+                                                    $associativeOptions[$index] = $option;
+                                                }
+                                                $options = $associativeOptions;
+                                            }
+
+                                            $labels = collect($answer)->map(function($val) use ($options) {
+                                                return $options[$val] ?? $val;
+                                            })->toArray();
                                             return implode(', ', $labels);
                                         }
                                         if (($q['type'] ?? null) === 'si_no') {
@@ -188,8 +204,21 @@ class FormIncidentResponseResource extends Resource
                                     } elseif (!is_array($options)) {
                                         $options = [];
                                     }
+
+                                    // Asegurar que las opciones tengan claves únicas
+                                    if (array_is_list($options)) {
+                                        // Si es un array indexado, convertir a array asociativo con strings
+                                        $associativeOptions = [];
+                                        foreach ($options as $index => $option) {
+                                            $associativeOptions[(string)$index] = $option;
+                                        }
+                                        return $associativeOptions;
+                                    }
+
                                     return $options;
                                 })
+                                ->columns(1)
+                                ->gridDirection('row')
                                 ->required(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['required'] ?? false))
                                 ->visible(fn (callable $get) => (collect($get('../../questions_structure'))->firstWhere('id', $get('question_id'))['type'] ?? null) === 'seleccion_multiple'),
                         ];
