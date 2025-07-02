@@ -29,6 +29,16 @@ class FormIncidentComplianceWidget extends Widget
         ];
     }
 
+    /**
+     * Genera la URL para completar un formulario específico
+     */
+    public function getCompleteFormUrl(int $formTypeId): string
+    {
+        return route('filament.admin.resources.form-incident-responses.create', [
+            'form_incident_type_id' => $formTypeId
+        ]);
+    }
+
     public static function canView(): bool
     {
         // Solo mostrar si el usuario tiene formularios obligatorios asignados

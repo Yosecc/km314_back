@@ -53,6 +53,10 @@ class FormIncidentResponseResource extends Resource
                             ->get()
                             ->pluck('formIncidentType.name', 'form_incident_type_id');
                     })
+                    ->default(function () {
+                        // Pre-seleccionar el tipo de formulario si viene como parámetro en la URL
+                        return request()->query('form_incident_type_id');
+                    })
                     ->required()
                     ->reactive()
                     ->afterStateUpdated(function ($state, callable $set) use ($isEdit) {

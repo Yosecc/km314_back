@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\FormIncidentResponseResource\Pages;
 
 use App\Filament\Resources\FormIncidentResponseResource;
+use App\Models\FormIncidentQuestion;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -13,5 +14,28 @@ class CreateFormIncidentResponse extends CreateRecord
     protected function getCreatedNotificationRedirectUrl(): string
     {
         return static::getResource()::getUrl('view', ['record' => $this->record]);
+    }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        // Si viene un form_incident_type_id en la URL, pre-cargar las preguntas
+        $formTypeId = request()->query('form_incident_type_id');
+        
+        if ($formTypeId) {
+            $questions = FormIncidentQuestion::whereHas('types', function($q) use ($formTypeId) {
+                $q->where('form_incident_type_id', $formTypeId);
+            })->orderBy('order')->get(['id', 'question', 'type', 'options', 'required']);
+
+            $data['form_incident_type_id'] = $formTypeId;
+            $data['questions_structure'] = $questions->toArray();
+            $data['answers'] = $questions->map(function($q) {
+                return [
+                    'question_id' => $q->id,
+                    'answer' => null,
+                ];
+            })->toArray();
+        }
+
+        return $data;
     }
 }
