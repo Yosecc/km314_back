@@ -44,7 +44,7 @@ class EnElBarrio extends BaseWidget
         }
 
         return $table
-            ->query(fn () => $rows->map(fn($row) => (object) $row)->all())
+            ->query(fn () => \Illuminate\Database\Eloquent\Collection::make($rows->map(fn($row) => (object) $row)->all()))
             ->columns([
                 Tables\Columns\TextColumn::make('first_name')->label('Nombre'),
                 Tables\Columns\TextColumn::make('last_name')->label('Apellido'),
