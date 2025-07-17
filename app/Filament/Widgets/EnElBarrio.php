@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 
 class EnElBarrio extends BaseWidget
 {
-    protected function getTableRecords()
+    public function getTableRecords()
     {
         $peopleInside = ActivitiesPeople::select('model_id', 'model')
             ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
@@ -39,7 +39,7 @@ class EnElBarrio extends BaseWidget
                 }
             }
         }
-        return $rows;
+        return \Illuminate\Database\Eloquent\Collection::make($rows);
     }
 
     public function table(Table $table): Table
