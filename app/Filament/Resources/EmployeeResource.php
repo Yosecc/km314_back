@@ -81,23 +81,8 @@ class EmployeeResource extends Resource
                             'Employee' => 'KM314',
                             'Owner' => 'Propietario',
                         ])
-                        ->default(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return 'Owner';
-                            }
-                        })
-                        ->disabled(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return true;
-                            }
-                            return false;
-                        })
-                        ->dehydrated(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return true;
-                            }
-                            return true;
-                        })
+                        ->default(fn(Get $get) => $get('model_origen') ?? (Auth::user()->hasRole('owner') && Auth::user()->owner_id ? 'Owner' : null))
+                        ->dehydrated(true)
                         ->visible(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return false;
@@ -327,7 +312,7 @@ class EmployeeResource extends Resource
         return [
             'index' => Pages\ManageEmployees::route('/'),
             'view' => Pages\ViewEmployeeResource::route('/{record}'),
-
+            'edit' => Pages\EditEmployee::route('/{record}/edit'),
         ];
     }
 }

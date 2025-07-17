@@ -59,15 +59,15 @@ class LoteResource extends Resource
                     ->required()
                     ->relationship(name: 'sector', titleAttribute: 'name'),
 
-                Forms\Components\Select::make('lote_id')
-                    ->label(__("general.LoteID"))
-                    ->options(function(){
-                        return Lote::get()->map(function($lote){
-                            $lote['lote_name'] = $lote->getNombre();
-                            return $lote;
-                        })->pluck('lote_name', 'id')->toArray();
-                    })
-                    ->searchable()
+                Forms\Components\TextInput::make('lote_id')
+                    ->label('Número de lote')
+                    // ->options(function(){
+                    //     return Lote::get()->map(function($lote){
+                    //         $lote['lote_name'] = $lote->getNombre();
+                    //         return $lote;
+                    //     })->pluck('lote_name', 'id')->toArray();
+                    // })
+                    // ->searchable()
                     ->required()
                     ,
 

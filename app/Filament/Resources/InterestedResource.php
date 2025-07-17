@@ -49,7 +49,7 @@ class InterestedResource extends Resource
                 Forms\Components\TextInput::make('email')
                     ->label(__("general.Email"))
                     ->email()
-                    ->required()
+
                     ->maxLength(255),
                 Forms\Components\TextInput::make('phone')
                     ->label(__("general.Phone"))
@@ -82,7 +82,7 @@ class InterestedResource extends Resource
                             return $lote;
                         })->pluck('lote_name', 'id')->toArray();
                     })
-                    ->required()
+
                     ->searchable()
                     ->label(__("general.Lote")),
 
