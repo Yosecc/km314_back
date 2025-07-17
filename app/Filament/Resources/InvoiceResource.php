@@ -29,7 +29,7 @@ class InvoiceResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-       protected static ?string $navigationGroup = 'Administración contable';
+       protected static ?string $navigationGroup = 'Administración contable (vPRUEBA)';
     protected static ?string $label = 'Factura';
     protected static ?string $pluralLabel = 'Facturas';
 

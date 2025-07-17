@@ -20,7 +20,7 @@ class AccountStatusResource extends Resource
 {
     protected static ?string $model = AccountStatus::class;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Administración contable';
+    protected static ?string $navigationGroup = 'Administración contable (vPRUEBA)';
     protected static ?string $label = 'Estado de Cuenta';
     protected static ?string $pluralLabel = 'Estados de Cuenta';
 

@@ -21,7 +21,7 @@ class TutorialResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Tutoriales';
+    protected static ?string $navigationLabel = 'Ayuda';
 
     public static function form(Form $form): Form
     {
