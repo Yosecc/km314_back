@@ -25,21 +25,26 @@ class EnElBarrio extends BaseWidget
             if (class_exists($modelClass)) {
                 $instance = $modelClass::find($person->model_id);
                 if ($instance) {
+                    // Buscar la última actividad de entrada
+                    $lastEntry = ActivitiesPeople::join('activities', 'activities_people.activities_id', '=', 'activities.id')
+                        ->where('activities_people.model', $person->model)
+                        ->where('activities_people.model_id', $person->model_id)
+                        ->where('activities.type', 'Entry')
+                        ->orderByDesc('activities.created_at')
+                        ->value('activities.created_at');
+
                     $rows->push([
                         'first_name' => $instance->first_name ?? '',
                         'last_name' => $instance->last_name ?? '',
                         'type' => $person->model,
-                        'last_entry' => optional($instance->activitiesPeople()->latest('created_at')->first())->created_at,
+                        'last_entry' => $lastEntry,
                     ]);
                 }
             }
         }
 
         return $table
-            ->query(
-                // Usamos una colección en memoria
-                $rows
-            )
+            ->fromCollection($rows)
             ->columns([
                 Tables\Columns\TextColumn::make('first_name')->label('Nombre'),
                 Tables\Columns\TextColumn::make('last_name')->label('Apellido'),
