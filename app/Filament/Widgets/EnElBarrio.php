@@ -44,7 +44,7 @@ class EnElBarrio extends BaseWidget
         }
 
         return $table
-            ->fromCollection($rows)
+            ->query(fn () => \Illuminate\Support\Collection::make($rows))
             ->columns([
                 Tables\Columns\TextColumn::make('first_name')->label('Nombre'),
                 Tables\Columns\TextColumn::make('last_name')->label('Apellido'),
