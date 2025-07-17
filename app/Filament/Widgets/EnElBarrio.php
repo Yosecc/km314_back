@@ -1,6 +1,4 @@
 <?php
-<?php
-
 namespace App\Filament\Widgets;
 
 use Filament\Tables;
