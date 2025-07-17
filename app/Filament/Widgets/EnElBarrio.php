@@ -42,50 +42,63 @@ class EnElBarrio extends BaseWidget
         return \Illuminate\Database\Eloquent\Collection::make($rows);
     }
 
-    public function table(Table $table): Table
+    public function getTableRecords(): \Illuminate\Database\Eloquent\Collection
     {
-        // IDs de cada tipo que están dentro
+        $rows = collect();
+
+        // Owner
         $ownerIds = ActivitiesPeople::select('model_id')
             ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
             ->where('activities_people.model', 'Owner')
             ->groupBy('model_id')
             ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
             ->pluck('model_id')->toArray();
+        foreach (\App\Models\Owner::whereIn('id', $ownerIds)->get() as $owner) {
+            $rows->push((object)[
+                'first_name' => $owner->first_name,
+                'last_name' => $owner->last_name,
+                'tipo' => 'Propietario',
+            ]);
+        }
 
+        // OwnerFamily
         $familyIds = ActivitiesPeople::select('model_id')
             ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
             ->where('activities_people.model', 'OwnerFamily')
             ->groupBy('model_id')
             ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
             ->pluck('model_id')->toArray();
+        foreach (\App\Models\OwnerFamily::whereIn('id', $familyIds)->get() as $family) {
+            $rows->push((object)[
+                'first_name' => $family->first_name,
+                'last_name' => $family->last_name,
+                'tipo' => 'Familiar',
+            ]);
+        }
 
+        // Employee
         $employeeIds = ActivitiesPeople::select('model_id')
             ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
             ->where('activities_people.model', 'Employee')
             ->groupBy('model_id')
             ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
             ->pluck('model_id')->toArray();
+        foreach (\App\Models\Employee::whereIn('id', $employeeIds)->get() as $employee) {
+            $rows->push((object)[
+                'first_name' => $employee->first_name,
+                'last_name' => $employee->last_name,
+                'tipo' => 'Empleado',
+            ]);
+        }
 
-        // Builder para cada tipo con columna "tipo"
-        $ownerQuery = \App\Models\Owner::query()
-            ->whereIn('id', $ownerIds)
-            ->selectRaw('id, first_name, last_name, "Propietario" as tipo');
+        // ...agrega más tipos si lo necesitas...
 
-        $familyQuery = \App\Models\OwnerFamily::query()
-            ->whereIn('id', $familyIds)
-            ->selectRaw('id, first_name, last_name, "Familiar" as tipo');
+        return \Illuminate\Database\Eloquent\Collection::make($rows);
+    }
 
-        $employeeQuery = \App\Models\Employee::query()
-            ->whereIn('id', $employeeIds)
-            ->selectRaw('id, first_name, last_name, "Empleado" as tipo');
-
-        // Unir todos los builders
-        $unionQuery = $ownerQuery
-            ->unionAll($familyQuery)
-            ->unionAll($employeeQuery);
-
+    public function table(Table $table): Table
+    {
         return $table
-            ->query($unionQuery)
             ->columns([
                 Tables\Columns\TextColumn::make('first_name')->label('Nombre'),
                 Tables\Columns\TextColumn::make('last_name')->label('Apellido'),
