@@ -44,20 +44,52 @@ class EnElBarrio extends BaseWidget
 
     public function table(Table $table): Table
     {
+        // IDs de cada tipo que están dentro
+        $ownerIds = ActivitiesPeople::select('model_id')
+            ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
+            ->where('activities_people.model', 'Owner')
+            ->groupBy('model_id')
+            ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
+            ->pluck('model_id')->toArray();
+
+        $familyIds = ActivitiesPeople::select('model_id')
+            ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
+            ->where('activities_people.model', 'OwnerFamily')
+            ->groupBy('model_id')
+            ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
+            ->pluck('model_id')->toArray();
+
+        $employeeIds = ActivitiesPeople::select('model_id')
+            ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
+            ->where('activities_people.model', 'Employee')
+            ->groupBy('model_id')
+            ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
+            ->pluck('model_id')->toArray();
+
+        // Builder para cada tipo con columna "tipo"
+        $ownerQuery = \App\Models\Owner::query()
+            ->whereIn('id', $ownerIds)
+            ->selectRaw('id, first_name, last_name, "Propietario" as tipo');
+
+        $familyQuery = \App\Models\OwnerFamily::query()
+            ->whereIn('id', $familyIds)
+            ->selectRaw('id, first_name, last_name, "Familiar" as tipo');
+
+        $employeeQuery = \App\Models\Employee::query()
+            ->whereIn('id', $employeeIds)
+            ->selectRaw('id, first_name, last_name, "Empleado" as tipo');
+
+        // Unir todos los builders
+        $unionQuery = $ownerQuery
+            ->unionAll($familyQuery)
+            ->unionAll($employeeQuery);
+
         return $table
+            ->query($unionQuery)
             ->columns([
                 Tables\Columns\TextColumn::make('first_name')->label('Nombre'),
                 Tables\Columns\TextColumn::make('last_name')->label('Apellido'),
-                Tables\Columns\TextColumn::make('type')->label('Tipo')->formatStateUsing(fn($state) => match($state) {
-                    'Owner' => 'Propietario',
-                    'OwnerFamily' => 'Familiar',
-                    'Employee' => 'Empleado',
-                    'OwnerSpontaneousVisit' => 'Visita espontánea',
-                    'FormControlPeople' => 'Visitante',
-                    'Tenant' => 'Inquilino',
-                    default => $state,
-                }),
-                Tables\Columns\TextColumn::make('last_entry')->label('Última entrada')->dateTime(),
+                Tables\Columns\TextColumn::make('tipo')->label('Tipo'),
             ]);
     }
 }
