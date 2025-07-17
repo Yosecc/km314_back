@@ -41,8 +41,6 @@ class Conversations extends Model
 
         $conversations = $socialMessages->getConversations();
 
-        dd('se paso');
-
         // Obtener las conversaciones del caché
         // $conversations = Cache::get('conversations', []);
         // Mapea los datos del caché para que se ajusten a la estructura esperada

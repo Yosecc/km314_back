@@ -23,7 +23,7 @@ class ExpenseStatusResource extends Resource
     protected static ?string $label = 'estatus de gasto';
     protected static ?string $navigationGroup = 'Administracion Contable';
 
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'Estatus de gastos';
@@ -78,5 +78,10 @@ class ExpenseStatusResource extends Resource
         return [
             'index' => Pages\ManageExpenseStatuses::route('/'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
     }
 }

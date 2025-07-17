@@ -40,11 +40,15 @@ class SocialMessages extends Controller
 
             $this->token = Cache::store('file')->get('access_token');
         }else{
-            $redirectUri = config('app.url') . '/auth/facebook';
-            header('Location: '.$redirectUri);
+            // Facebook integration deshabilitada temporalmente
+            // $redirectUri = config('app.url') . '/auth/facebook';
+            // header('Location: '.$redirectUri);
             // dd('No hay token');
-            die();
-            return redirect()->route('auth.facebook');
+            // die();
+            // return redirect()->route('auth.facebook');
+
+            // Por ahora, solo retorna null o un token vacío
+            $this->token = null;
         }
 
         $this->getAccounts();

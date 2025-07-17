@@ -153,4 +153,6 @@ class Employee extends Model
             'mensaje' => "Hoy no tiene acceso."
         ];
     }
+
+    // (Elimino métodos y relaciones agregados para integración con formularios de incidentes)
 }

@@ -59,6 +59,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsTo(Owner::class);
     }
 
+    public function formIncidentRequirements()
+    {
+        return $this->hasMany(\App\Models\FormIncidentUserRequirement::class);
+    }
+
     // public function roles()
     // {
     //     return $this->belongsToMany(Role::class);

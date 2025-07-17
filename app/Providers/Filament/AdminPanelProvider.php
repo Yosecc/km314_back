@@ -7,6 +7,8 @@ use App\Filament\Resources\ActivitiesResource\Widgets\UltimasActividades;
 use App\Filament\Resources\FormControlResource\Widgets\FormControlStats;
 use App\Filament\Widgets\EmpleadosEnElBarrio;
 use App\Filament\Widgets\Entry;
+use App\Filament\Widgets\FormIncidentComplianceWidget;
+use App\Filament\Widgets\FormIncidentStatsWidget;
 use App\Filament\Widgets\InquilinosEnElBarrio;
 use App\Filament\Widgets\Personas;
 use App\Filament\Widgets\PropietariosEnElBarrio;
@@ -56,28 +58,16 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 FilamentFullCalendarPlugin::make()
-                // ->schedulerLicenseKey()
                 ->selectable()
                 ->editable()
-                // ->timezone()
-                // ->locale()
-                // ->plugins()
-                // ->config()
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                // Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
-                // Entry::class,
+                FormIncidentComplianceWidget::class,
+                FormIncidentStatsWidget::class,
                 UltimasActividades::class,
                 IncidentesStats::class,
                 FormControlStats::class,
-                // Personas::class,
-                // PropietariosEnElBarrio::class,
-                // EmpleadosEnElBarrio::class,
-                // TrabajadoresEnElBarrio::class,
-                // InquilinosEnElBarrio::class,
-                // \App\Filament\Resources\ActivitiesResource\Widgets\ActivitiesWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -94,16 +84,7 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->databaseNotifications()
-            // ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
-            //     return $builder->groups([
-            //         NavigationGroup::make('Seguridad')
-            //             ->items([
-            //                 ...\App\Filament\Resources\ActivitiesResource::getNavigationItems(),
 
-            //             ]),
-
-            //     ]);
-            // })
             ;
     }
 }

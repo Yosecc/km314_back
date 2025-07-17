@@ -31,44 +31,49 @@ class ExpenseResource extends Resource
     protected static ?string $label = 'gasto';
     protected static ?string $navigationGroup = 'Administracion Contable';
 
-    
+
     public static function getPluralModelLabel(): string
     {
         return 'Gastos de mantenimiento';
     }
 
-    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
+
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                
+
                 Forms\Components\Select::make('owner_id')
                     ->relationship(name: 'owner')
                     ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
                     ->label(__("general.Owner"))
                     ->live(),
 
-                
+
 
                 // Forms\Components\Select::make('propertie_id')
                 //     ->label(__("general.Propertie"))
                 //     ->options(Property::get()->pluck('identificador', 'id')->toArray()),
-                
-                
-                    
+
+
+
 
                 Forms\Components\Select::make('expense_status_id')
                     ->required()
                     ->relationship(name: 'expenseStatus', titleAttribute: 'name'),
-               
 
-               
+
+
                 Forms\Components\DatePicker::make('date_prox_payment')
                     ->required(),
 
-                
+
 
                 // Forms\Components\TextInput::make('')
                 // ->afterStateHydrated(function (TextInput $component, string $state,  $record) {
@@ -81,15 +86,15 @@ class ExpenseResource extends Resource
                 //         Forms\Components\Select::make('expense_concept_id')
                 //             ->required()
                 //             ->options(ExpenseConcept::get()->pluck('name', 'id')->toArray()),
-                            
+
                 //         Forms\Components\TextInput::make('amount')
                 //             ->required()
                 //             ->maxLength(255),
-                        
+
                 //         Forms\Components\TextInput::make('description')
                 //             ->required()
-                //             ->maxLength(255),  
-                            
+                //             ->maxLength(255),
+
                 //     ])
                 //     ->columns(2)
             ]);
@@ -115,7 +120,7 @@ class ExpenseResource extends Resource
                 Tables\Columns\TextColumn::make('owner')
                     ->formatStateUsing(fn ($state) => $state->first_name.' '.$state->last_name )
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('concepts')
                     ->label('Subtotal')
                     ->formatStateUsing(fn ($record, $state) => $record->concepts->sum('amount'))
