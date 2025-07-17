@@ -9,23 +9,20 @@ use Illuminate\Support\Collection;
 
 class EnElBarrio extends BaseWidget
 {
-    public function table(Table $table): Table
+    protected function getTableRecords()
     {
-        // Buscar todos los que están dentro, sin filtrar por tipo
         $peopleInside = ActivitiesPeople::select('model_id', 'model')
             ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
             ->groupBy('model', 'model_id')
             ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
             ->get();
 
-        // Mapear los datos a una colección con nombre, apellido y tipo
         $rows = collect();
         foreach ($peopleInside as $person) {
             $modelClass = "\\App\\Models\\" . $person->model;
             if (class_exists($modelClass)) {
                 $instance = $modelClass::find($person->model_id);
                 if ($instance) {
-                    // Buscar la última actividad de entrada
                     $lastEntry = ActivitiesPeople::join('activities', 'activities_people.activities_id', '=', 'activities.id')
                         ->where('activities_people.model', $person->model)
                         ->where('activities_people.model_id', $person->model_id)
@@ -33,7 +30,7 @@ class EnElBarrio extends BaseWidget
                         ->orderByDesc('activities.created_at')
                         ->value('activities.created_at');
 
-                    $rows->push([
+                    $rows->push((object)[
                         'first_name' => $instance->first_name ?? '',
                         'last_name' => $instance->last_name ?? '',
                         'type' => $person->model,
@@ -42,9 +39,12 @@ class EnElBarrio extends BaseWidget
                 }
             }
         }
+        return $rows;
+    }
 
+    public function table(Table $table): Table
+    {
         return $table
-            ->records($rows->map(fn($row) => (object) $row)->all())
             ->columns([
                 Tables\Columns\TextColumn::make('first_name')->label('Nombre'),
                 Tables\Columns\TextColumn::make('last_name')->label('Apellido'),
