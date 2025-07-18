@@ -11,6 +11,10 @@ use Filament\Tables\Columns\Summarizers\Count;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Support\Facades\DB;
+use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Activities;
+
 
 class EnElBarrio extends BaseWidget
 {
@@ -36,6 +40,41 @@ class EnElBarrio extends BaseWidget
                 ->summarize(Count::make()->label('Total personas')),
             Tables\Columns\TextColumn::make('ultima_entrada')->label('ultima_entrada')->searchable(),
 
+        ])
+        ->actions([
+            Action::make('forzar_salida')
+                ->label('Forzar Salida')
+                ->action(function ($record) {
+                    $userName = Auth::user()->name ?? 'Sistema';
+                    $tipoEntrada = match ($record->model) {
+                        'Owner', 'OwnerFamily', 'OwnerSpontaneousVisit' => 1,
+                        'Employee' => 2,
+                        'FormControl' => 3,
+                        default => 0,
+                    };
+
+                    $activity = Activities::create([
+                        'lote_ids' => $record->lote,
+                        'form_control_id' => null,
+                        'tipo_entrada' => $tipoEntrada,
+                        'type' => 'Exit',
+                        'observations' => 'Salida forzada por: ' . $userName,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    ActivitiesPeople::create([
+                        'activities_id' => $activity->id,
+                        'model' => $record->model,
+                        'model_id' => $record->model_id,
+                        'type' => null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                })
+                ->requiresConfirmation()
+                ->color('danger')
+                ->icon('heroicon-o-arrow-right-end-on-rectangle'),
         ]);
     }
 }
