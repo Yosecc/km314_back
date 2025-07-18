@@ -11,6 +11,11 @@ class MovementsTableWidget extends Widget
 
     protected static string $view = 'filament.widgets.movements-table-widget';
 
+    public static function isVisible(): bool
+{
+    return false;
+}
+
     public function getMovements(): array
     {
         if (!$this->record) return [];
