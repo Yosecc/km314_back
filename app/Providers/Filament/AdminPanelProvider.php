@@ -67,7 +67,7 @@ class AdminPanelProvider extends PanelProvider
                 EnElBarrio::class,
                 FormIncidentComplianceWidget::class,
                 FormIncidentStatsWidget::class,
-                UltimasActividades::class,
+                //UltimasActividades::class,
                 IncidentesStats::class,
                 FormControlStats::class,
             ])
