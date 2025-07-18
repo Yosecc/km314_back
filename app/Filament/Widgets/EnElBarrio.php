@@ -1,10 +1,11 @@
 <?php
 namespace App\Filament\Widgets;
 
+use App\Models\ActivitiesPeople;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use App\Models\ActivitiesPeople;
 use Illuminate\Support\Collection;
 
 class EnElBarrio extends BaseWidget
