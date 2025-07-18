@@ -39,7 +39,10 @@ class EnElBarrio extends BaseWidget
                 ->label('Lote')
                 ->searchable()
                 ,
-            Tables\Columns\TextColumn::make('ultima_entrada')->label('ultima_entrada')->searchable()->summarize(Count::make()->label('Total personas')),
+            Tables\Columns\TextColumn::make('ultima_entrada')
+                ->label('ultima_entrada')
+                ->searchable()
+                ->summarize(Count::make()->label('Total personas')),
 
         ])
         ->actions([
