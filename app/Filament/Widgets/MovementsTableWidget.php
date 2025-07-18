@@ -47,10 +47,10 @@ class MovementsTableWidget extends Widget
         return $all->toArray();
     }
 
-    public function render(): View
-    {
-        return view(static::$view, [
-            'movimientos' => $this->getMovements(),
-        ]);
-    }
+    // public function render(): View
+    // {
+    //     return view(static::$view, [
+    //         'movimientos' => $this->getMovements(),
+    //     ]);
+    // }
 }
