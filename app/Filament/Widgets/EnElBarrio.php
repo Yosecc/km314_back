@@ -8,9 +8,7 @@ use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Arr;
-
+use Illuminate\Support\Facades\DB;
 
 class EnElBarrio extends BaseWidget
 {
@@ -36,7 +34,7 @@ class EnElBarrio extends BaseWidget
             ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
             ->pluck('model_id')->toArray();
 
-        // Query unificada con tipo
+        // Subqueries para cada tipo
         $families = OwnerFamily::query()
             ->whereIn('id', $familysInside)
             ->selectRaw('id, first_name, last_name, "Familiar" as tipo');
@@ -44,12 +42,13 @@ class EnElBarrio extends BaseWidget
             ->whereIn('id', $employeesInside)
             ->selectRaw('id, first_name, last_name, "Empleado" as tipo');
 
-        // Unimos ambas queries con unionAll
-        $unifiedQuery = $families->unionAll($employees);
+        // Union y subconsulta para paginación/ordenamiento
+        $union = $families->unionAll($employees);
+        $sub = DB::query()->fromSub($union, 'personas_en_el_barrio');
 
         return $table
             ->heading(self::$heading)
-            ->query($unifiedQuery)
+            ->query($sub)
             ->columns([
                 Tables\Columns\TextColumn::make('first_name')->label(__('general.FirstName'))->searchable(),
                 Tables\Columns\TextColumn::make('last_name')->label(__('general.LastName'))->searchable(),
