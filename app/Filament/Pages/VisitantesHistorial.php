@@ -66,7 +66,6 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->heading(self::$heading)
             ->query(PersonaEnElBarrio::query())
             ->defaultGroup('lote')
             ->columns([
