@@ -2,7 +2,6 @@ CREATE OR REPLACE VIEW personas_en_el_barrio AS
 
 -- PROPIETARIOS
 SELECT
-    o.id,
     o.first_name,
     o.last_name,
     'Propietario' AS tipo,
@@ -11,7 +10,15 @@ SELECT
         FROM lotes l
         JOIN sectors s ON l.sector_id = s.id
         WHERE l.owner_id = o.id
-    ) AS lote
+    ) AS lote,
+    'Owner' AS model,
+    o.id AS model_id,
+    (
+        SELECT MAX(a.created_at)
+        FROM activities_people ap
+        JOIN activities a ON ap.activities_id = a.id
+        WHERE ap.model_id = o.id AND ap.model = 'Owner' AND a.type = 'Entry'
+    ) AS ultima_entrada
 FROM owners o
 WHERE o.id IN (
     SELECT ap.model_id
@@ -26,7 +33,6 @@ UNION ALL
 
 -- FAMILIARES
 SELECT
-    of.id,
     of.first_name,
     of.last_name,
     'Familiar' AS tipo,
@@ -35,7 +41,15 @@ SELECT
         FROM lotes l
         JOIN sectors s ON l.sector_id = s.id
         WHERE l.owner_id = of.owner_id
-    ) AS lote
+    ) AS lote,
+    'OwnerFamily' AS model,
+    of.id AS model_id,
+    (
+        SELECT MAX(a.created_at)
+        FROM activities_people ap
+        JOIN activities a ON ap.activities_id = a.id
+        WHERE ap.model_id = of.id AND ap.model = 'OwnerFamily' AND a.type = 'Entry'
+    ) AS ultima_entrada
 FROM owner_families of
 WHERE of.id IN (
     SELECT ap.model_id
@@ -50,7 +64,6 @@ UNION ALL
 
 -- VISITANTES ESPONTÁNEOS
 SELECT
-    osv.id,
     osv.first_name,
     osv.last_name,
     'Visita espontánea' AS tipo,
@@ -59,7 +72,15 @@ SELECT
         FROM lotes l
         JOIN sectors s ON l.sector_id = s.id
         WHERE l.owner_id = osv.owner_id
-    ) AS lote
+    ) AS lote,
+    'OwnerSpontaneousVisit' AS model,
+    osv.id AS model_id,
+    (
+        SELECT MAX(a.created_at)
+        FROM activities_people ap
+        JOIN activities a ON ap.activities_id = a.id
+        WHERE ap.model_id = osv.id AND ap.model = 'OwnerSpontaneousVisit' AND a.type = 'Entry'
+    ) AS ultima_entrada
 FROM owner_spontaneous_visits osv
 WHERE osv.id IN (
     SELECT ap.model_id
@@ -74,7 +95,6 @@ UNION ALL
 
 -- EMPLEADOS
 SELECT
-    e.id,
     e.first_name,
     e.last_name,
     'Empleado' AS tipo,
@@ -83,7 +103,15 @@ SELECT
         FROM lotes l
         JOIN sectors s ON l.sector_id = s.id
         WHERE l.owner_id = e.owner_id
-    ) AS lote
+    ) AS lote,
+    'Employee' AS model,
+    e.id AS model_id,
+    (
+        SELECT MAX(a.created_at)
+        FROM activities_people ap
+        JOIN activities a ON ap.activities_id = a.id
+        WHERE ap.model_id = e.id AND ap.model = 'Employee' AND a.type = 'Entry'
+    ) AS ultima_entrada
 FROM employees e
 WHERE e.id IN (
     SELECT ap.model_id
@@ -98,11 +126,18 @@ UNION ALL
 
 -- VISITANTES (general, playa, house)
 SELECT
-    fcp.id,
     fcp.first_name,
     fcp.last_name,
     'Visitante' AS tipo,
-    TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote
+    TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote,
+    'FormControl' AS model,
+    fcp.id AS model_id,
+    (
+        SELECT MAX(a.created_at)
+        FROM activities_people ap
+        JOIN activities a ON ap.activities_id = a.id
+        WHERE ap.model_id = fcp.id AND ap.model = 'FormControl' AND a.type = 'Entry'
+    ) AS ultima_entrada
 FROM form_control_people fcp
 JOIN form_controls fc ON fcp.form_control_id = fc.id
 WHERE (
@@ -123,11 +158,18 @@ UNION ALL
 
 -- INQUILINOS (lote)
 SELECT
-    fcp.id,
     fcp.first_name,
     fcp.last_name,
     'Inquilino' AS tipo,
-    TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote
+    TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote,
+    'FormControl' AS model,
+    fcp.id AS model_id,
+    (
+        SELECT MAX(a.created_at)
+        FROM activities_people ap
+        JOIN activities a ON ap.activities_id = a.id
+        WHERE ap.model_id = fcp.id AND ap.model = 'FormControl' AND a.type = 'Entry'
+    ) AS ultima_entrada
 FROM form_control_people fcp
 JOIN form_controls fc ON fcp.form_control_id = fc.id
 WHERE fc.access_type LIKE '%lote%'
@@ -145,11 +187,18 @@ UNION ALL
 
 -- TRABAJADORES (lote)
 SELECT
-    fcp.id,
     fcp.first_name,
     fcp.last_name,
     'Trabajador' AS tipo,
-    TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote
+    TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote,
+    'FormControl' AS model,
+    fcp.id AS model_id,
+    (
+        SELECT MAX(a.created_at)
+        FROM activities_people ap
+        JOIN activities a ON ap.activities_id = a.id
+        WHERE ap.model_id = fcp.id AND ap.model = 'FormControl' AND a.type = 'Entry'
+    ) AS ultima_entrada
 FROM form_control_people fcp
 JOIN form_controls fc ON fcp.form_control_id = fc.id
 WHERE fc.access_type LIKE '%lote%'
@@ -167,11 +216,18 @@ UNION ALL
 
 -- VISITAS (lote)
 SELECT
-    fcp.id,
     fcp.first_name,
     fcp.last_name,
     'Visita' AS tipo,
-    TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote
+    TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote,
+    'FormControl' AS model,
+    fcp.id AS model_id,
+    (
+        SELECT MAX(a.created_at)
+        FROM activities_people ap
+        JOIN activities a ON ap.activities_id = a.id
+        WHERE ap.model_id = fcp.id AND ap.model = 'FormControl' AND a.type = 'Entry'
+    ) AS ultima_entrada
 FROM form_control_people fcp
 JOIN form_controls fc ON fcp.form_control_id = fc.id
 WHERE fc.access_type LIKE '%lote%'
