@@ -22,7 +22,7 @@ class EnElBarrio extends BaseWidget
 
     public function table(Table $table): Table
     {
-         return $table
+        return $table
         ->heading(self::$heading)
         ->query(PersonaEnElBarrio::query())
         ->defaultGroup('lote')
@@ -30,7 +30,10 @@ class EnElBarrio extends BaseWidget
             Tables\Columns\TextColumn::make('first_name')->label('Nombre')->searchable(),
             Tables\Columns\TextColumn::make('last_name')->label('Apellido')->searchable(),
             Tables\Columns\TextColumn::make('tipo')->label('Tipo')->searchable(),
-            Tables\Columns\TextColumn::make('lote')->label('Lote')->searchable()->summarize(Count::make()->label('Total personas')),,
+            Tables\Columns\TextColumn::make('lote')
+                ->label('Lote')
+                ->searchable()
+                ->summarize(Count::make()->label('Total personas')),
         ]);
     }
 }
