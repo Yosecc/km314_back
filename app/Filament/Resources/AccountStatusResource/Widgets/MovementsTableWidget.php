@@ -10,7 +10,10 @@ class MovementsTableWidget extends Widget
     public ?object $record = null;
 
     protected static string $view = 'filament.resources.account-status-resource.widgets.movements-table-widget';
-
+public static function isVisible(): bool
+{
+    return false;
+}
     public function getMovements(): array
     {
         if (!$this->record) return [];

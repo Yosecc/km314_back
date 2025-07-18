@@ -10,12 +10,10 @@ class MovementsTableWidget extends Widget
     public ?object $record = null;
 
     protected static string $view = 'filament.widgets.movements-table-widget';
-
-    public static function isVisible(): bool
+public static function isVisible(): bool
 {
     return false;
 }
-
     public function getMovements(): array
     {
         if (!$this->record) return [];
@@ -47,10 +45,10 @@ class MovementsTableWidget extends Widget
         return $all->toArray();
     }
 
-    // public function render(): View
-    // {
-    //     return view(static::$view, [
-    //         'movimientos' => $this->getMovements(),
-    //     ]);
-    // }
+    public function render(): View
+    {
+        return view(static::$view, [
+            'movimientos' => $this->getMovements(),
+        ]);
+    }
 }
