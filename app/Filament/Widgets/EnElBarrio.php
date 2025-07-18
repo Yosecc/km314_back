@@ -34,4 +34,4 @@ class EnElBarrio extends BaseWidget
             ]);
     }
 }
-}
+
