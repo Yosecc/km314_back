@@ -7,6 +7,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Support\Collection;
+use App\Models\OwnerFamily;
+
 
 class EnElBarrio extends BaseWidget
 {
