@@ -2,6 +2,7 @@ CREATE OR REPLACE VIEW personas_en_el_barrio AS
 
 -- PROPIETARIOS
 SELECT
+    o.id AS id,
     o.first_name,
     o.last_name,
     'Propietario' AS tipo,
@@ -33,6 +34,7 @@ UNION ALL
 
 -- FAMILIARES
 SELECT
+    of.id AS id,
     of.first_name,
     of.last_name,
     'Familiar' AS tipo,
@@ -64,6 +66,7 @@ UNION ALL
 
 -- VISITANTES ESPONTÁNEOS
 SELECT
+    osv.id AS id,
     osv.first_name,
     osv.last_name,
     'Visita espontánea' AS tipo,
@@ -95,6 +98,7 @@ UNION ALL
 
 -- EMPLEADOS
 SELECT
+    e.id AS id,
     e.first_name,
     e.last_name,
     'Empleado' AS tipo,
@@ -126,6 +130,7 @@ UNION ALL
 
 -- VISITANTES (general, playa, house)
 SELECT
+    fcp.id AS id,
     fcp.first_name,
     fcp.last_name,
     'Visitante' AS tipo,
@@ -158,6 +163,7 @@ UNION ALL
 
 -- INQUILINOS (lote)
 SELECT
+    fcp.id AS id,
     fcp.first_name,
     fcp.last_name,
     'Inquilino' AS tipo,
@@ -187,6 +193,7 @@ UNION ALL
 
 -- TRABAJADORES (lote)
 SELECT
+    fcp.id AS id,
     fcp.first_name,
     fcp.last_name,
     'Trabajador' AS tipo,
@@ -216,6 +223,7 @@ UNION ALL
 
 -- VISITAS (lote)
 SELECT
+    fcp.id AS id,
     fcp.first_name,
     fcp.last_name,
     'Visita' AS tipo,
