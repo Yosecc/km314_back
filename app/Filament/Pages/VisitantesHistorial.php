@@ -27,6 +27,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\Auth;
+use Filament\Tables;
+
 
 class VisitantesHistorial extends Page implements HasForms, HasTable
 {
