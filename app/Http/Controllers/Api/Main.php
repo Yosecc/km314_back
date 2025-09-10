@@ -52,10 +52,12 @@ class Main extends Controller
                                 ->orderBy('created_at','desc')
                                 ->with(['autos','files','horarios'])
                                 ->get();
+
         $empleados = $empleados->map(function($empleado){
-            $empleado['phone'] == null ? $empleado['phone'] = '' : $empleado['phone'];
+            $empleado['phone'] == null ? $empleado['phone'] = 0 : $empleado['phone'];
             return $empleado;
         });
+
         return response()->json(['empleados'=>$empleados,'tipo_empleos' => Works::where('status', true)->orderBy('name','asc')->get()], 200);
     }
 
