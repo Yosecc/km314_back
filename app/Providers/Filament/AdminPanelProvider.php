@@ -6,6 +6,7 @@ use  App\Filament\Resources\IncidentResource\Widgets\IncidentesStats;
 use App\Filament\Resources\ActivitiesResource\Widgets\UltimasActividades;
 use App\Filament\Resources\FormControlResource\Widgets\FormControlStats;
 use App\Filament\Widgets\EmpleadosEnElBarrio;
+use App\Filament\Widgets\EnElBarrio;
 use App\Filament\Widgets\Entry;
 use App\Filament\Widgets\FormIncidentComplianceWidget;
 use App\Filament\Widgets\FormIncidentStatsWidget;
@@ -63,9 +64,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                EnElBarrio::class,
                 FormIncidentComplianceWidget::class,
                 FormIncidentStatsWidget::class,
-                UltimasActividades::class,
+                //UltimasActividades::class,
                 IncidentesStats::class,
                 FormControlStats::class,
             ])

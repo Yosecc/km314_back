@@ -14,7 +14,7 @@ class ViewAccountStatus extends ViewRecord
     protected function getHeaderWidgets(): array
     {
         return [
-            MovementsTableWidget::make(['record' => $this->record]),
+            // MovementsTableWidget::make(['record' => $this->record]),
         ];
     }
 }
