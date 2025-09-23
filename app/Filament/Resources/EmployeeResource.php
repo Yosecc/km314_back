@@ -319,9 +319,8 @@ class EmployeeResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                 
-
                 IconColumn::make('status')
+                    ->label('Estado')
                     ->icon(fn (string $state): string => match ($state) {
                         'rechazado' => 'heroicon-o-x-circle',
                         'pendiente' => 'heroicon-o-clock',
