@@ -20,8 +20,8 @@ class ManageOwners extends ManageRecords
         }
     }
 
-    // También puedes usar canAccess si prefieres
-    public static function canAccess(): bool
+    // Corregir la signatura del método
+    public static function canAccess(array $parameters = []): bool
     {
         return !auth()->user()->hasRole('owner');
     }
