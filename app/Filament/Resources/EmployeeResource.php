@@ -27,6 +27,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
    use Filament\Tables\Columns\IconColumn;
+use Filament\Notifications\Notification;
+
 class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
@@ -364,7 +366,7 @@ class EmployeeResource extends Resource
                                 Forms\Components\TextInput::make('file_name')
                                     ->label('Descripción del documento')
                                     ->required()
-                                    ->default('Documento renovado'),
+                                    ->default('Seguro'),
                                 Forms\Components\DatePicker::make('file_fecha_vencimiento')
                                     ->label('Fecha de vencimiento')
                                     ->displayFormat('d/m/Y')
