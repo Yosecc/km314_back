@@ -24,18 +24,25 @@ class Owner extends Model
         return $this->hasMany(Employee::class,'owner_id');
     }
 
+ // Nueva relación muchos-a-muchos
+    public function empleados()
+    {
+        return $this->belongsToMany(Employee::class, 'employee_owner');
+    }
 
 public function getAllTrabajadores()
 {
-    // Obtener trabajadores de la nueva relación many-to-many
-    $pivotEmployees = $this->empleados; // Asumiendo que tienes esta relación
+    // Obtener empleados de la nueva relación many-to-many directamente
+    $employees = \App\Models\Employee::whereHas('owners', function($query) {
+        $query->where('owner_id', $this->id);
+    })->get();
     
-    // Si no hay empleados en la tabla pivot, usar la relación antigua
-    if ($pivotEmployees->isEmpty()) {
-        return $this->trabajadores; // Relación antigua
+    // Si no hay empleados en la nueva relación, usar la relación antigua
+    if ($employees->isEmpty()) {
+        $employees = $this->trabajadores ?? collect();
     }
     
-    return $pivotEmployees;
+    return $employees;
 }
 
     public function activitiePeople()
