@@ -25,6 +25,18 @@ class Owner extends Model
     }
 
 
+public function getAllTrabajadores()
+{
+    // Obtener trabajadores de la nueva relación many-to-many
+    $pivotEmployees = $this->empleados; // Asumiendo que tienes esta relación
+    
+    // Si no hay empleados en la tabla pivot, usar la relación antigua
+    if ($pivotEmployees->isEmpty()) {
+        return $this->trabajadores; // Relación antigua
+    }
+    
+    return $pivotEmployees;
+}
 
     public function activitiePeople()
     {

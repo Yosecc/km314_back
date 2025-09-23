@@ -216,17 +216,32 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->columns(4),
 
 
-                CheckboxList::make('technologies')->label('Trabajadores')
-                    ->options(isset(Auth::user()->owner->trabajadores) ? Auth::user()->owner->trabajadores->map(function($trabajador){
-                        $trabajador['name'] = $trabajador->first_name.' '.$trabajador->last_name;
-                        return $trabajador;
-                    })->pluck('name','id')->toArray() : [] )
+                              
+                CheckboxList::make('owners')->label('Trabajadores')
+                    ->options(function() {
+                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            $trabajadores = Auth::user()->owner->getAllTrabajadores();
+                            return $trabajadores->map(function($trabajador) {
+                                return [
+                                    'id' => $trabajador->id,
+                                    'name' => $trabajador->first_name . ' ' . $trabajador->last_name
+                                ];
+                            })->pluck('name', 'id')->toArray();
+                        }
+                        return [];
+                    })
                     ->visible(function(){
                         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                            if(!isset(Auth::user()->owner->trabajadores) || (isset(Auth::user()->owner->trabajadores) && !Auth::user()->owner->trabajadores->count())){
-                                return false;
+                            // Verificar si hay trabajadores en cualquiera de las dos relaciones
+                            $hasEmployees = \App\Models\Employee::whereHas('owners', function($query) {
+                                $query->where('owner_id', Auth::user()->owner_id);
+                            })->exists();
+                            
+                            if (!$hasEmployees) {
+                                $hasEmployees = \App\Models\Employee::where('owner_id', Auth::user()->owner_id)->exists();
                             }
-                            return true;
+                            
+                            return $hasEmployees;
                         }
                         return false;
                     })
@@ -236,13 +251,29 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->live()
                     ->afterStateUpdated(function (Set $set, Get $get, $state) {
                         $peoples = collect($get('peoples'));
-                        $trabajadores = Auth::user()->owner->trabajadores->whereIn('id', $state);
-
+                        
+                        // Obtener trabajadores seleccionados usando ambas relaciones
+                        $trabajadores = collect();
+                        
+                        // Primero intentar con la nueva relación
+                        $employeesFromPivot = \App\Models\Employee::whereHas('owners', function($query) {
+                            $query->where('owner_id', Auth::user()->owner_id);
+                        })->whereIn('id', $state)->get();
+                        
+                        if ($employeesFromPivot->isNotEmpty()) {
+                            $trabajadores = $employeesFromPivot;
+                        } else {
+                            // Fallback a la relación antigua
+                            $trabajadores = \App\Models\Employee::where('owner_id', Auth::user()->owner_id)
+                                ->whereIn('id', $state)
+                                ->get();
+                        }
+                
                         // Eliminar trabajadores desmarcados
                         $peoples = $peoples->filter(function ($person) use ($trabajadores) {
                             return $trabajadores->contains('dni', $person['dni']) || !is_null($person['dni']);
                         });
-
+                
                         // Agregar trabajadores marcados
                         foreach ($trabajadores as $trabajador) {
                             if (!$peoples->contains('dni', $trabajador->dni)) {
@@ -257,12 +288,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 ]);
                             }
                         }
-
+                
                         // Eliminar registros con valores nulos
                         $peoples = $peoples->filter(function ($person) {
                             return !is_null($person['dni']) && !is_null($person['first_name']) && !is_null($person['last_name']);
                         });
-
+                
                         // Actualizar el estado de 'peoples' sin sobrescribirlo completamente
                         $set('peoples', $peoples->values()->toArray());
                     }),
