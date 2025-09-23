@@ -359,29 +359,25 @@ class EmployeeResource extends Resource
                             ])
                             ->visible(fn ($record) => $record->isVencidoSeguro()),
 
-                        Forms\Components\Section::make('Renovar Documentos')
+                       Forms\Components\Section::make('Renovar Documentos')
                             ->schema([
-                                Forms\Components\Repeater::make('files')
-                                    ->schema([
-                                        Forms\Components\TextInput::make('name')
-                                            ->label('Descripción')
-                                            ->required(),
-                                        Forms\Components\DatePicker::make('fecha_vencimiento')
-                                            ->label('Fecha de vencimiento')
-                                            ->displayFormat('d/m/Y')
-                                            ->required(),
-                                        Forms\Components\FileUpload::make('file')
-                                            ->label('Archivo')
-                                            ->required()
-                                            ->storeFileNamesIn('attachment_file_names')
-                                            ->getUploadedFileNameForStorageUsing(function ($file) {
-                                                return $file->getClientOriginalName();
-                                            }),
-                                    ])
-                                    ->defaultItems(1)
-                                    ->columns(1)
+                                Forms\Components\TextInput::make('file_name')
+                                    ->label('Descripción del documento')
+                                    ->required()
+                                    ->default('Documento renovado'),
+                                Forms\Components\DatePicker::make('file_fecha_vencimiento')
+                                    ->label('Fecha de vencimiento')
+                                    ->displayFormat('d/m/Y')
+                                    ->required(),
+                                Forms\Components\FileUpload::make('file_upload')
+                                    ->label('Archivo')
+                                    ->required()
+                                    ->storeFileNamesIn('attachment_file_names')
+                                    ->getUploadedFileNameForStorageUsing(function ($file) {
+                                        return $file->getClientOriginalName();
+                                    }),
                             ])
-                            ->visible(fn ($record) => $record->vencidosFile()),
+                            ->visible(fn ($record) => $record->isVencidoSeguro()),
                     ])
                     ->action(function ($record, $data) {
                         // Actualizar fecha de vencimiento del seguro si está presente
