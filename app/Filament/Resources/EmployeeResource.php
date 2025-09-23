@@ -219,6 +219,7 @@ class EmployeeResource extends Resource
                         DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento'),
                         Forms\Components\FileUpload::make('file')
                             ->label('Archivo')
+                            ->required()
                             ->storeFileNamesIn('attachment_file_names')
                             ->getUploadedFileNameForStorageUsing(function ($file, $record) {
                                 return $file ? $file->getClientOriginalName() : $record->file;
