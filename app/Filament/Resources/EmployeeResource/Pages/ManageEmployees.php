@@ -18,6 +18,10 @@ class ManageEmployees extends ManageRecords
         return [
             Actions\CreateAction::make()
                 ->after(function ($record) {
+                     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                        $record->owners()->attach(Auth::user()->owner_id);
+                    }
+                    
                     // Enviar notificación si es un owner quien crea el registro
                     if (Auth::user()->hasRole('owner')) {
                         $this->sendEmployeeCreatedNotification($record);
