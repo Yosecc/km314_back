@@ -170,14 +170,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 Radio::make('tipo_trabajo')
                     ->options(Trabajos::get()->pluck('name','name')->toArray())
                     ->visible(function(Get $get){
-                        return collect($get('income_type'))->contains('Trabajador');
+                        return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
                     }),
                 Forms\Components\Select::make('construction_companie_id')
                     ->options(function(){
                         return ConstructionCompanie::get()->pluck('name','id')->toArray();
                     })
                     ->visible(function(Get $get){
-                        return collect($get('income_type'))->contains('Trabajador');
+                        return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
                     })
                     ->live(),
 

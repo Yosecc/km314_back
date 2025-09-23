@@ -16,7 +16,7 @@ class ManageOwners extends ManageRecords
         
         // Bloquear solo esta página para users con rol 'owner'
         if (auth()->user()->hasRole('owner')) {
-            abort(403, 'No tienes permisos para acceder a la lista de propietarios');
+            abort(403, 'No tienes permisos para acceder a esta página');
         }
     }
 
