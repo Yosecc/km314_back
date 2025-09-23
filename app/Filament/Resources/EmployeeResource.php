@@ -344,7 +344,7 @@ class EmployeeResource extends Resource
                         return true;
                     }),
                 Tables\Actions\DeleteAction::make(),
-                Tables\Actions\ViewAction::make()->visible(fn () => !Auth::user()->hasRole('owner')),
+                Tables\Actions\ViewAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
