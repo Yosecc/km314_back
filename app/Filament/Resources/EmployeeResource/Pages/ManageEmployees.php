@@ -18,7 +18,8 @@ class ManageEmployees extends ManageRecords
         return [
             Actions\CreateAction::make()
                 ->after(function ($record) {
-                     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                    
+                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                         $record->owners()->attach(Auth::user()->owner_id);
                     }
                     

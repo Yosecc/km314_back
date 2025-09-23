@@ -17,7 +17,7 @@ class ViewEmployeeResource extends ViewRecord
     {
         return [
             // Acción para editar
-            Actions\EditAction::make(),
+            // Actions\EditAction::make(),
             
             // Acción para aprobar (solo si es admin y el empleado está pendiente)
             Actions\Action::make('aprobar')
