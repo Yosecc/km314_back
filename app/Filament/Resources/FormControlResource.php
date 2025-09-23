@@ -309,17 +309,33 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         Forms\Components\TextInput::make('dni')
                             ->label(__("general.DNI"))
                             ->required()
+                            ->disabled(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Trabajador');
+                            })
+                            ->dehydrated(true),
                             ->numeric(),
                         Forms\Components\TextInput::make('first_name')
                             ->label(__("general.FirstName"))
                             ->required()
+                            ->disabled(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Trabajador');
+                            })
+                            ->dehydrated(true),
                             ->maxLength(255),
                         Forms\Components\TextInput::make('last_name')
                             ->label(__("general.LastName"))
                             ->required()
+                            ->disabled(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Trabajador');
+                            })
+                            ->dehydrated(true),
                             ->maxLength(255),
                         Forms\Components\TextInput::make('phone')
                             ->label(__("general.Phone"))
+                            ->disabled(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Trabajador');
+                            })
+                            ->dehydrated(true),
                             ->tel()
                             ->numeric(),
                         Forms\Components\Toggle::make('is_responsable')->label(__("general.Responsable")),
