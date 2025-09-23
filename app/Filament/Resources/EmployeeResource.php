@@ -164,8 +164,6 @@ class EmployeeResource extends Resource
                             return Auth::user()->owner_id;
                         }
                     }),
-
-
                 ])->columns(2),
 
                 Forms\Components\Repeater::make('autos')
@@ -337,7 +335,14 @@ class EmployeeResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(function ($record) {
+                        // Si es owner y el empleado está aprobado, ocultar el botón de editar
+                        if (Auth::user()->hasRole('owner') && $record->status === 'aprobado') {
+                            return false;
+                        }
+                        return true;
+                    }),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ViewAction::make()->visible(fn () => !Auth::user()->hasRole('owner')),
             ])

@@ -753,15 +753,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
 				->visible(auth()->user()->can('rechazar_form::control'))
 				,
                 Tables\Actions\EditAction::make()
-                ->visible(function($record){
-                    if(Auth::user()->hasRole('owner') && Auth::user()->owner_id){
-                        return $record->statusComputed() == 'Pending' ? true : false;
-                    }
-                    return true;
-                }),
+                    ->visible(function($record){
+                        if(Auth::user()->hasRole('owner') && Auth::user()->owner_id){
+                            return $record->statusComputed() == 'Pending' ? true : false;
+                        }
+                        return true;
+                    }),
                 ViewAction::make()
-                ->label('Ver')
-                ->icon('heroicon-o-eye')
+                    ->label('Ver')
+                    ->icon('heroicon-o-eye')
                 ,
             ])
             ->bulkActions([
