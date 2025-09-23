@@ -8,12 +8,16 @@ use Illuminate\Contracts\View\View;
 class MovementsTableWidget extends Widget
 {
     public ?object $record = null;
-
+protected static ?int $sort = null; 
     protected static string $view = 'filament.widgets.movements-table-widget';
 public static function isVisible(): bool
 {
     return false;
 }
+public static function canView(): bool
+    {
+        return false;
+    }
     public function getMovements(): array
     {
         if (!$this->record) return [];
