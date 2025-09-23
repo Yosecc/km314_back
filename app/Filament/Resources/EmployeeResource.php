@@ -387,11 +387,13 @@ class EmployeeResource extends Resource
                             $record->update(['fecha_vencimiento_seguro' => $data['fecha_vencimiento_seguro']]);
                         }
 
-                        // Crear nuevos archivos si están presentes
-                        if (isset($data['files']) && is_array($data['files'])) {
-                            foreach ($data['files'] as $fileData) {
-                                $record->files()->create($fileData);
-                            }
+                         // Crear nuevo archivo si está presente
+                        if (isset($data['file_upload'])) {
+                            $record->files()->create([
+                                'name' => $data['file_name'],
+                                'fecha_vencimiento' => $data['file_fecha_vencimiento'],
+                                'file' => $data['file_upload'],
+                            ]);
                         }
 
                         Notification::make()
