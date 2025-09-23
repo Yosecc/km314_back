@@ -312,7 +312,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->disabled(function(Get $get){
                                 return collect($get('../../income_type'))->contains('Trabajador');
                             })
-                            ->dehydrated(true),
+                            ->dehydrated(true)
                             ->numeric(),
                         Forms\Components\TextInput::make('first_name')
                             ->label(__("general.FirstName"))
@@ -320,7 +320,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->disabled(function(Get $get){
                                 return collect($get('../../income_type'))->contains('Trabajador');
                             })
-                            ->dehydrated(true),
+                            ->dehydrated(true)
                             ->maxLength(255),
                         Forms\Components\TextInput::make('last_name')
                             ->label(__("general.LastName"))
@@ -328,7 +328,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->disabled(function(Get $get){
                                 return collect($get('../../income_type'))->contains('Trabajador');
                             })
-                            ->dehydrated(true),
+                            ->dehydrated(true)
                             ->maxLength(255),
                         Forms\Components\TextInput::make('phone')
                             ->label(__("general.Phone"))
