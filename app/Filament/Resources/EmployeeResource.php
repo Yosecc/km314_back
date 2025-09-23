@@ -255,20 +255,24 @@ class EmployeeResource extends Resource
     {
         $color = '';
         $texto = '';
+        $status = false;
         if($record->isVencidoSeguro()){
             $color = "danger";
             $texto = "Seguro vencido";
+            $status = true;
         }
 
         $vencidosFile = $record->vencidosFile();
         if($vencidosFile){
             $color = "danger";
             $texto = "Documentos  vencidos: ". implode($vencidosFile);
+            $status = true;
         }
 
         return [
             'color' => $color,
-            'texto' => $texto
+            'texto' => $texto,
+            'isVencido' => $status,
         ];
     }
 
@@ -341,6 +345,66 @@ class EmployeeResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('renovar_documentos')
+                    ->label('Renovar Documentos')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->form([
+                        Forms\Components\Section::make('Renovar Seguro')
+                            ->schema([
+                                Forms\Components\DatePicker::make('fecha_vencimiento_seguro')
+                                    ->label('Fecha de vencimiento del seguro')
+                                    ->displayFormat('d/m/Y')
+                                    ->required(),
+                            ])
+                            ->visible(fn ($record) => $record->isVencidoSeguro()),
+
+                        Forms\Components\Section::make('Renovar Documentos')
+                            ->schema([
+                                Forms\Components\Repeater::make('files')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name')
+                                            ->label('Descripción')
+                                            ->required(),
+                                        Forms\Components\DatePicker::make('fecha_vencimiento')
+                                            ->label('Fecha de vencimiento')
+                                            ->displayFormat('d/m/Y')
+                                            ->required(),
+                                        Forms\Components\FileUpload::make('file')
+                                            ->label('Archivo')
+                                            ->required()
+                                            ->storeFileNamesIn('attachment_file_names')
+                                            ->getUploadedFileNameForStorageUsing(function ($file) {
+                                                return $file->getClientOriginalName();
+                                            }),
+                                    ])
+                                    ->defaultItems(1)
+                                    ->columns(1)
+                            ])
+                            ->visible(fn ($record) => $record->vencidosFile()),
+                    ])
+                    ->action(function ($record, $data) {
+                        // Actualizar fecha de vencimiento del seguro si está presente
+                        if (isset($data['fecha_vencimiento_seguro'])) {
+                            $record->update(['fecha_vencimiento_seguro' => $data['fecha_vencimiento_seguro']]);
+                        }
+
+                        // Crear nuevos archivos si están presentes
+                        if (isset($data['files']) && is_array($data['files'])) {
+                            foreach ($data['files'] as $fileData) {
+                                $record->files()->create($fileData);
+                            }
+                        }
+
+                        Notification::make()
+                            ->title('Documentos renovados exitosamente')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(function ($record) {
+                        $vencimientos = self::isVencimientos($record);
+                        return $vencimientos['isVencido'];
+                    }),
                 Tables\Actions\EditAction::make()
                     ->visible(function ($record) {
                         // Si es owner y el empleado está aprobado, ocultar el botón de editar
