@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-
+   use Filament\Tables\Columns\IconColumn;
 class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
@@ -49,12 +49,12 @@ class EmployeeResource extends Resource
                 Forms\Components\Grid::make(2)
                 ->schema([
                     Forms\Components\Hidden::make('status')
-                    ->default(function(){
-                        if (Auth::user()->hasRole('owner')) {
-                            return 'pendiente';
-                        }
-                        return 'aprobado'; // Para admin u otros roles
-                    }),
+                        ->default(function(){
+                            if (Auth::user()->hasRole('owner')) {
+                                return 'pendiente';
+                            }
+                            return 'aprobado'; // Para admin u otros roles
+                        }),
                     Forms\Components\Select::make('work_id')
                         ->label(__("general.Work"))
                         ->required()
@@ -319,6 +319,20 @@ class EmployeeResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                 
+
+                IconColumn::make('status')
+                    ->icon(fn (string $state): string => match ($state) {
+                        'rechazado' => 'heroicon-o-x-circle',
+                        'pendiente' => 'heroicon-o-clock',
+                        'aprobado' => 'heroicon-o-check-circle',
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'pendiente' => 'warning',
+                        'aprobado' => 'success',
+                        'rechazado' => 'danger',
+                        default => 'gray',
+                    })
             ])
             ->filters([
                 //
