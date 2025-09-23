@@ -48,6 +48,13 @@ class EmployeeResource extends Resource
             ->schema([
                 Forms\Components\Grid::make(2)
                 ->schema([
+                    Forms\Components\Hidden::make('status')
+                    ->default(function(){
+                        if (Auth::user()->hasRole('owner')) {
+                            return 'pendiente';
+                        }
+                        return 'aprobado'; // Para admin u otros roles
+                    }),
                     Forms\Components\Select::make('work_id')
                         ->label(__("general.Work"))
                         ->required()
