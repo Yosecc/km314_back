@@ -348,7 +348,7 @@ class EmployeeResource extends Resource
             ])
             ->actions([
                 Tables\Actions\Action::make('renovar_documentos')
-                    ->label('Renovar Documentos')
+                    ->label('Renovar Seguro')
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
                     ->form([

@@ -306,39 +306,73 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->label(__("general.Peoples"))
                     ->relationship()
                     ->schema([
-                        Forms\Components\TextInput::make('dni')
-                            ->label(__("general.DNI"))
-                            ->required()
-                            ->disabled(function(Get $get){
-                                return collect($get('../../income_type'))->contains('Trabajador');
-                            })
-                            ->dehydrated(true)
-                            ->numeric(),
-                        Forms\Components\TextInput::make('first_name')
-                            ->label(__("general.FirstName"))
-                            ->required()
-                            ->disabled(function(Get $get){
-                                return collect($get('../../income_type'))->contains('Trabajador');
-                            })
-                            ->dehydrated(true)
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('last_name')
-                            ->label(__("general.LastName"))
-                            ->required()
-                            ->disabled(function(Get $get){
-                                return collect($get('../../income_type'))->contains('Trabajador');
-                            })
-                            ->dehydrated(true)
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('phone')
-                            ->label(__("general.Phone"))
-                           
-                            ->tel()
-                            ->numeric(),
-                        Forms\Components\Toggle::make('is_responsable')->label(__("general.Responsable")),
-                        Forms\Components\Toggle::make('is_acompanante')->label(__("general.Acompanante")),
-                        Forms\Components\Toggle::make('is_menor')->label(__("general.Minor")),
-                    ])
+        Forms\Components\TextInput::make('dni')
+            ->label(__("general.DNI"))
+            ->required()
+            ->disabled(function(Get $get){
+                return collect($get('../../income_type'))->contains('Trabajador');
+            })
+            ->dehydrated(true)
+            ->numeric(),
+        Forms\Components\TextInput::make('first_name')
+            ->label(__("general.FirstName"))
+            ->required()
+            ->disabled(function(Get $get){
+                return collect($get('../../income_type'))->contains('Trabajador');
+            })
+            ->dehydrated(true)
+            ->maxLength(255)
+            ->live()
+            ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                // Solo agregar archivo si es "Inquilino"
+                if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
+                    $currentFiles = $get('../../files') ?? [];
+                    $lastName = $get('last_name') ?? '';
+                    
+                    $currentFiles[] = [
+                        'description' => "DNI: {$state} {$lastName}",
+                        'file' => null
+                    ];
+                    
+                    $set('../../files', $currentFiles);
+                }
+            }),
+        Forms\Components\TextInput::make('last_name')
+            ->label(__("general.LastName"))
+            ->required()
+            ->disabled(function(Get $get){
+                return collect($get('../../income_type'))->contains('Trabajador');
+            })
+            ->dehydrated(true)
+            ->maxLength(255)
+            ->live()
+            ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                // Actualizar la descripción si ya existe el archivo
+                if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
+                    $firstName = $get('first_name') ?? '';
+                    if (!empty($firstName)) {
+                        $currentFiles = $get('../../files') ?? [];
+                        
+                        // Buscar y actualizar el archivo correspondiente
+                        foreach ($currentFiles as $index => $file) {
+                            if (str_contains($file['description'] ?? '', "DNI: {$firstName}")) {
+                                $currentFiles[$index]['description'] = "DNI: {$firstName} {$state}";
+                                break;
+                            }
+                        }
+                        
+                        $set('../../files', $currentFiles);
+                    }
+                }
+            }),
+        Forms\Components\TextInput::make('phone')
+            ->label(__("general.Phone"))
+            ->tel()
+            ->numeric(),
+        Forms\Components\Toggle::make('is_responsable')->label(__("general.Responsable")),
+        Forms\Components\Toggle::make('is_acompanante')->label(__("general.Acompanante")),
+        Forms\Components\Toggle::make('is_menor')->label(__("general.Minor")),
+    ])
                     ->columns(4)->columnSpanFull(),
 
                 Forms\Components\Repeater::make('autos')
@@ -391,7 +425,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ])
                     ->columns(2)
                     ->defaultItems(0)
-                    ->columnSpanFull(),
+                    ->columnSpanFull()->visible(function(Get $get){
+                        return !collect($get('income_type'))->contains('Trabajador');
+                    }),
 
                 Forms\Components\TextInput::make('observations')
                     ->columnSpanFull()
