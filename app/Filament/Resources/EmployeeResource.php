@@ -108,39 +108,55 @@ class EmployeeResource extends Resource
                         ->displayFormat('d/m/Y')
                         ->live()
                         ,
-                    Forms\Components\Select::make('owner_id')
-                        ->label('Propietario')
-                        ->searchable()
-                        ->options(function(){
-                            return Owner::get()->map(function($owner){
-                                $owner['texto'] = $owner->nombres();
-                                return $owner;
-                            })->pluck('texto','id')->toArray();
-                        })
-                        ->default(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return Auth::user()->owner_id;
-                            }
-                        })
-                        // ->disabled(function(){
-                        //     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                        //         return true;
-                        //     }
-                        //     return false;
-                        // })
-                        // ->dehydrated(function(){
-                        //     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                        //         return true;
-                        //     }
-                        //     return false;
-                        // })
-                        ->visible(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return false;
-                            }
-                            return true;
-                        })
+                    // Forms\Components\Select::make('owner_id')
+                    //     ->label('Propietario')
+                    //     ->searchable()
+                    //     ->options(function(){
+                    //         return Owner::get()->map(function($owner){
+                    //             $owner['texto'] = $owner->nombres();
+                    //             return $owner;
+                    //         })->pluck('texto','id')->toArray();
+                    //     })
+                    //     ->default(function(){
+                    //         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                    //             return Auth::user()->owner_id;
+                    //         }
+                    //     })
+                    //     ->visible(function(){
+                    //         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                    //             return false;
+                    //         }
+                    //         return true;
+                    //     }),
+                // Cambiar el select de owner_id por un select múltiple
+                Forms\Components\Select::make('owners')
+                    ->label('Propietarios')
+                    ->multiple()
+                    ->searchable()
+                    ->relationship('owners', 'first_name')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nombres())
+                    ->preload()
+                    ->default(function($record){
+                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            return [Auth::user()->owner_id];
+                        }
+                        // Si es edición y tiene owner_id, incluirlo por defecto
+                        return $record && $record->owner_id ? [$record->owner_id] : [];
+                    })
+                    ->visible(function(){
+                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            return false;
+                        }
+                        return true;
+                    }),
 
+                // Mantener temporalmente el campo owner_id oculto para compatibilidad
+                Forms\Components\Hidden::make('owner_id')
+                    ->default(function(){
+                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            return Auth::user()->owner_id;
+                        }
+                    }),
 
 
                 ])->columns(2),
@@ -250,7 +266,11 @@ class EmployeeResource extends Resource
         return $table
             ->modifyQueryUsing(function (Builder $query) {
                 if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                    $query->where('owner_id', Auth::user()->owner_id);
+                    $query->where(function($q) {
+                        $q->whereHas('owners', function($ownerQuery) {
+                            $ownerQuery->where('owner_id', Auth::user()->owner_id);
+                        })->orWhere('owner_id', Auth::user()->owner_id);
+                    });
                 }
                 return $query->orderBy('created_at', 'desc');
             })
