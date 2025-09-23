@@ -40,17 +40,7 @@ class OwnerResource extends Resource implements HasShieldPermissions
     protected static ?string $recordTitleAttribute = 'first_name';
 
 
-    public function mount(): void
-    {
-        parent::mount();
-        
-        // Tu lógica personalizada aquí
-        // Por ejemplo, verificar permisos adicionales
-        if (auth()->user()->hasRole('owner')) {
-            abort(403);
-        }
-    }
-    
+   
     public static function shouldRegisterNavigation(): bool
     {
         return !auth()->user()->hasRole('owner');
