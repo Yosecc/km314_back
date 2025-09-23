@@ -240,7 +240,14 @@ class EmployeeResource extends Resource
                             return $record ? true : false;
                         }),
                     ])
-                    ->defaultItems(0)
+                    ->defaultItems(1)
+                    ->mutateRelationshipDataBeforeCreateUsing(function (array $data, $state): array {
+                        // Solo para el primer documento (cuando no hay otros documentos)
+                        if (empty($state) || count($state) === 1) {
+                            $data['name'] = 'Seguro';
+                        }
+                        return $data;
+                    })
                     ->columns(1)
             ])->columns(1);
     }
