@@ -332,10 +332,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->maxLength(255),
                         Forms\Components\TextInput::make('phone')
                             ->label(__("general.Phone"))
-                            ->disabled(function(Get $get){
-                                return collect($get('../../income_type'))->contains('Trabajador');
-                            })
-                            ->dehydrated(true),
+                           
                             ->tel()
                             ->numeric(),
                         Forms\Components\Toggle::make('is_responsable')->label(__("general.Responsable")),
