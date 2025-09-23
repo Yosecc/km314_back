@@ -35,11 +35,11 @@ public function getAllTrabajadores()
     // Obtener empleados de la nueva relación many-to-many directamente
     $employees = \App\Models\Employee::whereHas('owners', function($query) {
         $query->where('owner_id', $this->id);
-    })->get();
+    })->where('status', 'aprobado')->get();
     
     // Si no hay empleados en la nueva relación, usar la relación antigua
     if ($employees->isEmpty()) {
-        $employees = $this->trabajadores ?? collect();
+        $employees = $this->trabajadores()->where('status', 'aprobado')->get() ?? collect();
     }
     
     return $employees;
