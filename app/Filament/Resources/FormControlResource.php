@@ -221,12 +221,16 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->options(function() {
                         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                             $trabajadores = Auth::user()->owner->getAllTrabajadores();
-                            return $trabajadores->map(function($trabajador) {
-                                return [
-                                    'id' => $trabajador->id,
-                                    'name' => $trabajador->first_name . ' ' . $trabajador->last_name
-                                ];
-                            })->pluck('name', 'id')->toArray();
+                            
+                            // Verificar que no sea null y sea una colección
+                            if ($trabajadores && $trabajadores->isNotEmpty()) {
+                                return $trabajadores->map(function($trabajador) {
+                                    return [
+                                        'id' => $trabajador->id,
+                                        'name' => $trabajador->first_name . ' ' . $trabajador->last_name
+                                    ];
+                                })->pluck('name', 'id')->toArray();
+                            }
                         }
                         return [];
                     })
