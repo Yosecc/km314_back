@@ -437,7 +437,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->maxLength(255),
                         Forms\Components\Hidden::make('form_control_id'),
                         Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-                        FileUpload::make('file')->label('Archivo')
+                        FileUpload::make('file')->required()->label('Archivo')
                     ])
                     ->columns(2)
                     ->defaultItems(0)
