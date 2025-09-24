@@ -981,7 +981,9 @@ class ActivitiesResource extends Resource
                                         'model' => $model,
                                         'tipo_entrada' => $get('tipo_entrada'),
                                         'num_search' => $get('num_search'),
-                                        'families' => $get('families')
+                                        'families' => $get('families'),
+                                        'peoples' => $get('peoples'),
+                                        'form_control_id' => $get('form_control_id')
                                     ];
                                 })
                                 ->form([
@@ -999,50 +1001,39 @@ class ActivitiesResource extends Resource
                                                 ->maxLength(255),
                                             Forms\Components\TextInput::make('color'),
 
-                                                                                       
-                                                                                        
                                             Forms\Components\Radio::make('model_id')
                                                 ->columnSpanFull()
-                                                ->required()
                                                 ->label(__('general.Select the responsible person'))
-                                                ->afterStateUpdated(function($state, Set $set, Get $get){
-                                                    // Determinar el modelo correcto basado en tipo_entrada
-                                                    $model = match($get('../../tipo_entrada')) {
-                                                        1 => 'Owner',
-                                                        2 => 'Employee',
-                                                        3 => 'FormControl',
-                                                        default => 'Owner'
-                                                    };
-                                                    $set('model', $model);
-                                                    $set('model_id', $state);
+                                                ->afterStateUpdated(function($state, Set $set){
+                                                    $set('model','Owner');
+                                                    $set('model_id',$state);
                                                 })
-                                                ->options(function(Get $get, $context){
-                                                    // Buscar form_control_id en diferentes niveles
-                                                    $formControlId = $get('../../form_control_id') ?? $get('../../../form_control_id') ?? null;
-                                                    
+                                                ->options(function(Get $get , $context){
+
                                                     $data = self::getPeoples([
-                                                        'tipo_entrada' => $get('../../tipo_entrada'),
-                                                        'num_search' => $get('../../num_search') ?? '',
-                                                        'form_control_id' => $formControlId,
+                                                        'tipo_entrada' =>  $get('../../tipo_entrada'),
+                                                        'num_search' => $get('../../num_search'),
+                                                        'form_control_id' => $get('../../form_control_id') ?? null,
                                                         'tipo' => 'option',
-                                                        'ids' => [],
+                                                        'ids' =>  $get('../../peoples'),
                                                     ]);
-                                            
+
+
+                                                    // dd($data, $visitantes);
                                                     return $data;
                                                 })
                                                 ->descriptions(function(Get $get, $context){
-                                                    // Buscar form_control_id en diferentes niveles
-                                                    $formControlId = $get('../../form_control_id') ?? $get('../../../form_control_id') ?? null;
-                                                    
+
                                                     $data = self::getPeoples([
-                                                        'tipo_entrada' => $get('../../tipo_entrada'),
-                                                        'num_search' => $get('../../num_search') ?? '',
-                                                        'form_control_id' => $formControlId,
+                                                        'tipo_entrada' =>  $get('../../tipo_entrada'),
+                                                        'num_search' => $get('../../num_search'),
                                                         'tipo' => 'descriptions',
-                                                        'ids' => [],
+                                                        'form_control_id' => $get('../../form_control_id') ?? null,
+                                                        'ids' =>   $get('../../peoples'),
                                                     ]);
-                                            
+
                                                     return $data;
+
                                                 }),
 
                                             Forms\Components\Radio::make('familiar_model_id')->label('')
