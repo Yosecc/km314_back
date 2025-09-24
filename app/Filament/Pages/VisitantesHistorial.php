@@ -73,9 +73,20 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
             ->defaultGroup('lote')
             ->columns([
                 Tables\Columns\TextColumn::make('model_id')->label('Form')
-                    ->visible(function($record){
-                        return $record && $record->model == 'FormControl';
-                    })
+                    ->formatStateUsing(function ($state, $record) {
+                            if (!$record) {
+                                return '-';
+                            }
+                            
+                            return match ($record->model) {
+                                'FormControl' => $record->model_id,
+                                'Owner' => 'Propietario',
+                                'Employee' => 'Empleado',
+                                'OwnerFamily' => 'Familiar',
+                                'OwnerSpontaneousVisit' => 'Visita',
+                                default => $record->model ?? '-',
+                            };
+                        })
                     ->searchable(),
                 Tables\Columns\TextColumn::make('dni')->label('DNI')->searchable(),
                 Tables\Columns\TextColumn::make('first_name')->label('Nombre')->searchable(),
