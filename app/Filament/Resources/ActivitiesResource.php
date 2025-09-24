@@ -71,7 +71,7 @@ class ActivitiesResource extends Resource
             $query->whereHas('autos', function ($query) use ($dni){
                 $query->where('patente','like','%'.$dni.'%');
             });
-        })->limit(10)->get();
+        })->where('model_origen','Employee')->limit(10)->get();
 
 
         $mapeo = function($employee) use ($type){
@@ -568,7 +568,7 @@ class ActivitiesResource extends Resource
                  */
                 Forms\Components\Fieldset::make('peoples_list')->label(__('general.Peoples'))
                     ->columns(2)
-                    ->schema([
+                    ->schema([  
 
                         /**
                          * PERSONAS
@@ -659,7 +659,8 @@ class ActivitiesResource extends Resource
                         /**
                          * FAMILIARES
                          */
-                        Forms\Components\CheckboxList::make('families')->label(__('general.Familiares'))
+                        Forms\Components\CheckboxList::make('families')
+                            ->label(__('general.Familiares'))
                             ->searchable()
                             ->options(function(Get $get, $context){
 
