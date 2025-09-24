@@ -110,7 +110,7 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
 
                             $activity = Activities::where('form_control_id',$formControlPerson->form_control_id)->first();
                             if($activity){
-                                return route('filament.resources.activities.records.view', $activity->id);
+                                return route('filament.admin.resources.activities.view', $activity->id);
                             }
                         }
                         return '#';
