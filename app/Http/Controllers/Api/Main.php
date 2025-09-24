@@ -61,6 +61,63 @@ class Main extends Controller
         return response()->json(['empleados'=>$empleados,'tipo_empleos' => Works::where('status', true)->orderBy('name','asc')->get()], 200);
     }
 
+    public function empleadosStore(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            // 'work_id'  => 'required',
+            'dni' => 'required',
+            'first_name' => 'required',
+            'last_name'  => 'required',
+            'phone' => 'required',
+            'fecha_vencimiento_seguro' => 'required',
+            'files' => 'array', // Validar que files sea un array
+            'files.*.name' => 'required|string', // Cada archivo debe tener nombre
+            'files.*.file' => 'required|file', // Cada archivo debe ser un archivo válido
+            'files.*.fecha_vencimiento' => 'nullable|date', // Fecha de vencimiento opcional
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json( ['status' => false, 'errors' => $validator->errors() ], 422);
+        }
+
+        // Usar create() en lugar de insert() para obtener el modelo creado
+        $employee = Employee::create([
+            'work_id' => 36,
+            'dni' => $request->dni,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'phone' => $request->phone,
+            'user_id' => $request->user()->id,
+            'fecha_vencimiento_seguro' => $request->fecha_vencimiento_seguro,
+            'owner_id' => $request->user()->owner->id,
+            'model_origen' => 'Owner',
+            'model_origen_id' => $request->user()->owner->id,
+            'status' => 'pendiente', // Agregar status por defecto
+        ]);
+
+        // Asociar la relación owners (tabla pivot)
+        $employee->owners()->attach($request->user()->owner->id);
+
+        // Procesar y guardar archivos si existen
+        if ($request->has('files') && is_array($request->files)) {
+            foreach ($request->files as $fileData) {
+                // Guardar el archivo en storage
+                $filePath = $fileData['file']->store('employee-files', 'public');
+                
+                // Crear el registro en la base de datos
+                $employee->files()->create([
+                    'name' => $fileData['name'],
+                    'file' => $filePath,
+                    'fecha_vencimiento' => $fileData['fecha_vencimiento'] ?? null,
+                ]);
+            }
+        }
+
+        return response()->json(['status' => true, 'message' => 'Registro guardado con archivos' ], 200);
+    }
+
+
+
     public function resourceEmpleados(Request $request)
     {
         $validator = Validator::make($request->all(), [
