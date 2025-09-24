@@ -50,6 +50,10 @@ class EmployeeResource extends Resource
             ->schema([
                 Forms\Components\Grid::make(2)
                 ->schema([
+                    Forms\Components\Placeholder::make('info')
+                        ->label('Información')
+                        ->content('Complete todos los campos requeridos. Los empleados creados por propietarios requieren aprobación.')
+                        ->columnSpanFull(),
                     Forms\Components\Hidden::make('status')
                         ->default(function(){
                             if (Auth::user()->hasRole('owner')) {
