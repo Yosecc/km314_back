@@ -1001,7 +1001,8 @@ class ActivitiesResource extends Resource
                                                 ->required()
                                                 ->maxLength(255),
                                             Forms\Components\TextInput::make('color'),
-                                            Forms\Components\TextInput::make('color')->default(function(Get $get){
+                                            Forms\Components\Hidden::make('model_id')
+                                            ->default(function(Get $get){
                                                 return $get('../../form_control_id');
                                             }),
 
