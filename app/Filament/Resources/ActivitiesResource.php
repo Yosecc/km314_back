@@ -1005,7 +1005,7 @@ class ActivitiesResource extends Resource
                                                 ->columnSpanFull()
                                                 ->label(__('general.Select the responsible person'))
                                                 ->afterStateUpdated(function($state, Set $set){
-                                                    $set('model','Owner');
+                                                    // $set('model','Owner');
                                                     $set('model_id',$state);
                                                 })
                                                 ->options(function(Get $get , $context){
