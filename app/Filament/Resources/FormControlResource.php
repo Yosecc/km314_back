@@ -141,7 +141,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 return array_search("lote", $get('access_type')) !== false ? true : false;
                             })
                             ->live(),
-
+  
                         Forms\Components\Radio::make('income_type')
                             ->label(__("general.TypeIncome"))
                             ->options(function(){
@@ -317,7 +317,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->label(__("general.DNI"))
                             ->required()
                             ->disabled(function(Get $get){
-                                return collect($get('../../income_type'))->contains('Trabajador');
+                                return collect($get('../../income_type'))->contains('Trabajador') && auth()->user()->hasRole('owner');
                             })
                             ->dehydrated(true)
                             ->numeric(),
@@ -327,7 +327,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->label(__("general.FirstName"))
                             ->required()
                             ->disabled(function(Get $get){
-                                return collect($get('../../income_type'))->contains('Trabajador');
+                                return collect($get('../../income_type'))->contains('Trabajador') && auth()->user()->hasRole('owner');
                             })
                             ->dehydrated(true)
                             ->maxLength(255)
@@ -365,7 +365,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->label(__("general.LastName"))
                             ->required()
                             ->disabled(function(Get $get){
-                                return collect($get('../../income_type'))->contains('Trabajador');
+                                return collect($get('../../income_type'))->contains('Trabajador') && auth()->user()->hasRole('owner');
                             })
                             ->dehydrated(true)
                             ->maxLength(255)
