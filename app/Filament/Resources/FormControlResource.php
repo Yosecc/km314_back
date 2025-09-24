@@ -234,7 +234,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         }
                         return [];
                     })
-                    ->visible(function(){
+                      ->visible(function(Get $get){
+                            // Solo visible si está seleccionado "Trabajador" Y el usuario es owner con trabajadores
+                            $isWorkerSelected = collect($get('income_type'))->contains('Trabajador');
+                            
+                            if (!$isWorkerSelected) {
+                                return false;
+                            }
+
                         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                             // Verificar si hay trabajadores en cualquiera de las dos relaciones
                             $hasEmployees = \App\Models\Employee::whereHas('owners', function($query) {
