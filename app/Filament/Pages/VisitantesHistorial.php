@@ -77,8 +77,13 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
                             if (!$record) {
                                 return '-';
                             }
+                            $FormControl = null;
+                            if($record->model == 'FormControl'){
+                                $formControlPerson = FormControlPeople::where('id',$record->model_id)->first();
+                                $FormControl = $formControlPerson->form_control_id ?? 0;
+                            }
                             return match ($record->model) {
-                                'FormControl' => $record->model_id,
+                                'FormControl' => $FormControl,
                                 'Owner' => 'Propietario',
                                 'Employee' => 'Empleado',
                                 'OwnerFamily' => 'Familiar',
