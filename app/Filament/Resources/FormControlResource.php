@@ -142,7 +142,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             })
                             ->live(),
 
-                        Forms\Components\CheckboxList::make('income_type')
+                        Forms\Components\Radio::make('income_type')
                             ->label(__("general.TypeIncome"))
                             ->options(function(){
                                 if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
