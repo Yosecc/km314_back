@@ -116,8 +116,17 @@ class Main extends Controller
         return response()->json(['status' => true, 'message' => 'Registro guardado con archivos' ], 200);
     }
 
+    
     public function empleadosUpdate(Request $request, $id)
     {
+        // Debug: Ver todos los datos que llegan
+        \Log::info('empleadosUpdate - Request data:', [
+            'all_data' => $request->all(),
+            'files_data' => $request->file('files'),
+            'has_files' => $request->hasFile('files'),
+            'files_input' => $request->input('files'),
+        ]);
+    
         $validator = Validator::make($request->all(), [
             'dni' => 'required',
             'first_name' => 'required',
@@ -129,20 +138,22 @@ class Main extends Controller
             'files.*.file' => 'required|file', // Cada archivo debe ser un archivo válido
             'files.*.fecha_vencimiento' => 'nullable|date', // Fecha de vencimiento opcional
         ]);
-
+    
         if ($validator->fails()) {
+            \Log::error('empleadosUpdate - Validation failed:', $validator->errors()->toArray());
             return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
         }
-
+    
         // Buscar el empleado que pertenece al owner
         $employee = Employee::where('id', $id)
             ->where('owner_id', $request->user()->owner->id)
             ->first();
-
+    
         if (!$employee) {
+            \Log::error('empleadosUpdate - Employee not found:', ['id' => $id, 'owner_id' => $request->user()->owner->id]);
             return response()->json(['status' => false, 'message' => 'Empleado no encontrado'], 404);
         }
-
+    
         // Actualizar los datos del empleado
         $employee->update([
             'dni' => $request->dni,
@@ -151,22 +162,66 @@ class Main extends Controller
             'phone' => $request->phone,
             'fecha_vencimiento_seguro' => $request->fecha_vencimiento_seguro,
         ]);
-
+    
+        \Log::info('empleadosUpdate - Employee updated successfully');
+    
+        // Debug: Verificar archivos antes de procesarlos
+        \Log::info('empleadosUpdate - Files check:', [
+            'has_files_input' => $request->has('files'),
+            'files_is_array' => is_array($request->input('files')),
+            'files_count' => $request->has('files') ? count($request->input('files', [])) : 0,
+            'hasFile_files' => $request->hasFile('files'),
+        ]);
+    
         // Procesar y agregar nuevos archivos si existen
-        if ($request->has('files') && is_array($request->files)) {
-            foreach ($request->files as $fileData) {
-                // Guardar el archivo en storage
-                $filePath = $fileData['file']->store('employee-files', 'public');
-                
-                // Crear el registro en la base de datos
-                $employee->files()->create([
-                    'name' => $fileData['name'],
-                    'file' => $filePath,
-                    'fecha_vencimiento' => $fileData['fecha_vencimiento'] ?? null,
+        if ($request->has('files') && is_array($request->input('files'))) {
+            \Log::info('empleadosUpdate - Processing files...');
+            
+            $files = $request->input('files');
+            foreach ($files as $index => $fileData) {
+                \Log::info("empleadosUpdate - Processing file {$index}:", [
+                    'file_data' => $fileData,
+                    'has_file_key' => isset($fileData['file']),
+                    'file_type' => isset($fileData['file']) ? gettype($fileData['file']) : 'not_set',
                 ]);
+    
+                // Verificar si el archivo está en el request
+                if ($request->hasFile("files.{$index}.file")) {
+                    $file = $request->file("files.{$index}.file");
+                    \Log::info("empleadosUpdate - File found:", [
+                        'original_name' => $file->getClientOriginalName(),
+                        'size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                    ]);
+    
+                    try {
+                        // Guardar el archivo en storage
+                        $filePath = $file->store('employee-files', 'public');
+                        \Log::info("empleadosUpdate - File stored:", ['path' => $filePath]);
+                        
+                        // Crear el registro en la base de datos
+                        $fileRecord = $employee->files()->create([
+                            'name' => $fileData['name'],
+                            'file' => $filePath,
+                            'fecha_vencimiento' => $fileData['fecha_vencimiento'] ?? null,
+                        ]);
+                        
+                        \Log::info("empleadosUpdate - File record created:", ['record_id' => $fileRecord->id]);
+                        
+                    } catch (\Exception $e) {
+                        \Log::error("empleadosUpdate - Error processing file {$index}:", [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                    }
+                } else {
+                    \Log::warning("empleadosUpdate - File not found in request:", ['index' => $index]);
+                }
             }
+        } else {
+            \Log::info('empleadosUpdate - No files to process');
         }
-
+    
         return response()->json(['status' => true, 'message' => 'Empleado actualizado correctamente'], 200);
     }
 
