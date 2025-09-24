@@ -72,6 +72,27 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
             ->query(PersonaEnElBarrio::query())
             ->defaultGroup('lote')
             ->columns([
+                Tables\Columns\TextColumn::make('model_id')->label('Form')
+                    ->formatStateUsing(function ($state, $record) {
+                            if (!$record) {
+                                return '-';
+                            }
+                            $FormControl = null;
+                            if($record->model == 'FormControl'){
+                                $formControlPerson = FormControlPeople::where('id',$record->model_id)->first();
+                                $FormControl = $formControlPerson->form_control_id ?? 0;
+                            }
+                            return match ($record->model) {
+                                'FormControl' => $FormControl,
+                                'Owner' => 'Propietario',
+                                'Employee' => 'Empleado',
+                                'OwnerFamily' => 'Familiar',
+                                'OwnerSpontaneousVisit' => 'Visita',
+                                default => $record->model ?? '-',
+                            };
+                        })
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('dni')->label('DNI')->searchable(),
                 Tables\Columns\TextColumn::make('first_name')->label('Nombre')->searchable(),
                 Tables\Columns\TextColumn::make('last_name')->label('Apellido')->searchable(),
                 Tables\Columns\TextColumn::make('tipo')->label('Tipo')->searchable(),
@@ -80,12 +101,30 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
                     ->searchable()
                     ,
                 Tables\Columns\TextColumn::make('ultima_entrada')
-                    ->label('ultima_entrada')
+                    ->label('Última Entrada')
                     ->searchable()
                     ->summarize(Count::make()->label('Total personas')),
 
             ])
             ->actions([
+                Action::make('ver_actividad')
+                    ->label('Ver Actividad')
+                    ->url(function(PersonaEnElBarrio $record){
+                        if($record->model == 'FormControl'){
+                            $formControlPerson = FormControlPeople::where('id',$record->model_id)->first();
+
+                            $activity = Activities::where('form_control_id',$formControlPerson->form_control_id)->first();
+                            if($activity){
+                                return route('filament.admin.resources.activities.view', $activity->id);
+                            }
+                        }
+                        return '#';
+                    })
+                    // ->url(fn (PersonaEnElBarrio $record): string => route('filament.resources.visitantes.edit', $record->model_id))
+                    ->icon('heroicon-o-eye')
+                    ->openUrlInNewTab()
+                    ->visible(fn (PersonaEnElBarrio $record): bool => in_array($record->model, ['FormControl']))
+                    ,
                 Action::make('forzar_salida')
                     ->label('Forzar Salida')
                     ->action(function ($record) {

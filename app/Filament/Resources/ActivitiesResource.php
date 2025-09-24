@@ -71,7 +71,7 @@ class ActivitiesResource extends Resource
             $query->whereHas('autos', function ($query) use ($dni){
                 $query->where('patente','like','%'.$dni.'%');
             });
-        })->limit(10)->get();
+        })->where('model_origen','Employee')->limit(10)->get();
 
 
         $mapeo = function($employee) use ($type){
@@ -264,17 +264,36 @@ class ActivitiesResource extends Resource
 
 
 
+       
     public static function createAuto($data, $config)
     {
         $data = collect($data)->map(function($auto) use ($config){
             $auto['user_id'] = Auth::user()->id;
             $auto['created_at'] = Carbon::now();
             $auto['updated_at'] = Carbon::now();
+            
+            // Limpiar campos que no van a la tabla
             unset($auto['familiar_model_id']);
             unset($auto['espontaneo_model_id']);
-
+            
+            // Validar que model_id no sea null
+            // if (empty($auto['model_id'])) {
+            //     throw new \Exception('Debe seleccionar el responsable del vehículo');
+            // }
+            
+            // Asegurar que model esté definido
+            if (empty($auto['model'])) {
+                $auto['model'] = match($config['type']) {
+                    1 => 'Owner',
+                    2 => 'Employee', 
+                    3 => 'FormControl',
+                    default => 'Owner'
+                };
+            }
+    
             return $auto;
         });
+        
         Auto::insert($data->toArray());
     }
 
@@ -301,25 +320,27 @@ class ActivitiesResource extends Resource
 
     }
 
+        
     public static function getPeoples($data)
     {
         self::$PARAMS = [
-            'num_search' => $data['num_search'],
-            'tipo_entrada' => $data['tipo_entrada']
+            'num_search' => $data['num_search'] ?? '',
+            'tipo_entrada' => $data['tipo_entrada'] ?? null,
+            'form_control_id' => $data['form_control_id'] ?? null // Agregar default null
         ];
-
+    
         if( $data['tipo_entrada'] == 2){
             return $data['num_search'] || count($data['ids']) ? self::searchEmployee($data['num_search'], $data['tipo'], $data['ids']) : [];
         }
-
+    
         if( $data['tipo_entrada'] == 1){
             return $data['num_search'] || count($data['ids']) ? self::searchOwners($data['num_search'], $data['tipo'], $data['ids']) : [];
         }
-
-        if( $data['tipo_entrada'] == 3 && $data['form_control_id']){
+    
+        if( $data['tipo_entrada'] == 3 && isset($data['form_control_id']) && $data['form_control_id']){
             return $data['num_search'] || count($data['ids']) ? self::searchFormControl($data['form_control_id'],  $data['tipo'], $data['ids']) : [];
         }
-
+    
         return [];
     }
 
@@ -568,7 +589,7 @@ class ActivitiesResource extends Resource
                  */
                 Forms\Components\Fieldset::make('peoples_list')->label(__('general.Peoples'))
                     ->columns(2)
-                    ->schema([
+                    ->schema([  
 
                         /**
                          * PERSONAS
@@ -654,12 +675,24 @@ class ActivitiesResource extends Resource
                                     });
 
                                 }
+                                if($get('tipo_entrada') == 2){
+                                    Employee::whereIn('id',$state)->get()->each(function($employee) use ($set){
+                                       if($employee->isVencidoSeguro()){
+                                            Notification::make()
+                                                ->title('Empleado con seguro vencido: '.$employee->nombres())
+                                                ->warning()
+                                                ->send();
+                                       }
+                                    });
+
+                                }
                             })
                             ->live(),
                         /**
                          * FAMILIARES
                          */
-                        Forms\Components\CheckboxList::make('families')->label(__('general.Familiares'))
+                        Forms\Components\CheckboxList::make('families')
+                            ->label(__('general.Familiares'))
                             ->searchable()
                             ->options(function(Get $get, $context){
 
@@ -883,6 +916,7 @@ class ActivitiesResource extends Resource
                                     $data = count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
+                                    
                                     $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'option') : [];
                                 }
 
@@ -943,12 +977,14 @@ class ActivitiesResource extends Resource
                                     }else if($get('tipo_entrada') == 3){
                                         $model = 'FormControl';
                                     }
-
+                                  
                                     return [
                                         'model' => $model,
                                         'tipo_entrada' => $get('tipo_entrada'),
                                         'num_search' => $get('num_search'),
-                                        'families' => $get('families')
+                                        'families' => $get('families'),
+                                        'peoples' => $get('peoples'),
+                                        'form_control_id' => $get('form_control_id')
                                     ];
                                 })
                                 ->form([
@@ -965,39 +1001,45 @@ class ActivitiesResource extends Resource
                                                 ->required()
                                                 ->maxLength(255),
                                             Forms\Components\TextInput::make('color'),
+                                            Forms\Components\Hidden::make('model_id')
+                                            ->default(function(Get $get){
+                                                return $get('../../form_control_id');
+                                            }),
 
-                                            Forms\Components\Radio::make('model_id')
-                                                ->columnSpanFull()
-                                                ->label(__('general.Select the responsible person'))
-                                                ->afterStateUpdated(function($state, Set $set){
-                                                    $set('model','Owner');
-                                                    $set('model_id',$state);
-                                                })
-                                                ->options(function(Get $get , $context){
+                                            // Forms\Components\Radio::make('model_id')
+                                            //     ->columnSpanFull()
+                                            //     ->label(__('general.Select the responsible person'))
+                                            //     ->afterStateUpdated(function($state, Set $set){
+                                            //         // $set('model','Owner');
+                                            //         $set('model_id',$state);
+                                            //     })
+                                            //     ->options(function(Get $get , $context){
 
-                                                    $data = self::getPeoples([
-                                                        'tipo_entrada' =>  $get('../../tipo_entrada'),
-                                                        'num_search' => $get('../../num_search'),
-                                                        'tipo' => 'option',
-                                                        'ids' =>  [],
-                                                    ]);
+                                            //         $data = self::getPeoples([
+                                            //             'tipo_entrada' =>  $get('../../tipo_entrada'),
+                                            //             'num_search' => $get('../../num_search'),
+                                            //             'form_control_id' => $get('../../form_control_id') ?? null,
+                                            //             'tipo' => 'option',
+                                            //             'ids' =>  $get('../../peoples'),
+                                            //         ]);
 
 
-                                                    // dd($data, $visitantes);
-                                                    return $data;
-                                                })
-                                                ->descriptions(function(Get $get, $context){
+                                            //         // dd($data, $visitantes);
+                                            //         return $data;
+                                            //     })
+                                            //     ->descriptions(function(Get $get, $context){
 
-                                                    $data = self::getPeoples([
-                                                        'tipo_entrada' =>  $get('../../tipo_entrada'),
-                                                        'num_search' => $get('../../num_search'),
-                                                        'tipo' => 'descriptions',
-                                                        'ids' =>   [],
-                                                    ]);
+                                            //         $data = self::getPeoples([
+                                            //             'tipo_entrada' =>  $get('../../tipo_entrada'),
+                                            //             'num_search' => $get('../../num_search'),
+                                            //             'tipo' => 'descriptions',
+                                            //             'form_control_id' => $get('../../form_control_id') ?? null,
+                                            //             'ids' =>   $get('../../peoples'),
+                                            //         ]);
 
-                                                    return $data;
+                                            //         return $data;
 
-                                                }),
+                                            //     }),
 
                                             Forms\Components\Radio::make('familiar_model_id')->label('')
                                                 ->reactive()
@@ -1051,7 +1093,7 @@ class ActivitiesResource extends Resource
                                                 ->visible(function(Get $get){
                                                     return $get('../../families') && count($get('../../families')) ? true : false;
                                                 }),
-// ALTER TABLE `autos` CHANGE `model` `model` ENUM('Employee','Owner','FormControl','OwnerFamily','OwnerSpontaneousVisit') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
+                                                // ALTER TABLE `autos` CHANGE `model` `model` ENUM('Employee','Owner','FormControl','OwnerFamily','OwnerSpontaneousVisit') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
                                             Forms\Components\Radio::make('espontaneo_model_id')->label('')
                                                 ->reactive()
                                                 ->columnSpanFull()

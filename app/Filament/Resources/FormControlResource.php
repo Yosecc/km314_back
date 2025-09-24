@@ -142,7 +142,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             })
                             ->live(),
 
-                        Forms\Components\CheckboxList::make('income_type')
+                        Forms\Components\Radio::make('income_type')
                             ->label(__("general.TypeIncome"))
                             ->options(function(){
                                 if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
@@ -170,14 +170,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 Radio::make('tipo_trabajo')
                     ->options(Trabajos::get()->pluck('name','name')->toArray())
                     ->visible(function(Get $get){
-                        return collect($get('income_type'))->contains('Trabajador');
+                        return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
                     }),
                 Forms\Components\Select::make('construction_companie_id')
                     ->options(function(){
                         return ConstructionCompanie::get()->pluck('name','id')->toArray();
                     })
                     ->visible(function(Get $get){
-                        return collect($get('income_type'))->contains('Trabajador');
+                        return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
                     })
                     ->live(),
 
@@ -216,17 +216,43 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->columns(4),
 
 
-                CheckboxList::make('technologies')->label('Trabajadores')
-                    ->options(isset(Auth::user()->owner->trabajadores) ? Auth::user()->owner->trabajadores->map(function($trabajador){
-                        $trabajador['name'] = $trabajador->first_name.' '.$trabajador->last_name;
-                        return $trabajador;
-                    })->pluck('name','id')->toArray() : [] )
-                    ->visible(function(){
+                              
+                CheckboxList::make('owners')->label('Trabajadores')
+                    ->options(function() {
                         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                            if(!isset(Auth::user()->owner->trabajadores) || (isset(Auth::user()->owner->trabajadores) && !Auth::user()->owner->trabajadores->count())){
+                            $trabajadores = Auth::user()->owner->getAllTrabajadores();
+                            
+                            // Verificar que no sea null y sea una colección
+                            if ($trabajadores && $trabajadores->isNotEmpty()) {
+                                return $trabajadores->map(function($trabajador) {
+                                    return [
+                                        'id' => $trabajador->id,
+                                        'name' => $trabajador->first_name . ' ' . $trabajador->last_name
+                                    ];
+                                })->pluck('name', 'id')->toArray();
+                            }
+                        }
+                        return [];
+                    })
+                      ->visible(function(Get $get){
+                            // Solo visible si está seleccionado "Trabajador" Y el usuario es owner con trabajadores
+                            $isWorkerSelected = collect($get('income_type'))->contains('Trabajador');
+                            
+                            if (!$isWorkerSelected) {
                                 return false;
                             }
-                            return true;
+
+                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                            // Verificar si hay trabajadores en cualquiera de las dos relaciones
+                            $hasEmployees = \App\Models\Employee::whereHas('owners', function($query) {
+                                $query->where('owner_id', Auth::user()->owner_id);
+                            })->exists();
+                            
+                            if (!$hasEmployees) {
+                                $hasEmployees = \App\Models\Employee::where('owner_id', Auth::user()->owner_id)->exists();
+                            }
+                            
+                            return $hasEmployees;
                         }
                         return false;
                     })
@@ -236,13 +262,29 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->live()
                     ->afterStateUpdated(function (Set $set, Get $get, $state) {
                         $peoples = collect($get('peoples'));
-                        $trabajadores = Auth::user()->owner->trabajadores->whereIn('id', $state);
-
+                        
+                        // Obtener trabajadores seleccionados usando ambas relaciones
+                        $trabajadores = collect();
+                        
+                        // Primero intentar con la nueva relación
+                        $employeesFromPivot = \App\Models\Employee::whereHas('owners', function($query) {
+                            $query->where('owner_id', Auth::user()->owner_id);
+                        })->whereIn('id', $state)->get();
+                        
+                        if ($employeesFromPivot->isNotEmpty()) {
+                            $trabajadores = $employeesFromPivot;
+                        } else {
+                            // Fallback a la relación antigua
+                            $trabajadores = \App\Models\Employee::where('owner_id', Auth::user()->owner_id)
+                                ->whereIn('id', $state)
+                                ->get();
+                        }
+                
                         // Eliminar trabajadores desmarcados
                         $peoples = $peoples->filter(function ($person) use ($trabajadores) {
                             return $trabajadores->contains('dni', $person['dni']) || !is_null($person['dni']);
                         });
-
+                
                         // Agregar trabajadores marcados
                         foreach ($trabajadores as $trabajador) {
                             if (!$peoples->contains('dni', $trabajador->dni)) {
@@ -257,12 +299,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 ]);
                             }
                         }
-
+                
                         // Eliminar registros con valores nulos
                         $peoples = $peoples->filter(function ($person) {
                             return !is_null($person['dni']) && !is_null($person['first_name']) && !is_null($person['last_name']);
                         });
-
+                
                         // Actualizar el estado de 'peoples' sin sobrescribirlo completamente
                         $set('peoples', $peoples->values()->toArray());
                     }),
@@ -274,15 +316,85 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         Forms\Components\TextInput::make('dni')
                             ->label(__("general.DNI"))
                             ->required()
+                            ->disabled(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Trabajador');
+                            })
+                            ->dehydrated(true)
                             ->numeric(),
+                                                
+                                               
                         Forms\Components\TextInput::make('first_name')
                             ->label(__("general.FirstName"))
                             ->required()
-                            ->maxLength(255),
+                            ->disabled(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Trabajador');
+                            })
+                            ->dehydrated(true)
+                            ->maxLength(255)
+                            ->lazy()
+                            ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                                // Solo agregar archivo si es "Inquilino"
+                                if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
+                                    $currentFiles = $get('../../files') ?? [];
+                                    $lastName = $get('last_name') ?? '';
+                                    $dni = $get('dni') ?? '';
+                                    
+                                    // Verificar si ya existe un archivo para este DNI
+                                    $existsForDni = false;
+                                    foreach ($currentFiles as $file) {
+                                        if (isset($file['description']) && str_contains($file['description'], "DNI: {$dni}")) {
+                                            $existsForDni = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // Solo crear si no existe para este DNI
+                                    if (!$existsForDni && !empty($dni)) {
+                                        $currentFiles[] = [
+                                            'description' => "DNI: {$dni} - {$state} {$lastName}",
+                                            'file' => null,
+                                            'user_id' => Auth::user()->id, // Agregar el user_id
+                                            'form_control_id' => null // Se llenará automáticamente por la relación
+                                        ];
+                                        
+                                        $set('../../files', $currentFiles);
+                                    }
+                                }
+                            }),
                         Forms\Components\TextInput::make('last_name')
                             ->label(__("general.LastName"))
                             ->required()
-                            ->maxLength(255),
+                            ->disabled(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Trabajador');
+                            })
+                            ->dehydrated(true)
+                            ->maxLength(255)
+                            ->lazy()
+                            ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                                // Actualizar la descripción si ya existe el archivo para este DNI
+                                if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
+                                    $firstName = $get('first_name') ?? '';
+                                    $dni = $get('dni') ?? '';
+                                    
+                                    if (!empty($firstName) && !empty($dni)) {
+                                        $currentFiles = $get('../../files') ?? [];
+                                        
+                                        // Buscar y actualizar el archivo correspondiente por DNI
+                                        foreach ($currentFiles as $index => $file) {
+                                            if (isset($file['description']) && str_contains($file['description'], "DNI: {$dni}")) {
+                                                $currentFiles[$index]['description'] = "DNI: {$dni} - {$firstName} {$state}";
+                                                // Asegurar que tenga user_id
+                                                if (!isset($currentFiles[$index]['user_id'])) {
+                                                    $currentFiles[$index]['user_id'] = Auth::user()->id;
+                                                }
+                                                break;
+                                            }
+                                        }
+                                        
+                                        $set('../../files', $currentFiles);
+                                    }
+                                }
+                            }),
                         Forms\Components\TextInput::make('phone')
                             ->label(__("general.Phone"))
                             ->tel()
@@ -339,11 +451,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->maxLength(255),
                         Forms\Components\Hidden::make('form_control_id'),
                         Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-                        FileUpload::make('file')->label('Archivo')
+                        FileUpload::make('file')->required()->label('Archivo')
                     ])
                     ->columns(2)
                     ->defaultItems(0)
-                    ->columnSpanFull(),
+                    ->columnSpanFull()->visible(function(Get $get){
+                        return !collect($get('income_type'))->contains('Trabajador');
+                    }),
 
                 Forms\Components\TextInput::make('observations')
                     ->columnSpanFull()
@@ -705,15 +819,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
 				->visible(auth()->user()->can('rechazar_form::control'))
 				,
                 Tables\Actions\EditAction::make()
-                ->visible(function($record){
-                    if(Auth::user()->hasRole('owner') && Auth::user()->owner_id){
-                        return $record->statusComputed() == 'Pending' ? true : false;
-                    }
-                    return true;
-                }),
+                    ->visible(function($record){
+                        if(Auth::user()->hasRole('owner') && Auth::user()->owner_id){
+                            return $record->statusComputed() == 'Pending' ? true : false;
+                        }
+                        return true;
+                    }),
                 ViewAction::make()
-                ->label('Ver')
-                ->icon('heroicon-o-eye')
+                    ->label('Ver')
+                    ->icon('heroicon-o-eye')
                 ,
             ])
             ->bulkActions([

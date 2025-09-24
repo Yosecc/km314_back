@@ -13,11 +13,16 @@ class Employee extends Model
     use HasFactory,SoftDeletes;
 
     protected $hidden = ['created_at','updated_at'];
-    protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id','model_origen','model_origen_id','fecha_vencimiento_seguro','owner_id'];
+    protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id','model_origen','model_origen_id','fecha_vencimiento_seguro','owner_id',"status"];
 
     public function work()
     {
         return $this->belongsTo(Works::class);
+    }
+
+    public function owners()
+    {
+        return $this->belongsToMany(Owner::class);
     }
 
     public function owner()
@@ -47,8 +52,6 @@ class Employee extends Model
         }
         return Carbon::parse($this->fecha_vencimiento_seguro) < now() ? true : false;
     }
-// 30390545
-// 36512777
     public function getFormularios()
     {
         return $this->owner->formControls
@@ -58,6 +61,11 @@ class Employee extends Model
                 return $formControl ? $formControl->isDayRange() : false;
             })
             ->values();
+    }
+
+    public function nombres()
+    {
+        return $this->first_name . ' ' . $this->last_name;
     }
 
     public function isFormularios()

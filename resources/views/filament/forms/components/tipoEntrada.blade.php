@@ -30,6 +30,12 @@
                     @if($key == 1)
                     <span style="font-size: 14px; margin: 0px; padding: 0px">y/o familiares</span>
                     @endif
+                    @if($key == 2)
+                    <span style="font-size: 14px; margin: 0px; padding: 0px">Km314</span>
+                    @endif
+                    @if($key == 3)
+                    <span style="font-size: 14px; margin: 0px; padding: 0px">Formularios</span>
+                    @endif
                 </div>
 
                 </div>
@@ -61,6 +67,12 @@
                     @if($key == 1)
                     <span style="font-size: 14px; margin: 0px; padding: 0px">y/o familiares</span>
                     @endif
+                    @if($key == 2)
+                    <span style="font-size: 14px; margin: 0px; padding: 0px">Km314</span>
+                    @endif
+                    @if($key == 3)
+                    <span style="font-size: 14px; margin: 0px; padding: 0px">Formularios</span>
+                    @endif 
                 </div>
 
                 </div>

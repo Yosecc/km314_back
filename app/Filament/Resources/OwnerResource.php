@@ -40,7 +40,7 @@ class OwnerResource extends Resource implements HasShieldPermissions
     protected static ?string $recordTitleAttribute = 'first_name';
 
 
-
+   
     public static function shouldRegisterNavigation(): bool
     {
         return !auth()->user()->hasRole('owner');

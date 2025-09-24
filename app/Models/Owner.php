@@ -24,7 +24,26 @@ class Owner extends Model
         return $this->hasMany(Employee::class,'owner_id');
     }
 
+ // Nueva relación muchos-a-muchos
+    public function empleados()
+    {
+        return $this->belongsToMany(Employee::class, 'employee_owner');
+    }
 
+public function getAllTrabajadores()
+{
+    // Obtener empleados de la nueva relación many-to-many directamente
+    $employees = \App\Models\Employee::whereHas('owners', function($query) {
+        $query->where('owner_id', $this->id);
+    })->where('status', 'aprobado')->get();
+    
+    // Si no hay empleados en la nueva relación, usar la relación antigua
+    if ($employees->isEmpty()) {
+        $employees = $this->trabajadores()->where('status', 'aprobado')->get() ?? collect();
+    }
+    
+    return $employees;
+}
 
     public function activitiePeople()
     {

@@ -14,6 +14,7 @@ public static function isVisible(): bool
 {
     return false;
 }
+
     public function getMovements(): array
     {
         if (!$this->record) return [];
