@@ -61,8 +61,17 @@ class Main extends Controller
         return response()->json(['empleados'=>$empleados,'tipo_empleos' => Works::where('status', true)->orderBy('name','asc')->get()], 200);
     }
 
+       
     public function empleadosStore(Request $request)
     {
+        // Debug: Ver todos los datos que llegan
+        \Log::info('empleadosStore - Request data:', [
+            'all_data' => $request->all(),
+            'files_data' => $request->file('files'),
+            'has_files' => $request->hasFile('files'),
+            'files_input' => $request->input('files'),
+        ]);
+    
         $validator = Validator::make($request->all(), [
             // 'work_id'  => 'required',
             'dni' => 'required',
@@ -75,11 +84,12 @@ class Main extends Controller
             'files.*.file' => 'required|file', // Cada archivo debe ser un archivo válido
             'files.*.fecha_vencimiento' => 'nullable|date', // Fecha de vencimiento opcional
         ]);
-
+    
         if ($validator->fails()) {
+            \Log::error('empleadosStore - Validation failed:', $validator->errors()->toArray());
             return response()->json( ['status' => false, 'errors' => $validator->errors() ], 422);
         }
-
+    
         // Usar create() en lugar de insert() para obtener el modelo creado
         $employee = Employee::create([
             'work_id' => 36,
@@ -94,25 +104,69 @@ class Main extends Controller
             'model_origen_id' => $request->user()->owner->id,
             'status' => 'pendiente', // Agregar status por defecto
         ]);
-
+    
         // Asociar la relación owners (tabla pivot)
         $employee->owners()->attach($request->user()->owner->id);
-
-        // Procesar y guardar archivos si existen
-        if ($request->has('files') && is_array($request->files)) {
-            foreach ($request->files as $fileData) {
-                // Guardar el archivo en storage
-                $filePath = $fileData['file']->store('employee-files', 'public');
-                
-                // Crear el registro en la base de datos
-                $employee->files()->create([
-                    'name' => $fileData['name'],
-                    'file' => $filePath,
-                    'fecha_vencimiento' => $fileData['fecha_vencimiento'] ?? null,
+    
+        \Log::info('empleadosStore - Employee created successfully', ['employee_id' => $employee->id]);
+    
+        // Debug: Verificar archivos antes de procesarlos
+        \Log::info('empleadosStore - Files check:', [
+            'has_files_input' => $request->has('files'),
+            'files_is_array' => is_array($request->input('files')),
+            'files_count' => $request->has('files') ? count($request->input('files', [])) : 0,
+            'hasFile_files' => $request->hasFile('files'),
+        ]);
+    
+        // Procesar y guardar archivos si existen - USAR LA MISMA LÓGICA QUE UPDATE
+        if ($request->has('files') && is_array($request->input('files'))) {
+            \Log::info('empleadosStore - Processing files...');
+            
+            $files = $request->input('files');
+            foreach ($files as $index => $fileData) {
+                \Log::info("empleadosStore - Processing file {$index}:", [
+                    'file_data' => $fileData,
+                    'has_file_key' => isset($fileData['file']),
+                    'file_type' => isset($fileData['file']) ? gettype($fileData['file']) : 'not_set',
                 ]);
+    
+                // Verificar si el archivo está en el request
+                if ($request->hasFile("files.{$index}.file")) {
+                    $file = $request->file("files.{$index}.file");
+                    \Log::info("empleadosStore - File found:", [
+                        'original_name' => $file->getClientOriginalName(),
+                        'size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                    ]);
+    
+                    try {
+                        // Guardar el archivo en storage
+                        $filePath = $file->store('employee-files', 'public');
+                        \Log::info("empleadosStore - File stored:", ['path' => $filePath]);
+                        
+                        // Crear el registro en la base de datos
+                        $fileRecord = $employee->files()->create([
+                            'name' => $fileData['name'],
+                            'file' => $filePath,
+                            'fecha_vencimiento' => $fileData['fecha_vencimiento'] ?? null,
+                        ]);
+                        
+                        \Log::info("empleadosStore - File record created:", ['record_id' => $fileRecord->id]);
+                        
+                    } catch (\Exception $e) {
+                        \Log::error("empleadosStore - Error processing file {$index}:", [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                    }
+                } else {
+                    \Log::warning("empleadosStore - File not found in request:", ['index' => $index]);
+                }
             }
+        } else {
+            \Log::info('empleadosStore - No files to process');
         }
-
+    
         return response()->json(['status' => true, 'message' => 'Registro guardado con archivos' ], 200);
     }
 
