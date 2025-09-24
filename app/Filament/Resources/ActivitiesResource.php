@@ -999,37 +999,43 @@ class ActivitiesResource extends Resource
                                                 ->maxLength(255),
                                             Forms\Components\TextInput::make('color'),
 
+                                                                                       
                                             Forms\Components\Radio::make('model_id')
                                                 ->columnSpanFull()
+                                                ->required() // Agregar required
                                                 ->label(__('general.Select the responsible person'))
-                                                ->afterStateUpdated(function($state, Set $set){
-                                                    $set('model','Owner');
-                                                    $set('model_id',$state);
+                                                ->afterStateUpdated(function($state, Set $set, Get $get){
+                                                    // Determinar el modelo correcto basado en tipo_entrada
+                                                    $model = match($get('../../tipo_entrada')) {
+                                                        1 => 'Owner',
+                                                        2 => 'Employee',
+                                                        3 => 'FormControl',
+                                                        default => 'Owner'
+                                                    };
+                                                    $set('model', $model);
+                                                    $set('model_id', $state);
                                                 })
-                                                ->options(function(Get $get , $context){
-
+                                                ->options(function(Get $get, $context){
                                                     $data = self::getPeoples([
-                                                        'tipo_entrada' =>  $get('../../tipo_entrada'),
-                                                        'num_search' => $get('../../num_search'),
+                                                        'tipo_entrada' => $get('../../tipo_entrada'),
+                                                        'num_search' => $get('../../num_search') ?? '',
+                                                        'form_control_id' => $get('../../form_control_id') ?? null, // Agregar este parámetro
                                                         'tipo' => 'option',
-                                                        'ids' =>  [],
+                                                        'ids' => [],
                                                     ]);
-
-
-                                                    // dd($data, $visitantes);
+                                            
                                                     return $data;
                                                 })
                                                 ->descriptions(function(Get $get, $context){
-
                                                     $data = self::getPeoples([
-                                                        'tipo_entrada' =>  $get('../../tipo_entrada'),
-                                                        'num_search' => $get('../../num_search'),
+                                                        'tipo_entrada' => $get('../../tipo_entrada'),
+                                                        'num_search' => $get('../../num_search') ?? '',
+                                                        'form_control_id' => $get('../../form_control_id') ?? null, // Agregar este parámetro
                                                         'tipo' => 'descriptions',
-                                                        'ids' =>   [],
+                                                        'ids' => [],
                                                     ]);
-
+                                            
                                                     return $data;
-
                                                 }),
 
                                             Forms\Components\Radio::make('familiar_model_id')->label('')
