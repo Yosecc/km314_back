@@ -264,17 +264,36 @@ class ActivitiesResource extends Resource
 
 
 
+       
     public static function createAuto($data, $config)
     {
         $data = collect($data)->map(function($auto) use ($config){
             $auto['user_id'] = Auth::user()->id;
             $auto['created_at'] = Carbon::now();
             $auto['updated_at'] = Carbon::now();
+            
+            // Limpiar campos que no van a la tabla
             unset($auto['familiar_model_id']);
             unset($auto['espontaneo_model_id']);
-
+            
+            // Validar que model_id no sea null
+            if (empty($auto['model_id'])) {
+                throw new \Exception('Debe seleccionar el responsable del vehículo');
+            }
+            
+            // Asegurar que model esté definido
+            if (empty($auto['model'])) {
+                $auto['model'] = match($config['type']) {
+                    1 => 'Owner',
+                    2 => 'Employee', 
+                    3 => 'FormControl',
+                    default => 'Owner'
+                };
+            }
+    
             return $auto;
         });
+        
         Auto::insert($data->toArray());
     }
 
