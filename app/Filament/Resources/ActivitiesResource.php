@@ -1000,9 +1000,10 @@ class ActivitiesResource extends Resource
                                             Forms\Components\TextInput::make('color'),
 
                                                                                        
+                                                                                        
                                             Forms\Components\Radio::make('model_id')
                                                 ->columnSpanFull()
-                                                ->required() // Agregar required
+                                                ->required()
                                                 ->label(__('general.Select the responsible person'))
                                                 ->afterStateUpdated(function($state, Set $set, Get $get){
                                                     // Determinar el modelo correcto basado en tipo_entrada
@@ -1016,10 +1017,13 @@ class ActivitiesResource extends Resource
                                                     $set('model_id', $state);
                                                 })
                                                 ->options(function(Get $get, $context){
+                                                    // Buscar form_control_id en diferentes niveles
+                                                    $formControlId = $get('../../form_control_id') ?? $get('../../../form_control_id') ?? null;
+                                                    
                                                     $data = self::getPeoples([
                                                         'tipo_entrada' => $get('../../tipo_entrada'),
                                                         'num_search' => $get('../../num_search') ?? '',
-                                                        'form_control_id' => $get('../../form_control_id') ?? null, // Agregar este parámetro
+                                                        'form_control_id' => $formControlId,
                                                         'tipo' => 'option',
                                                         'ids' => [],
                                                     ]);
@@ -1027,10 +1031,13 @@ class ActivitiesResource extends Resource
                                                     return $data;
                                                 })
                                                 ->descriptions(function(Get $get, $context){
+                                                    // Buscar form_control_id en diferentes niveles
+                                                    $formControlId = $get('../../form_control_id') ?? $get('../../../form_control_id') ?? null;
+                                                    
                                                     $data = self::getPeoples([
                                                         'tipo_entrada' => $get('../../tipo_entrada'),
                                                         'num_search' => $get('../../num_search') ?? '',
-                                                        'form_control_id' => $get('../../form_control_id') ?? null, // Agregar este parámetro
+                                                        'form_control_id' => $formControlId,
                                                         'tipo' => 'descriptions',
                                                         'ids' => [],
                                                     ]);
