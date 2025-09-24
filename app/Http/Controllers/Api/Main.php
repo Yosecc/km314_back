@@ -116,52 +116,63 @@ class Main extends Controller
         return response()->json(['status' => true, 'message' => 'Registro guardado con archivos' ], 200);
     }
 
-
-
-    public function resourceEmpleados(Request $request)
+    public function empleadosUpdate(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'work_id'  => 'required',
             'dni' => 'required',
             'first_name' => 'required',
-            'last_name'  => 'required',
+            'last_name' => 'required',
             'phone' => 'required',
-            // 'fecha_vencimiento_seguro' => 'required',
+            'fecha_vencimiento_seguro' => 'nullable|date',
+            'files' => 'array', // Validar que files sea un array
+            'files.*.name' => 'required|string', // Cada archivo debe tener nombre
+            'files.*.file' => 'required|file', // Cada archivo debe ser un archivo válido
+            'files.*.fecha_vencimiento' => 'nullable|date', // Fecha de vencimiento opcional
         ]);
 
         if ($validator->fails()) {
-            return response()->json( ['status' => false, 'errors' => $validator->errors() ], 422);
+            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
         }
 
-        if(isset($request->id)&&$request->id!=null){
-            Employee::where('id',$request->id)->update([
-                'work_id' => $request->work_id,
-                'dni' => $request->dni,
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'phone' => $request->phone,
-                'fecha_vencimiento_seguro' => $request->fecha_vencimiento_seguro,
-                'updated_at' => now(),
-            ]);
-        }else{
-            Employee::insert([
-                'work_id' => $request->work_id,
-                'dni' => $request->dni,
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'phone' => $request->phone,
-                'user_id' => $request->user()->id,
-                'fecha_vencimiento_seguro' => $request->fecha_vencimiento_seguro,
-                'owner_id' => $request->user()->owner->id,
-                'model_origen' => 'Owner' ,
-                'model_origen_id' => $request->user()->owner->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        // Buscar el empleado que pertenece al owner
+        $employee = Employee::where('id', $id)
+            ->where('owner_id', $request->user()->owner->id)
+            ->first();
+
+        if (!$employee) {
+            return response()->json(['status' => false, 'message' => 'Empleado no encontrado'], 404);
         }
 
-        return response()->json(['status' => true, 'message' => 'Registro guardado' ], 200);
+        // Actualizar los datos del empleado
+        $employee->update([
+            'dni' => $request->dni,
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'phone' => $request->phone,
+            'fecha_vencimiento_seguro' => $request->fecha_vencimiento_seguro,
+        ]);
+
+        // Procesar y agregar nuevos archivos si existen
+        if ($request->has('files') && is_array($request->files)) {
+            foreach ($request->files as $fileData) {
+                // Guardar el archivo en storage
+                $filePath = $fileData['file']->store('employee-files', 'public');
+                
+                // Crear el registro en la base de datos
+                $employee->files()->create([
+                    'name' => $fileData['name'],
+                    'file' => $filePath,
+                    'fecha_vencimiento' => $fileData['fecha_vencimiento'] ?? null,
+                ]);
+            }
+        }
+
+        return response()->json(['status' => true, 'message' => 'Empleado actualizado correctamente'], 200);
     }
+
+
+
+
 
     public function deleteEmpleados(Request $request)
     {
