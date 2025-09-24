@@ -315,6 +315,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->dehydrated(true)
                             ->numeric(),
                                                 
+                                               
                         Forms\Components\TextInput::make('first_name')
                             ->label(__("general.FirstName"))
                             ->required()
@@ -344,7 +345,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     if (!$existsForDni && !empty($dni)) {
                                         $currentFiles[] = [
                                             'description' => "DNI: {$dni} - {$state} {$lastName}",
-                                            'file' => null
+                                            'file' => null,
+                                            'user_id' => Auth::user()->id, // Agregar el user_id
+                                            'form_control_id' => null // Se llenará automáticamente por la relación
                                         ];
                                         
                                         $set('../../files', $currentFiles);
@@ -373,6 +376,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                         foreach ($currentFiles as $index => $file) {
                                             if (isset($file['description']) && str_contains($file['description'], "DNI: {$dni}")) {
                                                 $currentFiles[$index]['description'] = "DNI: {$dni} - {$firstName} {$state}";
+                                                // Asegurar que tenga user_id
+                                                if (!isset($currentFiles[$index]['user_id'])) {
+                                                    $currentFiles[$index]['user_id'] = Auth::user()->id;
+                                                }
                                                 break;
                                             }
                                         }
