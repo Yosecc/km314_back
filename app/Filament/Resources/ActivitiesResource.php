@@ -654,6 +654,17 @@ class ActivitiesResource extends Resource
                                     });
 
                                 }
+                                if($get('tipo_entrada') == 2){
+                                    Employee::whereIn('id',$state)->get()->each(function($employee) use ($set){
+                                       if($employee->isVencidoSeguro()){
+                                            Notification::make()
+                                                ->title('Empleado con seguro vencido: '.$employee->nombres())
+                                                ->warning()
+                                                ->send();
+                                       }
+                                    });
+
+                                }
                             })
                             ->live(),
                         /**
@@ -1052,7 +1063,7 @@ class ActivitiesResource extends Resource
                                                 ->visible(function(Get $get){
                                                     return $get('../../families') && count($get('../../families')) ? true : false;
                                                 }),
-// ALTER TABLE `autos` CHANGE `model` `model` ENUM('Employee','Owner','FormControl','OwnerFamily','OwnerSpontaneousVisit') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
+                                                // ALTER TABLE `autos` CHANGE `model` `model` ENUM('Employee','Owner','FormControl','OwnerFamily','OwnerSpontaneousVisit') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
                                             Forms\Components\Radio::make('espontaneo_model_id')->label('')
                                                 ->reactive()
                                                 ->columnSpanFull()
