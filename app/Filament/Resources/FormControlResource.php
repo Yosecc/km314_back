@@ -306,73 +306,89 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->label(__("general.Peoples"))
                     ->relationship()
                     ->schema([
-        Forms\Components\TextInput::make('dni')
-            ->label(__("general.DNI"))
-            ->required()
-            ->disabled(function(Get $get){
-                return collect($get('../../income_type'))->contains('Trabajador');
-            })
-            ->dehydrated(true)
-            ->numeric(),
-        Forms\Components\TextInput::make('first_name')
-            ->label(__("general.FirstName"))
-            ->required()
-            ->disabled(function(Get $get){
-                return collect($get('../../income_type'))->contains('Trabajador');
-            })
-            ->dehydrated(true)
-            ->maxLength(255)
-            ->live()
-            ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                // Solo agregar archivo si es "Inquilino"
-                if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
-                    $currentFiles = $get('../../files') ?? [];
-                    $lastName = $get('last_name') ?? '';
-                    
-                    $currentFiles[] = [
-                        'description' => "DNI: {$state} {$lastName}",
-                        'file' => null
-                    ];
-                    
-                    $set('../../files', $currentFiles);
-                }
-            }),
-        Forms\Components\TextInput::make('last_name')
-            ->label(__("general.LastName"))
-            ->required()
-            ->disabled(function(Get $get){
-                return collect($get('../../income_type'))->contains('Trabajador');
-            })
-            ->dehydrated(true)
-            ->maxLength(255)
-            ->live()
-            ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                // Actualizar la descripción si ya existe el archivo
-                if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
-                    $firstName = $get('first_name') ?? '';
-                    if (!empty($firstName)) {
-                        $currentFiles = $get('../../files') ?? [];
-                        
-                        // Buscar y actualizar el archivo correspondiente
-                        foreach ($currentFiles as $index => $file) {
-                            if (str_contains($file['description'] ?? '', "DNI: {$firstName}")) {
-                                $currentFiles[$index]['description'] = "DNI: {$firstName} {$state}";
-                                break;
-                            }
-                        }
-                        
-                        $set('../../files', $currentFiles);
-                    }
-                }
-            }),
-        Forms\Components\TextInput::make('phone')
-            ->label(__("general.Phone"))
-            ->tel()
-            ->numeric(),
-        Forms\Components\Toggle::make('is_responsable')->label(__("general.Responsable")),
-        Forms\Components\Toggle::make('is_acompanante')->label(__("general.Acompanante")),
-        Forms\Components\Toggle::make('is_menor')->label(__("general.Minor")),
-    ])
+                        Forms\Components\TextInput::make('dni')
+                            ->label(__("general.DNI"))
+                            ->required()
+                            ->disabled(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Trabajador');
+                            })
+                            ->dehydrated(true)
+                            ->numeric(),
+                                                
+                        Forms\Components\TextInput::make('first_name')
+                            ->label(__("general.FirstName"))
+                            ->required()
+                            ->disabled(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Trabajador');
+                            })
+                            ->dehydrated(true)
+                            ->maxLength(255)
+                            ->lazy()
+                            ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                                // Solo agregar archivo si es "Inquilino"
+                                if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
+                                    $currentFiles = $get('../../files') ?? [];
+                                    $lastName = $get('last_name') ?? '';
+                                    $dni = $get('dni') ?? '';
+                                    
+                                    // Verificar si ya existe un archivo para este DNI
+                                    $existsForDni = false;
+                                    foreach ($currentFiles as $file) {
+                                        if (isset($file['description']) && str_contains($file['description'], "DNI: {$dni}")) {
+                                            $existsForDni = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // Solo crear si no existe para este DNI
+                                    if (!$existsForDni && !empty($dni)) {
+                                        $currentFiles[] = [
+                                            'description' => "DNI: {$dni} - {$state} {$lastName}",
+                                            'file' => null
+                                        ];
+                                        
+                                        $set('../../files', $currentFiles);
+                                    }
+                                }
+                            }),
+                        Forms\Components\TextInput::make('last_name')
+                            ->label(__("general.LastName"))
+                            ->required()
+                            ->disabled(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Trabajador');
+                            })
+                            ->dehydrated(true)
+                            ->maxLength(255)
+                            ->lazy()
+                            ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                                // Actualizar la descripción si ya existe el archivo para este DNI
+                                if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
+                                    $firstName = $get('first_name') ?? '';
+                                    $dni = $get('dni') ?? '';
+                                    
+                                    if (!empty($firstName) && !empty($dni)) {
+                                        $currentFiles = $get('../../files') ?? [];
+                                        
+                                        // Buscar y actualizar el archivo correspondiente por DNI
+                                        foreach ($currentFiles as $index => $file) {
+                                            if (isset($file['description']) && str_contains($file['description'], "DNI: {$dni}")) {
+                                                $currentFiles[$index]['description'] = "DNI: {$dni} - {$firstName} {$state}";
+                                                break;
+                                            }
+                                        }
+                                        
+                                        $set('../../files', $currentFiles);
+                                    }
+                                }
+                            }),
+                        Forms\Components\TextInput::make('phone')
+                            ->label(__("general.Phone"))
+                            ->tel()
+                            ->numeric(),
+                        Forms\Components\Toggle::make('is_responsable')->label(__("general.Responsable")),
+                        Forms\Components\Toggle::make('is_acompanante')->label(__("general.Acompanante")),
+                        Forms\Components\Toggle::make('is_menor')->label(__("general.Minor")),
+                    ])
                     ->columns(4)->columnSpanFull(),
 
                 Forms\Components\Repeater::make('autos')
