@@ -77,7 +77,6 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
                             if (!$record) {
                                 return '-';
                             }
-                            
                             return match ($record->model) {
                                 'FormControl' => $record->model_id,
                                 'Owner' => 'Propietario',
@@ -103,6 +102,24 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
 
             ])
             ->actions([
+                Action::make('ver_actividad')
+                    ->label('Ver Actividad')
+                    ->url(function(PersonaEnElBarrio $record){
+                        if($record->model == 'FormControl'){
+                            $formControlPerson = FormControlPeople::where('id',$record->model_id)->first();
+
+                            $activity = Activities::where('form_control_id',$formControlPerson->form_control_id)->first();
+                            if($activity){
+                                return route('filament.resources.activities.records.view', $activity->id);
+                            }
+                        }
+                        return '#';
+                    })
+                    // ->url(fn (PersonaEnElBarrio $record): string => route('filament.resources.visitantes.edit', $record->model_id))
+                    ->icon('heroicon-o-eye')
+                    ->openUrlInNewTab()
+                    ->visible(fn (PersonaEnElBarrio $record): bool => in_array($record->model, ['FormControl']))
+                    ,
                 Action::make('forzar_salida')
                     ->label('Forzar Salida')
                     ->action(function ($record) {
