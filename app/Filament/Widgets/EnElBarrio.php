@@ -32,9 +32,11 @@ class EnElBarrio extends BaseWidget
         ->query(PersonaEnElBarrio::query())
         ->defaultGroup('lote')
         ->columns([
-            Tables\Columns\TextColumn::make('model_id')->label('Form')->visible(function($record){
-                return $record->model == 'FormControl';
-            })->searchable(),
+             Tables\Columns\TextColumn::make('model_id')->label('Form')
+                    ->visible(function($record){
+                        return $record && $record->model == 'FormControl';
+                    })
+                    ->searchable(),
             Tables\Columns\TextColumn::make('dni')->label('DNI')->searchable(),
             Tables\Columns\TextColumn::make('first_name')->label('Nombre')->searchable(),
             Tables\Columns\TextColumn::make('last_name')->label('Apellido')->searchable(),
