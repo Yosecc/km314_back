@@ -277,9 +277,9 @@ class ActivitiesResource extends Resource
             unset($auto['espontaneo_model_id']);
             
             // Validar que model_id no sea null
-            if (empty($auto['model_id'])) {
-                throw new \Exception('Debe seleccionar el responsable del vehículo');
-            }
+            // if (empty($auto['model_id'])) {
+            //     throw new \Exception('Debe seleccionar el responsable del vehículo');
+            // }
             
             // Asegurar que model esté definido
             if (empty($auto['model'])) {
@@ -984,7 +984,7 @@ class ActivitiesResource extends Resource
                                         'num_search' => $get('num_search'),
                                         'families' => $get('families'),
                                         'peoples' => $get('peoples'),
-                                        'model_id' => $get('form_control_id')
+                                        'form_control_id' => $get('form_control_id')
                                     ];
                                 })
                                 ->form([
@@ -1001,6 +1001,9 @@ class ActivitiesResource extends Resource
                                                 ->required()
                                                 ->maxLength(255),
                                             Forms\Components\TextInput::make('color'),
+                                            Forms\Components\TextInput::make('color')->default(function(Get $get){
+                                                return $get('../../form_control_id');
+                                            }),
 
                                             // Forms\Components\Radio::make('model_id')
                                             //     ->columnSpanFull()
