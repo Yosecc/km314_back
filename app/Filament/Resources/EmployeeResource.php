@@ -268,12 +268,12 @@ class EmployeeResource extends Resource
             $status = true;
         }
 
-        $vencidosFile = $record->vencidosFile();
-        if($vencidosFile){
-            $color = "danger";
-            $texto = "Documentos  vencidos: ". implode($vencidosFile);
-            $status = true;
-        }
+        // $vencidosFile = $record->vencidosFile();
+        // if($vencidosFile){
+        //     $color = "danger";
+        //     $texto = "Documentos  vencidos: ". implode($vencidosFile);
+        //     $status = true;
+        // }
 
         return [
             'color' => $color,
