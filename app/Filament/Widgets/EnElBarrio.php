@@ -35,6 +35,7 @@ class EnElBarrio extends BaseWidget
             Tables\Columns\TextColumn::make('model_id')->label('Form')->visible(function($record){
                 return $record->model == 'FormControl';
             })->searchable(),
+            Tables\Columns\TextColumn::make('dni')->label('DNI')->searchable(),
             Tables\Columns\TextColumn::make('first_name')->label('Nombre')->searchable(),
             Tables\Columns\TextColumn::make('last_name')->label('Apellido')->searchable(),
             Tables\Columns\TextColumn::make('tipo')->label('Tipo')->searchable(),

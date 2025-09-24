@@ -5,6 +5,7 @@ SELECT
     o.id AS id,
     o.first_name,
     o.last_name,
+    o.dni,
     'Propietario' AS tipo,
     (
         SELECT GROUP_CONCAT(CONCAT(s.name, l.lote_id) SEPARATOR ', ')
@@ -37,6 +38,7 @@ SELECT
     of.id AS id,
     of.first_name,
     of.last_name,
+    of.dni,
     'Familiar' AS tipo,
     (
         SELECT GROUP_CONCAT(CONCAT(s.name, l.lote_id) SEPARATOR ', ')
@@ -69,6 +71,7 @@ SELECT
     osv.id AS id,
     osv.first_name,
     osv.last_name,
+    osv.dni,
     'Visita espontánea' AS tipo,
     (
         SELECT GROUP_CONCAT(CONCAT(s.name, l.lote_id) SEPARATOR ', ')
@@ -101,6 +104,7 @@ SELECT
     e.id AS id,
     e.first_name,
     e.last_name,
+    e.dni,
     'Empleado' AS tipo,
     (
         SELECT GROUP_CONCAT(CONCAT(s.name, l.lote_id) SEPARATOR ', ')
@@ -133,6 +137,7 @@ SELECT
     fcp.id AS id,
     fcp.first_name,
     fcp.last_name,
+    fcp.dni,
     'Visitante' AS tipo,
     TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote,
     'FormControl' AS model,
@@ -166,6 +171,7 @@ SELECT
     fcp.id AS id,
     fcp.first_name,
     fcp.last_name,
+    fcp.dni,
     'Inquilino' AS tipo,
     TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote,
     'FormControl' AS model,
@@ -196,6 +202,7 @@ SELECT
     fcp.id AS id,
     fcp.first_name,
     fcp.last_name,
+    fcp.dni,
     'Trabajador' AS tipo,
     TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote,
     'FormControl' AS model,
@@ -226,6 +233,7 @@ SELECT
     fcp.id AS id,
     fcp.first_name,
     fcp.last_name,
+    fcp.dni,
     'Visita' AS tipo,
     TRIM(BOTH '[]"' FROM REPLACE(REPLACE(fc.lote_ids, '\"', ''), '],[', ', ')) AS lote,
     'FormControl' AS model,
