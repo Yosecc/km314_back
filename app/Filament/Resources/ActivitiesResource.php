@@ -301,25 +301,27 @@ class ActivitiesResource extends Resource
 
     }
 
+        
     public static function getPeoples($data)
     {
         self::$PARAMS = [
-            'num_search' => $data['num_search'],
-            'tipo_entrada' => $data['tipo_entrada']
+            'num_search' => $data['num_search'] ?? '',
+            'tipo_entrada' => $data['tipo_entrada'] ?? null,
+            'form_control_id' => $data['form_control_id'] ?? null // Agregar default null
         ];
-
+    
         if( $data['tipo_entrada'] == 2){
             return $data['num_search'] || count($data['ids']) ? self::searchEmployee($data['num_search'], $data['tipo'], $data['ids']) : [];
         }
-
+    
         if( $data['tipo_entrada'] == 1){
             return $data['num_search'] || count($data['ids']) ? self::searchOwners($data['num_search'], $data['tipo'], $data['ids']) : [];
         }
-
-        if( $data['tipo_entrada'] == 3 && $data['form_control_id']){
+    
+        if( $data['tipo_entrada'] == 3 && isset($data['form_control_id']) && $data['form_control_id']){
             return $data['num_search'] || count($data['ids']) ? self::searchFormControl($data['form_control_id'],  $data['tipo'], $data['ids']) : [];
         }
-
+    
         return [];
     }
 
