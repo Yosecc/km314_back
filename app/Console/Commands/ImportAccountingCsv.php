@@ -77,13 +77,25 @@ class ImportAccountingCsv extends Command
                         continue;
                     }
                     
+                    // Usar el período del CSV o generar uno basado en la fecha
                     $periodoKey = $periodo ?: $fechaCarbon->format('Ym');
+                    
+                    // Convertir el período a fecha para la base de datos (primer día del mes)
+                    $periodoFecha = null;
+                    if (strlen($periodo) == 6 && is_numeric($periodo)) {
+                        // Formato YYYYMM -> convertir a fecha
+                        $year = substr($periodo, 0, 4);
+                        $month = substr($periodo, 4, 2);
+                        $periodoFecha = Carbon::create($year, $month, 1);
+                    } else {
+                        $periodoFecha = $fechaCarbon->startOfMonth();
+                    }
                     
                     // Buscar o crear factura para ese periodo
                     $factura = Invoice::firstOrCreate([
                         'owner_id' => $ownerId,
                         'lote_id' => $loteId,
-                        'period' => $periodoKey,
+                        'period' => $periodoFecha->format('Y-m-d'),
                     ], [
                         'due_date' => $fechaCarbon->copy()->addDays(10),
                         'total' => 0,
