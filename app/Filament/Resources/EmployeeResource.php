@@ -206,11 +206,11 @@ class EmployeeResource extends Resource
                     ->columns(2),
                     
 
-Placeholder::make('created')
-    ->content(' dsdkyhgujbkjlg'),
+               
                 Forms\Components\Repeater::make('horarios')
                     ->relationship()
                     ->schema([
+                        Placeholder::make('')->content('Selecciona los dias y el horario de trabajo del empleado.'),
                         Forms\Components\Select::make('day_of_week')
                             ->label(__("Día"))
                             ->options([
