@@ -234,7 +234,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         }
                         return [];
                     })
-                      ->visible(function(Get $get){
+                    ->visible(function(Get $get){
                             // Solo visible si está seleccionado "Trabajador" Y el usuario es owner con trabajadores
                             $isWorkerSelected = collect($get('income_type'))->contains('Trabajador');
                             
@@ -403,7 +403,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         Forms\Components\Toggle::make('is_acompanante')->label(__("general.Acompanante")),
                         Forms\Components\Toggle::make('is_menor')->label(__("general.Minor")),
                     ])
-                    ->columns(4)->columnSpanFull(),
+                    ->addable(collect($get('income_type'))->contains('Trabajador') ? false : true)
+                    ->columns(4)
+                    ->columnSpanFull(),
 
                 Forms\Components\Repeater::make('autos')
                     ->relationship()
