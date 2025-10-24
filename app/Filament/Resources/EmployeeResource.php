@@ -87,6 +87,7 @@ class EmployeeResource extends Resource
                     Forms\Components\TextInput::make('phone')
                         ->label(__("general.Phone"))
                         ->tel()
+                        ->required()
                         ->numeric(),
 
                     Forms\Components\Hidden::make('user_id')->disabled(fn($context)=> $context == 'edit')->default(Auth::user()->id),
@@ -123,6 +124,7 @@ class EmployeeResource extends Resource
                     DatePicker::make('fecha_vencimiento_seguro')
                         ->label('Fecha de vencimiento del seguro personal')
                         ->displayFormat('d/m/Y')
+                        ->required()
                         ->live()
                         ,
                     // Forms\Components\Select::make('owner_id')
