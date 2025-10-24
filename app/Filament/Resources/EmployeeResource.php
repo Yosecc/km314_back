@@ -60,7 +60,15 @@ class EmployeeResource extends Resource
                     Forms\Components\Select::make('work_id')
                         ->label(__("general.Work"))
                         ->required()
+                        ->default(32)
+                        ->visible(function(){
+                            if (Auth::user()->hasRole('super_admin')) {
+                                return true;
+                            }
+                            return false;
+                        })
                         ->relationship(name: 'work', titleAttribute: 'name'),
+
                     Forms\Components\TextInput::make('dni')
                         ->label(__("general.DNI"))
                         ->required()
