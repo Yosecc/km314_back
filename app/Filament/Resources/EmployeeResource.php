@@ -8,7 +8,7 @@ use App\Models\ConstructionCompanie;
 use App\Models\Employee;
 use App\Models\Owner;
 use App\Models\Trabajos;
-
+use Filament\Forms\Components\Placeholder;
 use App\Models\Works;
 use Carbon\Carbon;
 use Filament\Forms;
@@ -204,8 +204,11 @@ class EmployeeResource extends Resource
                     ])
                     ->defaultItems(0)
                     ->columns(2),
+                    
+
+Placeholder::make('created')
+    ->content(' dsdkyhgujbkjlg'),
                 Forms\Components\Repeater::make('horarios')
-                    ->label('Definir los horarios de trabajo del empleado')
                     ->relationship()
                     ->schema([
                         Forms\Components\Select::make('day_of_week')
