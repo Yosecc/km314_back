@@ -155,7 +155,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->columns(2)
                             ->gridDirection('row')
                             ->afterStateUpdated(function (Set $set) {
-                                $set('peoples', [
+                                $set('peoples', [[
                                     'dni' => '',
                                     'first_name' => '',
                                     'last_name' => '',
@@ -163,7 +163,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     'is_responsable' => false,
                                     'is_acompanante' => false,
                                     'is_menor' => false,
-                                ]);
+                                ]]);
                             })
                             ->required(function(Get $get){
                                 if($get('access_type')== null || !count($get('access_type'))){
