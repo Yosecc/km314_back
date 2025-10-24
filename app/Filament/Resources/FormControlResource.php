@@ -293,7 +293,29 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 
                         // Eliminar trabajadores desmarcados
                         $peoples = $peoples->filter(function ($person) use ($trabajadores) {
-                            return $trabajadores->contains('dni', $person['dni']) || !is_null($person['dni']);
+                            $dni = trim($person['dni'] ?? '');
+                            $first = trim($person['first_name'] ?? '');
+                            $last = trim($person['last_name'] ?? '');
+
+                            // eliminar registros con campos vacíos obligatorios
+                            if ($dni === '' || $first === '' || $last === '') {
+                                return false;
+                            }
+
+                            // Comprobar si existe un empleado con este DNI para el owner actual
+                            $isEmployee = \App\Models\Employee::where(function($q){
+                                $q->whereHas('owners', function($q2) {
+                                    $q2->where('owner_id', Auth::user()->owner_id);
+                                })->orWhere('owner_id', Auth::user()->owner_id);
+                            })->where('dni', $dni)->exists();
+
+                            // Si es empleado, mantener solo si está entre los trabajadores seleccionados
+                            if ($isEmployee) {
+                                return $trabajadores->contains('dni', $dni);
+                            }
+
+                            // Si no es empleado (invitado), mantener
+                            return true;
                         });
                 
                         // Agregar trabajadores marcados
