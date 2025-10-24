@@ -156,13 +156,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->gridDirection('row')
                             ->afterStateUpdated(function (Set $set) {
                                 $set('peoples', [[
-                                    'dni' => '',
-                                    'first_name' => '',
-                                    'last_name' => '',
-                                    'phone' => '',
-                                    'is_responsable' => false,
-                                    'is_acompanante' => false,
-                                    'is_menor' => false,
+                                    // 'dni' => '',
+                                    // 'first_name' => '',
+                                    // 'last_name' => '',
+                                    // 'phone' => '',
+                                    // 'is_responsable' => false,
+                                    // 'is_acompanante' => false,
+                                    // 'is_menor' => false,
                                 ]]);
                             })
                             ->required(function(Get $get){
