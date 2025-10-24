@@ -403,7 +403,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         Forms\Components\Toggle::make('is_acompanante')->label(__("general.Acompanante")),
                         Forms\Components\Toggle::make('is_menor')->label(__("general.Minor")),
                     ])
-                    ->addable(collect($get('income_type'))->contains('Trabajador') ? false : true)
+                    ->addable(function(Get $get){
+                        return !collect($get('income_type'))->contains('Trabajador') || !auth()->user()->hasRole('owner');
+                    })
                     ->columns(4)
                     ->columnSpanFull(),
 
