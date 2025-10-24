@@ -205,7 +205,7 @@ class EmployeeResource extends Resource
                     ->defaultItems(0)
                     ->columns(2),
                 Forms\Components\Repeater::make('horarios')
-                    ->helpText('Definir los horarios de trabajo del empleado')
+                    ->label('Definir los horarios de trabajo del empleado')
                     ->relationship()
                     ->schema([
                         Forms\Components\Select::make('day_of_week')
