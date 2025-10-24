@@ -154,6 +154,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             })
                             ->columns(2)
                             ->gridDirection('row')
+                            ->afterStateUpdated(function (Set $set) {
+                                $set('peoples', []);
+                            })
                             ->required(function(Get $get){
                                 if($get('access_type')== null || !count($get('access_type'))){
                                     return false;
