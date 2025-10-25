@@ -273,6 +273,25 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->live()
                     ->afterStateUpdated(function (Set $set, Get $get, $state) {
                         $peoples = collect($get('peoples'));
+
+
+                        $trabajador = \App\Models\Employee::whereIn('id', $state)->first();
+
+                        if ($trabajador->horarios()->exists()) {
+                           
+                        }else{
+                            Notification::make()
+                                ->title('Este trabajador no tiene horarios asignados.')
+                                ->body('Por favor, asigne un horario en la sección de trabajadores en el menú antes de continuar.')
+                                ->danger ()
+                                ->actions([
+                                    Action::make('Ver trabajadores')
+                                        ->button()
+                                        ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true)
+                                ])
+                                ->send();
+                        }
+
                         
                         // Obtener trabajadores seleccionados usando ambas relaciones
                         $trabajadores = collect();
