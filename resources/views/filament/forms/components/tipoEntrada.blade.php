@@ -34,7 +34,7 @@
                     <span style="font-size: 14px; margin: 0px; padding: 0px">Km314</span>
                     @endif
                     @if($key == 3)
-                    <span style="font-size: 14px; margin: 0px; padding: 0px">Formularios</span>
+                    <span style="font-size: 14px; margin: 0px; padding: 0px">Inquilinos, visitas y trabajadores</span>
                     @endif
                 </div>
 
@@ -71,7 +71,7 @@
                     <span style="font-size: 14px; margin: 0px; padding: 0px">Km314</span>
                     @endif
                     @if($key == 3)
-                    <span style="font-size: 14px; margin: 0px; padding: 0px">Formularios</span>
+                    <span style="font-size: 14px; margin: 0px; padding: 0px">Inquilinos, visitas y trabajadores</span>
                     @endif 
                 </div>
 
