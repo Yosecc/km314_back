@@ -273,8 +273,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->live()
                     ->afterStateUpdated(function (Set $set, Get $get, $state) {
                         $peoples = collect($get('peoples'));
-                        dd($state);
-                        if($state){
+                        // dd($state);
+                        if(count($state)){
 
                             $trabajador = \App\Models\Employee::whereIn('id', $state)->first();
 
