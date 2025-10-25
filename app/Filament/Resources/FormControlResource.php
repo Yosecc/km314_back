@@ -278,6 +278,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         $trabajador = \App\Models\Employee::whereIn('id', $state)->first();
 
                         if ($trabajador->horarios()->exists()) {
+
+                          dd($trabajador->horarios)
                            
                         }else{
                             Notification::make()
@@ -290,6 +292,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                         ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true)
                                 ])
                                 ->send();
+                            return;
                         }
 
                         
