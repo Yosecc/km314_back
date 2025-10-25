@@ -279,6 +279,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 ->title('Seleccione primero el rango de fechas y horas.')
                                 ->danger()
                                 ->send();
+                                $set('owners', []);
                             return; 
                         }
                         // dd($state);
