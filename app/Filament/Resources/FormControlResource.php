@@ -292,7 +292,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             
                             $allHaveHorarios = true;
                             $failedId = null;
-                            $trabajadores->each(function($trabajador) use (&$allHaveHorarios, &$failedId, $get, $set) {
+                            $trabajadores->each(function($trabajador) use (&$allHaveHorarios, &$failedId, $get, $set, $state) {
                                 if (!$trabajador->horarios()->exists()) {
                                     Notification::make()
                                         ->title('Este trabajador no tiene horarios asignados.')
