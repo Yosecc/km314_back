@@ -279,26 +279,35 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             $trabajadores = \App\Models\Employee::whereIn('id', $state)->get();
 
                             
-
-                            if ($trabajadores->isNotEmpty()) {
-                                $trabajadores->each(function($trabajador) {
-                                    if ($trabajador->horarios()->exists()) {
-                                        dd($trabajador->horarios);
-                                    }else{
-                                        Notification::make()
+                            $allHaveHorarios = true;
+                            $failedId = null;
+                            $trabajadores->each(function($trabajador) use (&$allHaveHorarios, &$failedId) {
+                                if (!$trabajador->horarios()->exists()) {
+                                    Notification::make()
                                         ->title('Este trabajador no tiene horarios asignados.')
                                         ->body('Por favor, asigne un horario en la sección de trabajadores en el menú antes de continuar.')
-                                        ->danger ()
+                                        ->danger()
                                         ->actions([
                                             NotificationAction::make('Ver trabajadores')
-                                            ->button()
-                                            ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true)
-                                            ])
-                                            ->send();
-                                            return;
-                                    }
-                                });
+                                                ->button()
+                                                ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true)
+                                        ])
+                                        ->send();
+                                    $allHaveHorarios = false;
+                                    $failedId = $trabajador->id;
+                                    // No return aquí, para que puedas seguir usando dd más adelante si lo necesitas
+                                } else {
+                                    // Aquí tu lógica adicional
+                                    // dd($trabajador->horarios);
+                                }
+                            });
+                            if (!$allHaveHorarios && $failedId) {
+                                // Quitar el id que falló del estado de owners
+                                $newOwners = array_filter($state, fn($id) => $id != $failedId);
+                                $set('owners', array_values($newOwners));
+                                return;
                             }
+                            
                         }
 
                         
