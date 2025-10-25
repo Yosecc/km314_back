@@ -274,25 +274,27 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->afterStateUpdated(function (Set $set, Get $get, $state) {
                         $peoples = collect($get('peoples'));
 
+                        if($state){
 
-                        $trabajador = \App\Models\Employee::whereIn('id', $state)->first();
-
-                        if ($trabajador->horarios()->exists()) {
-
-                          dd($trabajador->horarios);
-                           
-                        }else{
-                            Notification::make()
+                            $trabajador = \App\Models\Employee::whereIn('id', $state)->first();
+                            
+                            if ($trabajador->horarios()->exists()) {
+                                
+                                dd($trabajador->horarios);
+                                
+                            }else{
+                                Notification::make()
                                 ->title('Este trabajador no tiene horarios asignados.')
                                 ->body('Por favor, asigne un horario en la sección de trabajadores en el menú antes de continuar.')
                                 ->danger ()
                                 ->actions([
                                     NotificationAction::make('Ver trabajadores')
-                                        ->button()
-                                        ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true)
-                                ])
-                                ->send();
-                            return;
+                                    ->button()
+                                    ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true)
+                                    ])
+                                    ->send();
+                                    return;
+                            }
                         }
 
                         
