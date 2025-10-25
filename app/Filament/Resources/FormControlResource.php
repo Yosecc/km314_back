@@ -41,7 +41,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
-
+use Filament\Notifications\Actions\Action as NotificationAction;
 class FormControlResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = FormControl::class;
@@ -285,7 +285,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 ->body('Por favor, asigne un horario en la sección de trabajadores en el menú antes de continuar.')
                                 ->danger ()
                                 ->actions([
-                                    Action::make('Ver trabajadores')
+                                    NotificationAction::make('Ver trabajadores')
                                         ->button()
                                         ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true)
                                 ])
