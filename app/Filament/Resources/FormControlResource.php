@@ -42,6 +42,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Actions\Action as NotificationAction;
+use Carbon\CarbonPeriod;
+
 class FormControlResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = FormControl::class;
@@ -307,7 +309,45 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 } else {
                                     // Aquí tu lógica adicional
                                     
-                                    dd($trabajador->horarios, $get('start_date_range'),$get('start_time_range'),$get('end_date_range'),$get('end_time_range'));
+                                   $startDate = Carbon::parse($get('start_date_range') . ' ' . $get('start_time_range'));
+                                    $endDate = Carbon::parse($get('end_date_range') . ' ' . $get('end_time_range'));
+
+                                    // Obtener días de la semana configurados en los horarios del trabajador
+                                    $diasDisponibles = $trabajador->horarios->pluck('day_of_week')->unique()->values()->toArray();
+
+                                    // Mapear días de Carbon a español (ajusta si tus días están en otro idioma)
+                                    $carbonToDb = [
+                                        'Sunday' => 'Domingo',
+                                        'Monday' => 'Lunes',
+                                        'Tuesday' => 'Martes',
+                                        'Wednesday' => 'Miércoles',
+                                        'Thursday' => 'Jueves',
+                                        'Friday' => 'Viernes',
+                                        'Saturday' => 'Sábado',
+                                    ];
+
+                                    // Recorrer el rango de fechas y ver si hay coincidencia de día
+                                    $period = CarbonPeriod::create($startDate->copy()->startOfDay(), $endDate->copy()->startOfDay());
+                                    $hayCoincidencia = false;
+                                    foreach ($period as $date) {
+                                        $dia = $carbonToDb[$date->format('l')];
+                                        if (in_array($dia, $diasDisponibles)) {
+                                            $hayCoincidencia = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!$hayCoincidencia) {
+                                        Notification::make()
+                                            ->title('Rango de fechas no válido para el trabajador')
+                                            ->body('Los días disponibles para este trabajador son: ' . implode(', ', $diasDisponibles) . '. Ajusta el rango de fechas para coincidir con alguno de estos días.')
+                                            ->danger()
+                                            ->send();
+                                        // Aquí puedes quitar el trabajador del owners si lo deseas
+                                        // $set('owners', array_values(array_filter($state, fn($id) => $id != $trabajador->id)));
+                                        return;
+                                    }
+                                    //validar horarios
                                 }
                             });
                             if (!$allHaveHorarios && $failedId) {
