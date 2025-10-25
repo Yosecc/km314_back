@@ -344,7 +344,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                             ->danger()
                                             ->send();
                                         // Aquí puedes quitar el trabajador del owners si lo deseas
-                                        // $set('owners', array_values(array_filter($state, fn($id) => $id != $trabajador->id)));
+                                        $set('owners', array_values(array_filter($state, fn($id) => $id != $trabajador->id)));
                                         return;
                                     }
                                     //validar horarios
