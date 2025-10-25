@@ -297,7 +297,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     $failedId = $trabajador->id;
                                 } else {
                                     // Aquí tu lógica adicional
-                                    dd($trabajador->horarios);
+                                    
+                                    dd($trabajador->horarios, $get('start_date_range'),$get('start_time_range'),$get('end_date_range'),$get('end_time_range'));
                                 }
                             });
                             if (!$allHaveHorarios && $failedId) {
