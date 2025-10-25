@@ -274,7 +274,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->afterStateUpdated(function (Set $set, Get $get, $state) {
                         $peoples = collect($get('peoples'));
 
-                        if($get('start_date_range') == null || $get('start_time_range') == null || $get('end_date_range') == null || $get('end_time_range')){
+                        if($get('start_date_range') == null || $get('start_time_range') == null || $get('end_date_range') == null || $get('end_time_range')  == null){
                             Notification::make()
                                 ->title('Seleccione primero el rango de fechas y horas.')
                                 ->danger()
