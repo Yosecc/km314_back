@@ -279,7 +279,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                         if ($trabajador->horarios()->exists()) {
 
-                          dd($trabajador->horarios)
+                          dd($trabajador->horarios);
                            
                         }else{
                             Notification::make()
