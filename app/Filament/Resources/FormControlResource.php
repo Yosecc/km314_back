@@ -277,6 +277,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         if($state){
 
                             $trabajador = \App\Models\Employee::whereIn('id', $state)->first();
+
+                            dd($trabajador->horarios);
                             
                             if ($trabajador->horarios()->exists()) {
                                 
