@@ -339,14 +339,16 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                                     if (!$hayCoincidencia) {
                                         $allHaveHorarios = false;
+                                        $failedId = $trabajador->id;
+
                                         Notification::make()
                                             ->title('Rango de fechas no válido para el trabajador')
                                             ->body('Los días disponibles para este trabajador son: ' . implode(', ', $diasDisponibles) . '. Ajusta el rango de fechas para coincidir con alguno de estos días.')
                                             ->danger()
                                             ->send();
                                         // Aquí puedes quitar el trabajador del owners si lo deseas
-                                        $set('owners', array_values(array_filter($state, fn($id) => $id != $trabajador->id)));
-                                        return;
+                                        // $set('owners', array_values(array_filter($state, fn($id) => $id != $trabajador->id)));
+                                        // return;
                                     }
                                 }
                             });
