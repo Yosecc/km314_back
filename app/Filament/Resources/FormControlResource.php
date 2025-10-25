@@ -276,26 +276,28 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         // dd($state);
                         if(count($state)){
 
-                            $trabajador = \App\Models\Employee::whereIn('id', $state)->first();
+                            $trabajadores = \App\Models\Employee::whereIn('id', $state)->get();
 
-                            dd($trabajador->horarios);
                             
-                            if ($trabajador->horarios()->exists()) {
-                                
-                                dd($trabajador->horarios);
-                                
-                            }else{
-                                Notification::make()
-                                ->title('Este trabajador no tiene horarios asignados.')
-                                ->body('Por favor, asigne un horario en la sección de trabajadores en el menú antes de continuar.')
-                                ->danger ()
-                                ->actions([
-                                    NotificationAction::make('Ver trabajadores')
-                                    ->button()
-                                    ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true)
-                                    ])
-                                    ->send();
-                                    return;
+
+                            if ($trabajadores->isNotEmpty()) {
+                                $trabajadores->each(function($trabajador) {
+                                    if ($trabajador->horarios()->exists()) {
+                                        dd($trabajador->horarios);
+                                    }else{
+                                        Notification::make()
+                                        ->title('Este trabajador no tiene horarios asignados.')
+                                        ->body('Por favor, asigne un horario en la sección de trabajadores en el menú antes de continuar.')
+                                        ->danger ()
+                                        ->actions([
+                                            NotificationAction::make('Ver trabajadores')
+                                            ->button()
+                                            ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true)
+                                            ])
+                                            ->send();
+                                            return;
+                                    }
+                                });
                             }
                         }
 
