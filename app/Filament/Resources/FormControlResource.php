@@ -338,6 +338,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     }
 
                                     if (!$hayCoincidencia) {
+                                        $allHaveHorarios = false;
                                         Notification::make()
                                             ->title('Rango de fechas no válido para el trabajador')
                                             ->body('Los días disponibles para este trabajador son: ' . implode(', ', $diasDisponibles) . '. Ajusta el rango de fechas para coincidir con alguno de estos días.')
@@ -347,7 +348,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                         $set('owners', array_values(array_filter($state, fn($id) => $id != $trabajador->id)));
                                         return;
                                     }
-                                    //validar horarios
                                 }
                             });
                             if (!$allHaveHorarios && $failedId) {
