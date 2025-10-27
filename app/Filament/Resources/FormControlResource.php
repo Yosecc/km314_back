@@ -421,18 +421,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             }
                         }
 
-                        $peoples = $peoples->map(function ($person) {
-                            $person['is_responsable'] = isset($person['is_responsable']) ? (bool)$person['is_responsable'] : false;
-                            $person['is_acompanante'] = isset($person['is_acompanante']) ? (bool)$person['is_acompanante'] : false;
-                            $person['is_menor'] = isset($person['is_menor']) ? (bool)$person['is_menor'] : false;
-                            return $person;
-                        });
+                       
                 
                         // Eliminar registros con valores nulos
                         $peoples = $peoples->filter(function ($person) {
                             return !is_null($person['dni']) && !is_null($person['first_name']) && !is_null($person['last_name']);
                         });
-                
+                 dd($pasa, $peoples);
                         // Actualizar el estado de 'peoples' sin sobrescribirlo completamente
                         $set('peoples', $peoples->values()->toArray());
                     }),
