@@ -14,6 +14,7 @@ class CreateFormControl extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        dd($data);
         if (isset($data['peoples']) && is_array($data['peoples'])) {
             $data['peoples'] = array_map(function ($person) {
                 $person['is_responsable'] = isset($person['is_responsable']) ? (bool)$person['is_responsable'] : false;
