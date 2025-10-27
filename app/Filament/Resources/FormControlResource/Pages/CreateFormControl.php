@@ -22,6 +22,7 @@ class CreateFormControl extends CreateRecord
                 return $person;
             }, $data['peoples']);
         }
+        dd($data);
         return $data;
     }
 
