@@ -156,17 +156,17 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             })
                             ->columns(2)
                             ->gridDirection('row')
-                            ->afterStateUpdated(function (Set $set) {
-                                $set('peoples', [[
-                                    // 'dni' => '',
-                                    // 'first_name' => '',
-                                    // 'last_name' => '',
-                                    // 'phone' => '',
-                                    // 'is_responsable' => false,
-                                    // 'is_acompanante' => false,
-                                    // 'is_menor' => false,
-                                ]]);
-                            })
+                            // ->afterStateUpdated(function (Set $set) {
+                            //     $set('peoples', [[
+                            //         // 'dni' => '',
+                            //         // 'first_name' => '',
+                            //         // 'last_name' => '',
+                            //         // 'phone' => '',
+                            //         // 'is_responsable' => false,
+                            //         // 'is_acompanante' => false,
+                            //         // 'is_menor' => false,
+                            //     ]]);
+                            // })
                             ->required(function(Get $get){
                                 if($get('access_type')== null || !count($get('access_type'))){
                                     return false;
@@ -194,8 +194,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     })
                     ->live(),
 
-            ])
-            ->columns(2),
+                ])
+                ->columns(2),
 
                 Forms\Components\Fieldset::make('range')->label('Rango de fecha de estancia')
                     ->schema([
@@ -420,12 +420,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 ]);
                             }
                         }
+
+                       
                 
                         // Eliminar registros con valores nulos
                         $peoples = $peoples->filter(function ($person) {
                             return !is_null($person['dni']) && !is_null($person['first_name']) && !is_null($person['last_name']);
                         });
-                
+                 dd($pasa, $peoples);
                         // Actualizar el estado de 'peoples' sin sobrescribirlo completamente
                         $set('peoples', $peoples->values()->toArray());
                     }),
