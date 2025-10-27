@@ -12,6 +12,19 @@ class CreateFormControl extends CreateRecord
 {
     protected static string $resource = FormControlResource::class;
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        if (isset($data['peoples']) && is_array($data['peoples'])) {
+            $data['peoples'] = array_map(function ($person) {
+                $person['is_responsable'] = isset($person['is_responsable']) ? (bool)$person['is_responsable'] : false;
+                $person['is_acompanante'] = isset($person['is_acompanante']) ? (bool)$person['is_acompanante'] : false;
+                $person['is_menor'] = isset($person['is_menor']) ? (bool)$person['is_menor'] : false;
+                return $person;
+            }, $data['peoples']);
+        }
+        return $data;
+    }
+
     protected function afterCreate(): void
     {
         try {
