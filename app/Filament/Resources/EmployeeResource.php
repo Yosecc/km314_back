@@ -60,7 +60,7 @@ class EmployeeResource extends Resource
                     Forms\Components\Select::make('work_id')
                         ->label(__("general.Work"))
                         ->required()
-                        ->default(32)
+                        ->default(37)
                         ->visible(function(){
                             if (Auth::user()->hasRole('super_admin')) {
                                 return true;
