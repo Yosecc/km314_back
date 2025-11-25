@@ -83,7 +83,7 @@ class ActivitiesResource extends Resource
                 $employee['texto'].= ' - '.__('general.Employee');
             }else{
                 $employee['texto'] = $employee->dni;
-                $employee['texto'] .= ' - '.$employee->work->name;
+                $employee['texto'] .= ' - '.$employee->work ? $employee->work->name : '';
             }
 
             return $employee;
@@ -264,36 +264,36 @@ class ActivitiesResource extends Resource
 
 
 
-       
+
     public static function createAuto($data, $config)
     {
         $data = collect($data)->map(function($auto) use ($config){
             $auto['user_id'] = Auth::user()->id;
             $auto['created_at'] = Carbon::now();
             $auto['updated_at'] = Carbon::now();
-            
+
             // Limpiar campos que no van a la tabla
             unset($auto['familiar_model_id']);
             unset($auto['espontaneo_model_id']);
-            
+
             // Validar que model_id no sea null
             // if (empty($auto['model_id'])) {
             //     throw new \Exception('Debe seleccionar el responsable del vehículo');
             // }
-            
+
             // Asegurar que model esté definido
             if (empty($auto['model'])) {
                 $auto['model'] = match($config['type']) {
                     1 => 'Owner',
-                    2 => 'Employee', 
+                    2 => 'Employee',
                     3 => 'FormControl',
                     default => 'Owner'
                 };
             }
-    
+
             return $auto;
         });
-        
+
         Auto::insert($data->toArray());
     }
 
@@ -320,7 +320,7 @@ class ActivitiesResource extends Resource
 
     }
 
-        
+
     public static function getPeoples($data)
     {
         self::$PARAMS = [
@@ -328,19 +328,19 @@ class ActivitiesResource extends Resource
             'tipo_entrada' => $data['tipo_entrada'] ?? null,
             'form_control_id' => $data['form_control_id'] ?? null // Agregar default null
         ];
-    
+
         if( $data['tipo_entrada'] == 2){
             return $data['num_search'] || count($data['ids']) ? self::searchEmployee($data['num_search'], $data['tipo'], $data['ids']) : [];
         }
-    
+
         if( $data['tipo_entrada'] == 1){
             return $data['num_search'] || count($data['ids']) ? self::searchOwners($data['num_search'], $data['tipo'], $data['ids']) : [];
         }
-    
+
         if( $data['tipo_entrada'] == 3 && isset($data['form_control_id']) && $data['form_control_id']){
             return $data['num_search'] || count($data['ids']) ? self::searchFormControl($data['form_control_id'],  $data['tipo'], $data['ids']) : [];
         }
-    
+
         return [];
     }
 
@@ -589,7 +589,7 @@ class ActivitiesResource extends Resource
                  */
                 Forms\Components\Fieldset::make('peoples_list')->label(__('general.Peoples'))
                     ->columns(2)
-                    ->schema([  
+                    ->schema([
 
                         /**
                          * PERSONAS
@@ -916,7 +916,7 @@ class ActivitiesResource extends Resource
                                     $data = count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
-                                    
+
                                     $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'option') : [];
                                 }
 
@@ -977,7 +977,7 @@ class ActivitiesResource extends Resource
                                     }else if($get('tipo_entrada') == 3){
                                         $model = 'FormControl';
                                     }
-                                  
+
                                     return [
                                         'model' => $model,
                                         'tipo_entrada' => $get('tipo_entrada'),
