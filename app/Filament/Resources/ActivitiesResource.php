@@ -83,7 +83,8 @@ class ActivitiesResource extends Resource
                 $employee['texto'].= ' - '.__('general.Employee');
             }else{
                 $employee['texto'] = $employee->dni;
-                $employee['texto'] .= ' - '.$employee->work ? $employee->work->name : '';
+                // wrap ternary in parentheses to ensure correct concatenation order and avoid accessing ->name on null
+                $employee['texto'] .= ' - '. ($employee->work ? $employee->work->name : '');
             }
 
             return $employee;
