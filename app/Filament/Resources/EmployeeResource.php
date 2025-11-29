@@ -488,8 +488,8 @@ class EmployeeResource extends Resource
                         $record->save();
 
                         Notification::make()
-                            ->title('Seguro personal verificado')
-                            ->body('La fecha de vencimiento del seguro personal se ha actualizado correctamente.')
+                            ->title('Trabajador verificado')
+                            ->body('La fecha de reverificación se ha actualizado correctamente.')
                             ->success()
                             ->send();
                     })
