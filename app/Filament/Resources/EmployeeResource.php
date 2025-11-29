@@ -491,6 +491,7 @@ class EmployeeResource extends Resource
                                 Repeater::make('files')
                                     ->relationship('files')
                                     ->schema([
+                                        Forms\Components\Hidden::make('id'),
                                         DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento del documento'),
                                         Forms\Components\FileUpload::make('file')
                                             ->label('Archivo')
@@ -514,21 +515,7 @@ class EmployeeResource extends Resource
                                             })->toArray();
                                     })
                                     ,
-                                // Forms\Components\TextInput::make('file_name')
-                                //     ->label('Descripción del documento')
-                                //     ->required()
-                                //     ->default('Seguro'),
-                                // Forms\Components\DatePicker::make('file_fecha_vencimiento')
-                                //     ->label('Fecha de vencimiento')
-                                //     ->displayFormat('d/m/Y')
-                                //     ->required(),
-                                // Forms\Components\FileUpload::make('file_upload')
-                                //     ->label('Archivo')
-                                //     ->required()
-                                //     ->storeFileNamesIn('attachment_file_names')
-                                //     ->getUploadedFileNameForStorageUsing(function ($file) {
-                                //         return $file->getClientOriginalName();
-                                //     }),
+                             
                             ])
                             // ->visible(fn ($record) => $record->isVencidoSeguro())
                             ,
