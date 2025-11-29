@@ -126,6 +126,8 @@ class EmployeeResource extends Resource
                 ->displayFormat('d/m/Y')
                 ->required()
                 ->default(Carbon::now()->addMonths(3))
+                ->hidden(true)
+                ->dehydrated()
                 ->live()
                 ,
             // Forms\Components\Select::make('owner_id')
