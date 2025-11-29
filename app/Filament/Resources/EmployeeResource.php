@@ -193,10 +193,10 @@ class EmployeeResource extends Resource
                         Forms\Components\Hidden::make('name')->dehydrated(),
                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento del documento')
-                            // ->hidden(function(Get $get, Set $set, $context){
-                            //     $is_required = $get('is_required_fecha_vencimiento') ?? false;
-                            //     return !$is_required;
-                            // })
+                            ->hidden(function(Get $get, Set $set, $context){
+                                $is_required = $context == 'create' && $get('is_required_fecha_vencimiento') ?? false;
+                                return !$is_required;
+                            })
                             ->required(function(Get $get, Set $set, $context){
                                 $is_required = $get('is_required_fecha_vencimiento') ?? false;
                                 return $is_required;
@@ -484,7 +484,10 @@ class EmployeeResource extends Resource
                             ->schema([
                                 Forms\Components\Hidden::make('id'),
                                 Forms\Components\Hidden::make('name'),
-                                DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento del documento'),
+                                DatePicker::make('fecha_vencimiento')
+                                    ->label('Fecha de vencimiento del documento')
+
+                                    ,
                                 Forms\Components\FileUpload::make('file')
                                     ->label('Archivo')
                                     ->required()
