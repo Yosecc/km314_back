@@ -35,6 +35,11 @@ class Employee extends Model
         return $this->hasMany(Auto::class,'model_id')->where('model','Employee');
     }
 
+    public function notes()
+    {
+        return $this->hasMany(EmployeeNote::class,'employee_id');
+    }
+
     public function trabajos()
     {
         return $this->hasMany(Trabajos::class,'trabajo_id');

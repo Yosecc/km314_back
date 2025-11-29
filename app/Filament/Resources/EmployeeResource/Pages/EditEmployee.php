@@ -2,16 +2,18 @@
 
 namespace App\Filament\Resources\EmployeeResource\Pages;
 
-
 use App\Filament\Resources\EmployeeResource;
+use App\Filament\Resources\EmployeeResource\Traits\HasNotesAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Filament\Actions;
-
+use Filament\Notifications\Notification;
 
 class EditEmployee extends EditRecord
 {
+    use HasNotesAction;
+    
     protected static string $resource = EmployeeResource::class;
 
     protected function beforeFill(): void
@@ -33,8 +35,8 @@ class EditEmployee extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            // Acción para editar
-            // Actions\EditAction::make(),
+            // Botón de notificaciones
+            self::getNotesPageAction(),
             
             // Acción para aprobar (solo si es admin y el empleado está pendiente)
             Actions\Action::make('aprobar')

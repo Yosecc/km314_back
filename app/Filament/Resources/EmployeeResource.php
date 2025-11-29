@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\EmployeeResource\Pages;
 use App\Filament\Resources\EmployeeResource\RelationManagers;
+use App\Filament\Resources\EmployeeResource\Traits\HasNotesAction;
 use App\Models\ConstructionCompanie;
 use App\Models\Employee;
 use App\Models\Owner;
@@ -34,6 +35,8 @@ use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Wizard;
 class EmployeeResource extends Resource
 {
+    use HasNotesAction;
+    
     protected static ?string $model = Employee::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -181,7 +184,7 @@ class EmployeeResource extends Resource
             }),
 
             Forms\Components\TextInput::make('observations')
-                ->label('Observaciones')
+                ->label('Observaciones del trabajo a realizar')
                 ->columnSpanFull(),
         ];
     }
@@ -486,6 +489,8 @@ class EmployeeResource extends Resource
                 //
             ])
             ->actions([
+                // Botón de notificaciones en la tabla
+                self::getNotesTableAction(),
 
                 Tables\Actions\Action::make('verificar_seguro')
                     ->label('Verificar trabajador')
