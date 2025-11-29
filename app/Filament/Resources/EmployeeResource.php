@@ -491,9 +491,17 @@ class EmployeeResource extends Resource
                                 Repeater::make('files')
                                     ->relationship('files')
                                     ->schema([
-                                         DatePicker::make('fecha_vencimiento')
-                            ->label('Fecha de vencimiento del documento')
+                                        DatePicker::make('fecha_vencimiento')
+                                            ->label('Fecha de vencimiento del documento')
                                     ])
+                                    ->default(function ($record) {
+                                        return $record->files->map(function ($file) {
+                                            return [
+                                                'id' => $file->id,
+                                                'fecha_vencimiento' => $file->fecha_vencimiento,
+                                            ];
+                                        })->toArray();
+                                    })
                                     ,
                                 // Forms\Components\TextInput::make('file_name')
                                 //     ->label('Descripción del documento')
