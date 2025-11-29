@@ -30,6 +30,17 @@ class EditEmployee extends EditRecord
                 $this->record->owners()->attach(Auth::user()->owner_id);
             }
         }
+
+        // Si es un owner y el estado era rechazado, cambiarlo a pendiente
+        if (Auth::user()->hasRole('owner') && $this->record->status === 'rechazado') {
+            $this->record->update(['status' => 'pendiente']);
+            
+            Notification::make()
+                ->title('Estado actualizado')
+                ->body('El trabajador ha sido enviado nuevamente para aprobación.')
+                ->info()
+                ->send();
+        }
     }
 
 
@@ -56,7 +67,8 @@ class EditEmployee extends EditRecord
                         ->send();
                 })
                 ->visible(function () {
-                    return Auth::user()->hasAnyRole(['admin', 'super_admin']);
+                    return Auth::user()->hasAnyRole(['admin', 'super_admin']) && 
+                           $this->record->status === 'pendiente';
                 }),
 
             // Acción para rechazar (solo si es admin y el empleado está pendiente)
