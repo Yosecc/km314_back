@@ -517,46 +517,66 @@ class EmployeeResource extends Resource
                             
                     ])
                     
+                                       
                     ->action(function (array $data, Employee $record): void {
-
-                        
                         // Obtener archivos vencidos directamente de la relación
-                        $vencidos = $record->files->where('fecha_vencimiento', '<', now());
-
-                        if (!$vencidos->isEmpty()) {
+                        $vencidos = $record->files()->where('fecha_vencimiento', '<', now())->get();
+                    
+                        if ($vencidos->isEmpty()) {
                             Notification::make()
-                                ->title('Todos los documentos vencidos deben ser renovados.')
-                                ->warning()
+                                ->title('No hay documentos vencidos para renovar')
+                                ->info()
                                 ->send();
-
                             return;
-                        }else{
-
-                            foreach ($vencidos as $fileRecord) {
-                                // Buscar si hay datos actualizados en $data para este archivo
-                                $fileData = collect($data['files'] ?? [])->firstWhere('id', $fileRecord->id);
-                                
-                                if ($fileData) {
-                                    // Actualizar fecha de vencimiento si fue modificada
-                                    if (isset($fileData['fecha_vencimiento'])) {
-                                        $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
-                                    }
-                                    
-                                    // Actualizar archivo si fue subido uno nuevo
-                                    if (isset($fileData['file']) && is_array($fileData['file']) && count($fileData['file']) > 0) {
-                                        $uploadedFilePath = $fileData['file'][0]->store('employee_files');
-                                        $fileRecord->file = $uploadedFilePath;
-                                    }
-                                    
-                                    $fileRecord->save();
-                                }
-                            }
-
-                            Notification::make()
-                                ->title('Documentos renovados exitosamente')
-                                ->success()
-                                ->send();
                         }
+                    
+                        // Validar que TODOS los archivos vencidos tengan datos actualizados
+                        $todosActualizados = true;
+                        foreach ($vencidos as $fileRecord) {
+                            $fileData = collect($data['files'] ?? [])->firstWhere('id', $fileRecord->id);
+                            
+                            // Si no hay datos o falta la fecha de vencimiento o el archivo
+                            if (!$fileData || 
+                                empty($fileData['fecha_vencimiento']) || 
+                                (empty($fileData['file']) || !is_array($fileData['file']) || count($fileData['file']) === 0)) {
+                                $todosActualizados = false;
+                                break;
+                            }
+                        }
+                    
+                        if (!$todosActualizados) {
+                            Notification::make()
+                                ->title('Todos los documentos vencidos deben ser renovados')
+                                ->body('Debes actualizar la fecha de vencimiento y subir un nuevo archivo para cada documento vencido.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+                    
+                        // Si todo está correcto, actualizar los archivos
+                        foreach ($vencidos as $fileRecord) {
+                            $fileData = collect($data['files'])->firstWhere('id', $fileRecord->id);
+                            
+                            if ($fileData) {
+                                // Actualizar fecha de vencimiento
+                                $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
+                                
+                                // Actualizar archivo
+                                if (isset($fileData['file'][0])) {
+                                    $uploadedFilePath = is_string($fileData['file'][0]) 
+                                        ? $fileData['file'][0] 
+                                        : $fileData['file'][0]->store('employee_files');
+                                    $fileRecord->file = $uploadedFilePath;
+                                }
+                                
+                                $fileRecord->save();
+                            }
+                        }
+                    
+                        Notification::make()
+                            ->title('Documentos renovados exitosamente')
+                            ->success()
+                            ->send();
                     })
                     ->visible(function ($record) {
                         $vencimientos = self::isVencimientos($record);
