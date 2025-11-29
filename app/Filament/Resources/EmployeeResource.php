@@ -121,15 +121,15 @@ class EmployeeResource extends Resource
                 })
                 ->live(),
 
-            DatePicker::make('fecha_vencimiento_seguro')
-                ->label('Fecha de vencimiento del seguro personal')
-                ->displayFormat('d/m/Y')
-                ->required()
-                ->default(Carbon::now()->addMonths(3))
-                ->hidden(true)
-                ->dehydrated()
-                ->live()
-                ,
+            // DatePicker::make('fecha_vencimiento_seguro')
+            //     ->label('Fecha de vencimiento del seguro personal')
+            //     ->displayFormat('d/m/Y')
+            //     ->required()
+            //     ->default(Carbon::now()->addMonths(3))
+            //     ->hidden(true)
+            //     ->dehydrated()
+            //     ->live()
+            //     ,
             // Forms\Components\Select::make('owner_id')
             //     ->label('Propietario')
             //     ->searchable()
