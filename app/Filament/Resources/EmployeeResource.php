@@ -314,6 +314,7 @@ class EmployeeResource extends Resource
                                 ],
                             ])
                             ->columns(1)
+                            ->columnSpanFull(),
                             
                     ])
                     ->itemLabel('Información del vehículo')
