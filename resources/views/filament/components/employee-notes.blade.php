@@ -2,7 +2,7 @@
     @if($notes->isNotEmpty())
         <div class="space-y-3 max-h-96 overflow-y-auto">
             @foreach($notes as $note)
-                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 {{ !$note->status ? 'ring-2 ring-blue-500' : '' }}">
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex items-center gap-2">
                             <span class="font-semibold text-gray-900 dark:text-gray-100">
@@ -12,9 +12,13 @@
                                 {{ $note->created_at->diffForHumans() }}
                             </span>
                         </div>
-                        @if($note->status === 'active')
-                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                Activa
+                        @if(!$note->status)
+                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                Nueva
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                                Leída
                             </span>
                         @endif
                     </div>

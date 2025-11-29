@@ -21,12 +21,18 @@ trait HasNotesAction
             ->label('Notificaciones')
             ->icon('heroicon-o-bell')
             ->color('info')
+            ->badge(fn (Employee $record) => $record->notes()->where('status', false)->count() ?: null)
+            ->badgeColor('danger')
             ->modalHeading(fn ($record) => 'Notificaciones - ' . $record->first_name . ' ' . $record->last_name)
             ->modalWidth('3xl')
             ->modalContent(fn (Employee $record) => view('filament.components.employee-notes', [
                 'notes' => $record->notes()->with('user')->orderBy('created_at', 'desc')->get(),
                 'employee' => $record
             ]))
+            ->mountUsing(function (Employee $record) {
+                // Marcar todas las notas como leídas al abrir el modal
+                $record->notes()->where('status', false)->update(['status' => true]);
+            })
             ->form([
                 Forms\Components\Textarea::make('description')
                     ->label('Nueva notificación')
@@ -40,7 +46,7 @@ trait HasNotesAction
                     'description' => $data['description'],
                     'employee_id' => $record->id,
                     'user_id' => Auth::id(),
-                    'status' => 'active',
+                    'status' => false, // No leída al crear
                 ]);
 
                 Notification::make()
@@ -60,12 +66,18 @@ trait HasNotesAction
             ->label('Notificaciones')
             ->icon('heroicon-o-bell')
             ->color('info')
+            ->badge(fn (Employee $record) => $record->notes()->where('status', false)->count() ?: null)
+            ->badgeColor('danger')
             ->modalHeading(fn (Employee $record) => 'Notificaciones - ' . $record->first_name . ' ' . $record->last_name)
             ->modalWidth('3xl')
             ->modalContent(fn (Employee $record) => view('filament.components.employee-notes', [
                 'notes' => $record->notes()->with('user')->orderBy('created_at', 'desc')->get(),
                 'employee' => $record
             ]))
+            ->mountUsing(function (Employee $record) {
+                // Marcar todas las notas como leídas al abrir el modal
+                $record->notes()->where('status', false)->update(['status' => true]);
+            })
             ->form([
                 Forms\Components\Textarea::make('description')
                     ->label('Nueva notificación')
@@ -79,7 +91,7 @@ trait HasNotesAction
                     'description' => $data['description'],
                     'employee_id' => $record->id,
                     'user_id' => Auth::id(),
-                    'status' => 'active',
+                    'status' => false, // No leída al crear
                 ]);
 
                 Notification::make()
