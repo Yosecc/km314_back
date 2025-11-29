@@ -36,6 +36,11 @@ trait HasNotesAction
                 }
             })
             ->visible(function(Employee $record){
+
+                if(Auth::user()->hasRole('super_admin') || Auth::user()->hasRole('admin')){
+                    return true;
+                }
+
                 return Auth::user()->hasRole('owner') && $record->notes()->where('status', false)->count() ? true : false;
             })
             ->form([
@@ -88,6 +93,9 @@ trait HasNotesAction
                     $record->notes()->where('status', false)->update(['status' => true]);
                 }
             })->visible(function(Employee $record){
+                if(Auth::user()->hasRole('super_admin') || Auth::user()->hasRole('admin')){
+                    return true;
+                }
                 return $record->notes()->where('status', false)->count() ? true : false;
             })
             ->form([
