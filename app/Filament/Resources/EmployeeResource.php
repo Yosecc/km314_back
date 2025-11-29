@@ -478,6 +478,7 @@ class EmployeeResource extends Resource
                             ->content('Remplaza los documentos vencidos con nuevos archivos y fechas de vencimiento actualizadas.')
                             ->columnSpanFull(),   
                         Repeater::make('files')
+                            ->label('Documentos vencidos a renovar')
                             ->relationship('files')
                             ->addable(false)
                             ->deletable(false)
@@ -491,7 +492,7 @@ class EmployeeResource extends Resource
                                     ->label('Fecha de vencimiento del documento'),
                                 Forms\Components\FileUpload::make('file')
                                     ->label('Archivo')
-                                    ->helperText('Sube un nuevo archivo para renovar el documento vencido. Presiona la X para eliminar el archivo actual y subir uno nuevo.')
+                                    ->helperText(' Presiona la X para eliminar el archivo actual y subir uno nuevo.')
                                     ->required()
                                     ->storeFileNamesIn('attachment_file_names')
                                     ->openable()
