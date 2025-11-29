@@ -323,7 +323,7 @@ class EmployeeResource extends Resource
                                     ->disabled(function($context, Get $get){
                                         return $context == 'edit' ? true:false;
                                     }),
-                            ])->columns(1),
+                            ])->columns(3),
                             
                     ])
                     ->defaultItems(0)
