@@ -491,16 +491,27 @@ class EmployeeResource extends Resource
                                 Repeater::make('files')
                                     ->relationship('files')
                                     ->schema([
-                                        DatePicker::make('fecha_vencimiento')
-                                            ->label('Fecha de vencimiento del documento')
+                                        DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento del documento'),
+                                        Forms\Components\FileUpload::make('file')
+                                            ->label('Archivo')
+                                            ->required()
+                                            ->storeFileNamesIn('attachment_file_names')
+                                            ->openable()
+                                            ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                                return $file ? $file->getClientOriginalName() : $record->file;
+                                            }),
                                     ])
                                     ->default(function ($record) {
-                                        return $record->files->map(function ($file) {
-                                            return [
-                                                'id' => $file->id,
-                                                'fecha_vencimiento' => $file->fecha_vencimiento,
-                                            ];
-                                        })->toArray();
+                                        return $record->files()
+                                            ->where('fecha_vencimiento', '<', now())
+                                            ->get()
+                                            ->map(function ($file) {
+                                                return [
+                                                    'id' => $file->id,
+                                                    'fecha_vencimiento' => $file->fecha_vencimiento,
+                                                    'file' => $file->file,
+                                                ];
+                                            })->toArray();
                                     })
                                     ,
                                 // Forms\Components\TextInput::make('file_name')
