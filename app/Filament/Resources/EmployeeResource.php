@@ -179,6 +179,10 @@ class EmployeeResource extends Resource
                     return Auth::user()->owner_id;
                 }
             }),
+
+            Forms\Components\TextInput::make('observations')
+                ->label('Observaciones')
+                ->columnSpanFull(),
         ];
     }
 
