@@ -475,16 +475,6 @@ class EmployeeResource extends Resource
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
                     ->form([
-                        Forms\Components\Section::make('Renovar Seguro')
-                            ->schema([
-                                Forms\Components\DatePicker::make('fecha_vencimiento_seguro')
-                                    ->label('Fecha de vencimiento del seguro')
-                                    ->displayFormat('d/m/Y')
-                                    ->required(),
-                            ])
-                            // ->visible(fn ($record) => $record->isVencidoSeguro())
-                            ,
-
                        Forms\Components\Section::make('Renovar Documentos')
                             ->schema([
 
