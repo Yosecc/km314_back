@@ -517,6 +517,8 @@ class EmployeeResource extends Resource
                         $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(3);
                         $record->save();
 
+                        dd($data);
+
                         foreach ($data['files'] as $fileData) {
                             $fileRecord = $record->files()->where('id', $fileData['id'])->first();
                             if ($fileRecord) {
