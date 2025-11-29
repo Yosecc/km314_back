@@ -484,7 +484,6 @@ class EmployeeResource extends Resource
                             ->deletable(false)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                             ->grid(2)
-                            
                             ->schema([
                                 Forms\Components\Hidden::make('id'),
                                 Forms\Components\Hidden::make('name'),
@@ -519,6 +518,8 @@ class EmployeeResource extends Resource
                     ])
                     
                     ->action(function (array $data, Employee $record): void {
+
+                        dd($record->files);
                         // Obtener archivos vencidos directamente de la relación
                         $vencidos = $record->files()
                             ->where('fecha_vencimiento', '<', now())
