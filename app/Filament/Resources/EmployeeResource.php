@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\Storage;
    use Filament\Tables\Columns\IconColumn;
 use Filament\Notifications\Notification;
 use Filament\Infolists\Components\TextEntry;
-
+use Filament\Forms\Components\Tabs;
 class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
@@ -45,142 +45,143 @@ class EmployeeResource extends Resource
         return 'trabajadores';
     }
 
-    public static function form(Form $form): Form
+    private static function formDatosPersonales()
     {
-        return $form
-            ->schema([
-                Forms\Components\Grid::make(2)
-                ->schema([
-                    Forms\Components\Hidden::make('status')
-                        ->default(function(){
-                            if (Auth::user()->hasRole('owner')) {
-                                return 'pendiente';
-                            }
-                            return 'aprobado'; // Para admin u otros roles
-                        }),
-                    Forms\Components\Select::make('work_id')
-                        ->label(__("general.Work"))
-                        ->required()
-                        ->default(37)
-                        ->visible(function(){
-                            if (Auth::user()->hasRole('super_admin')) {
-                                return true;
-                            }
-                            return false;
-                        })
-                        ->relationship(name: 'work', titleAttribute: 'name'),
-
-                    Forms\Components\TextInput::make('dni')
-                        ->label(__("general.DNI"))
-                        ->required()
-                        ->numeric(),
-
-                    Forms\Components\TextInput::make('first_name')
-                        ->label(__("general.FirstName"))
-                        ->required()
-                        ->maxLength(255),
-
-                    Forms\Components\TextInput::make('last_name')
-                        ->label(__("general.LastName"))
-                        ->required()
-                        ->maxLength(255),
-
-                    Forms\Components\TextInput::make('phone')
-                        ->label(__("general.Phone"))
-                        ->tel()
-                        ->required()
-                        ->numeric(),
-
-                    Forms\Components\Hidden::make('user_id')->disabled(fn($context)=> $context == 'edit')->default(Auth::user()->id),
-
-                    Forms\Components\Select::make('model_origen')
-                        ->label('Origen')
-                        ->options([
-                            'ConstructionCompanie' => 'Compañías De Construcciones',
-                            'Employee' => 'KM314',
-                            'Owner' => 'Propietario',
-                        ])
-                        ->default(fn(Get $get) => $get('model_origen') ?? (Auth::user()->hasRole('owner') && Auth::user()->owner_id ? 'Owner' : null))
-                        ->dehydrated(true)
-                        ->visible(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return false;
-                            }
-                            return true;
-                        })
-                        ->live(),
-
-                    Forms\Components\Select::make('model_origen_id')
-                        ->label('Compañía de origen')
-                        ->options(function(){
-                            return ConstructionCompanie::get()->pluck('name','id')->toArray();
-                        })->disabled(function(Get $get){
-                            return $get('model_origen') == 'ConstructionCompanie' ? false:true;
-                        })
-                        ->visible(function(Get $get){
-                            return $get('model_origen') == 'ConstructionCompanie' ? true:false;
-                        })
-                        ->live(),
-
-                    DatePicker::make('fecha_vencimiento_seguro')
-                        ->label('Fecha de vencimiento del seguro personal')
-                        ->displayFormat('d/m/Y')
-                        ->required()
-                        ->default(Carbon::now()->addMonths(3))
-                        ->live()
-                        ,
-                    // Forms\Components\Select::make('owner_id')
-                    //     ->label('Propietario')
-                    //     ->searchable()
-                    //     ->options(function(){
-                    //         return Owner::get()->map(function($owner){
-                    //             $owner['texto'] = $owner->nombres();
-                    //             return $owner;
-                    //         })->pluck('texto','id')->toArray();
-                    //     })
-                    //     ->default(function(){
-                    //         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                    //             return Auth::user()->owner_id;
-                    //         }
-                    //     })
-                    //     ->visible(function(){
-                    //         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                    //             return false;
-                    //         }
-                    //         return true;
-                    //     }),
-                // Cambiar el select de owner_id por un select múltiple
-                Forms\Components\Select::make('owners')
-                    ->label('Propietarios')
-                    ->multiple()
-                    ->searchable()
-                    ->relationship('owners', 'first_name')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->nombres())
-                    ->preload()
-                    ->default(function($record){
-                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                            return [Auth::user()->owner_id];
-                        }
-                        // Si es edición y tiene owner_id, incluirlo por defecto
-                        return $record && $record->owner_id ? [$record->owner_id] : [];
-                    })
-                    ->visible(function(){
-                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                            return false;
-                        }
+        return [
+            Forms\Components\Hidden::make('status')
+                ->default(function(){
+                    if (Auth::user()->hasRole('owner')) {
+                        return 'pendiente';
+                    }
+                    return 'aprobado'; // Para admin u otros roles
+                }),
+            Forms\Components\Select::make('work_id')
+                ->label(__("general.Work"))
+                ->required()
+                ->default(37)
+                ->visible(function(){
+                    if (Auth::user()->hasRole('super_admin')) {
                         return true;
-                    }),
+                    }
+                    return false;
+                })
+                ->relationship(name: 'work', titleAttribute: 'name'),
 
-                // Mantener temporalmente el campo owner_id oculto para compatibilidad
-                Forms\Components\Hidden::make('owner_id')
-                    ->default(function(){
-                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                            return Auth::user()->owner_id;
-                        }
-                    }),
-                ])->columns(2),
+            Forms\Components\TextInput::make('dni')
+                ->label(__("general.DNI"))
+                ->required()
+                ->numeric(),
 
-                Repeater::make('files')
+            Forms\Components\TextInput::make('first_name')
+                ->label(__("general.FirstName"))
+                ->required()
+                ->maxLength(255),
+
+            Forms\Components\TextInput::make('last_name')
+                ->label(__("general.LastName"))
+                ->required()
+                ->maxLength(255),
+
+            Forms\Components\TextInput::make('phone')
+                ->label(__("general.Phone"))
+                ->tel()
+                ->required()
+                ->numeric(),
+
+            Forms\Components\Hidden::make('user_id')->disabled(fn($context)=> $context == 'edit')->default(Auth::user()->id),
+
+            Forms\Components\Select::make('model_origen')
+                ->label('Origen')
+                ->options([
+                    'ConstructionCompanie' => 'Compañías De Construcciones',
+                    'Employee' => 'KM314',
+                    'Owner' => 'Propietario',
+                ])
+                ->default(fn(Get $get) => $get('model_origen') ?? (Auth::user()->hasRole('owner') && Auth::user()->owner_id ? 'Owner' : null))
+                ->dehydrated(true)
+                ->visible(function(){
+                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                        return false;
+                    }
+                    return true;
+                })
+                ->live(),
+
+            Forms\Components\Select::make('model_origen_id')
+                ->label('Compañía de origen')
+                ->options(function(){
+                    return ConstructionCompanie::get()->pluck('name','id')->toArray();
+                })->disabled(function(Get $get){
+                    return $get('model_origen') == 'ConstructionCompanie' ? false:true;
+                })
+                ->visible(function(Get $get){
+                    return $get('model_origen') == 'ConstructionCompanie' ? true:false;
+                })
+                ->live(),
+
+            DatePicker::make('fecha_vencimiento_seguro')
+                ->label('Fecha de vencimiento del seguro personal')
+                ->displayFormat('d/m/Y')
+                ->required()
+                ->default(Carbon::now()->addMonths(3))
+                ->live()
+                ,
+            // Forms\Components\Select::make('owner_id')
+            //     ->label('Propietario')
+            //     ->searchable()
+            //     ->options(function(){
+            //         return Owner::get()->map(function($owner){
+            //             $owner['texto'] = $owner->nombres();
+            //             return $owner;
+            //         })->pluck('texto','id')->toArray();
+            //     })
+            //     ->default(function(){
+            //         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+            //             return Auth::user()->owner_id;
+            //         }
+            //     })
+            //     ->visible(function(){
+            //         if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+            //             return false;
+            //         }
+            //         return true;
+            //     }),
+        // Cambiar el select de owner_id por un select múltiple
+        Forms\Components\Select::make('owners')
+            ->label('Propietarios')
+            ->multiple()
+            ->searchable()
+            ->relationship('owners', 'first_name')
+            ->getOptionLabelFromRecordUsing(fn ($record) => $record->nombres())
+            ->preload()
+            ->default(function($record){
+                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                    return [Auth::user()->owner_id];
+                }
+                // Si es edición y tiene owner_id, incluirlo por defecto
+                return $record && $record->owner_id ? [$record->owner_id] : [];
+            })
+            ->visible(function(){
+                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                    return false;
+                }
+                return true;
+            }),
+
+        // Mantener temporalmente el campo owner_id oculto para compatibilidad
+        Forms\Components\Hidden::make('owner_id')
+            ->default(function(){
+                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                    return Auth::user()->owner_id;
+                }
+            }),
+        ];
+    }
+
+    private static function formArchivosPersonales()
+    {
+        return [
+            Repeater::make('files')
                     ->relationship()
                     ->label('Documentos')
                     ->schema([
@@ -240,9 +241,14 @@ class EmployeeResource extends Resource
                         ],
 
                     ])
-                    ->columns(2),
+                    ->columns(2)
+        ];
+    }
 
-                Forms\Components\Repeater::make('autos')
+    private static function formAutos()
+    {
+        return [
+            Forms\Components\Repeater::make('autos')
                     ->relationship()
                     ->mutateRelationshipDataBeforeFillUsing(function ($record, $data) {
                         // dd($record->autos, $data);
@@ -269,11 +275,14 @@ class EmployeeResource extends Resource
                             // ->maxLength(255),
                     ])
                     ->defaultItems(0)
-                    ->columns(2),
-                    
+                    ->columns(2)
+        ];
+    }
 
-               
-                Forms\Components\Repeater::make('horarios')
+    private static function formHorarios()
+    {
+        return [
+            Forms\Components\Repeater::make('horarios')
                     ->relationship()
                     ->schema([
                         Placeholder::make('')->content('Selecciona el dia y el horario de trabajo')->columnSpanFull(),
@@ -299,8 +308,20 @@ class EmployeeResource extends Resource
                     ->minItems(1)
                     ->defaultItems(1)
                     ->columns(3),
+        ];
+    }
 
-                
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Tabs::make('Tabs')
+                    ->tabs([
+                        Tabs\Tab::make('Información')->schema(self::formDatosPersonales()),
+                        Tabs\Tab::make('Archivos personales')->schema(self::formArchivosPersonales()),
+                        Tabs\Tab::make('Autos')->schema(self::formAutos()),
+                        Tabs\Tab::make('Horarios de trabajo')->schema(self::formHorarios()),
+                    ]),                  
             ])->columns(1);
     }
 
