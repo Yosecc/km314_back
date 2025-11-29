@@ -237,7 +237,7 @@ class EmployeeResource extends Resource
                         ],
                         [
                             'name' => 'Monotributo',
-                            'is_required_fecha_vencimiento' => true,
+                            'is_required_fecha_vencimiento' => false,
                         ],
 
                     ])
