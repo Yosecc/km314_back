@@ -8,7 +8,7 @@
                             <span class="font-semibold text-gray-900 dark:text-gray-100">
                                 {{ $note->user->name ?? 'Usuario' }}
                             </span>
-                            <span class="text-xs text-gray-500 dark:text-gray-400">
+                            <span class="text-xs text-gray-900 dark:text-gray-100">
                                 {{ $note->created_at->diffForHumans() }}
                             </span>
                         </div>

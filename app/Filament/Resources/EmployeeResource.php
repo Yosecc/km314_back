@@ -27,12 +27,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-   use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Notifications\Notification;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Wizard;
+
 class EmployeeResource extends Resource
 {
     use HasNotesAction;

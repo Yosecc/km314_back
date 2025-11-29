@@ -21,7 +21,7 @@ trait HasNotesAction
             ->label('Notificaciones')
             ->icon('heroicon-o-bell')
             ->color('info')
-            ->badge(fn (Employee $record) => $record->notes()->where('status', false)->count() ?: null)
+            ->badge(fn (Employee $record) => Auth::user()->hasRole('owner') ? $record->notes()->where('status', false)->count() ?: null : null)
             ->badgeColor('danger')
             ->modalHeading(fn ($record) => 'Notificaciones - ' . $record->first_name . ' ' . $record->last_name)
             ->modalWidth('3xl')
@@ -31,7 +31,9 @@ trait HasNotesAction
             ]))
             ->mountUsing(function (Employee $record) {
                 // Marcar todas las notas como leídas al abrir el modal
-                $record->notes()->where('status', false)->update(['status' => true]);
+                if(Auth::user()->hasRole('owner')){
+                    $record->notes()->where('status', false)->update(['status' => true]);
+                }
             })
             ->form([
                 Forms\Components\Textarea::make('description')
@@ -66,7 +68,7 @@ trait HasNotesAction
             ->label('Notificaciones')
             ->icon('heroicon-o-bell')
             ->color('info')
-            ->badge(fn (Employee $record) => $record->notes()->where('status', false)->count() ?: null)
+            ->badge(fn (Employee $record) => Auth::user()->hasRole('owner') ? $record->notes()->where('status', false)->count() ?: null : null)
             ->badgeColor('danger')
             ->modalHeading(fn (Employee $record) => 'Notificaciones - ' . $record->first_name . ' ' . $record->last_name)
             ->modalWidth('3xl')
@@ -76,7 +78,9 @@ trait HasNotesAction
             ]))
             ->mountUsing(function (Employee $record) {
                 // Marcar todas las notas como leídas al abrir el modal
-                $record->notes()->where('status', false)->update(['status' => true]);
+                if(Auth::user()->hasRole('owner')){
+                    $record->notes()->where('status', false)->update(['status' => true]);
+                }
             })
             ->form([
                 Forms\Components\Textarea::make('description')
