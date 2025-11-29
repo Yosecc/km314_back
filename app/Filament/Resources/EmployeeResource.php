@@ -469,17 +469,33 @@ class EmployeeResource extends Resource
                 //
             ])
             ->actions([
+                                
                 Tables\Actions\Action::make('renovar_documentos')
                     ->label('Renovar documentos')
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
+                    ->fillForm(function (Employee $record): array {
+                        return [
+                            'files' => $record->files()
+                                ->where('fecha_vencimiento', '<', now())
+                                ->get()
+                                ->map(function ($file) {
+                                    return [
+                                        'id' => $file->id,
+                                        'fecha_vencimiento' => $file->fecha_vencimiento,
+                                        'file' => [$file->file],
+                                        'name' => $file->name,
+                                    ];
+                                })->toArray()
+                        ];
+                    })
                     ->form([
                         Placeholder::make('')
                             ->content('Remplaza los documentos vencidos con nuevos archivos y fechas de vencimiento actualizadas.')
                             ->columnSpanFull(),   
                         Repeater::make('files')
                             ->label('Documentos vencidos a renovar')
-                            ->relationship('files')
+                            // QUITAR ->relationship('files')
                             ->addable(false)
                             ->deletable(false)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
@@ -488,10 +504,11 @@ class EmployeeResource extends Resource
                                 Forms\Components\Hidden::make('id'),
                                 Forms\Components\Hidden::make('name'),
                                 DatePicker::make('fecha_vencimiento')
-                                    ->label('Fecha de vencimiento del documento'),
+                                    ->label('Fecha de vencimiento del documento')
+                                    ->required(),
                                 Forms\Components\FileUpload::make('file')
                                     ->label('Archivo')
-                                    ->helperText(' Presiona la X para eliminar el archivo actual y subir uno nuevo.')
+                                    ->helperText('Presiona la X para eliminar el archivo actual y subir uno nuevo.')
                                     ->required()
                                     ->storeFileNamesIn('attachment_file_names')
                                     ->openable()
@@ -499,27 +516,9 @@ class EmployeeResource extends Resource
                                         return $file ? $file->getClientOriginalName() : $record->file;
                                     }),
                             ])
-                            ->default(function ($record) {
-                                return $record->files()
-                                    ->where('fecha_vencimiento', '<', now())
-                                    ->get()
-                                    ->map(function ($file) {
-                                        return [
-                                            'id' => $file->id,
-                                            'fecha_vencimiento' => $file->fecha_vencimiento,
-                                            'file' => [$file->file],
-                                            'name' => $file->name,
-                                        ];
-                                    })->toArray();
-                            })
-                            ,
-                             
-                            
                     ])
-                    
-                                       
                     ->action(function (array $data, Employee $record): void {
-                        // Obtener archivos vencidos directamente de la relación
+                        // Tu validación sigue igual...
                         $vencidos = $record->files()->where('fecha_vencimiento', '<', now())->get();
                     
                         if ($vencidos->isEmpty()) {
@@ -530,12 +529,10 @@ class EmployeeResource extends Resource
                             return;
                         }
                     
-                        // Validar que TODOS los archivos vencidos tengan datos actualizados
                         $todosActualizados = true;
                         foreach ($vencidos as $fileRecord) {
                             $fileData = collect($data['files'] ?? [])->firstWhere('id', $fileRecord->id);
                             
-                            // Si no hay datos o falta la fecha de vencimiento o el archivo
                             if (!$fileData || 
                                 empty($fileData['fecha_vencimiento']) || 
                                 (empty($fileData['file']) || !is_array($fileData['file']) || count($fileData['file']) === 0)) {
@@ -553,15 +550,13 @@ class EmployeeResource extends Resource
                             return;
                         }
                     
-                        // Si todo está correcto, actualizar los archivos
+                        // Actualizar archivos
                         foreach ($vencidos as $fileRecord) {
                             $fileData = collect($data['files'])->firstWhere('id', $fileRecord->id);
                             
                             if ($fileData) {
-                                // Actualizar fecha de vencimiento
                                 $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
                                 
-                                // Actualizar archivo
                                 if (isset($fileData['file'][0])) {
                                     $uploadedFilePath = is_string($fileData['file'][0]) 
                                         ? $fileData['file'][0] 
@@ -581,7 +576,8 @@ class EmployeeResource extends Resource
                     ->visible(function ($record) {
                         $vencimientos = self::isVencimientos($record);
                         return $vencimientos['isVencido'];
-                    }),
+                    })
+                    ,
                 Tables\Actions\EditAction::make()
                     ->visible(function ($record) {
                         // Si es owner y el empleado está aprobado, ocultar el botón de editar
