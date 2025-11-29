@@ -34,31 +34,34 @@ trait HasNotesAction
                 if(Auth::user()->hasRole('owner')){
                     $record->notes()->where('status', false)->update(['status' => true]);
                 }
-            })->visible(function(Employee $record){
-                return $record->notes()->where('status', false)->count() ? true : false;
             })
-            // ->form([
-            //     Forms\Components\Textarea::make('description')
-            //         ->label('Nueva notificación')
-            //         ->placeholder('Escribe una nueva notificación...')
-            //         ->required()
-            //         ->rows(3)
-            //         ->columnSpanFull(),
-            // ])
-            // ->action(function (array $data, Employee $record): void {
-            //     EmployeeNote::create([
-            //         'description' => $data['description'],
-            //         'employee_id' => $record->id,
-            //         'user_id' => Auth::id(),
-            //         'status' => false, // No leída al crear
-            //     ]);
+            ->visible(function(Employee $record){
+                return Auth::user()->hasRole('owner') && $record->notes()->where('status', false)->count() ? true : false;
+            })
+            ->form([
+                Forms\Components\Textarea::make('description')
+                    ->label('Nueva notificación')
+                    ->placeholder('Escribe una nueva notificación...')
+                    ->required()
+                    ->rows(3)
+                    ->columnSpanFull()
+                    ->visible(fn () => Auth::user()->hasRole(['super_admin','admin']))
+                    ,
+            ])
+            ->action(function (array $data, Employee $record): void {
+                EmployeeNote::create([
+                    'description' => $data['description'],
+                    'employee_id' => $record->id,
+                    'user_id' => Auth::id(),
+                    'status' => false, // No leída al crear
+                ]);
 
-            //     Notification::make()
-            //         ->title('Notificación agregada')
-            //         ->success()
-            //         ->send();
-            // })
-            // ->modalSubmitActionLabel('Agregar notificación')
+                Notification::make()
+                    ->title('Notificación agregada')
+                    ->success()
+                    ->send();
+            })
+            ->modalSubmitActionLabel('Agregar notificación')
             ;
     }
 
@@ -87,28 +90,29 @@ trait HasNotesAction
             })->visible(function(Employee $record){
                 return $record->notes()->where('status', false)->count() ? true : false;
             })
-            // ->form([
-            //     Forms\Components\Textarea::make('description')
-            //         ->label('Nueva notificación')
-            //         ->placeholder('Escribe una nueva notificación...')
-            //         ->required()
-            //         ->rows(3)
-            //         ->columnSpanFull(),
-            // ])
-            // ->action(function (array $data, Employee $record): void {
-            //     EmployeeNote::create([
-            //         'description' => $data['description'],
-            //         'employee_id' => $record->id,
-            //         'user_id' => Auth::id(),
-            //         'status' => false, // No leída al crear
-            //     ]);
+            ->form([
+                Forms\Components\Textarea::make('description')
+                    ->label('Nueva notificación')
+                    ->placeholder('Escribe una nueva notificación...')
+                    ->required()
+                    ->rows(3)
+                    ->columnSpanFull()
+                    ->visible(fn () => Auth::user()->hasRole(['super_admin','admin']))
+            ])
+            ->action(function (array $data, Employee $record): void {
+                EmployeeNote::create([
+                    'description' => $data['description'],
+                    'employee_id' => $record->id,
+                    'user_id' => Auth::id(),
+                    'status' => false, // No leída al crear
+                ]);
 
-            //     Notification::make()
-            //         ->title('Notificación agregada')
-            //         ->success()
-            //         ->send();
-            // })
-            // ->modalSubmitActionLabel('Agregar notificación')
+                Notification::make()
+                    ->title('Notificación agregada')
+                    ->success()
+                    ->send();
+            })
+            ->modalSubmitActionLabel('Agregar notificación')
             
             ;
     }
