@@ -222,7 +222,7 @@ class EmployeeResource extends Resource
                         }),
                     ])
                     ->defaultItems(1)
-                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
+                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                     ->default([
                         [
                             'name' => 'DNI (Frente)',
