@@ -56,8 +56,7 @@ class EditEmployee extends EditRecord
                         ->send();
                 })
                 ->visible(function () {
-                    return Auth::user()->hasAnyRole(['admin', 'super_admin']) && 
-                           $this->record->status === 'pendiente';
+                    return Auth::user()->hasAnyRole(['admin', 'super_admin']);
                 }),
 
             // Acción para rechazar (solo si es admin y el empleado está pendiente)
