@@ -482,7 +482,8 @@ class EmployeeResource extends Resource
                                     ->displayFormat('d/m/Y')
                                     ->required(),
                             ])
-                            ->visible(fn ($record) => $record->isVencidoSeguro()),
+                            // ->visible(fn ($record) => $record->isVencidoSeguro())
+                            ,
 
                        Forms\Components\Section::make('Renovar Documentos')
                             ->schema([
@@ -502,7 +503,8 @@ class EmployeeResource extends Resource
                                         return $file->getClientOriginalName();
                                     }),
                             ])
-                            ->visible(fn ($record) => $record->isVencidoSeguro()),
+                            // ->visible(fn ($record) => $record->isVencidoSeguro())
+                            ,
                     ])
                     ->action(function ($record, $data) {
                         // Actualizar fecha de vencimiento del seguro si está presente
