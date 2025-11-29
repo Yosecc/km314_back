@@ -8,16 +8,20 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
+use App\Filament\Resources\EmployeeResource\Traits\HasNotesAction;
 
 class ViewEmployeeResource extends ViewRecord
 {
+    use HasNotesAction;
+
     protected static string $resource = EmployeeResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
             // Acción para editar
-            // Actions\EditAction::make(),
+           // Botón de notificaciones
+            self::getNotesPageAction(),
             
             // Acción para aprobar (solo si es admin y el empleado está pendiente)
             Actions\Action::make('aprobar')
@@ -48,11 +52,28 @@ class ViewEmployeeResource extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Rechazar trabajador')
                 ->modalDescription('¿Estás seguro de que quieres rechazar este trabajador?')
-                ->action(function () {
+                ->form([
+                    Forms\Components\Textarea::make('motivo_rechazo')
+                        ->label('Motivo del rechazo')
+                        ->placeholder('Escribe el motivo por el cual se rechaza este trabajador...')
+                        ->required()
+                        ->rows(3)
+                        ->columnSpanFull(),
+                ])
+                ->action(function (array $data) {
                     $this->record->update(['status' => 'rechazado']);
+                    
+                    // Crear nota con el motivo del rechazo
+                    \App\Models\EmployeeNote::create([
+                        'description' => 'Motivo del rechazo: ' . $data['motivo_rechazo'],
+                        'employee_id' => $this->record->id,
+                        'user_id' => Auth::id(),
+                        'status' => false, // No leída
+                    ]);
                     
                     Notification::make()
                         ->title('Trabajador rechazado')
+                        ->body('Se ha creado una notificación con el motivo del rechazo.')
                         ->success()
                         ->send();
                 })
