@@ -291,9 +291,8 @@ class EmployeeResource extends Resource
                                     ->getUploadedFileNameForStorageUsing(function ($file, $record) {
                                         return $file ? $file->getClientOriginalName() : $record->file;
                                     })
-                                    ->disabled(function($context, Get $get){
-                                        return $context == 'edit' ? true:false;
-                                    }),
+                                    
+                                    ,
                             ])
                             ->defaultItems(3)
                             ->minItems(3)
