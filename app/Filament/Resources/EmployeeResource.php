@@ -205,6 +205,7 @@ class EmployeeResource extends Resource
                             ->label('Archivo')
                             ->required()
                             ->storeFileNamesIn('attachment_file_names')
+                            ->openable()
                             ->getUploadedFileNameForStorageUsing(function ($file, $record) {
                                 return $file ? $file->getClientOriginalName() : $record->file;
                             })
@@ -212,14 +213,14 @@ class EmployeeResource extends Resource
                                 return $context == 'edit' ? true:false;
                             }),
 
-                        Actions::make([
-                            Action::make('open_file')
-                                ->label('Abrir archivo')
-                                ->icon('heroicon-m-eye')
-                                ->url(function ($record, $context) {
-                                    return Storage::url($record->file);
-                                 })
-                                ->openUrlInNewTab(),
+                        // Actions::make([
+                        //     Action::make('open_file')
+                        //         ->label('Abrir archivo')
+                        //         ->icon('heroicon-m-eye')
+                        //         ->url(function ($record, $context) {
+                        //             return Storage::url($record->file);
+                        //          })
+                        //         ->openUrlInNewTab(),
                         ])
                         ->visible(function($record){
                             return $record ? true : false;
@@ -293,6 +294,7 @@ class EmployeeResource extends Resource
                                     ->label('Seguro')
                                     ->required()
                                     ->storeFileNamesIn('attachment_file_names')
+                                    ->openable()
                                     ->getUploadedFileNameForStorageUsing(function ($file, $record) {
                                         return $file ? $file->getClientOriginalName() : $record->file;
                                     })
@@ -303,6 +305,7 @@ class EmployeeResource extends Resource
                                     ->label('VTV')
                                     ->required()
                                     ->storeFileNamesIn('attachment_file_names')
+                                    ->openable()
                                     ->getUploadedFileNameForStorageUsing(function ($file, $record) {
                                         return $file ? $file->getClientOriginalName() : $record->file;
                                     })
@@ -313,6 +316,7 @@ class EmployeeResource extends Resource
                                     ->label('Cédula')
                                     ->required()
                                     ->storeFileNamesIn('attachment_file_names')
+                                    ->openable()
                                     ->getUploadedFileNameForStorageUsing(function ($file, $record) {
                                         return $file ? $file->getClientOriginalName() : $record->file;
                                     })
