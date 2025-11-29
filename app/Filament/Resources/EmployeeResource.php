@@ -662,7 +662,17 @@ class EmployeeResource extends Resource
                         Placeholder::make('')
                             ->content('Aquí puedes agregar vehículos adicionales para el trabajador. Completa los detalles del vehículo y sus documentos correspondientes.')
                             ->columnSpanFull(),
-                        ...self::camposAutos(),
+                        Forms\Components\Repeater::make('autos')
+                            ->label('Vehículos')
+                            ->mutateRelationshipDataBeforeFillUsing(function ($record, $data) {
+                                $data['model'] = $record->autos->where('id', $data['id'])->first()->model;
+                                return $data;
+                            })
+                            ->schema(self::camposAutos())
+                            ->itemLabel('Información del vehículo')
+                            ->addActionLabel('Agregar vehículo')
+                            ->defaultItems(0)
+                            ->columns(2)
                     ])
                     ->action(function (Employee $record, array $data): void {
 
