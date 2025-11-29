@@ -192,7 +192,7 @@ class EmployeeResource extends Resource
                         // TextEntry::make('name'),
                         Forms\Components\TextInput::make('name')
                             ->disabled()
-                            ->dehydrated(false)
+                            ->dehydrated()
                             ->hidden()
                             ->label(''),
                         DatePicker::make('fecha_vencimiento')
