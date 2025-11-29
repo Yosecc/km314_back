@@ -107,6 +107,22 @@ class Employee extends Model
         return !empty($files) ? $files : null;
     }
 
+    public function vencidosAutosFile()
+    {
+        if (!$this->autos || !$this->autos->files || $this->autos->files->isEmpty()) {
+            return null;
+        }
+
+        $files = $this->autos->files
+            ->filter(function ($file) {
+                return $file->fecha_vencimiento && Carbon::parse($file->fecha_vencimiento)->isPast();
+            })
+            ->pluck('name')
+            ->toArray();
+
+        return !empty($files) ? $files : null;
+    }
+
     public function horarios()
     {
         return $this->hasMany(EmployeeSchedule::class);

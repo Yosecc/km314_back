@@ -395,6 +395,7 @@ class EmployeeResource extends Resource
         $color = '';
         $texto = '';
         $status = false;
+        
         if($record->isVencidoSeguro()){
             $color = "warning";
             $texto = "Trabajador pendiente de reverificación de datos.";
@@ -405,6 +406,13 @@ class EmployeeResource extends Resource
         if($vencidosFile){
             $color = "danger";
             $texto = "Documentos  vencidos: ". implode($vencidosFile);
+            $status = true;
+        }
+
+        $vencidosAutosFile = $record->vencidosAutosFile();
+        if($vencidosAutosFile){
+            $color = "danger";
+            $texto = "Documentos de autos vencidos: ". implode($vencidosAutosFile);
             $status = true;
         }
 
