@@ -456,6 +456,12 @@ class EmployeeResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('status')
                     ->label('Estado')
+                    ->tooltip(fn (string $state): string => match ($state) {
+                        'rechazado' => 'El trabajador ha sido rechazado.',
+                        'pendiente' => 'El trabajador está pendiente de aprobación.',
+                        'aprobado' => 'El trabajador ha sido aprobado.',
+                        default => 'Estado desconocido.',
+                    })
                     ->icon(fn (string $state): string => match ($state) {
                         'rechazado' => 'heroicon-o-x-circle',
                         'pendiente' => 'heroicon-o-clock',
