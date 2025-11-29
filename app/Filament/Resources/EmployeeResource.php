@@ -472,6 +472,25 @@ class EmployeeResource extends Resource
                 //
             ])
             ->actions([
+
+                Tables\Actions\Action::make('verificar_seguro')
+                    ->label('Verificar trabajador')
+                    ->icon('heroicon-o-shield-check')
+                    ->color('success')
+                    ->action(function (Employee $record): void {
+                        $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(6);
+                        $record->save();
+
+                        Notification::make()
+                            ->title('Seguro personal verificado')
+                            ->body('La fecha de vencimiento del seguro personal se ha actualizado correctamente.')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(function ($record) {
+                        return  $record->isVencidoSeguro();
+                    })
+                    ,
                                 
                 Tables\Actions\Action::make('renovar_documentos')
                     ->label('Renovar documentos')
@@ -587,8 +606,9 @@ class EmployeeResource extends Resource
                         }
                     })
                     ->visible(function ($record) {
-                        $vencimientos = self::isVencimientos($record);
-                        return $vencimientos['isVencido'];
+                        return  $record->vencidosFile();
+                        // $vencimientos = self::isVencimientos($record);
+                        // return $vencimientos['isVencido'];
                     })
                     ,
                 Tables\Actions\EditAction::make()
