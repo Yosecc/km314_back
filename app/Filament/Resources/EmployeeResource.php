@@ -193,7 +193,7 @@ class EmployeeResource extends Resource
                         Forms\Components\TextInput::make('name')
                             ->disabled()
                             ->dehydrated(false)
-                            ->hidden(),
+                            ->hidden()
                             ->label(''),
                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento del documento')
