@@ -189,14 +189,13 @@ class EmployeeResource extends Resource
                     ->relationship()
                     ->label('Documentos')
                     ->schema([
-                        // TextEntry::make('name'),
-                        // Forms\Components\TextInput::make('name')->disabled()->label('Cargar la siguiente documentación:'),
+
                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento del documento')
-                            ->hidden(function(Get $get, Set $set, $context){
-                                $is_required = $get('is_required_fecha_vencimiento') ?? false;
-                                return !$is_required;
-                            })
+                            // ->hidden(function(Get $get, Set $set, $context){
+                            //     $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                            //     return !$is_required;
+                            // })
                             ->required(function(Get $get, Set $set, $context){
                                 $is_required = $get('is_required_fecha_vencimiento') ?? false;
                                 return $is_required;
@@ -212,19 +211,6 @@ class EmployeeResource extends Resource
                             ->disabled(function($context, Get $get){
                                 return $context == 'edit' ? true:false;
                             }),
-
-                        // Actions::make([
-                        //     Action::make('open_file')
-                        //         ->label('Abrir archivo')
-                        //         ->icon('heroicon-m-eye')
-                        //         ->url(function ($record, $context) {
-                        //             return Storage::url($record->file);
-                        //          })
-                        //         ->openUrlInNewTab(),
-                        // ])
-                        // ->visible(function($record){
-                        //     return $record ? true : false;
-                        // }),
                     ])
                     ->defaultItems(1)
                     ->minItems(1)
@@ -288,7 +274,7 @@ class EmployeeResource extends Resource
                         Forms\Components\Hidden::make('model')
                             ->default('Employee'),
                             // ->maxLength(255),
-                        Fieldset::make('Cargue los siguientes documentos')
+                        Fieldset::make('Cargue los siguientes documentos del auto')
                             ->schema([
                                 Forms\Components\FileUpload::make('file_seguro')
                                     ->label('Seguro')
@@ -326,6 +312,7 @@ class EmployeeResource extends Resource
                             ])->columns(3),
                             
                     ])
+                    ->itemLabel('Información del auto')
                     ->defaultItems(0)
                     ->columns(2)
         ];
