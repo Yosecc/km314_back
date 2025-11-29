@@ -31,6 +31,7 @@ use Filament\Notifications\Notification;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Wizard;
 class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
@@ -350,7 +351,7 @@ class EmployeeResource extends Resource
                             ->dehydrated()
                             ->required(),
                     ])
-                    ->itemLabel('Selecciona los días de trabajo')
+                    ->itemLabel('Selecciona el día de trabajo')
                     ->minItems(1)
                     ->defaultItems(1)
                     ->grid(2)
@@ -362,12 +363,20 @@ class EmployeeResource extends Resource
     {
         return $form
             ->schema([
-                Tabs::make('Tabs')
-                    ->tabs([
-                        Tabs\Tab::make('Información')->schema(self::formDatosPersonales())->columns(2),
-                        Tabs\Tab::make('Archivos personales')->schema(self::formArchivosPersonales()),
-                        Tabs\Tab::make('Autos')->schema(self::formAutos()),
-                        Tabs\Tab::make('Días de trabajo')->schema(self::formHorarios()),
+                Wizard::([
+                        Wizard\Step::make('Información')
+                            ->icon('heroicon-m-information-circle')
+                            ->schema(self::formDatosPersonales())
+                            ->columns(2),
+                        Wizard\Step::make('Archivos personales')
+                            ->icon('heroicon-m-document-text')
+                            ->schema(self::formArchivosPersonales()),
+                        Wizard\Step::make('Autos')
+                            ->icon('heroicon-m-truck')
+                            ->schema(self::formAutos()),
+                        Wizard\Step::make('Días de trabajo')
+                            ->icon('heroicon-m-calendar')
+                            ->schema(self::formHorarios()),
                     ]),                  
             ])->columns(1);
     }
