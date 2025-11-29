@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
    use Filament\Tables\Columns\IconColumn;
 use Filament\Notifications\Notification;
+use Filament\Infolists\Components\TextEntry;
 
 class EmployeeResource extends Resource
 {
@@ -35,7 +36,7 @@ class EmployeeResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Trabajadores';
+    protected static ?string $navigationLabel = 'Gestion de Trabajadores';
     protected static ?string $label = 'trabajador';
     // protected static ?string $navigationGroup = 'Web';
 
@@ -125,6 +126,7 @@ class EmployeeResource extends Resource
                         ->label('Fecha de vencimiento del seguro personal')
                         ->displayFormat('d/m/Y')
                         ->required()
+                        ->default(Carbon::now()->addMonths(3))
                         ->live()
                         ,
                     // Forms\Components\Select::make('owner_id')
@@ -178,6 +180,68 @@ class EmployeeResource extends Resource
                     }),
                 ])->columns(2),
 
+                Repeater::make('files')
+                    ->relationship()
+                    ->label('Documentos')
+                    ->schema([
+                        TextEntry::make('name'),
+                        // Forms\Components\TextInput::make('name')->label('Descripción'),
+                        DatePicker::make('fecha_vencimiento')
+                            ->label('Fecha de vencimiento')
+                            ->required(function(Get $get, Set $set, $context){
+                                $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                return $is_required;
+                            }),
+                        Forms\Components\FileUpload::make('file')
+                            ->label('Archivo')
+                            ->required()
+                            ->storeFileNamesIn('attachment_file_names')
+                            ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                return $file ? $file->getClientOriginalName() : $record->file;
+                            })
+                            ->disabled(function($context, Get $get){
+                                return $context == 'edit' ? true:false;
+                            }),
+
+                        Actions::make([
+                            Action::make('open_file')
+                                ->label('Abrir archivo')
+                                ->icon('heroicon-m-eye')
+                                ->url(function ($record, $context) {
+                                    return Storage::url($record->file);
+                                 })
+                                ->openUrlInNewTab(),
+                        ])
+                        ->visible(function($record){
+                            return $record ? true : false;
+                        }),
+                    ])
+                    ->defaultItems(1)
+                    ->default([
+                        [
+                            'name' => 'DNI (Frente)',
+                            'is_required_fecha_vencimiento' => true,
+                        ],
+                        [
+                            'name' => 'DNI (Trasero)',
+                            'is_required_fecha_vencimiento' => true,
+                        ],
+                        [
+                            'name' => 'Seguro de Accidentes Personales',
+                            'is_required_fecha_vencimiento' => true,
+                        ],
+                        [
+                            'name' => 'Antecedentes Penales',
+                            'is_required_fecha_vencimiento' => true,
+                        ],
+                        [
+                            'name' => 'Monotributo',
+                            'is_required_fecha_vencimiento' => true,
+                        ],
+
+                    ])
+                    ->columns(1)
+
                 Forms\Components\Repeater::make('autos')
                     ->relationship()
                     ->mutateRelationshipDataBeforeFillUsing(function ($record, $data) {
@@ -221,53 +285,22 @@ class EmployeeResource extends Resource
                             ->required(),
                         Forms\Components\TimePicker::make('start_time')
                             ->label(__("Hora de entrada"))
-                            ->required(),
+                            ->required()
+                            ->default('12:00')
+                            ->hidden()
+                            ->dehydrated(),
                         Forms\Components\TimePicker::make('end_time')
                             ->label(__("Hora de salida"))
+                            ->default('23:59')
+                            ->hidden()
+                            ->dehydrated()
                             ->required(),
                     ])
                     ->minItems(1)
                     ->defaultItems(1)
                     ->columns(3),
 
-                Repeater::make('files')
-                    ->relationship()
-                    ->label('Documentos')
-                    ->schema([
-
-                        Forms\Components\TextInput::make('name')->label('Descripción'),
-                        // DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento'),
-                        Forms\Components\FileUpload::make('file')
-                            ->label('Archivo')
-                            ->required()
-                            ->storeFileNamesIn('attachment_file_names')
-                            ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                                return $file ? $file->getClientOriginalName() : $record->file;
-                            })
-                            ->disabled(function($context, Get $get){
-                                return $context == 'edit' ? true:false;
-                            }),
-
-                        Actions::make([
-                            Action::make('open_file')
-                                ->label('Abrir archivo')
-                                ->icon('heroicon-m-eye')
-                                ->url(function ($record, $context) {
-                                    return Storage::url($record->file);
-                                 })
-                                ->openUrlInNewTab(),
-                        ])
-                        ->visible(function($record){
-                            return $record ? true : false;
-                        }),
-                    ])
-                    ->defaultItems(1)
-                    ->default([
-                        [
-                            'name' => 'Seguro Personal',
-                        ]
-                    ])
-                    ->columns(1)
+                
             ])->columns(1);
     }
 
