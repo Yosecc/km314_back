@@ -654,11 +654,17 @@ class EmployeeResource extends Resource
                     ->visible(function ($record) {
                         return $record->status === 'aprobado';
                     })
+                    ->form([
+                        Placeholder::make('')
+                            ->content('Aquí puedes agregar vehículos adicionales para el trabajador. Completa los detalles del vehículo y sus documentos correspondientes.')
+                            ->columnSpanFull(),
+                        ...self::formAutos(),
+                    ])
                     ->action(function (Employee $record): void {
                         // Redirigir a la página de edición del empleado
                         // con el paso de vehículos seleccionado
-                        $url = EmployeeResource::getUrl('edit', ['record' => $record->id]) . '?step=2';
-                        redirect($url)->send();
+                        // $url = EmployeeResource::getUrl('edit', ['record' => $record->id]) . '?step=2';
+                        // redirect($url)->send();
                     }),
                     
                 Tables\Actions\Action::make('renovarAutos')
