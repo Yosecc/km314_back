@@ -318,11 +318,11 @@ class EmployeeResource extends Resource
                 Tabs::make('Tabs')
                     ->tabs([
                         Tabs\Tab::make('Información')->schema(self::formDatosPersonales()),
-                        Tabs\Tab::make('Archivos personales')->schema(self::formArchivosPersonales())->contained(false)->columns(2),
+                        Tabs\Tab::make('Archivos personales')->schema(self::formArchivosPersonales())->columns(2),
                         Tabs\Tab::make('Autos')->schema(self::formAutos()),
                         Tabs\Tab::make('Horarios de trabajo')->schema(self::formHorarios()),
-                    ]),                  
-            ])->columns(1);
+                    ])->contained(false)                  
+            ]);
     }
 
     public static function isVencimientos($record)
