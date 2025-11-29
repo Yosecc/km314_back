@@ -473,7 +473,7 @@ class EmployeeResource extends Resource
                     ->label('Renovar documentos')
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
-                    ->helperText('Your full name here, including any middle names.')
+                    
                     ->form([
                        
                         Repeater::make('files')
