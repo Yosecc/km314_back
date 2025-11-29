@@ -473,6 +473,7 @@ class EmployeeResource extends Resource
                     ->label('Renovar documentos')
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
+                    ->helperText('Your full name here, including any middle names.')
                     ->form([
                        
                         Repeater::make('files')
@@ -481,13 +482,12 @@ class EmployeeResource extends Resource
                             ->deletable(false)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                             ->grid(2)
+                            ->helperText('Your full name here, including any middle names.')
                             ->schema([
                                 Forms\Components\Hidden::make('id'),
                                 Forms\Components\Hidden::make('name'),
                                 DatePicker::make('fecha_vencimiento')
-                                    ->label('Fecha de vencimiento del documento')
-
-                                    ,
+                                    ->label('Fecha de vencimiento del documento'),
                                 Forms\Components\FileUpload::make('file')
                                     ->label('Archivo')
                                     ->required()
