@@ -494,7 +494,7 @@ class EmployeeResource extends Resource
                             ->send();
                     })
                     ->visible(function ($record) {
-                        return  $record->isVencidoSeguro();
+                        return Auth::user()->hasRole('super_admin') && $record->isVencidoSeguro();
                     })
                     ,
                                 
