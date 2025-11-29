@@ -661,7 +661,7 @@ class EmployeeResource extends Resource
                         ...self::formAutos(),
                     ])
                     ->action(function (Employee $record, array $data): void {
-                        dd($data);
+                        dd($data, $record);
                         // Redirigir a la página de edición del empleado
                         // con el paso de vehículos seleccionado
                         // $url = EmployeeResource::getUrl('edit', ['record' => $record->id]) . '?step=2';
