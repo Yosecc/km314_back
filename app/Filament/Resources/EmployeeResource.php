@@ -473,7 +473,7 @@ class EmployeeResource extends Resource
                     ->label('Renovar documentos')
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
-                    
+                    ->description('Prevent abuse by limiting the number of requests per period')
                     ->form([
                        
                         Repeater::make('files')
@@ -482,7 +482,7 @@ class EmployeeResource extends Resource
                             ->deletable(false)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                             ->grid(2)
-                            ->helperText('Your full name here, including any middle names.')
+                            ->description('Prevent abuse by limiting the number of requests per period')
                             ->schema([
                                 Forms\Components\Hidden::make('id'),
                                 Forms\Components\Hidden::make('name'),
