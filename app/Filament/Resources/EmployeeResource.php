@@ -472,7 +472,6 @@ class EmployeeResource extends Resource
             ->actions([
                 Tables\Actions\Action::make('renovar_documentos')
                     ->label('Renovar documentos')
-
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
                     ->form([
@@ -512,7 +511,7 @@ class EmployeeResource extends Resource
                              
                             
                     ])
-                    ->requiresConfirmation()
+                    
                     ->action(function ($record, $data) {
 
                         $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(3);
