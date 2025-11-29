@@ -373,7 +373,7 @@ class EmployeeResource extends Resource
                             ->schema(self::formHorarios()),
                     ])
                     ->skippable(function ($context) {
-                        return $context == 'edit';
+                        return $context == 'edit' || $context == 'view';
                     }),                  
             ])->columns(1);
     }
