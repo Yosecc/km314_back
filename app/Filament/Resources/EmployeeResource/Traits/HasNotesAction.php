@@ -62,6 +62,10 @@ trait HasNotesAction
                 ]);
 
                 Notification::make()
+                    ->title('Nueva notificación. Ir a Gestión de trabajadores')
+                    ->sendToDatabase($record->owner->user);
+
+                Notification::make()
                     ->title('Notificación agregada')
                     ->success()
                     ->send();

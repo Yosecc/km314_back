@@ -60,6 +60,10 @@ class EditEmployee extends EditRecord
                 ->modalDescription('¿Estás seguro de que quieres aprobar este trabajador?')
                 ->action(function () {
                     $this->record->update(['status' => 'aprobado']);
+
+                    Notification::make()
+                        ->title('Trabajador aprobado.')
+                        ->sendToDatabase($this->record->owner->user);
                     
                     Notification::make()
                         ->title('Trabajador aprobado')
@@ -97,6 +101,11 @@ class EditEmployee extends EditRecord
                         'user_id' => Auth::id(),
                         'status' => false, // No leída
                     ]);
+
+                    Notification::make()
+                        ->title('Trabajador rechazado. Ir a Gestión de trabajadores')
+                        ->sendToDatabase($this->record->owner->user);
+
                     
                     Notification::make()
                         ->title('Trabajador rechazado')
