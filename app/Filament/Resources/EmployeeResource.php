@@ -491,13 +491,9 @@ class EmployeeResource extends Resource
                                 Repeater::make('files')
                                     ->relationship('files')
                                     ->schema([
-                            DatePicker::make('fecha_vencimiento')
+                                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento del documento')
-                            // ->hidden(function(Get $get, Set $set, $context){
-                            //     $is_required = $get('is_required_fecha_vencimiento') ?? false;
-                            //     return !$is_required;
-                            // })
-                           
+                                    ])
                                     ,
                                 // Forms\Components\TextInput::make('file_name')
                                 //     ->label('Descripción del documento')
