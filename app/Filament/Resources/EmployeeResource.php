@@ -512,7 +512,7 @@ class EmployeeResource extends Resource
                              
                             
                     ])
-                    ->requireConfirmation()
+                    ->requiresConfirmation()
                     ->action(function ($record, $data) {
 
                         $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(3);
