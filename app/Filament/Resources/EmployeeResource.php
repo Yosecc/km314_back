@@ -184,8 +184,8 @@ class EmployeeResource extends Resource
                     ->relationship()
                     ->label('Documentos')
                     ->schema([
-                        TextEntry::make('name'),
-                        // Forms\Components\TextInput::make('name')->label('Descripción'),
+                        // TextEntry::make('name'),
+                        Forms\Components\TextInput::make('name')->disabled()->label('Cargar la siguiente documentación:'),
                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento')
                             ->required(function(Get $get, Set $set, $context){
