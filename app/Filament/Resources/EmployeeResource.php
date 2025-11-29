@@ -665,6 +665,8 @@ class EmployeeResource extends Resource
                         ...self::camposAutos(),
                     ])
                     ->action(function (Employee $record, array $data): void {
+
+                        dd($data);
                         Notification::make()
                             ->title('Vehiculo agregado')
                             ->body('El vehículo pasará por un proceso de verificación.')
