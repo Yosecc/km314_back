@@ -189,6 +189,10 @@ class EmployeeResource extends Resource
                         Forms\Components\TextInput::make('name')->disabled()->label('Cargar la siguiente documentación:'),
                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento')
+                            ->hidden(function(Get $get, Set $set, $context){
+                                $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                return !$is_required;
+                            })
                             ->required(function(Get $get, Set $set, $context){
                                 $is_required = $get('is_required_fecha_vencimiento') ?? false;
                                 return $is_required;
@@ -221,11 +225,11 @@ class EmployeeResource extends Resource
                     ->default([
                         [
                             'name' => 'DNI (Frente)',
-                            'is_required_fecha_vencimiento' => true,
+                            'is_required_fecha_vencimiento' => false,
                         ],
                         [
                             'name' => 'DNI (Trasero)',
-                            'is_required_fecha_vencimiento' => true,
+                            'is_required_fecha_vencimiento' => false,
                         ],
                         [
                             'name' => 'Seguro de Accidentes Personales',
@@ -237,7 +241,7 @@ class EmployeeResource extends Resource
                         ],
                         [
                             'name' => 'Monotributo',
-                            'is_required_fecha_vencimiento' => false,
+                            'is_required_fecha_vencimiento' => true,
                         ],
 
                     ])
