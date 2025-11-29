@@ -224,8 +224,8 @@ class EmployeeResource extends Resource
                     ->defaultItems(1)
                     ->minItems(1)
                     ->maxItems(5)
-                    ->addAction(false)
-                    ->deleteAction(false)
+                    ->addable(false)
+                    ->deletable(false)
                     ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                     ->default([
                         [
