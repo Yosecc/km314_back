@@ -495,9 +495,9 @@ class EmployeeResource extends Resource
                             ->columnSpanFull(),   
                         Repeater::make('files')
                             ->label('Documentos vencidos a renovar')
-                            // QUITAR ->relationship('files')
                             ->addable(false)
                             ->deletable(false)
+                            ->reorderable(false)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                             ->grid(2)
                             ->schema([
