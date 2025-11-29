@@ -660,7 +660,8 @@ class EmployeeResource extends Resource
                             ->columnSpanFull(),
                         ...self::formAutos(),
                     ])
-                    ->action(function (Employee $record): void {
+                    ->action(function (Employee $record, array $data): void {
+                        dd($data);
                         // Redirigir a la página de edición del empleado
                         // con el paso de vehículos seleccionado
                         // $url = EmployeeResource::getUrl('edit', ['record' => $record->id]) . '?step=2';
