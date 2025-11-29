@@ -275,10 +275,16 @@ class EmployeeResource extends Resource
                         Forms\Components\Hidden::make('model')
                             ->default('Employee'),
                             // ->maxLength(255),
-                        Fieldset::make('Cargue los siguientes documentos del vehículo')
+                        Repeater::make('files')
+                            ->relationship()
+                            ->label('Documentos del vehículo')
                             ->schema([
-                                Forms\Components\FileUpload::make('file_seguro')
-                                    ->label('Seguro')
+                                Forms\Components\Hidden::make('name')->dehydrated(),
+                                DatePicker::make('fecha_vencimiento')
+                                    ->label('Fecha de vencimiento del documento')
+                                    ->required(),
+                                Forms\Components\FileUpload::make('file')
+                                    ->label('Archivo')
                                     ->required()
                                     ->storeFileNamesIn('attachment_file_names')
                                     ->openable()
@@ -288,29 +294,26 @@ class EmployeeResource extends Resource
                                     ->disabled(function($context, Get $get){
                                         return $context == 'edit' ? true:false;
                                     }),
-                                Forms\Components\FileUpload::make('file_vtv')
-                                    ->label('VTV')
-                                    ->required()
-                                    ->storeFileNamesIn('attachment_file_names')
-                                    ->openable()
-                                    ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                                        return $file ? $file->getClientOriginalName() : $record->file;
-                                    })
-                                    ->disabled(function($context, Get $get){
-                                        return $context == 'edit' ? true:false;
-                                    }),
-                                Forms\Components\FileUpload::make('file_cedula')
-                                    ->label('Cédula')
-                                    ->required()
-                                    ->storeFileNamesIn('attachment_file_names')
-                                    ->openable()
-                                    ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                                        return $file ? $file->getClientOriginalName() : $record->file;
-                                    })
-                                    ->disabled(function($context, Get $get){
-                                        return $context == 'edit' ? true:false;
-                                    }),
-                            ])->columns(3),
+                            ])
+                            ->defaultItems(3)
+                            ->minItems(3)
+                            ->maxItems(3)
+                            ->addable(false)
+                            ->deletable(false)
+                            ->grid(2)
+                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                            ->default([
+                                [
+                                    'name' => 'Seguro del Vehículo',
+                                ],
+                                [
+                                    'name' => 'VTV',
+                                ],
+                                [
+                                    'name' => 'Cédula del Vehículo',
+                                ],
+                            ])
+                            ->columns(1)
                             
                     ])
                     ->itemLabel('Información del vehículo')

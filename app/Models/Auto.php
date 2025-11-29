@@ -9,8 +9,13 @@ class Auto extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['marca', 'patente','modelo','color','user_id','model','model_id','file_seguro','file_vtv','file_cedula'];
+    protected $fillable = ['marca', 'patente','modelo','color','user_id','model','model_id'];
 
     protected $hidden = ['user_id','model','model_id','created_at','updated_at'];
+
+    public function files()
+    {
+        return $this->hasMany(AutoFile::class,'auto_id');
+    }
 
 }
