@@ -514,10 +514,10 @@ class EmployeeResource extends Resource
                     
                     ->action(function ($record, $data) {
 
-                        $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(3);
-                        $record->save();
+                        // $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(3);
+                        // $record->save();?
 
-                        dd($data);
+                        dd($data, $record);
 
                         foreach ($data['files'] as $fileData) {
                             $fileRecord = $record->files()->where('id', $fileData['id'])->first();
