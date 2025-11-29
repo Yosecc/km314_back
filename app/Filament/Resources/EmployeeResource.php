@@ -190,8 +190,7 @@ class EmployeeResource extends Resource
                     ->label('Documentos')
                     ->schema([
                         // TextEntry::make('name'),
-                        Forms\Components\Hidden::make('name')
-                            ->dehydrated(),
+                        Forms\Components\Hidden::make('name')->dehydrated(),
                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento del documento')
                             // ->hidden(function(Get $get, Set $set, $context){
@@ -484,6 +483,7 @@ class EmployeeResource extends Resource
                             ->grid(2)
                             ->schema([
                                 Forms\Components\Hidden::make('id'),
+                                Forms\Components\Hidden::make('name'),
                                 DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento del documento'),
                                 Forms\Components\FileUpload::make('file')
                                     ->label('Archivo')
