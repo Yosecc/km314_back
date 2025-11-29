@@ -362,7 +362,7 @@ class EmployeeResource extends Resource
                             ->icon('heroicon-m-information-circle')
                             ->schema(self::formDatosPersonales())
                             ->columns(2),
-                        Wizard\Step::make('Archivos personales')
+                        Wizard\Step::make('Documentos personales')
                             ->icon('heroicon-m-document-text')
                             ->schema(self::formArchivosPersonales()),
                         Wizard\Step::make('Autos')
@@ -371,7 +371,10 @@ class EmployeeResource extends Resource
                         Wizard\Step::make('Días de trabajo')
                             ->icon('heroicon-m-calendar')
                             ->schema(self::formHorarios()),
-                    ]),                  
+                    ])
+                    ->skippable(function ($context) {
+                        return $context == 'edit';
+                    }),                  
             ])->columns(1);
     }
 
