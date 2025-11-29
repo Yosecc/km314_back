@@ -474,7 +474,9 @@ class EmployeeResource extends Resource
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
                     ->form([
-                        Placeholder::make('')->content('Selecciona el dia y el horario de trabajo')->columnSpanFull(),   
+                        Placeholder::make('')
+                            ->content('Remplaza los documentos vencidos con nuevos archivos y fechas de vencimiento actualizadas.')
+                            ->columnSpanFull(),   
                         Repeater::make('files')
                             ->relationship('files')
                             ->addable(false)
@@ -489,6 +491,7 @@ class EmployeeResource extends Resource
                                     ->label('Fecha de vencimiento del documento'),
                                 Forms\Components\FileUpload::make('file')
                                     ->label('Archivo')
+                                    ->helperText('Sube un nuevo archivo para renovar el documento vencido. Presiona la X para eliminar el archivo actual y subir uno nuevo.')
                                     ->required()
                                     ->storeFileNamesIn('attachment_file_names')
                                     ->openable()
