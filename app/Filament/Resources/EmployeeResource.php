@@ -330,7 +330,7 @@ class EmployeeResource extends Resource
             Forms\Components\Repeater::make('horarios')
                     ->relationship()
                     ->schema([
-                        Placeholder::make('')->content('Selecciona el dia y el horario de trabajo')->columnSpanFull(),
+                        // Placeholder::make('')->content('Selecciona el dia y el horario de trabajo')->columnSpanFull(),
                         Forms\Components\Select::make('day_of_week')
                             ->label(__("Día"))
                             ->options([
@@ -350,9 +350,11 @@ class EmployeeResource extends Resource
                             ->dehydrated()
                             ->required(),
                     ])
+                    ->itemLabel('Selecciona los días de trabajo')
                     ->minItems(1)
                     ->defaultItems(1)
-                    ->columns(3),
+                    ->grid(2)
+                    ->columns(1),
         ];
     }
 
@@ -365,7 +367,7 @@ class EmployeeResource extends Resource
                         Tabs\Tab::make('Información')->schema(self::formDatosPersonales())->columns(2),
                         Tabs\Tab::make('Archivos personales')->schema(self::formArchivosPersonales()),
                         Tabs\Tab::make('Autos')->schema(self::formAutos()),
-                        Tabs\Tab::make('Horarios de trabajo')->schema(self::formHorarios()),
+                        Tabs\Tab::make('Días de trabajo')->schema(self::formHorarios()),
                     ]),                  
             ])->columns(1);
     }
