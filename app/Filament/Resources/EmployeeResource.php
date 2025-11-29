@@ -363,7 +363,7 @@ class EmployeeResource extends Resource
     {
         return $form
             ->schema([
-                Wizard::([
+                Wizard::make([
                         Wizard\Step::make('Información')
                             ->icon('heroicon-m-information-circle')
                             ->schema(self::formDatosPersonales())
