@@ -94,7 +94,7 @@ class Employee extends Model
 
         $files = $this->files
             ->filter(function ($file) {
-                return Carbon::parse($file->fecha_vencimiento)->isPast();
+                return $file->fecha_vencimiento && Carbon::parse($file->fecha_vencimiento)->isPast();
             })
             ->pluck('name')
             ->toArray();
