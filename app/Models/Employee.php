@@ -109,16 +109,21 @@ class Employee extends Model
 
     public function vencidosAutosFile()
     {
-        if (!$this->autos || !$this->autos->files || $this->autos->files->isEmpty()) {
+        if (!$this->autos || $this->autos->isEmpty()) {
             return null;
         }
 
-        $files = $this->autos->files
-            ->filter(function ($file) {
-                return $file->fecha_vencimiento && Carbon::parse($file->fecha_vencimiento)->isPast();
-            })
-            ->pluck('name')
-            ->toArray();
+        $files = $this->autos->flatMap(function ($auto) {
+            if (!$auto->files || $auto->files->isEmpty()) {
+                return [];
+            }
+            
+            return $auto->files
+                ->filter(function ($file) {
+                    return $file->fecha_vencimiento && Carbon::parse($file->fecha_vencimiento)->isPast();
+                })
+                ->pluck('name');
+        })->toArray();
 
         return !empty($files) ? $files : null;
     }
