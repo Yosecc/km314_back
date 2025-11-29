@@ -221,10 +221,10 @@ class EmployeeResource extends Resource
                         //             return Storage::url($record->file);
                         //          })
                         //         ->openUrlInNewTab(),
-                        ])
-                        ->visible(function($record){
-                            return $record ? true : false;
-                        }),
+                        // ])
+                        // ->visible(function($record){
+                        //     return $record ? true : false;
+                        // }),
                     ])
                     ->defaultItems(1)
                     ->minItems(1)
