@@ -510,7 +510,7 @@ class EmployeeResource extends Resource
                                                 return [
                                                     'id' => $file->id,
                                                     'fecha_vencimiento' => $file->fecha_vencimiento,
-                                                    'file' => $file->file,
+                                                    'file' => [$file->file],
                                                 ];
                                             })->toArray();
                                     })
