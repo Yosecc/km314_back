@@ -8,6 +8,7 @@ use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Filament\Actions;
+use Filament\Forms;
 use Filament\Notifications\Notification;
 
 class EditEmployee extends EditRecord
@@ -67,11 +68,28 @@ class EditEmployee extends EditRecord
                 ->requiresConfirmation()
                 ->modalHeading('Rechazar trabajador')
                 ->modalDescription('¿Estás seguro de que quieres rechazar este trabajador?')
-                ->action(function () {
+                ->form([
+                    Forms\Components\Textarea::make('motivo_rechazo')
+                        ->label('Motivo del rechazo')
+                        ->placeholder('Escribe el motivo por el cual se rechaza este trabajador...')
+                        ->required()
+                        ->rows(3)
+                        ->columnSpanFull(),
+                ])
+                ->action(function (array $data) {
                     $this->record->update(['status' => 'rechazado']);
+                    
+                    // Crear nota con el motivo del rechazo
+                    \App\Models\EmployeeNote::create([
+                        'description' => 'Motivo del rechazo: ' . $data['motivo_rechazo'],
+                        'employee_id' => $this->record->id,
+                        'user_id' => Auth::id(),
+                        'status' => false, // No leída
+                    ]);
                     
                     Notification::make()
                         ->title('Trabajador rechazado')
+                        ->body('Se ha creado una notificación con el motivo del rechazo.')
                         ->success()
                         ->send();
                 })
