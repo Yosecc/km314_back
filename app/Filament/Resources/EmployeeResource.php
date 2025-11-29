@@ -241,6 +241,7 @@ class EmployeeResource extends Resource
                         ],
 
                     ])
+                    ->grid(2)
                     ->columns(1)
         ];
     }
