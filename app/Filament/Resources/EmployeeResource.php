@@ -518,8 +518,10 @@ class EmployeeResource extends Resource
                             ])
                     ])
                     ->action(function (array $data, Employee $record): void {
-                        // Tu validación sigue igual...
-                        $vencidos = $record->files()->where('fecha_vencimiento', '<', now())->get();
+                        
+                        $vencidos = collect($data['files'])->filter(function ($file) {
+                            return Carbon::parse($file['fecha_vencimiento'])->isBefore(now()->startOfDay());
+                        });
                     
                         if ($vencidos->isEmpty()) {
                             Notification::make()
