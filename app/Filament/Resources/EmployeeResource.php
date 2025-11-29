@@ -473,7 +473,7 @@ class EmployeeResource extends Resource
                     ->label('Renovar documentos')
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
-                    ->description('Prevent abuse by limiting the number of requests per period')
+                    
                     ->form([
                        
                         Repeater::make('files')
