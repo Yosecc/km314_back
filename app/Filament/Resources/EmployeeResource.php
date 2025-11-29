@@ -651,6 +651,9 @@ class EmployeeResource extends Resource
                     ->label('Agregar vehículos')
                     ->icon('heroicon-o-truck')
                     ->color('primary')
+                    ->visible(function ($record) {
+                        return $record->status === 'aprobado';
+                    })
                     ->action(function (Employee $record): void {
                         // Redirigir a la página de edición del empleado
                         // con el paso de vehículos seleccionado
