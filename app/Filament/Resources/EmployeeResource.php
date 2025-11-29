@@ -490,6 +490,10 @@ class EmployeeResource extends Resource
 
                                 Repeater::make('files')
                                     ->relationship('files')
+                                    ->addable(false)
+                                    ->deletable(false)
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                                    ->grid(2)
                                     ->schema([
                                         Forms\Components\Hidden::make('id'),
                                         DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento del documento'),
