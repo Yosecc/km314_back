@@ -518,45 +518,36 @@ class EmployeeResource extends Resource
                             ])
                     ])
                     ->action(function (array $data, Employee $record): void {
+                        // dd($data);
                         
-                        $vencidos = collect($data['files'])->filter(function ($file) {
-                            return Carbon::parse($file['fecha_vencimiento'])->isBefore(now()->startOfDay());
-                        });
-                    
-                        if ($vencidos->isEmpty()) {
+                        // Validar que haya datos
+                        if (empty($data['files'])) {
                             Notification::make()
-                                ->title('No hay documentos vencidos para renovar')
-                                ->info()
-                                ->send();
-                            return;
-                        }
-                    
-                        $todosActualizados = true;
-                        foreach ($vencidos as $fileRecord) {
-                            $fileData = collect($data['files'] ?? [])->firstWhere('id', $fileRecord->id);
-                            
-                            if (!$fileData || 
-                                empty($fileData['fecha_vencimiento']) || 
-                                (empty($fileData['file']) || !is_array($fileData['file']) || count($fileData['file']) === 0)) {
-                                $todosActualizados = false;
-                                break;
-                            }
-                        }
-                    
-                        if (!$todosActualizados) {
-                            Notification::make()
-                                ->title('Todos los documentos vencidos deben ser renovados')
-                                ->body('Debes actualizar la fecha de vencimiento y subir un nuevo archivo para cada documento vencido.')
+                                ->title('No se recibieron datos del formulario')
                                 ->danger()
                                 ->send();
                             return;
                         }
-                    
+                        
+                        // Filtrar los archivos que tienen fechas vencidas
+                        $vencidos = collect($data['files'])->filter(function ($file) {
+                            return Carbon::parse($file['fecha_vencimiento'])->isBefore(now()->startOfDay());
+                        });
+                        
+                        if ($vencidos->isNotEmpty()) {
+                            Notification::make()
+                                ->title('Fechas de vencimiento inválidas')
+                                ->body('Las nuevas fechas de vencimiento no pueden estar vencidas.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+                        
                         // Actualizar archivos
-                        foreach ($vencidos as $fileRecord) {
-                            $fileData = collect($data['files'])->firstWhere('id', $fileRecord->id);
+                        foreach ($data['files'] as $fileData) {
+                            $fileRecord = $record->files()->where('id', $fileData['id'])->first();
                             
-                            if ($fileData) {
+                            if ($fileRecord) {
                                 $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
                                 
                                 if (isset($fileData['file'][0])) {
