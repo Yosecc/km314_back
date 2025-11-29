@@ -471,63 +471,66 @@ class EmployeeResource extends Resource
             ])
             ->actions([
                 Tables\Actions\Action::make('renovar_documentos')
-                    ->label('Renovar Seguro')
+                    ->label('Renovar documentos')
+
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
                     ->form([
-                       Forms\Components\Section::make('Renovar Documentos')
+                       
+                        Repeater::make('files')
+                            ->relationship('files')
+                            ->addable(false)
+                            ->deletable(false)
+                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                            ->grid(2)
                             ->schema([
-
-                                Repeater::make('files')
-                                    ->relationship('files')
-                                    ->addable(false)
-                                    ->deletable(false)
-                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                                    ->grid(2)
-                                    ->schema([
-                                        Forms\Components\Hidden::make('id'),
-                                        DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento del documento'),
-                                        Forms\Components\FileUpload::make('file')
-                                            ->label('Archivo')
-                                            ->required()
-                                            ->storeFileNamesIn('attachment_file_names')
-                                            ->openable()
-                                            ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                                                return $file ? $file->getClientOriginalName() : $record->file;
-                                            }),
-                                    ])
-                                    ->default(function ($record) {
-                                        return $record->files()
-                                            ->where('fecha_vencimiento', '<', now())
-                                            ->get()
-                                            ->map(function ($file) {
-                                                return [
-                                                    'id' => $file->id,
-                                                    'fecha_vencimiento' => $file->fecha_vencimiento,
-                                                    'file' => [$file->file],
-                                                    'name' => $file->name,
-                                                ];
-                                            })->toArray();
-                                    })
-                                    ,
-                             
+                                Forms\Components\Hidden::make('id'),
+                                DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento del documento'),
+                                Forms\Components\FileUpload::make('file')
+                                    ->label('Archivo')
+                                    ->required()
+                                    ->storeFileNamesIn('attachment_file_names')
+                                    ->openable()
+                                    ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                        return $file ? $file->getClientOriginalName() : $record->file;
+                                    }),
                             ])
-                            // ->visible(fn ($record) => $record->isVencidoSeguro())
+                            ->default(function ($record) {
+                                return $record->files()
+                                    ->where('fecha_vencimiento', '<', now())
+                                    ->get()
+                                    ->map(function ($file) {
+                                        return [
+                                            'id' => $file->id,
+                                            'fecha_vencimiento' => $file->fecha_vencimiento,
+                                            'file' => [$file->file],
+                                            'name' => $file->name,
+                                        ];
+                                    })->toArray();
+                            })
                             ,
+                             
+                            
                     ])
+                    ->requireConfirmation()
                     ->action(function ($record, $data) {
-                        // Actualizar fecha de vencimiento del seguro si está presente
-                        if (isset($data['fecha_vencimiento_seguro'])) {
-                            $record->update(['fecha_vencimiento_seguro' => $data['fecha_vencimiento_seguro']]);
-                        }
 
-                         // Crear nuevo archivo si está presente
-                        if (isset($data['file_upload'])) {
-                            $record->files()->create([
-                                'name' => $data['file_name'],
-                                'fecha_vencimiento' => $data['file_fecha_vencimiento'],
-                                'file' => $data['file_upload'],
-                            ]);
+                        $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(3);
+                        $record->save();
+
+                        foreach ($data['files'] as $fileData) {
+                            $fileRecord = $record->files()->where('id', $fileData['id'])->first();
+                            if ($fileRecord) {
+                                $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
+                                if (isset($fileData['file']) && is_array($fileData['file']) && count($fileData['file']) > 0) {
+                                    // Almacenar el archivo y obtener la ruta
+                                    $uploadedFilePath = $fileData['file'][0]->store('employee_files');
+
+                                    // Actualizar el campo 'file' con la ruta del archivo almacenado
+                                    $fileRecord->file = $uploadedFilePath;
+                                }
+                                $fileRecord->save();
+                            }
                         }
 
                         Notification::make()
