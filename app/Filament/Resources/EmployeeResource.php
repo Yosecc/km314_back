@@ -240,7 +240,7 @@ class EmployeeResource extends Resource
                         ],
 
                     ])
-                    ->columns(1)
+                    ->columns(1),
 
                 Forms\Components\Repeater::make('autos')
                     ->relationship()
