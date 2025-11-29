@@ -190,11 +190,8 @@ class EmployeeResource extends Resource
                     ->label('Documentos')
                     ->schema([
                         // TextEntry::make('name'),
-                        Forms\Components\TextInput::make('name')
-                            ->disabled()
-                            ->dehydrated()
-                            ->hidden()
-                            ->label(''),
+                        Forms\Components\Hidden::make('name')
+                            ->dehydrated(),
                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento del documento')
                             // ->hidden(function(Get $get, Set $set, $context){
