@@ -8,6 +8,7 @@ use App\Filament\Resources\EmployeeResource\Traits\HasNotesAction;
 use App\Models\ConstructionCompanie;
 use App\Models\Employee;
 use App\Models\Owner;
+use App\Models\User;
 use App\Models\Trabajos;
 use Filament\Forms\Components\Placeholder;
 use App\Models\Works;
@@ -661,11 +662,20 @@ class EmployeeResource extends Resource
                         ...self::formAutos(),
                     ])
                     ->action(function (Employee $record, array $data): void {
-                        dd($data, $record);
-                        // Redirigir a la página de edición del empleado
-                        // con el paso de vehículos seleccionado
-                        // $url = EmployeeResource::getUrl('edit', ['record' => $record->id]) . '?step=2';
-                        // redirect($url)->send();
+                        Notification::make()
+                            ->title('Vehiculo agregado')
+                            ->body('El vehículo pasará por un proceso de verificación.')
+                            ->success()
+                            ->send();
+
+                        $recipient = User::whereHas("roles", function($q){ $q->whereIn("name", ["super_admin","admin"]); })->get();
+
+                        Notification::make()
+                            ->title('El propietario ha agregado un nuevo vehículo de un trabajador aprobado para verificación. Ir a Gestión de Trabajadores.')
+                            ->sendToDatabase($recipient);
+
+                        $record->status = 'pendiente';
+                        $record->save();
                     }),
                     
                 Tables\Actions\Action::make('renovarAutos')
