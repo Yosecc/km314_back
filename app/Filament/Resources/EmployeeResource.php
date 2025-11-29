@@ -475,14 +475,14 @@ class EmployeeResource extends Resource
                     ->color('warning')
                     
                     ->form([
-                       
+                       Placeholder::make('documentation')->content(['jkugjkhgjkhgjkhghjkghjk']),    
                         Repeater::make('files')
                             ->relationship('files')
                             ->addable(false)
                             ->deletable(false)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                             ->grid(2)
-                            ->description('Prevent abuse by limiting the number of requests per period')
+                            
                             ->schema([
                                 Forms\Components\Hidden::make('id'),
                                 Forms\Components\Hidden::make('name'),
