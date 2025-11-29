@@ -513,23 +513,35 @@ class EmployeeResource extends Resource
                     ])
                     
                     ->action(function (array $data, Employee $record): void {
+                        // Obtener archivos vencidos directamente de la relación
+                        $vencidos = $record->files()
+                            ->where('fecha_vencimiento', '<', now())
+                            ->get();
 
-                        // $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(3);
-                        // $record->save();?
+                        if ($vencidos->isEmpty()) {
+                            Notification::make()
+                                ->title('No hay documentos vencidos para renovar')
+                                ->warning()
+                                ->send();
+                            return;
+                        }
 
-                        dd($data, $record);
-
-                        foreach ($data['files'] as $fileData) {
-                            $fileRecord = $record->files()->where('id', $fileData['id'])->first();
-                            if ($fileRecord) {
-                                $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
+                        foreach ($vencidos as $fileRecord) {
+                            // Buscar si hay datos actualizados en $data para este archivo
+                            $fileData = collect($data['files'] ?? [])->firstWhere('id', $fileRecord->id);
+                            
+                            if ($fileData) {
+                                // Actualizar fecha de vencimiento si fue modificada
+                                if (isset($fileData['fecha_vencimiento'])) {
+                                    $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
+                                }
+                                
+                                // Actualizar archivo si fue subido uno nuevo
                                 if (isset($fileData['file']) && is_array($fileData['file']) && count($fileData['file']) > 0) {
-                                    // Almacenar el archivo y obtener la ruta
                                     $uploadedFilePath = $fileData['file'][0]->store('employee_files');
-
-                                    // Actualizar el campo 'file' con la ruta del archivo almacenado
                                     $fileRecord->file = $uploadedFilePath;
                                 }
+                                
                                 $fileRecord->save();
                             }
                         }
