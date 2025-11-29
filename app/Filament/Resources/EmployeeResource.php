@@ -519,15 +519,13 @@ class EmployeeResource extends Resource
                     
                     ->action(function (array $data, Employee $record): void {
 
-                        dd($record->files->where('fecha_vencimiento', '<', now()));
+                        
                         // Obtener archivos vencidos directamente de la relación
-                        $vencidos = $record->files()
-                            ->where('fecha_vencimiento', '<', now())
-                            ->get();
+                        $vencidos = $record->files->where('fecha_vencimiento', '<', now());
 
-                        if ($vencidos->isEmpty()) {
+                        if (!$vencidos->isEmpty()) {
                             Notification::make()
-                                ->title('No hay documentos vencidos para renovar')
+                                ->title('Todos los documentos vencidos deben ser renovados.')
                                 ->warning()
                                 ->send();
                             return;
