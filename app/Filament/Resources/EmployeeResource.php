@@ -282,7 +282,7 @@ class EmployeeResource extends Resource
                         Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
                             // ->maxLength(255),
                         Forms\Components\Hidden::make('model')
-                            ->default('Employee')
+                            ->default('Employee'),
                             // ->maxLength(255),
                         Fieldset::make('Cargue los siguientes documentos')
                             ->schema([
