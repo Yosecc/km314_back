@@ -61,9 +61,12 @@ class EditEmployee extends EditRecord
                 ->action(function () {
                     $this->record->update(['status' => 'aprobado']);
 
-                    Notification::make()
+                    if($this->record->owner && $this->record->owner->user ){
+
+                        Notification::make()
                         ->title('Trabajador aprobado.')
                         ->sendToDatabase($this->record->owner->user);
+                    }
                     
                     Notification::make()
                         ->title('Trabajador aprobado')
@@ -102,9 +105,12 @@ class EditEmployee extends EditRecord
                         'status' => false, // No leída
                     ]);
 
-                    Notification::make()
+                    if($this->record->owner && $this->record->owner->user ){
+
+                        Notification::make()
                         ->title('Trabajador rechazado. Ir a Gestión de trabajadores')
                         ->sendToDatabase($this->record->owner->user);
+                    }
 
                     
                     Notification::make()

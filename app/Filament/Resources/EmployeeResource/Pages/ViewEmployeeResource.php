@@ -34,6 +34,13 @@ class ViewEmployeeResource extends ViewRecord
                 ->modalDescription('¿Estás seguro de que quieres aprobar este trabajador?')
                 ->action(function () {
                     $this->record->update(['status' => 'aprobado']);
+
+                     if($this->record->owner && $this->record->owner->user ){
+
+                        Notification::make()
+                        ->title('Trabajador aprobado.')
+                        ->sendToDatabase($this->record->owner->user);
+                    }
                     
                     Notification::make()
                         ->title('Trabajador aprobado')
@@ -71,6 +78,13 @@ class ViewEmployeeResource extends ViewRecord
                         'user_id' => Auth::id(),
                         'status' => false, // No leída
                     ]);
+
+                     if($this->record->owner && $this->record->owner->user ){
+
+                        Notification::make()
+                        ->title('Trabajador rechazado. Ir a Gestión de trabajadores')
+                        ->sendToDatabase($this->record->owner->user);
+                    }
                     
                     Notification::make()
                         ->title('Trabajador rechazado')
