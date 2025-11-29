@@ -327,7 +327,7 @@ class EmployeeResource extends Resource
             ->schema([
                 Tabs::make('Tabs')
                     ->tabs([
-                        Tabs\Tab::make('Información')->schema(self::formDatosPersonales()),
+                        Tabs\Tab::make('Información')->schema(self::formDatosPersonales())->columns(2),
                         Tabs\Tab::make('Archivos personales')->schema(self::formArchivosPersonales()),
                         Tabs\Tab::make('Autos')->schema(self::formAutos()),
                         Tabs\Tab::make('Horarios de trabajo')->schema(self::formHorarios()),
