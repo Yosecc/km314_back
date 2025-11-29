@@ -251,9 +251,9 @@ class EmployeeResource extends Resource
     {
         return [
             Forms\Components\Repeater::make('autos')
+                    ->label('Vehículos')
                     ->relationship()
                     ->mutateRelationshipDataBeforeFillUsing(function ($record, $data) {
-                        // dd($record->autos, $data);
                         $data['model'] = $record->autos->where('id', $data['id'])->first()->model;
                         return $data;
                     })
@@ -275,7 +275,7 @@ class EmployeeResource extends Resource
                         Forms\Components\Hidden::make('model')
                             ->default('Employee'),
                             // ->maxLength(255),
-                        Fieldset::make('Cargue los siguientes documentos del auto')
+                        Fieldset::make('Cargue los siguientes documentos del vehículo')
                             ->schema([
                                 Forms\Components\FileUpload::make('file_seguro')
                                     ->label('Seguro')
@@ -313,7 +313,8 @@ class EmployeeResource extends Resource
                             ])->columns(3),
                             
                     ])
-                    ->itemLabel('Información del auto')
+                    ->itemLabel('Información del vehículo')
+                    ->addActionLabel('Agregar vehículo')
                     ->defaultItems(0)
                     ->columns(2)
         ];
@@ -365,7 +366,7 @@ class EmployeeResource extends Resource
                         Wizard\Step::make('Documentos personales')
                             ->icon('heroicon-m-document-text')
                             ->schema(self::formArchivosPersonales()),
-                        Wizard\Step::make('Autos')
+                        Wizard\Step::make('Vehiculos')
                             ->icon('heroicon-m-truck')
                             ->schema(self::formAutos()),
                         Wizard\Step::make('Días de trabajo')
