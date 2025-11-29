@@ -473,9 +473,8 @@ class EmployeeResource extends Resource
                     ->label('Renovar documentos')
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
-                    
                     ->form([
-                       Placeholder::make('documentation')->content(['jkugjkhgjkhgjkhghjkghjk']),    
+                        Placeholder::make('')->content('Selecciona el dia y el horario de trabajo')->columnSpanFull(),   
                         Repeater::make('files')
                             ->relationship('files')
                             ->addable(false)
