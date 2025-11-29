@@ -519,7 +519,7 @@ class EmployeeResource extends Resource
                     
                     ->action(function (array $data, Employee $record): void {
 
-                        dd($record->files);
+                        dd($record->files->where('fecha_vencimiento', '<', now()));
                         // Obtener archivos vencidos directamente de la relación
                         $vencidos = $record->files()
                             ->where('fecha_vencimiento', '<', now())
