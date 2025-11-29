@@ -512,7 +512,7 @@ class EmployeeResource extends Resource
                             
                     ])
                     
-                    ->action(function ($record, $data) {
+                    ->action(function (array $data, Employee $record): void {
 
                         // $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(3);
                         // $record->save();?
