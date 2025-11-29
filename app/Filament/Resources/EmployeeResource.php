@@ -491,7 +491,7 @@ class EmployeeResource extends Resource
                     })
                     ->form([
                         Placeholder::make('')
-                            ->content('Remplaza los documentos vencidos con nuevos archivos y fechas de vencimiento actualizadas.')
+                            ->content('Remplaza los documentos vencidos con nuevos archivos y fechas de vencimiento actualizadas. Todos los documentos deben actualizarse para proceder con la renovación.')
                             ->columnSpanFull(),   
                         Repeater::make('files')
                             ->label('Documentos vencidos a renovar')
