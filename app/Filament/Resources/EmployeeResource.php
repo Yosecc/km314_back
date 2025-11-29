@@ -529,42 +529,61 @@ class EmployeeResource extends Resource
                             return;
                         }
                         
-                        // Filtrar los archivos que tienen fechas vencidas
-                        $vencidos = collect($data['files'])->filter(function ($file) {
-                            return Carbon::parse($file['fecha_vencimiento'])->isBefore(now()->startOfDay());
-                        });
+                        $actualizados = 0;
+                        $noActualizados = 0;
+                        $documentosNoActualizados = [];
                         
-                        if ($vencidos->isNotEmpty()) {
-                            Notification::make()
-                                ->title('Fechas de vencimiento inválidas')
-                                ->body('Las nuevas fechas de vencimiento no pueden estar vencidas.')
-                                ->danger()
-                                ->send();
-                            return;
-                        }
-                        
-                        // Actualizar archivos
+                        // Procesar cada archivo
                         foreach ($data['files'] as $fileData) {
                             $fileRecord = $record->files()->where('id', $fileData['id'])->first();
                             
-                            if ($fileRecord) {
-                                $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
-                                
-                                if (isset($fileData['file'][0])) {
-                                    $uploadedFilePath = is_string($fileData['file'][0]) 
-                                        ? $fileData['file'][0] 
-                                        : $fileData['file'][0]->store('employee_files');
-                                    $fileRecord->file = $uploadedFilePath;
-                                }
-                                
-                                $fileRecord->save();
+                            if (!$fileRecord) {
+                                continue;
                             }
+                            
+                            // Verificar si la fecha está vencida
+                            $fechaVencimiento = Carbon::parse($fileData['fecha_vencimiento']);
+                            if ($fechaVencimiento->isBefore(now()->startOfDay())) {
+                                // Si está vencida, no actualizar
+                                $noActualizados++;
+                                $documentosNoActualizados[] = $fileData['name'] ?? "Documento ID {$fileData['id']}";
+                                continue;
+                            }
+                            
+                            // Si la fecha es válida, actualizar
+                            $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
+                            
+                            if (isset($fileData['file'][0])) {
+                                $uploadedFilePath = is_string($fileData['file'][0]) 
+                                    ? $fileData['file'][0] 
+                                    : $fileData['file'][0]->store('employee_files');
+                                $fileRecord->file = $uploadedFilePath;
+                            }
+                            
+                            $fileRecord->save();
+                            $actualizados++;
                         }
-                    
-                        Notification::make()
-                            ->title('Documentos renovados exitosamente')
-                            ->success()
-                            ->send();
+                        
+                        // Mostrar notificación según el resultado
+                        if ($actualizados > 0 && $noActualizados === 0) {
+                            Notification::make()
+                                ->title('Documentos renovados exitosamente')
+                                ->body("Se actualizaron {$actualizados} documento(s).")
+                                ->success()
+                                ->send();
+                        } elseif ($actualizados > 0 && $noActualizados > 0) {
+                            Notification::make()
+                                ->title('Renovación parcial')
+                                ->body("Se actualizaron {$actualizados} documento(s). Los siguientes documentos no se actualizaron por tener fechas vencidas: " . implode(', ', $documentosNoActualizados))
+                                ->warning()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('No se actualizó ningún documento')
+                                ->body('Todos los documentos tienen fechas de vencimiento inválidas (vencidas).')
+                                ->danger()
+                                ->send();
+                        }
                     })
                     ->visible(function ($record) {
                         $vencimientos = self::isVencimientos($record);
