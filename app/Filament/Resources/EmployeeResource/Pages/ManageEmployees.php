@@ -4,6 +4,7 @@ namespace App\Filament\Resources\EmployeeResource\Pages;
 
 use App\Filament\Resources\EmployeeResource;
 use App\Models\User;
+use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
@@ -17,6 +18,11 @@ class ManageEmployees extends ManageRecords
     {
         return [
             Actions\CreateAction::make()
+                ->mutateFormDataUsing(function (array $data): array {
+                    // Siempre establecer fecha_vencimiento_seguro
+                    $data['fecha_vencimiento_seguro'] = Carbon::now()->addMonths(3)->toDateString();
+                    return $data;
+                })
                 ->after(function ($record) {
                     
                     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
