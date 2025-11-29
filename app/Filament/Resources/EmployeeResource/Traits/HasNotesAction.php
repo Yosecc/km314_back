@@ -67,6 +67,7 @@ trait HasNotesAction
                     ->send();
             })
             ->modalSubmitActionLabel('Agregar notificación')
+            ->modalSubmitAction(fn ($action) => $action->visible(fn () => Auth::user()->hasRole(['super_admin','admin'])))
             ;
     }
 
@@ -121,6 +122,7 @@ trait HasNotesAction
                     ->send();
             })
             ->modalSubmitActionLabel('Agregar notificación')
+            ->modalSubmitAction(fn ($action) => $action->visible(fn () => Auth::user()->hasRole(['super_admin','admin'])))
             
             ;
     }
