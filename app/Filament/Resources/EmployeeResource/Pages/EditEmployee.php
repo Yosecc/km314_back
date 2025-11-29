@@ -17,6 +17,22 @@ class EditEmployee extends EditRecord
     
     protected static string $resource = EmployeeResource::class;
 
+    public function mount(int | string $record): void
+    {
+        parent::mount($record);
+
+        // Si es owner y el registro está aprobado, redirigir
+        if (Auth::user()->hasRole('owner') && $this->record->status === 'aprobado') {
+            Notification::make()
+                ->title('No se puede editar')
+                ->body('No puedes editar un trabajador que ya ha sido aprobado.')
+                ->danger()
+                ->send();
+
+            $this->redirect(EmployeeResource::getUrl('index'));
+        }
+    }
+
     protected function beforeFill(): void
     {
      //  dd('este es');
