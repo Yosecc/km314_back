@@ -188,7 +188,7 @@ class EmployeeResource extends Resource
                         // TextEntry::make('name'),
                         // Forms\Components\TextInput::make('name')->disabled()->label('Cargar la siguiente documentación:'),
                         DatePicker::make('fecha_vencimiento')
-                            ->label('Fecha de vencimiento')
+                            ->label('Fecha de vencimiento del documento')
                             ->hidden(function(Get $get, Set $set, $context){
                                 $is_required = $get('is_required_fecha_vencimiento') ?? false;
                                 return !$is_required;
@@ -283,6 +283,40 @@ class EmployeeResource extends Resource
                         Forms\Components\Hidden::make('model')
                             ->default('Employee')
                             // ->maxLength(255),
+                        Fieldset::make('Cargue los siguientes documentos')
+                            ->schema([
+                                Forms\Components\FileUpload::make('file_seguro')
+                                    ->label('Seguro')
+                                    ->required()
+                                    ->storeFileNamesIn('attachment_file_names')
+                                    ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                        return $file ? $file->getClientOriginalName() : $record->file;
+                                    })
+                                    ->disabled(function($context, Get $get){
+                                        return $context == 'edit' ? true:false;
+                                    }),
+                                Forms\Components\FileUpload::make('file_vtv')
+                                    ->label('VTV')
+                                    ->required()
+                                    ->storeFileNamesIn('attachment_file_names')
+                                    ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                        return $file ? $file->getClientOriginalName() : $record->file;
+                                    })
+                                    ->disabled(function($context, Get $get){
+                                        return $context == 'edit' ? true:false;
+                                    }),
+                                Forms\Components\FileUpload::make('file_cedula')
+                                    ->label('Cédula')
+                                    ->required()
+                                    ->storeFileNamesIn('attachment_file_names')
+                                    ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                        return $file ? $file->getClientOriginalName() : $record->file;
+                                    })
+                                    ->disabled(function($context, Get $get){
+                                        return $context == 'edit' ? true:false;
+                                    }),
+                            ])
+                            
                     ])
                     ->defaultItems(0)
                     ->columns(2)
