@@ -682,12 +682,18 @@ class EmployeeResource extends Resource
                                 ->body("Se actualizaron {$actualizados} documento(s).")
                                 ->success()
                                 ->send();
+
+                                $record->status = 'pendiente';
+                                $record->save();
+
                         } elseif ($actualizados > 0 && $noActualizados > 0) {
                             Notification::make()
                                 ->title('Renovación parcial')
                                 ->body("Se actualizaron {$actualizados} documento(s). Los siguientes documentos no se actualizaron por tener fechas vencidas: " . implode(', ', $documentosNoActualizados))
                                 ->warning()
                                 ->send();
+                                $record->status = 'pendiente';
+                                $record->save();
                         } else {
                             Notification::make()
                                 ->title('No se actualizó ningún documento')
