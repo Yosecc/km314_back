@@ -698,52 +698,6 @@ class EmployeeResource extends Resource
                         // $vencimientos = self::isVencimientos($record);
                         // return $vencimientos['isVencido'];
                     }),
-
-                Tables\Actions\Action::make('renovarAutos')
-                    ->label('Renovar documentos de vehiculos')
-                    ->action(function (Employee $record) {
-                        $actualizados = 0;
-                        $noActualizados = 0;
-                        $documentosNoActualizados = [];
-
-                        foreach ($record->autos as $auto) {
-                            foreach ($auto->files as $file) {
-                                if ($file->fecha_vencimiento && Carbon::parse($file->fecha_vencimiento)->isPast()) {
-                                    // Actualizar la fecha de vencimiento del archivo
-                                    $file->fecha_vencimiento = now()->addYear();
-                                    $file->save();
-                                    $actualizados++;
-                                } else {
-                                    $noActualizados++;
-                                    $documentosNoActualizados[] = $file->name;
-                                }
-                            }
-                        }
-
-                        // Mostrar notificación según el resultado
-                        if ($actualizados > 0 && $noActualizados === 0) {
-                            Notification::make()
-                                ->title('Documentos de autos renovados exitosamente')
-                                ->body("Se actualizaron {$actualizados} documento(s) de autos.")
-                                ->success()
-                                ->send();
-                        } elseif ($actualizados > 0 && $noActualizados > 0) {
-                            Notification::make()
-                                ->title('Renovación parcial de documentos de autos')
-                                ->body("Se actualizaron {$actualizados} documento(s) de autos. Los siguientes documentos no se actualizaron por tener fechas vencidas: " . implode(', ', $documentosNoActualizados))
-                                ->warning()
-                                ->send();
-                        } else {
-                            Notification::make()
-                                ->title('No se actualizó ningún documento de autos')
-                                ->body('Todos los documentos de autos tienen fechas de vencimiento inválidas (vencidas).')
-                                ->danger()
-                                ->send();
-                        }
-                    })
-                    ->visible(function ($record) {
-                        return  $record->vencidosAutosFile();
-                    }),
                 
                 ActionGroup::make([
                     Tables\Actions\Action::make('agregarAutos')
