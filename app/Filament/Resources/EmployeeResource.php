@@ -550,6 +550,15 @@ class EmployeeResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(function ($record) {
+                        // Si es owner y el empleado está aprobado, ocultar el botón de editar
+                        if (Auth::user()->hasRole('owner') && $record->status === 'aprobado') {
+                            return false;
+                        }
+                        return true;
+                    }),
                 // Botón de notificaciones en la tabla
                 self::getNotesTableAction(),
 
@@ -690,14 +699,7 @@ class EmployeeResource extends Resource
                         // return $vencimientos['isVencido'];
                     })
                     ,
-                Tables\Actions\EditAction::make()
-                    ->visible(function ($record) {
-                        // Si es owner y el empleado está aprobado, ocultar el botón de editar
-                        if (Auth::user()->hasRole('owner') && $record->status === 'aprobado') {
-                            return false;
-                        }
-                        return true;
-                    }),
+                
                     ActionGroup::make([
                         Tables\Actions\Action::make('agregarAutos')
                             ->label('Gestionar vehículos')
@@ -1068,8 +1070,8 @@ class EmployeeResource extends Resource
                     }),
                     
                 
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\ViewAction::make(),
+                // Tables\Actions\DeleteAction::make(),
+                
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
