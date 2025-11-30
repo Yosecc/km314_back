@@ -1018,7 +1018,7 @@ class EmployeeResource extends Resource
                                 $record->status = 'pendiente';
                                 $record->save();
                             }),
-                    ])->color('info');
+                    ])->color('info'),
                
                     
                 Tables\Actions\Action::make('renovarAutos')
