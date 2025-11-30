@@ -981,34 +981,22 @@ class EmployeeResource extends Resource
                                         ])
                                         ->required()
                                         ->columnSpan(2),
-                                    Forms\Components\TimePicker::make('start_time')
-                                        ->label('Hora de entrada')
-                                        ->required()
+                                    Forms\Components\Hidden::make('start_time')
                                         ->default('12:00')
-                                        ->hidden()
-                                        ->dehydrated()
-                                        ->seconds(false),
-                                    Forms\Components\TimePicker::make('end_time')
-                                        ->label('Hora de salida')
-                                        ->required()
+                                        ->dehydrated(),
+                                    Forms\Components\Hidden::make('end_time')
                                         ->default('23:59')
-                                        ->hidden()
-                                        ->dehydrated()
-                                        ->seconds(false),
+                                        ->dehydrated(),
                                 ])
                                 ->itemLabel(fn (array $state): ?string => 
-                                    isset($state['day_of_week']) 
-                                        ? "{$state['day_of_week']}" . (isset($state['start_time']) && isset($state['end_time']) 
-                                            ? " ({$state['start_time']} - {$state['end_time']})" 
-                                            : '')
-                                        : 'Nuevo horario'
+                                    isset($state['day_of_week']) ? $state['day_of_week'] : 'Nuevo horario'
                                 )
                                 ->addActionLabel('Agregar día de trabajo')
                                 ->defaultItems(0)
                                 ->deletable(true)
                                 ->reorderable(false)
                                 ->grid(2)
-                                ->columns(4)
+                                ->columns(1)
                                 ->columnSpanFull()
                         ])
                         ->action(function (Employee $record, array $data): void {
