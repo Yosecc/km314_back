@@ -256,6 +256,24 @@ class EmployeeResource extends Resource
         ];
     }
 
+    private function camposAutosFiles()
+    {
+        return [
+            Forms\Components\Hidden::make('name')->dehydrated(),
+            DatePicker::make('fecha_vencimiento')
+                ->label('Fecha de vencimiento del documento')
+                ->required(),
+            Forms\Components\FileUpload::make('file')
+                ->label('Archivo')
+                ->required()
+                ->storeFileNamesIn('attachment_file_names')
+                ->openable()
+                ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                    return $file ? $file->getClientOriginalName() : $record->file;
+                })
+        ];
+    }
+
     private static function camposAutos()
     {
         return [
@@ -279,22 +297,7 @@ class EmployeeResource extends Resource
             Repeater::make('files')
                 ->relationship()
                 ->label('Documentos del vehículo')
-                ->schema([
-                    Forms\Components\Hidden::make('name')->dehydrated(),
-                    DatePicker::make('fecha_vencimiento')
-                        ->label('Fecha de vencimiento del documento')
-                        ->required(),
-                    Forms\Components\FileUpload::make('file')
-                        ->label('Archivo')
-                        ->required()
-                        ->storeFileNamesIn('attachment_file_names')
-                        ->openable()
-                        ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                            return $file ? $file->getClientOriginalName() : $record->file;
-                        })
-                        
-                        ,
-                ])
+                ->schema(self::camposAutosFiles())
                 ->defaultItems(3)
                 ->minItems(3)
                 ->maxItems(3)
@@ -327,7 +330,49 @@ class EmployeeResource extends Resource
                         $data['model'] = $record->autos->where('id', $data['id'])->first()->model;
                         return $data;
                     })
-                    ->schema(self::camposAutos())
+                    ->schema([
+                         Forms\Components\TextInput::make('marca')
+                            ->label(__("general.Marca"))
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('modelo')
+                            ->label(__("general.Modelo"))
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('patente')
+                            ->label(__("general.Patente"))
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('color')
+                            ->label(__("general.Color"))
+                            ->maxLength(255),
+                        Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+                            // ->maxLength(255),
+                        Forms\Components\Hidden::make('model')
+                            ->default('Employee'),
+                            // ->maxLength(255),
+                        Repeater::make('files')
+                            ->relationship()
+                            ->label('Documentos del vehículo')
+                            ->schema(self::camposAutosFiles())
+                            ->defaultItems(3)
+                            ->minItems(3)
+                            ->maxItems(3)
+                            ->addable(false)
+                            ->deletable(false)
+                            ->grid(2)
+                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                            ->default([
+                                [
+                                    'name' => 'Seguro del Vehículo',
+                                ],
+                                [
+                                    'name' => 'VTV',
+                                ],
+                                [
+                                    'name' => 'Cédula del Vehículo',
+                                ],
+                            ])
+                            ->columns(1)
+                            ->columnSpanFull(),
+                    ])
                     ->itemLabel('Información del vehículo')
                     ->addActionLabel('Agregar vehículo')
                     ->defaultItems(0)
@@ -521,8 +566,7 @@ class EmployeeResource extends Resource
                     })
                     ->visible(function ($record) {
                         return Auth::user()->hasRole('super_admin') && $record->isVencidoSeguro();
-                    })
-                    ,
+                    }),
                                 
                 Tables\Actions\Action::make('renovar_documentos')
                     ->label('Renovar documentos')
@@ -662,13 +706,55 @@ class EmployeeResource extends Resource
                         Placeholder::make('')
                             ->content('Aquí puedes agregar vehículos adicionales para el trabajador. Completa los detalles del vehículo y sus documentos correspondientes.')
                             ->columnSpanFull(),
+
                         Forms\Components\Repeater::make('autos')
                             ->label('Vehículos')
                             ->mutateRelationshipDataBeforeFillUsing(function ($record, $data) {
                                 $data['model'] = $record->autos->where('id', $data['id'])->first()->model;
                                 return $data;
                             })
-                            ->schema(self::camposAutos())
+                            ->schema([
+                                Forms\Components\TextInput::make('marca')
+                                    ->label(__("general.Marca"))
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('modelo')
+                                    ->label(__("general.Modelo"))
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('patente')
+                                    ->label(__("general.Patente"))
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('color')
+                                    ->label(__("general.Color"))
+                                    ->maxLength(255),
+                                Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+                                    // ->maxLength(255),
+                                Forms\Components\Hidden::make('model')
+                                    ->default('Employee'),
+                                    // ->maxLength(255),
+                                Repeater::make('files')
+                                    ->label('Documentos del vehículo')
+                                    ->schema(self::camposAutosFiles())
+                                    ->defaultItems(3)
+                                    ->minItems(3)
+                                    ->maxItems(3)
+                                    ->addable(false)
+                                    ->deletable(false)
+                                    ->grid(2)
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                                    ->default([
+                                        [
+                                            'name' => 'Seguro del Vehículo',
+                                        ],
+                                        [
+                                            'name' => 'VTV',
+                                        ],
+                                        [
+                                            'name' => 'Cédula del Vehículo',
+                                        ],
+                                    ])
+                                    ->columns(1)
+                                    ->columnSpanFull(),
+                            ])
                             ->itemLabel('Información del vehículo')
                             ->addActionLabel('Agregar vehículo')
                             ->defaultItems(0)
