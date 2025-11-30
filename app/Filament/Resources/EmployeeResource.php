@@ -256,7 +256,7 @@ class EmployeeResource extends Resource
         ];
     }
 
-    private function camposAutosFiles()
+    private static function camposAutosFiles()
     {
         return [
             Forms\Components\Hidden::make('name')->dehydrated(),
