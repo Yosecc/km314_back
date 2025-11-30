@@ -696,44 +696,78 @@ class EmployeeResource extends Resource
                         return true;
                     }),
                 Tables\Actions\Action::make('agregarAutos')
-                    ->label('Agregar vehículos')
+                    ->label('Gestionar vehículos')
                     ->icon('heroicon-o-truck')
                     ->color('primary')
                     ->visible(function ($record) {
                         return $record->status === 'aprobado';
                     })
+                    ->fillForm(function (Employee $record): array {
+                        return [
+                            'autos' => $record->autos->map(function ($auto) {
+                                return [
+                                    'id' => $auto->id,
+                                    'marca' => $auto->marca,
+                                    'modelo' => $auto->modelo,
+                                    'patente' => $auto->patente,
+                                    'color' => $auto->color,
+                                    'user_id' => $auto->user_id,
+                                    'model' => $auto->model,
+                                    'files' => $auto->files->map(function ($file) {
+                                        return [
+                                            'id' => $file->id,
+                                            'name' => $file->name,
+                                            'fecha_vencimiento' => $file->fecha_vencimiento,
+                                            'file' => $file->file,
+                                        ];
+                                    })->toArray()
+                                ];
+                            })->toArray()
+                        ];
+                    })
                     ->form([
                         Placeholder::make('')
-                            ->content('Aquí puedes agregar vehículos adicionales para el trabajador. Completa los detalles del vehículo y sus documentos correspondientes.')
+                            ->content('Aquí puedes gestionar los vehículos del trabajador. Puedes agregar nuevos vehículos o eliminar los existentes. Los cambios pasarán por un proceso de verificación.')
                             ->columnSpanFull(),
 
                         Forms\Components\Repeater::make('autos')
                             ->label('Vehículos')
-                            ->mutateRelationshipDataBeforeFillUsing(function ($record, $data) {
-                                $data['model'] = $record->autos->where('id', $data['id'])->first()->model;
-                                return $data;
-                            })
                             ->schema([
+                                Forms\Components\Hidden::make('id'),
                                 Forms\Components\TextInput::make('marca')
                                     ->label(__("general.Marca"))
+                                    ->required()
                                     ->maxLength(255),
                                 Forms\Components\TextInput::make('modelo')
                                     ->label(__("general.Modelo"))
+                                    ->required()
                                     ->maxLength(255),
                                 Forms\Components\TextInput::make('patente')
                                     ->label(__("general.Patente"))
+                                    ->required()
                                     ->maxLength(255),
                                 Forms\Components\TextInput::make('color')
                                     ->label(__("general.Color"))
                                     ->maxLength(255),
                                 Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-                                    // ->maxLength(255),
-                                Forms\Components\Hidden::make('model')
-                                    ->default('Employee'),
-                                    // ->maxLength(255),
+                                Forms\Components\Hidden::make('model')->default('Employee'),
                                 Repeater::make('files')
                                     ->label('Documentos del vehículo')
-                                    ->schema(self::camposAutosFiles())
+                                    ->schema([
+                                        Forms\Components\Hidden::make('id'),
+                                        Forms\Components\Hidden::make('name')->dehydrated(),
+                                        DatePicker::make('fecha_vencimiento')
+                                            ->label('Fecha de vencimiento del documento')
+                                            ->required(),
+                                        Forms\Components\FileUpload::make('file')
+                                            ->label('Archivo')
+                                            ->required()
+                                            ->storeFileNamesIn('attachment_file_names')
+                                            ->openable()
+                                            ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                                return $file ? $file->getClientOriginalName() : ($record ? $record->file : null);
+                                            })
+                                    ])
                                     ->defaultItems(3)
                                     ->minItems(3)
                                     ->maxItems(3)
@@ -755,24 +789,101 @@ class EmployeeResource extends Resource
                                     ->columns(1)
                                     ->columnSpanFull(),
                             ])
-                            ->itemLabel('Información del vehículo')
+                            ->itemLabel(fn (array $state): ?string => 
+                                isset($state['patente']) ? "Vehículo: {$state['patente']}" : 'Nuevo vehículo'
+                            )
                             ->addActionLabel('Agregar vehículo')
                             ->defaultItems(0)
+                            ->deletable(true)
+                            ->reorderable(false)
                             ->columns(2)
+                            ->columnSpanFull()
                     ])
                     ->action(function (Employee $record, array $data): void {
-
-                        dd($data);
+                        $autosActuales = $record->autos->pluck('id')->toArray();
+                        $autosFormulario = collect($data['autos'])->pluck('id')->filter()->toArray();
+                        
+                        // Autos a eliminar (están en BD pero no en el formulario)
+                        $autosEliminar = array_diff($autosActuales, $autosFormulario);
+                        
+                        // Eliminar autos y sus archivos
+                        foreach ($autosEliminar as $autoId) {
+                            $auto = $record->autos()->find($autoId);
+                            if ($auto) {
+                                // Eliminar archivos físicos
+                                foreach ($auto->files as $file) {
+                                    if (Storage::exists($file->file)) {
+                                        Storage::delete($file->file);
+                                    }
+                                    $file->delete();
+                                }
+                                $auto->delete();
+                            }
+                        }
+                        
+                        // Procesar autos del formulario
+                        foreach ($data['autos'] as $autoData) {
+                            if (isset($autoData['id']) && $autoData['id']) {
+                                // Actualizar auto existente
+                                $auto = $record->autos()->find($autoData['id']);
+                                if ($auto) {
+                                    $auto->update([
+                                        'marca' => $autoData['marca'],
+                                        'modelo' => $autoData['modelo'],
+                                        'patente' => $autoData['patente'],
+                                        'color' => $autoData['color'],
+                                    ]);
+                                    
+                                    // Actualizar archivos
+                                    foreach ($autoData['files'] as $fileData) {
+                                        if (isset($fileData['id']) && $fileData['id']) {
+                                            $file = $auto->files()->find($fileData['id']);
+                                            if ($file) {
+                                                $file->update([
+                                                    'fecha_vencimiento' => $fileData['fecha_vencimiento'],
+                                                    'file' => is_array($fileData['file']) ? $fileData['file'][0] : $fileData['file'],
+                                                ]);
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                // Crear nuevo auto
+                                $nuevoAuto = $record->autos()->create([
+                                    'marca' => $autoData['marca'],
+                                    'modelo' => $autoData['modelo'],
+                                    'patente' => $autoData['patente'],
+                                    'color' => $autoData['color'],
+                                    'user_id' => Auth::user()->id,
+                                    'model' => 'Employee',
+                                    'model_id' => $record->id,
+                                ]);
+                                
+                                // Crear archivos para el nuevo auto
+                                foreach ($autoData['files'] as $fileData) {
+                                    if (isset($fileData['file'])) {
+                                        $nuevoAuto->files()->create([
+                                            'name' => $fileData['name'],
+                                            'fecha_vencimiento' => $fileData['fecha_vencimiento'],
+                                            'file' => is_array($fileData['file']) ? $fileData['file'][0] : $fileData['file'],
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                        
                         Notification::make()
-                            ->title('Vehiculo agregado')
-                            ->body('El vehículo pasará por un proceso de verificación.')
+                            ->title('Vehículos actualizados')
+                            ->body('Los cambios en los vehículos pasarán por un proceso de verificación.')
                             ->success()
                             ->send();
 
-                        $recipient = User::whereHas("roles", function($q){ $q->whereIn("name", ["super_admin","admin"]); })->get();
+                        $recipient = User::whereHas("roles", function($q){ 
+                            $q->whereIn("name", ["super_admin","admin"]); 
+                        })->get();
 
                         Notification::make()
-                            ->title('El propietario ha agregado un nuevo vehículo de un trabajador aprobado para verificación. Ir a Gestión de Trabajadores.')
+                            ->title('Un propietario ha modificado los vehículos de un trabajador aprobado. Ir a Gestión de Trabajadores.')
                             ->sendToDatabase($recipient);
 
                         $record->status = 'pendiente';
