@@ -700,7 +700,7 @@ class EmployeeResource extends Resource
                     }),
 
                 Tables\Actions\Action::make('renovarAutos')
-                    ->label('Renovar documentos de autos')
+                    ->label('Renovar documentos de vehiculos')
                     ->action(function (Employee $record) {
                         $actualizados = 0;
                         $noActualizados = 0;
