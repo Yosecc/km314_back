@@ -935,6 +935,132 @@ class EmployeeResource extends Resource
                     ->visible(function ($record) {
                         return  $record->vencidosAutosFile();
                     }),
+                    
+                Tables\Actions\Action::make('gestionarHorarios')
+                    ->label('Gestionar horarios')
+                    ->icon('heroicon-o-clock')
+                    ->color('info')
+                    ->visible(function ($record) {
+                        return $record->status === 'aprobado';
+                    })
+                    ->fillForm(function (Employee $record): array {
+                        return [
+                            'horarios' => $record->horarios->map(function ($horario) {
+                                return [
+                                    'id' => $horario->id,
+                                    'day_of_week' => $horario->day_of_week,
+                                    'start_time' => $horario->start_time,
+                                    'end_time' => $horario->end_time,
+                                ];
+                            })->toArray()
+                        ];
+                    })
+                    ->form([
+                        Placeholder::make('')
+                            ->content('Aquí puedes gestionar los días de trabajo del empleado. Puedes agregar nuevos días o eliminar los existentes. Los cambios pasarán por un proceso de verificación.')
+                            ->columnSpanFull(),
+
+                        Forms\Components\Repeater::make('horarios')
+                            ->label('Horarios de trabajo')
+                            ->schema([
+                                Forms\Components\Hidden::make('id'),
+                                Forms\Components\Select::make('day_of_week')
+                                    ->label('Día de la semana')
+                                    ->options([
+                                        'Domingo' => 'Domingo',
+                                        'Lunes' => 'Lunes',
+                                        'Martes' => 'Martes',
+                                        'Miercoles' => 'Miércoles',
+                                        'Jueves' => 'Jueves',
+                                        'Viernes' => 'Viernes',
+                                        'Sabado' => 'Sábado'
+                                    ])
+                                    ->required()
+                                    ->columnSpan(2),
+                                Forms\Components\TimePicker::make('start_time')
+                                    ->label('Hora de entrada')
+                                    ->required()
+                                    ->default('12:00')
+                                    ->hidden()
+                                    ->dehydrated()
+                                    ->seconds(false),
+                                Forms\Components\TimePicker::make('end_time')
+                                    ->label('Hora de salida')
+                                    ->required()
+                                    ->default('23:59')
+                                    ->hidden()
+                                    ->dehydrated()
+                                    ->seconds(false),
+                            ])
+                            ->itemLabel(fn (array $state): ?string => 
+                                isset($state['day_of_week']) 
+                                    ? "{$state['day_of_week']}" . (isset($state['start_time']) && isset($state['end_time']) 
+                                        ? " ({$state['start_time']} - {$state['end_time']})" 
+                                        : '')
+                                    : 'Nuevo horario'
+                            )
+                            ->addActionLabel('Agregar día de trabajo')
+                            ->defaultItems(0)
+                            ->deletable(true)
+                            ->reorderable(false)
+                            ->grid(2)
+                            ->columns(4)
+                            ->columnSpanFull()
+                    ])
+                    ->action(function (Employee $record, array $data): void {
+                        $horariosActuales = $record->horarios->pluck('id')->toArray();
+                        $horariosFormulario = collect($data['horarios'])->pluck('id')->filter()->toArray();
+                        
+                        // Horarios a eliminar (están en BD pero no en el formulario)
+                        $horariosEliminar = array_diff($horariosActuales, $horariosFormulario);
+                        
+                        // Eliminar horarios
+                        foreach ($horariosEliminar as $horarioId) {
+                            $horario = $record->horarios()->find($horarioId);
+                            if ($horario) {
+                                $horario->delete();
+                            }
+                        }
+                        
+                        // Procesar horarios del formulario
+                        foreach ($data['horarios'] as $horarioData) {
+                            if (isset($horarioData['id']) && $horarioData['id']) {
+                                // Actualizar horario existente
+                                $horario = $record->horarios()->find($horarioData['id']);
+                                if ($horario) {
+                                    $horario->update([
+                                        'day_of_week' => $horarioData['day_of_week'],
+                                        'start_time' => $horarioData['start_time'],
+                                        'end_time' => $horarioData['end_time'],
+                                    ]);
+                                }
+                            } else {
+                                // Crear nuevo horario
+                                $record->horarios()->create([
+                                    'day_of_week' => $horarioData['day_of_week'],
+                                    'start_time' => $horarioData['start_time'],
+                                    'end_time' => $horarioData['end_time'],
+                                ]);
+                            }
+                        }
+                        
+                        Notification::make()
+                            ->title('Horarios actualizados')
+                            ->body('Los cambios en los horarios pasarán por un proceso de verificación.')
+                            ->success()
+                            ->send();
+
+                        $recipient = User::whereHas("roles", function($q){ 
+                            $q->whereIn("name", ["super_admin","admin"]); 
+                        })->get();
+
+                        Notification::make()
+                            ->title('Un propietario ha modificado los horarios de un trabajador aprobado. Ir a Gestión de Trabajadores.')
+                            ->sendToDatabase($recipient);
+
+                        $record->status = 'pendiente';
+                        $record->save();
+                    }),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\ViewAction::make(),
             ])
