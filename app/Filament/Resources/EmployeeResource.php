@@ -207,7 +207,7 @@ class EmployeeResource extends Resource
                             ->label('Fecha de vencimiento del documento')
                             ->hidden(function(Get $get, Set $set, $context){
                                 if($context == 'edit' || $context == 'view'){
-                                    return true;
+                                    return false;
                                 }
                                 $is_required = $context == 'create' && $get('is_required_fecha_vencimiento') ?? false;
                                 return !$is_required;
