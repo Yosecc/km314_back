@@ -691,7 +691,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ]),
 
                     Wizard\Step::make('Paso 2')
-                        ->description('Fechas de estancia en el barrio')
+                        ->description('Fechas y horarios')
                         ->schema([
                             ...self::fechasFormulario(),
                         ]),
