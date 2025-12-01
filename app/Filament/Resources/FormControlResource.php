@@ -167,7 +167,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 return FormControlTypeIncome::where('status',1)->get()->pluck('name','name')->toArray();
                             }
                         })
-                        ->columns(2)
+                        ->columns(3)
                         ->gridDirection('row')
                         ->afterStateUpdated(function (Set $set) {
                             $set('peoples', [[
