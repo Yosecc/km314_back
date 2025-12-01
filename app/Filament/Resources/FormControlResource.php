@@ -677,6 +677,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     return !collect($get('income_type'))->contains('Trabajador');
                 }),
 
+            Forms\Components\Toggle::make('bring_mascotas')
+                ->label('¿Traerá mascotas?')
+                ->live(),
+
             Forms\Components\Repeater::make('mascotas')
                 ->relationship()
                 ->schema([
@@ -692,6 +696,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     Forms\Components\Toggle::make('is_vacunado')
                         ->label(__("general.IsVaccinated")),
                 ])
+                ->visible(function(Get $get){
+                    return $get('bring_mascotas') ? true : false;
+                })
                 ->columns(4)
                 ->defaultItems(0)
                 ->columnSpanFull(),
