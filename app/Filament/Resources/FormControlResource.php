@@ -347,7 +347,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                                 // $trabajador->solicitarReverificacion();
                                                 dd('ss');
                                             })
-                                            ->url(route('filament.admin.resources.employees.edit', $trabajador), shouldOpenInNewTab: true),
+                                            // ->url(route('filament.admin.resources.employees.edit', $trabajador), shouldOpenInNewTab: true),
                                     ])
                                     ->send();
                                
