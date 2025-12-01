@@ -224,7 +224,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->required()
                         ->live(),
-                    Forms\Components\TimePicker::make('start_time_range')->label(__('general.start_time_range'))
+                    Forms\Components\TimePicker::make('start_time_range')
+                        ->label(__('general.start_time_range'))
+                        ->required()
                         ->seconds(false),
                     Forms\Components\DatePicker::make('end_date_range')->label(__('general.end_date_range'))
                         ->minDate(function(Get $get){
@@ -234,7 +236,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return !$get('date_unilimited') ? true: false;
                         })
                         ->live(),
-                    Forms\Components\TimePicker::make('end_time_range')->label(__('general.end_time_range'))->seconds(false),
+                    Forms\Components\TimePicker::make('end_time_range')
+                        ->label(__('general.end_time_range'))
+                        ->required()
+                        ->seconds(false),
+                        
                     Forms\Components\Toggle::make('date_unilimited')
                         ->label(__('general.date_unilimited'))
                         ->live()
