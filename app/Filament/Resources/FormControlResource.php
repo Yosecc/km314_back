@@ -733,20 +733,21 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     }
                                     return true;
                                 }),
+                            Forms\Components\Hidden::make('status')
+                                ->label(__("general.Status"))
+                                ->default('Pending')
+                                ->live(),
+
+                            Forms\Components\Hidden::make('authorized_user_id')
+                                ->label(__("general.AuthorizedPer"))
+                                ->live(),
+
+                            Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
                         ]),
 
                 ])->columnSpanFull(),
 
-                Forms\Components\Hidden::make('status')
-                    ->label(__("general.Status"))
-                    ->default('Pending')
-                    ->live(),
-
-                Forms\Components\Hidden::make('authorized_user_id')
-                    ->label(__("general.AuthorizedPer"))
-                    ->live(),
-
-                Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+              
 
                 
             ]);
