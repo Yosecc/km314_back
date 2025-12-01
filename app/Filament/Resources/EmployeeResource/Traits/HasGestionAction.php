@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Notifications\Actions\Action as NotificationAction;
+use Filament\Forms\Components\Placeholder;
 
 trait HasGestionAction
 {
