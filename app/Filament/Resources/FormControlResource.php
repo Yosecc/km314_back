@@ -316,10 +316,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     }
                     // dd($state);
                     if(count($state)){
-
                         $trabajadores = \App\Models\Employee::whereIn('id', $state)->get();
-
-                        
                         $allHaveHorarios = true;
                         $failedId = null;
                         $trabajadores->each(function(Employee $trabajador) use (&$allHaveHorarios, &$failedId, $get, $set, $state) {
@@ -632,6 +629,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
         return [
             Forms\Components\Repeater::make('autos')
                 ->relationship()
+                ->extraInputAttributes(['width' => 200])
                 ->schema([
                     Forms\Components\TextInput::make('marca')
                         ->label(__("general.Marca"))
