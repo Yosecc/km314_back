@@ -8,7 +8,6 @@ use App\Models\FormControl;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use App\Filament\Resources\FormControlResource;
-use Filament\Forms\Components\Actions\Action as FormAction;
 
 
 class EditFormControl extends EditRecord
@@ -20,8 +19,7 @@ class EditFormControl extends EditRecord
         return [
             Actions\DeleteAction::make(),
      
-                    FormAction::make('aprobar')
-                        ->button()
+                    Actions\Action::make('aprobar')
                         ->requiresConfirmation()
                         ->color('success')
                         ->label('Aprobar')
@@ -45,7 +43,7 @@ class EditFormControl extends EditRecord
                         })
                         ->visible(auth()->user()->can('aprobar_form::control')),
 
-                    FormAction::make('rechazar')
+                    Actions\Action::make('rechazar')
                         ->action(function(FormControl $record){
                             $record->rechazar();
                             Notification::make()
@@ -59,7 +57,6 @@ class EditFormControl extends EditRecord
                                     ->sendToDatabase($record->owner->user);
                                 }
                         })
-                        ->button()
                         ->requiresConfirmation()
                         ->icon('heroicon-m-hand-thumb-down')
                         ->color('danger')
