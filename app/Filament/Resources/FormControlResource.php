@@ -107,18 +107,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             }
                             return [];
                         })
-                        ->disabled(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return true;
-                            }
-                            return false;
-                        })
-                        ->dehydrated(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return true;
-                            }
-                            return true;
-                        }),
+                       
+                        ->dehydrated(true),
 
                     Forms\Components\Select::make('lote_ids')
                         ->label(__("general.Lotes"))
