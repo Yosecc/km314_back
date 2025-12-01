@@ -684,7 +684,7 @@ trait HasGestionAction
         return PageAction::make('reeverificacion')
             ->label('Solicitar reverificación')
             ->color('warning')
-            ->icon('heroicon-o-refresh')
+            ->icon('heroicon-o-arrow-path')
             ->requiresConfirmation()
             ->visible(function ($record) {
                 return $record->status === 'aprobado' && Carbon::parse($record->fecha_vencimiento)->isPast();
