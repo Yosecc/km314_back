@@ -324,9 +324,36 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         $failedId = null;
                         $trabajadores->each(function(Employee $trabajador) use (&$allHaveHorarios, &$failedId, $get, $set, $state) {
 
-                            
-// vencidosFile
-// vencidosAutosFile
+                            if($trabajador->vencidosAutosFile()){
+                                Notification::make()
+                                    ->title('El trabajador '.$trabajador->nombres().' tiene vehículos con documentos vencidos.')
+                                    ->body('Por favor, solicite una reeverificación de los documentos del trabajador. ')
+                                    ->danger()
+                                    ->actions([
+                                        NotificationAction::make('Ver a '.$trabajador->nombres())
+                                            ->button()
+                                            ->url(route('filament.admin.resources.employees.view', $trabajador), shouldOpenInNewTab: true),
+                                    ])
+                                    ->send();
+                                $allHaveHorarios = false;
+                                $failedId = $trabajador->id;
+
+                            }
+
+                            if($trabajador->vencidosFile()){
+                                Notification::make()
+                                    ->title('El trabajador '.$trabajador->nombres().' tiene documentos vencidos.')
+                                    ->body('Por favor, solicite una reeverificación de los documentos del trabajador. ')
+                                    ->danger()
+                                    ->actions([
+                                        NotificationAction::make('Ver a '.$trabajador->nombres())
+                                            ->button()
+                                            ->url(route('filament.admin.resources.employees.view', $trabajador), shouldOpenInNewTab: true),
+                                    ])
+                                    ->send();
+                                $allHaveHorarios = false;
+                                $failedId = $trabajador->id;
+                            }
 
                             if($trabajador->isVencidoSeguro()){
                                 Notification::make()
@@ -343,7 +370,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 $failedId = $trabajador->id;
                             } 
 
-                            
+
 
                             if (!$trabajador->horarios()->exists()) {
                                 Notification::make()
