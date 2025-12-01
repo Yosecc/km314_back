@@ -462,9 +462,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     // Actualizar el estado de 'peoples' sin sobrescribirlo completamente
                     $set('peoples', $peoples->values()->toArray());
                 }),
-
+            
+                
             Forms\Components\Repeater::make('peoples')
-                ->label(__("general.Peoples"))
+                ->label('Cargue los datos de las personas que ingresarán al barrio')
                 ->relationship()
                 ->schema([
                     Forms\Components\TextInput::make('dni')
@@ -569,6 +570,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->addable(function(Get $get){
                     return !collect($get('income_type'))->contains('Trabajador') || !auth()->user()->hasRole('owner');
                 })
+                ->itemLabel(fn (array $state): ?string => $state['first_name'] ?? null)
                 ->columns(4)
                 ->columnSpanFull(),
         ];
@@ -763,11 +765,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
                         ]),
 
-                ])->columnSpanFull(),
-
-              
-
-                
+                ])->columnSpanFull(), 
             ]);
     }
 
