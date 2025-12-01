@@ -712,6 +712,27 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->description('Información Extra')
                         ->schema([
                             ...self::informacionExtraFormulario(),
+                            Forms\Components\Select::make('owner_id')
+                                ->relationship(name: 'owner')
+                                ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
+                                ->label(__("general.Owner"))
+                                ->default(function(){
+                                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                        return Auth::user()->owner_id;
+                                    }
+                                })
+                                ->disabled(function(){
+                                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                        return true;
+                                    }
+                                    return false;
+                                })
+                                ->dehydrated(function(){
+                                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                        return true;
+                                    }
+                                    return true;
+                                }),
                         ]),
 
                 ]),
@@ -727,27 +748,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                 Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
 
-                Forms\Components\Select::make('owner_id')
-                    ->relationship(name: 'owner')
-                    ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
-                    ->label(__("general.Owner"))
-                    ->default(function(){
-                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                            return Auth::user()->owner_id;
-                        }
-                    })
-                    ->disabled(function(){
-                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                            return true;
-                        }
-                        return false;
-                    })
-                    ->dehydrated(function(){
-                        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                            return true;
-                        }
-                        return true;
-                    }),
+                
             ]);
     }
 
