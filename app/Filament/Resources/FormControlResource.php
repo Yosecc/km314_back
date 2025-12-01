@@ -107,12 +107,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             }
                             return [];
                         })
-                        ->disabled(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return true;
-                            }
-                            return false;
-                        })
+                        // ->disabled(function(){
+                        //     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                        //         return true;
+                        //     }
+                        //     return false;
+                        // })
                         ->dehydrated(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return true;
@@ -193,7 +193,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 return false;
                             }
                             return array_search("lote", $get('access_type')) !== false ? true : false;
-                        })->live(),
+                        })
+                        ->live(),
 
                     Radio::make('tipo_trabajo')
                         ->options(Trabajos::get()->pluck('name','name')->toArray())
