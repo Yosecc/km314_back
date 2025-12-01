@@ -342,7 +342,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                         NotificationAction::make('Solicitar reeverificación')
                                             ->button()
                                             ->color('warning')
-                                            ->requiresConfirmation()
                                             ->action(function() use ($trabajador){
                                                 // Lógica para solicitar reeverificación
                                                 // $trabajador->solicitarReverificacion();
