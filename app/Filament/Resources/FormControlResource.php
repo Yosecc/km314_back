@@ -94,6 +94,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->columns(2)
                         ->required()
                         ->gridDirection('row')
+                        ->visible(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return false;
+                            }
+                            return true;
+                        })
                         ->default(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return ['lote'];
@@ -140,6 +146,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 return false;
                             }
                             return array_search("lote", $get('access_type')) !== false ? true : false;
+                        })
+                        ->default(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return Auth::user()->owner->lotes->map(function($lote) {
+                                    return $lote->sector->name . $lote->lote_id;
+                                })->toArray();
+                            }
+                            return [];
                         })
                         ->live(),
 
