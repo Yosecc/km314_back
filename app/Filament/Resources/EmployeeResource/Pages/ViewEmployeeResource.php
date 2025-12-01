@@ -27,6 +27,7 @@ class ViewEmployeeResource extends ViewRecord
 
             self::getGestionarAutosPageAction(),
             self::getGestionarHorariosPageAction(),
+            self::getSolicitarReverificacionPageAction(),
             
             // Acción para aprobar (solo si es admin y el empleado está pendiente)
             Actions\Action::make('aprobar')

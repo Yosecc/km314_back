@@ -334,20 +334,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     ->body('Solicite una reeverificación de los documentos del trabajador. ')
                                     ->danger()
                                     ->actions([
-
                                         NotificationAction::make('Ver a '.$trabajador->nombres())
                                             ->button()
                                             ->url(route('filament.admin.resources.employees.view', $trabajador), shouldOpenInNewTab: true),
-
-                                        NotificationAction::make('Solicitar reeverificación')
-                                            ->button()
-                                            ->color('warning')
-                                            ->action(function() use ($trabajador){
-                                                // Lógica para solicitar reeverificación
-                                                // $trabajador->solicitarReverificacion();
-                                                dd('ss');
-                                            })
-                                            // ->url(route('filament.admin.resources.employees.edit', $trabajador), shouldOpenInNewTab: true),
                                     ])
                                     ->send();
                                

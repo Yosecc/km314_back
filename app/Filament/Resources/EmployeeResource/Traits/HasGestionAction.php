@@ -677,4 +677,33 @@ trait HasGestionAction
                 $record->save();
             });
     }
+
+    public static function getSolicitarReverificacionPageAction()
+    {
+        return PageAction::make('delete')
+            ->requiresConfirmation()
+            ->action(function (Employee $record) {
+                $record->status = 'pendiente';
+                $record->save();
+
+                Notification::make()
+                    ->title('Reverificación solicitada')
+                    ->body('Se ha solicitado la reverificación del trabajador.')
+                    ->success()
+                    ->send();
+
+                $recipient = User::whereHas("roles", function($q){ 
+                    $q->whereIn("name", ["super_admin","admin"]); 
+                })->get();
+
+                Notification::make()
+                    ->title('Un propietario ha solicitado la reverificación de un trabajador aprobado.')
+                    ->actions([
+                            NotificationAction::make('Ver trabajador')
+                                ->button()
+                                ->url(route('filament.admin.resources.employees.view', $record), shouldOpenInNewTab: true)
+                        ])
+                    ->sendToDatabase($recipient);
+            });
+    }
 }
