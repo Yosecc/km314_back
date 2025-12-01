@@ -573,7 +573,44 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->default(function($context) {
                                 return  'FormControl' ;
                             }),
-                        ])
+                        Repeater::make('files')
+                            ->relationship()
+                            ->label('Documentos del vehículo')
+                            ->schema([
+                                Forms\Components\Hidden::make('name')->dehydrated(),
+                                DatePicker::make('fecha_vencimiento')
+                                    ->label('Fecha de vencimiento del documento')
+                                    ->required(),
+                                Forms\Components\FileUpload::make('file')
+                                    ->label('Archivo')
+                                    ->required()
+                                    ->storeFileNamesIn('attachment_file_names')
+                                    ->openable()
+                                    ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                        return $file ? $file->getClientOriginalName() : $record->file;
+                                    })
+                            ])
+                            ->defaultItems(3)
+                            ->minItems(3)
+                            ->maxItems(3)
+                            ->addable(false)
+                            ->deletable(false)
+                            ->grid(2)
+                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                            ->default([
+                                [
+                                    'name' => 'Seguro del Vehículo',
+                                ],
+                                [
+                                    'name' => 'VTV',
+                                ],
+                                [
+                                    'name' => 'Cédula del Vehículo',
+                                ],
+                            ])
+                            ->columns(1)
+                            ->columnSpanFull(),
+                    ])
                     ->columns(4)
                     ->defaultItems(0)
                     ->columnSpanFull()
