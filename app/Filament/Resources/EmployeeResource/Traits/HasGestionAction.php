@@ -2,18 +2,19 @@
 
 namespace App\Filament\Resources\EmployeeResource\Traits;
 
-use App\Models\Employee;
-use App\Models\User;
-use Filament\Actions\Action as PageAction;
+use Carbon\Carbon;
 use Filament\Forms;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Repeater;
-use Filament\Notifications\Actions\Action as NotificationAction;
-use Filament\Notifications\Notification;
-use Filament\Tables\Actions\Action as TableAction;
+use App\Models\User;
+use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Repeater;
 use Illuminate\Support\Facades\Storage;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\DatePicker;
+use Filament\Actions\Action as PageAction;
+use Filament\Forms\Components\Placeholder;
+use Filament\Tables\Actions\Action as TableAction;
+use Filament\Notifications\Actions\Action as NotificationAction;
 
 
 trait HasGestionAction
@@ -683,6 +684,9 @@ trait HasGestionAction
         return PageAction::make('reeverificacion')
             ->label('Solicitar reverificación')
             ->requiresConfirmation()
+            ->visible(function ($record) {
+                return $record->status === 'aprobado' && Carbon::parse($record->fecha_vencimiento)->isPast();
+            })
             ->action(function (Employee $record) {
                 $record->status = 'pendiente';
                 $record->save();
