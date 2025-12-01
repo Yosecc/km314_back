@@ -2,9 +2,13 @@
 
 namespace App\Filament\Resources\FormControlResource\Pages;
 
-use App\Filament\Resources\FormControlResource;
 use Filament\Actions;
+use App\Models\FormControl;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use App\Filament\Resources\FormControlResource;
+use Filament\Forms\Components\Actions\Action as FormAction;
+
 
 class EditFormControl extends EditRecord
 {
@@ -14,7 +18,7 @@ class EditFormControl extends EditRecord
     {
         return [
             Actions\DeleteAction::make(),
-            Actions::make([
+            Actions\Action::make([
                     FormAction::make('aprobar')
                         ->button()
                         ->requiresConfirmation()
