@@ -261,11 +261,7 @@ class ActivitiesResource extends Resource
             return $auto;
         })->pluck('texto','id')->toArray();
     }
-
-
-
-
-
+    
     public static function createAuto($data, $config)
     {
         $data = collect($data)->map(function($auto) use ($config){
@@ -454,7 +450,7 @@ class ActivitiesResource extends Resource
                     }),
                 /**
                  * ///////////
-                 * FORMULARIOS
+                 * FORMULARIOS 
                  */
                 Forms\Components\Fieldset::make('forms_control')->label(__('general.Forms Control'))
                     ->schema([
@@ -680,9 +676,25 @@ class ActivitiesResource extends Resource
                                     Employee::whereIn('id',$state)->get()->each(function($employee) use ($set){
                                        if($employee->isVencidoSeguro()){
                                             Notification::make()
-                                                ->title('Empleado con seguro vencido: '.$employee->nombres())
+                                                ->title('Trabajador expirado requiere atención: '.$employee->nombres())
                                                 ->warning()
                                                 ->send();
+                                       }
+                                       if($employee->vencidosFile()){
+                                        
+                                            Notification::make()
+                                                ->title('Trabajador con documentos vencidos, requiere atencion: '.$employee->nombres())
+                                                ->warning()
+                                                ->send();
+
+                                       }
+                                       if($employee->vencidosAutosFile()){
+                                        
+                                            Notification::make()
+                                                ->title('Vehículos del Trabajador posee documentos vencidos, requiere atencion: '.$employee->nombres())
+                                                ->warning()
+                                                ->send();
+
                                        }
                                     });
 

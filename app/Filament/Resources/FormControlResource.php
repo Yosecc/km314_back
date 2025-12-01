@@ -180,22 +180,23 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 return array_search("lote", $get('access_type')) !== false ? true : false;
                             })->live(),
 
-                Radio::make('tipo_trabajo')
-                    ->options(Trabajos::get()->pluck('name','name')->toArray())
-                    ->visible(function(Get $get){
-                        return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
-                    }),
-                Forms\Components\Select::make('construction_companie_id')
-                    ->options(function(){
-                        return ConstructionCompanie::get()->pluck('name','id')->toArray();
-                    })
-                    ->visible(function(Get $get){
-                        return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
-                    })
-                    ->live(),
+                        Radio::make('tipo_trabajo')
+                            ->options(Trabajos::get()->pluck('name','name')->toArray())
+                            ->visible(function(Get $get){
+                                return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
+                            }),
 
-            ])
-            ->columns(2),
+                        Forms\Components\Select::make('construction_companie_id')
+                            ->options(function(){
+                                return ConstructionCompanie::get()->pluck('name','id')->toArray();
+                            })
+                            ->visible(function(Get $get){
+                                return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
+                            })
+                            ->live(),
+
+                    ])
+                    ->columns(2),
 
                 Forms\Components\Fieldset::make('range')->label('Rango de fecha de estancia')
                     ->schema([
@@ -457,32 +458,32 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->lazy()
                             ->afterStateUpdated(function (Set $set, Get $get, $state) {
                                 // Solo agregar archivo si es "Inquilino"
-                                if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
-                                    $currentFiles = $get('../../files') ?? [];
-                                    $lastName = $get('last_name') ?? '';
-                                    $dni = $get('dni') ?? '';
+                                // if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
+                                //     $currentFiles = $get('../../files') ?? [];
+                                //     $lastName = $get('last_name') ?? '';
+                                //     $dni = $get('dni') ?? '';
                                     
-                                    // Verificar si ya existe un archivo para este DNI
-                                    $existsForDni = false;
-                                    foreach ($currentFiles as $file) {
-                                        if (isset($file['description']) && str_contains($file['description'], "DNI: {$dni}")) {
-                                            $existsForDni = true;
-                                            break;
-                                        }
-                                    }
+                                //     // Verificar si ya existe un archivo para este DNI
+                                //     $existsForDni = false;
+                                //     foreach ($currentFiles as $file) {
+                                //         if (isset($file['description']) && str_contains($file['description'], "DNI: {$dni}")) {
+                                //             $existsForDni = true;
+                                //             break;
+                                //         }
+                                //     }
                                     
-                                    // Solo crear si no existe para este DNI
-                                    if (!$existsForDni && !empty($dni)) {
-                                        $currentFiles[] = [
-                                            'description' => "DNI: {$dni} - {$state} {$lastName}",
-                                            'file' => null,
-                                            'user_id' => Auth::user()->id, // Agregar el user_id
-                                            'form_control_id' => null // Se llenará automáticamente por la relación
-                                        ];
+                                //     // Solo crear si no existe para este DNI
+                                //     if (!$existsForDni && !empty($dni)) {
+                                //         $currentFiles[] = [
+                                //             'description' => "DNI: {$dni} - {$state} {$lastName}",
+                                //             'file' => null,
+                                //             'user_id' => Auth::user()->id, // Agregar el user_id
+                                //             'form_control_id' => null // Se llenará automáticamente por la relación
+                                //         ];
                                         
-                                        $set('../../files', $currentFiles);
-                                    }
-                                }
+                                //         $set('../../files', $currentFiles);
+                                //     }
+                                // }
                             }),
                         Forms\Components\TextInput::make('last_name')
                             ->label(__("general.LastName"))
@@ -495,28 +496,28 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->lazy()
                             ->afterStateUpdated(function (Set $set, Get $get, $state) {
                                 // Actualizar la descripción si ya existe el archivo para este DNI
-                                if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
-                                    $firstName = $get('first_name') ?? '';
-                                    $dni = $get('dni') ?? '';
+                                // if (collect($get('../../income_type'))->contains('Inquilino') && !empty($state)) {
+                                //     $firstName = $get('first_name') ?? '';
+                                //     $dni = $get('dni') ?? '';
                                     
-                                    if (!empty($firstName) && !empty($dni)) {
-                                        $currentFiles = $get('../../files') ?? [];
+                                //     if (!empty($firstName) && !empty($dni)) {
+                                //         $currentFiles = $get('../../files') ?? [];
                                         
-                                        // Buscar y actualizar el archivo correspondiente por DNI
-                                        foreach ($currentFiles as $index => $file) {
-                                            if (isset($file['description']) && str_contains($file['description'], "DNI: {$dni}")) {
-                                                $currentFiles[$index]['description'] = "DNI: {$dni} - {$firstName} {$state}";
-                                                // Asegurar que tenga user_id
-                                                if (!isset($currentFiles[$index]['user_id'])) {
-                                                    $currentFiles[$index]['user_id'] = Auth::user()->id;
-                                                }
-                                                break;
-                                            }
-                                        }
+                                //         // Buscar y actualizar el archivo correspondiente por DNI
+                                //         foreach ($currentFiles as $index => $file) {
+                                //             if (isset($file['description']) && str_contains($file['description'], "DNI: {$dni}")) {
+                                //                 $currentFiles[$index]['description'] = "DNI: {$dni} - {$firstName} {$state}";
+                                //                 // Asegurar que tenga user_id
+                                //                 if (!isset($currentFiles[$index]['user_id'])) {
+                                //                     $currentFiles[$index]['user_id'] = Auth::user()->id;
+                                //                 }
+                                //                 break;
+                                //             }
+                                //         }
                                         
-                                        $set('../../files', $currentFiles);
-                                    }
-                                }
+                                //         $set('../../files', $currentFiles);
+                                //     }
+                                // }
                             }),
                         Forms\Components\TextInput::make('phone')
                             ->label(__("general.Phone"))
@@ -525,6 +526,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         Forms\Components\Toggle::make('is_responsable')->label(__("general.Responsable")),
                         Forms\Components\Toggle::make('is_acompanante')->label(__("general.Acompanante")),
                         Forms\Components\Toggle::make('is_menor')->label(__("general.Minor")),
+                        
+                        FileUpload::make('file_dni')->required()->label('DNI')
+                            ->required(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Inquilino');
+                            })
+                            ->visible(function(Get $get){
+                                return collect($get('../../income_type'))->contains('Inquilino');
+                            }),
+
                     ])
                     ->addable(function(Get $get){
                         return !collect($get('income_type'))->contains('Trabajador') || !auth()->user()->hasRole('owner');
