@@ -14,6 +14,10 @@ use Filament\Tables\Table;
 use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Forms\Components\Placeholder;
 
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
+
+
 trait HasGestionAction
 {
     public static function getGestionarAutos()
