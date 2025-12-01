@@ -680,7 +680,8 @@ trait HasGestionAction
 
     public static function getSolicitarReverificacionPageAction()
     {
-        return PageAction::make('delete')
+        return PageAction::make('reeverificacion')
+            ->label('Solicitar reverificación')
             ->requiresConfirmation()
             ->action(function (Employee $record) {
                 $record->status = 'pendiente';
