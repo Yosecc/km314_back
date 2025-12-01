@@ -712,8 +712,8 @@ class EmployeeResource extends Resource
                     }),
                 
                 ActionGroup::make([
-                    self::getGestionarAutos(),
-                    self::getGestionarHorarios(),
+                    self::getGestionarAutosTableAction(),
+                    self::getGestionarHorariosTableAction(),
                 ])->color('info'),
                 
             ])

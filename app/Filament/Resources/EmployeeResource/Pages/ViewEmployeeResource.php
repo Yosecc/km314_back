@@ -10,10 +10,11 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
 use App\Filament\Resources\EmployeeResource\Traits\HasNotesAction;
+use App\Filament\Resources\EmployeeResource\Traits\HasGestionAction;
 
 class ViewEmployeeResource extends ViewRecord
 {
-    use HasNotesAction;
+    use HasNotesAction, HasGestionAction;
 
     protected static string $resource = EmployeeResource::class;
 
@@ -23,6 +24,9 @@ class ViewEmployeeResource extends ViewRecord
             // Acción para editar
            // Botón de notificaciones
             self::getNotesPageAction(),
+
+            self::getGestionarAutosTableAction(),
+            self::getGestionarHorariosTableAction(),
             
             // Acción para aprobar (solo si es admin y el empleado está pendiente)
             Actions\Action::make('aprobar')
