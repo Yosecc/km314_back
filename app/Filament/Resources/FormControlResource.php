@@ -595,6 +595,26 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->columnSpanFull()->visible(function(Get $get){
                         return !collect($get('income_type'))->contains('Trabajador');
                     }),
+                
+                Forms\Components\Repeater::make('mascotas')
+                    ->relationship()
+                    ->schema([
+                        Forms\Components\TextInput::make('tipo_mascota')
+                            ->label(__("general.TypePet"))
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('raza')
+                            ->label(__("general.Breed"))
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('nombre')
+                            ->label(__("general.NamePet"))
+                            ->maxLength(255),
+                        Forms\Components\Toggle::make('is_vacunado')
+                            ->label(__("general.IsVaccinated")),
+                    ])
+                    ->columns(4)
+                    ->defaultItems(0)
+                    ->columnSpanFull()
+                    ,
 
                 Forms\Components\TextInput::make('observations')
                     ->columnSpanFull()
