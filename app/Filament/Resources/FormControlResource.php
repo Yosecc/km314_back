@@ -95,11 +95,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->columns(2)
                         ->required()
                         ->gridDirection('row')
-                        ->visible(function(){
+                        ->hidden(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return false;
+                                return true;
                             }
-                            return true;
+                            return false;
                         })
                         ->default(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
@@ -107,12 +107,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             }
                             return [];
                         })
-                        // ->disabled(function(){
-                        //     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                        //         return true;
-                        //     }
-                        //     return false;
-                        // })
+                        ->disabled(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return true;
+                            }
+                            return false;
+                        })
                         ->dehydrated(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return true;
