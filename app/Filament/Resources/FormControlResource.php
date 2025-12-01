@@ -99,7 +99,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         //     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                         //         return true;
                         //     }
-                        //     return false;
+                        //     return true;
                         // })
                         ->default(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
@@ -107,8 +107,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             }
                             return [];
                         })
-                       
-                        ->dehydrated(true),
+                        ->disabled(function(){
+                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                                return true;
+                            }
+                            return false;
+                        })
+                        ->dehydrated(function(){
+                            return true;
+                        }),
 
                     Forms\Components\Select::make('lote_ids')
                         ->label(__("general.Lotes"))
@@ -160,7 +167,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->columns(3)
                         ->gridDirection('row')
-                        ->columnSpan(3)
+                        ->columnSpan(2)
                         ->afterStateUpdated(function (Set $set) {
                             $set('peoples', [[
                                 // 'dni' => '',
