@@ -211,7 +211,7 @@ trait HasGestionAction
                 })->get();
 
                 Notification::make()
-                    ->title('Un propietario ha modificado los vehículos de un trabajador aprobado. Ir a Gestión de Trabajadores.')
+                    ->title('Un propietario ha modificado los vehículos de un trabajador aprobado.')
                     ->actions([
                             NotificationAction::make('Ver trabajador')
                                 ->button()
@@ -417,7 +417,7 @@ trait HasGestionAction
                 })->get();
 
                 Notification::make()
-                    ->title('Un propietario ha modificado los vehículos de un trabajador aprobado. Ir a Gestión de Trabajadores.')
+                    ->title('Un propietario ha modificado los vehículos de un trabajador aprobado.')
                     ->actions([
                             NotificationAction::make('Ver trabajador')
                                 ->button()
@@ -542,7 +542,7 @@ trait HasGestionAction
                 })->get();
 
                 Notification::make()
-                    ->title('Un propietario ha modificado los horarios de un trabajador aprobado. Ir a Gestión de Trabajadores.')
+                    ->title('Un propietario ha modificado los horarios de un trabajador aprobado.')
                     ->danger()
                     ->actions([
                             NotificationAction::make('Ver trabajador')
@@ -665,8 +665,7 @@ trait HasGestionAction
                 })->get();
 
                 Notification::make()
-                    ->title('Un propietario ha modificado los horarios de un trabajador aprobado. Ir a Gestión de Trabajadores.')
-                    ->danger()
+                    ->title('Un propietario ha modificado los horarios de un trabajador aprobado.')
                     ->actions([
                             NotificationAction::make('Ver trabajador')
                                 ->button()

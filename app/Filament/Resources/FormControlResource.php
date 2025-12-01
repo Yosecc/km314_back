@@ -45,6 +45,7 @@ use Filament\Forms\Components\Wizard;
 use Filament\Notifications\Actions\Action as NotificationAction;
 use Carbon\CarbonPeriod;
 use Filament\Forms\Components\Placeholder;
+use App\Models\Employee;
 
 class FormControlResource extends Resource implements HasShieldPermissions
 {
@@ -321,7 +322,38 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         
                         $allHaveHorarios = true;
                         $failedId = null;
-                        $trabajadores->each(function($trabajador) use (&$allHaveHorarios, &$failedId, $get, $set, $state) {
+                        $trabajadores->each(function(Employee $trabajador) use (&$allHaveHorarios, &$failedId, $get, $set, $state) {
+
+                            
+// vencidosFile
+// vencidosAutosFile
+
+                            if($trabajador->isVencidoSeguro()){
+                                Notification::make()
+                                    ->title('El trabajador '.$trabajador->nombres().' require una reeverificación.')
+                                    ->body('Solicite una reeverificación de los documentos del trabajador. ')
+                                    ->danger()
+                                    ->actions([
+
+                                        NotificationAction::make('Ver a '.$trabajador->nombres())
+                                            ->button()
+                                            ->url(route('filament.admin.resources.employees.view', $trabajador), shouldOpenInNewTab: true),
+
+                                        NotificationAction::make('Solicitar reeverificación')
+                                            ->button()
+                                            ->color('warning')
+                                            ->requiresConfirmation()
+                                            ->action(function() use ($trabajador){
+                                                // Lógica para solicitar reeverificación
+                                                // $trabajador->solicitarReverificacion();
+                                                dd('ss');
+                                            })
+                                            ->url(route('filament.admin.resources.employees.edit', $trabajador), shouldOpenInNewTab: true),
+                                    ])
+                                    ->send();
+                               
+                            } 
+
                             if (!$trabajador->horarios()->exists()) {
                                 Notification::make()
                                     ->title('Este trabajador no tiene horarios asignados.')
