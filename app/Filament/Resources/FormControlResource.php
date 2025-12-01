@@ -699,30 +699,25 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                 Wizard::make([
                     Wizard\Step::make('Paso 1')
-                        ->description('Tipo de formulario')
+                        ->description('Tipo y fechas')
                         ->schema([
                             ...self::tiposFormulario(),
-                        ]),
-
-                    Wizard\Step::make('Paso 2')
-                        ->description('Fechas y horarios')
-                        ->schema([
                             ...self::fechasFormulario(),
                         ]),
 
-                    Wizard\Step::make('Paso 3')
+                    Wizard\Step::make('Paso 2')
                         ->description('Personas')
                         ->schema([
                             ...self::personasFormulario(),
                         ]),
                     
-                    Wizard\Step::make('Paso 4')
+                    Wizard\Step::make('Paso 3')
                         ->description('Autos')
                         ->schema([
                             ...self::autosFormulario(),
                         ]),
 
-                    Wizard\Step::make('Paso 5')
+                    Wizard\Step::make('Paso  4')
                         ->description('Información Extra')
                         ->schema([
                             ...self::informacionExtraFormulario(),
