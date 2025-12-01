@@ -25,8 +25,8 @@ class ViewEmployeeResource extends ViewRecord
            // Botón de notificaciones
             self::getNotesPageAction(),
 
-            self::getGestionarAutosTableAction(),
-            self::getGestionarHorariosTableAction(),
+            self::getGestionarAutosPageAction(),
+            self::getGestionarHorariosPageAction(),
             
             // Acción para aprobar (solo si es admin y el empleado está pendiente)
             Actions\Action::make('aprobar')
