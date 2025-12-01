@@ -97,4 +97,8 @@ return [
     'created_from_' => 'Desde',
     'created_until_' => 'Hasta',
     'Visitantes' => 'Visitantes',
+    'TypePet' => 'Tipo de mascota',
+    'Breed' => 'Raza',
+    'NamePet' => 'Nombre',
+    'IsVaccinated' => '¿Está vacunado?',
 ];

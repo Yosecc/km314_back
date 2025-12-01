@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('form_control_mascota', function (Blueprint $table) {
+        Schema::create('form_control_mascotas', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('form_control_id');
             $table->foreign('form_control_id')->references('id')->on('form_controls')->onDelete('cascade');
