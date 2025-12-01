@@ -572,6 +572,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 })
                 ->itemLabel(fn (array $state): ?string => $state['first_name'] ?? null)
                 ->columns(4)
+                ->addActionLabel('Agregar persona')
                 ->columnSpanFull(),
         ];
     }
