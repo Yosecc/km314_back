@@ -339,8 +339,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                             ->url(route('filament.admin.resources.employees.view', $trabajador), shouldOpenInNewTab: true),
                                     ])
                                     ->send();
-                               
+                                $allHaveHorarios = false;
+                                $failedId = $trabajador->id;
                             } 
+
+                            
 
                             if (!$trabajador->horarios()->exists()) {
                                 Notification::make()
@@ -410,15 +413,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             $set('owners', array_values($newOwners));
                             return;
                         }
-                        
                     }
 
-                    
                     // Obtener trabajadores seleccionados usando ambas relaciones
                     $trabajadores = collect();
                     
                     // Primero intentar con la nueva relación
-                    $employeesFromPivot = \App\Models\Employee::whereHas('owners', function($query) {
+                    $employeesFromPivot = Employee::whereHas('owners', function($query) {
                         $query->where('owner_id', Auth::user()->owner_id);
                     })->whereIn('id', $state)->get();
                     
@@ -426,7 +427,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         $trabajadores = $employeesFromPivot;
                     } else {
                         // Fallback a la relación antigua
-                        $trabajadores = \App\Models\Employee::where('owner_id', Auth::user()->owner_id)
+                        $trabajadores = Employee::where('owner_id', Auth::user()->owner_id)
                             ->whereIn('id', $state)
                             ->get();
                     }
