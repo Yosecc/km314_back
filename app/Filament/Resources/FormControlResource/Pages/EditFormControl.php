@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\FormControlResource\Pages;
 
 use Filament\Actions;
+use Filament\Actions\Action as PageAction;
 use App\Models\FormControl;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -18,7 +19,7 @@ class EditFormControl extends EditRecord
     {
         return [
             Actions\DeleteAction::make(),
-            Actions\Action::make([
+     
                     FormAction::make('aprobar')
                         ->button()
                         ->requiresConfirmation()
@@ -43,6 +44,7 @@ class EditFormControl extends EditRecord
                             return $record->isActive() || $record->isExpirado() || $record->isVencido() ? true : false;
                         })
                         ->visible(auth()->user()->can('aprobar_form::control')),
+
                     FormAction::make('rechazar')
                         ->action(function(FormControl $record){
                             $record->rechazar();
@@ -66,9 +68,7 @@ class EditFormControl extends EditRecord
                         ->hidden(function(FormControl $record){
                             return $record->isDenied() || $record->isExpirado() || $record->isVencido() ? true : false;
                         })
-                ])->visible(function($context){
-                    return $context == 'edit' ? true : false;
-                }),
+                
         ];
     }
 }
