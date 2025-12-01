@@ -4,17 +4,15 @@ namespace App\Filament\Resources\EmployeeResource\Traits;
 
 use App\Models\Employee;
 use App\Models\User;
+use Filament\Actions\Action as PageAction;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Repeater;
+use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action as TableAction;
-use Filament\Actions\Action as PageAction;
 use Illuminate\Support\Facades\Auth;
-use Filament\Tables;
-use Filament\Notifications\Actions\Action as NotificationAction;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Repeater;
-use Filament\Resources\Components\Tab;
 use Illuminate\Support\Facades\Storage;
 
 
