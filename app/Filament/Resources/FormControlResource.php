@@ -433,6 +433,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     // return;
                                 }
                             }
+                            
                         });
                         if (!$allHaveHorarios && $failedId) {
                             // Quitar el id que falló del estado de owners
