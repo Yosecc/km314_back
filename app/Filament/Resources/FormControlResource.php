@@ -735,7 +735,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 }),
                         ]),
 
-                ]),
+                ])->columnSpanFull(),
 
                 Forms\Components\Hidden::make('status')
                     ->label(__("general.Status"))
