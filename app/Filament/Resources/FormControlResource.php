@@ -547,15 +547,19 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->schema([
                         Forms\Components\TextInput::make('marca')
                             ->label(__("general.Marca"))
+                            ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('modelo')
                             ->label(__("general.Modelo"))
+                            ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('patente')
                             ->label(__("general.Patente"))
+                            ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('color')
                             ->label(__("general.Color"))
+                            ->required()
                             ->maxLength(255),
 
                         Forms\Components\Hidden::make('user_id')
@@ -595,7 +599,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->maxItems(3)
                             ->addable(false)
                             ->deletable(false)
-                            ->grid(2)
+                            ->grid(3)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                             ->default([
                                 [
@@ -617,7 +621,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ,
 
                 Forms\Components\Repeater::make('files')
-                    ->label('Documentos')
+                    ->label('Otros documentos')
                     ->relationship()
                     ->schema([
                         Forms\Components\TextInput::make('description')
