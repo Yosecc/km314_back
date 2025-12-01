@@ -679,6 +679,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
             Forms\Components\Toggle::make('bring_mascotas')
                 ->label('¿Traerá mascotas?')
+                ->default(function(Get $get){
+                    return $get('mascotas') && count($get('mascotas')) > 0 ? true : false;
+                })
                 ->live(),
 
             Forms\Components\Repeater::make('mascotas')
