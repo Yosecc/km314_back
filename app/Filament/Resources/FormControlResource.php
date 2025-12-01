@@ -629,7 +629,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
         return [
             Forms\Components\Repeater::make('autos')
                 ->relationship()
-                ->extraInputAttributes(['width' => 200])
                 ->schema([
                     Forms\Components\TextInput::make('marca')
                         ->label(__("general.Marca"))
@@ -670,6 +669,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             Forms\Components\Hidden::make('name')->dehydrated(),
                             DatePicker::make('fecha_vencimiento')
                                 ->label('Fecha de vencimiento del documento')
+                                ->extraInputAttributes(function(Get $get, $state){
+                                    if(Carbon::parse($state)->isPast()){
+                                        return ['style' => 'border-color: red;'];
+                                    }
+                                    return [];
+                                })
                                 ->required(),
                             Forms\Components\FileUpload::make('file')
                                 ->label('Archivo')
