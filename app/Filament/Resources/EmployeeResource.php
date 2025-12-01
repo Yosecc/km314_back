@@ -492,13 +492,13 @@ class EmployeeResource extends Resource
                 return $query->orderBy('created_at', 'desc');
             })
             ->columns([
-                Tables\Columns\TextColumn::make('work.name')
-                    ->label(__("general.Work"))
-                    ->numeric()
-                    ->sortable()
-                    ->color(fn (Employee $record) => self::isVencimientos($record)['color'])
-                    ->tooltip(fn (Employee $record) => self::isVencimientos($record)['texto'])
-                    ,
+                // Tables\Columns\TextColumn::make('work.name')
+                //     ->label(__("general.Work"))
+                //     ->numeric()
+                //     ->sortable()
+                //     ->color(fn (Employee $record) => self::isVencimientos($record)['color'])
+                //     ->tooltip(fn (Employee $record) => self::isVencimientos($record)['texto'])
+                //     ,
                 Tables\Columns\TextColumn::make('dni')
                     ->label(__("general.DNI"))
                     ->color(fn (Employee $record) => self::isVencimientos($record)['color'])
@@ -531,6 +531,8 @@ class EmployeeResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('status')
                     ->label('Estado')
+                    ->sortable()
+                    ->searchable()
                     ->tooltip(fn (string $state): string => match ($state) {
                         'rechazado' => 'El trabajador ha sido rechazado.',
                         'pendiente' => 'El trabajador está pendiente de aprobación.',

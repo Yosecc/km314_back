@@ -102,5 +102,5 @@ return [
     'Breed' => 'Raza',
     'NamePet' => 'Nombre',
     'IsVaccinated' => '¿Está vacunado?',
-
+    'updated_at' => 'Fecha de actualización',
 ];
