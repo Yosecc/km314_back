@@ -710,6 +710,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 Wizard::make([
                     Wizard\Step::make('Paso 1')
                         ->description('Tipo y fechas')
+                        ->icon('heroicon-m-document-text')
                         ->schema([
                             ...self::tiposFormulario(),
                             ...self::fechasFormulario(),
@@ -717,18 +718,21 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                     Wizard\Step::make('Paso 2')
                         ->description('Personas')
+                        ->icon('heroicon-m-user-group')
                         ->schema([
                             ...self::personasFormulario(),
                         ]),
                     
                     Wizard\Step::make('Paso 3')
                         ->description('Autos')
+                        ->icon('heroicon-m-car')
                         ->schema([
                             ...self::autosFormulario(),
                         ]),
 
                     Wizard\Step::make('Paso  4')
                         ->description('Información Extra')
+                        ->icon('heroicon-m-information-circle')
                         ->schema([
                             ...self::informacionExtraFormulario(),
                             Forms\Components\Select::make('owner_id')
@@ -764,7 +768,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
                         ]),
 
-                ])->columnSpanFull(), 
+                ])
+                ->skippable(function($context){
+                    return $context === 'edit' || $context === 'view' ? true : false;
+                })
+                ->columnSpanFull(), 
             ]);
     }
 
