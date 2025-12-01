@@ -327,7 +327,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             if($trabajador->vencidosAutosFile()){
                                 Notification::make()
                                     ->title('El trabajador '.$trabajador->nombres().' tiene vehículos con documentos vencidos.')
-                                    ->body('Por favor, solicite una reeverificación de los documentos del trabajador. ')
+                                    ->body('Por favor, verifique la documentacion de los vehículos del trabajador.')
                                     ->danger()
                                     ->actions([
                                         NotificationAction::make('Ver a '.$trabajador->nombres())
@@ -343,7 +343,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             if($trabajador->vencidosFile()){
                                 Notification::make()
                                     ->title('El trabajador '.$trabajador->nombres().' tiene documentos vencidos.')
-                                    ->body('Por favor, solicite una reeverificación de los documentos del trabajador. ')
+                                    ->body('Por favor, verifique la documentación del trabajador.')
                                     ->danger()
                                     ->actions([
                                         NotificationAction::make('Ver a '.$trabajador->nombres())
@@ -357,8 +357,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                             if($trabajador->isVencidoSeguro()){
                                 Notification::make()
-                                    ->title('El trabajador '.$trabajador->nombres().' require una reeverificación.')
-                                    ->body('Solicite una reeverificación de los documentos del trabajador. ')
+                                    ->title('El trabajador '.$trabajador->nombres().' requiere una reeverificación.')
+                                    ->body('Por favor, verifique la documentación del trabajador.')
                                     ->danger()
                                     ->actions([
                                         NotificationAction::make('Ver a '.$trabajador->nombres())
@@ -433,7 +433,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     // return;
                                 }
                             }
-                            
+
                         });
                         if (!$allHaveHorarios && $failedId) {
                             // Quitar el id que falló del estado de owners
