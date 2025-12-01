@@ -672,6 +672,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     FileUpload::make('file')->required()->label('Archivo')
                 ])
                 ->columns(2)
+                ->itemLabel(fn (array $state): ?string => $state['description'] ?? null)
                 ->defaultItems(0)
                 ->columnSpanFull()->visible(function(Get $get){
                     return !collect($get('income_type'))->contains('Trabajador');
@@ -699,9 +700,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     Forms\Components\Toggle::make('is_vacunado')
                         ->label(__("general.IsVaccinated")),
                 ])
-                ->visible(function(Get $get){
+                ->visible(function(Get $get , $context){
+                    if($context === 'edit' || $context === 'view'){
+                        return true;
+                    }
                     return $get('bring_mascotas') ? true : false;
                 })
+                ->itemLabel(fn (array $state): ?string => $state['nombre'] ?? null)
                 ->columns(4)
                 ->defaultItems(0)
                 ->columnSpanFull(),
