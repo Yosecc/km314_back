@@ -44,6 +44,7 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Wizard;
 use Filament\Notifications\Actions\Action as NotificationAction;
 use Carbon\CarbonPeriod;
+use Filament\Forms\Components\Placeholder;
 
 class FormControlResource extends Resource implements HasShieldPermissions
 {
@@ -169,6 +170,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->columns(3)
                         ->gridDirection('row')
+                        ->columnSpan(3)
                         ->afterStateUpdated(function (Set $set) {
                             $set('peoples', [[
                                 // 'dni' => '',
@@ -209,13 +211,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->live(),
 
                 ])
-                ->columns(2),
+                ->columns(4),
         ];
     }
 
     public static function fechasFormulario()
     {
         return [
+            
             Forms\Components\Fieldset::make('range')->label('Rango de fecha de estancia')
                 ->schema([
                     Forms\Components\DatePicker::make('start_date_range')->label(__('general.start_date_range'))
@@ -240,7 +243,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.end_time_range'))
                         ->required()
                         ->seconds(false),
-                        
+
                     Forms\Components\Toggle::make('date_unilimited')
                         ->label(__('general.date_unilimited'))
                         ->live()
@@ -702,7 +705,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
     {
         return $form
             ->schema([
-
+                Placeholder::make('')->content('Completa la siguiente información para crear un formulario de control del acceso.')->columnSpanFull(),
                 Wizard::make([
                     Wizard\Step::make('Paso 1')
                         ->description('Tipo y fechas')
