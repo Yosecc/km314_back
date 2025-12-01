@@ -330,7 +330,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     ->actions([
                                         NotificationAction::make('Ver trabajadores')
                                             ->button()
-                                            ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true)
+                                            ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true),
+                                        NotificationAction::make('Ver a '.$trabajador->first_name)
+                                            ->button()
+                                            ->url(route('filament.admin.resources.employees.view', $trabajador), shouldOpenInNewTab: true),
                                     ])
                                     ->send();
                                 $allHaveHorarios = false;
