@@ -725,7 +725,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     
                     Wizard\Step::make('Paso 3')
                         ->description('Autos')
-                        ->icon('heroicon-m-car')
+                        ->icon('heroicon-m-truck')
                         ->schema([
                             ...self::autosFormulario(),
                         ]),
