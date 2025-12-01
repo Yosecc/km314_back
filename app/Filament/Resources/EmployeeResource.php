@@ -35,6 +35,7 @@ use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Wizard;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Notifications\Actions\Action as NotificationAction;
 
 
 
@@ -531,7 +532,6 @@ class EmployeeResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('status')
                     ->label('Estado')
-                    ->sortable()
                     ->searchable()
                     ->tooltip(fn (string $state): string => match ($state) {
                         'rechazado' => 'El trabajador ha sido rechazado.',
@@ -900,6 +900,11 @@ class EmployeeResource extends Resource
 
                             Notification::make()
                                 ->title('Un propietario ha modificado los vehículos de un trabajador aprobado. Ir a Gestión de Trabajadores.')
+                                ->actions([
+                                        NotificationAction::make('Ver trabajador')
+                                            ->button()
+                                            ->url(route('filament.admin.resources.employees.view', $record), shouldOpenInNewTab: true)
+                                    ])
                                 ->sendToDatabase($recipient);
 
                             $record->status = 'pendiente';
@@ -1013,6 +1018,12 @@ class EmployeeResource extends Resource
 
                             Notification::make()
                                 ->title('Un propietario ha modificado los horarios de un trabajador aprobado. Ir a Gestión de Trabajadores.')
+                                ->danger()
+                                ->actions([
+                                        NotificationAction::make('Ver trabajador')
+                                            ->button()
+                                            ->url(route('filament.admin.resources.employees.view', $record), shouldOpenInNewTab: true)
+                                    ])
                                 ->sendToDatabase($recipient);
 
                             $record->status = 'pendiente';
