@@ -95,12 +95,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->columns(2)
                         ->required()
                         ->gridDirection('row')
-                        ->hidden(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return true;
-                            }
-                            return false;
-                        })
+                        // ->hidden(function(){
+                        //     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                        //         return true;
+                        //     }
+                        //     return false;
+                        // })
                         ->default(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return ['lote'];
