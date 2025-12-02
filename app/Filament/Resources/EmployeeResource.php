@@ -272,10 +272,11 @@ class EmployeeResource extends Resource
                 ->label('Fecha de vencimiento del documento')
                 ->extraInputAttributes(function(Get $get, $state){
                     if(Carbon::parse($state)->isPast()){
-                        return ['style' => 'border-color: red;'];
+                        return ['style' => 'color: red;'];
                     }
                     return [];
                 })
+                ->extraFieldWrapperAttributes(['class' => 'components-locked'])
                 ->required(),
             Forms\Components\FileUpload::make('file')
                 ->label('Archivo')
