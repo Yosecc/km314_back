@@ -728,4 +728,260 @@ trait HasGestionAction
                     ->sendToDatabase($recipient);
             });
     }
+
+    public static function getRenovarDocumentosTableAction()
+    {
+        return TableAction::make('renovar_documentos')
+                ->label('Renovar documentos')
+                ->icon('heroicon-o-arrow-path')
+                ->color('warning')
+                ->fillForm(function (Employee $record): array {
+                    return [
+                        'files' => $record->files()
+                            ->where('fecha_vencimiento', '<', now())
+                            ->get()
+                            ->map(function ($file) {
+                                return [
+                                    'id' => $file->id,
+                                    'fecha_vencimiento' => $file->fecha_vencimiento,
+                                    'file' => [$file->file],
+                                    'name' => $file->name,
+                                ];
+                            })->toArray()
+                    ];
+                })
+                ->form([
+                    Placeholder::make('')
+                        ->content('Remplaza los documentos vencidos con nuevos archivos y fechas de vencimiento actualizadas. Todos los documentos deben actualizarse para proceder con la renovación.')
+                        ->columnSpanFull(),   
+                    Repeater::make('files')
+                        ->label('Documentos vencidos a renovar')
+                        ->addable(false)
+                        ->deletable(false)
+                        ->reorderable(false)
+                        ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                        ->grid(2)
+                        ->schema([
+                            Forms\Components\Hidden::make('id'),
+                            Forms\Components\Hidden::make('name'),
+                            DatePicker::make('fecha_vencimiento')
+                                ->label('Fecha de vencimiento del documento')
+                                ->required(),
+                            Forms\Components\FileUpload::make('file')
+                                ->label('Archivo')
+                                ->helperText('Presiona la X para eliminar el archivo actual y subir uno nuevo.')
+                                ->required()
+                                ->storeFileNamesIn('attachment_file_names')
+                                ->openable()
+                                ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                    return $file ? $file->getClientOriginalName() : $record->file;
+                                }),
+                        ])
+                ])
+                ->action(function (array $data, Employee $record): void {
+                    // Validar que haya datos
+                    if (empty($data['files'])) {
+                        Notification::make()
+                            ->title('No se recibieron datos del formulario')
+                            ->danger()
+                            ->send();
+                        return;
+                    }
+                    
+                    $actualizados = 0;
+                    $noActualizados = 0;
+                    $documentosNoActualizados = [];
+                    
+                    // Procesar cada archivo
+                    foreach ($data['files'] as $fileData) {
+                        $fileRecord = $record->files()->where('id', $fileData['id'])->first();
+                        
+                        if (!$fileRecord) {
+                            continue;
+                        }
+                        
+                        // Verificar si la fecha está vencida
+                        $fechaVencimiento = Carbon::parse($fileData['fecha_vencimiento']);
+                        if ($fechaVencimiento->isBefore(now()->startOfDay())) {
+                            $noActualizados++;
+                            $documentosNoActualizados[] = $fileData['name'] ?? "Documento ID {$fileData['id']}";
+                            continue;
+                        }
+                        
+                        // Actualizar fecha de vencimiento
+                        $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
+                        
+                        // Actualizar archivo solo si se subió uno nuevo
+                        // Cuando Filament procesa el FileUpload, el archivo ya está guardado
+                        // y $fileData['file'] contiene la ruta del nuevo archivo
+                        if (isset($fileData['file']) && $fileData['file'] !== $fileRecord->file) {
+                            // Si hay un archivo nuevo diferente al actual
+                            $fileRecord->file = $fileData['file'];
+                        }
+                        
+                        $fileRecord->save();
+                        $actualizados++;
+                    }
+                    
+                    // Mostrar notificación según el resultado
+                    if ($actualizados > 0 && $noActualizados === 0) {
+                        Notification::make()
+                            ->title('Documentos renovados exitosamente')
+                            ->body("Se actualizaron {$actualizados} documento(s).")
+                            ->success()
+                            ->send();
+
+                            $record->status = 'pendiente';
+                            $record->save();
+
+                    } elseif ($actualizados > 0 && $noActualizados > 0) {
+                        Notification::make()
+                            ->title('Renovación parcial')
+                            ->body("Se actualizaron {$actualizados} documento(s). Los siguientes documentos no se actualizaron por tener fechas vencidas: " . implode(', ', $documentosNoActualizados))
+                            ->warning()
+                            ->send();
+                            $record->status = 'pendiente';
+                            $record->save();
+                    } else {
+                        Notification::make()
+                            ->title('No se actualizó ningún documento')
+                            ->body('Todos los documentos tienen fechas de vencimiento inválidas (vencidas).')
+                            ->danger()
+                            ->send();
+                    }
+                })
+                ->visible(function ($record) {
+                    return  $record->vencidosFile();
+                    // $vencimientos = self::isVencimientos($record);
+                    // return $vencimientos['isVencido'];
+                });
+    }
+
+    public static function getRenovarDocumentosPageAction()
+    {
+        return PageAction::make('renovar_documentos')
+                ->label('Renovar documentos')
+                ->icon('heroicon-o-arrow-path')
+                ->color('warning')
+                ->fillForm(function (Employee $record): array {
+                    return [
+                        'files' => $record->files()
+                            ->where('fecha_vencimiento', '<', now())
+                            ->get()
+                            ->map(function ($file) {
+                                return [
+                                    'id' => $file->id,
+                                    'fecha_vencimiento' => $file->fecha_vencimiento,
+                                    'file' => [$file->file],
+                                    'name' => $file->name,
+                                ];
+                            })->toArray()
+                    ];
+                })
+                ->form([
+                    Placeholder::make('')
+                        ->content('Remplaza los documentos vencidos con nuevos archivos y fechas de vencimiento actualizadas. Todos los documentos deben actualizarse para proceder con la renovación.')
+                        ->columnSpanFull(),   
+                    Repeater::make('files')
+                        ->label('Documentos vencidos a renovar')
+                        ->addable(false)
+                        ->deletable(false)
+                        ->reorderable(false)
+                        ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                        ->grid(2)
+                        ->schema([
+                            Forms\Components\Hidden::make('id'),
+                            Forms\Components\Hidden::make('name'),
+                            DatePicker::make('fecha_vencimiento')
+                                ->label('Fecha de vencimiento del documento')
+                                ->required(),
+                            Forms\Components\FileUpload::make('file')
+                                ->label('Archivo')
+                                ->helperText('Presiona la X para eliminar el archivo actual y subir uno nuevo.')
+                                ->required()
+                                ->storeFileNamesIn('attachment_file_names')
+                                ->openable()
+                                ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                    return $file ? $file->getClientOriginalName() : $record->file;
+                                }),
+                        ])
+                ])
+                ->action(function (array $data, Employee $record): void {
+                    // Validar que haya datos
+                    if (empty($data['files'])) {
+                        Notification::make()
+                            ->title('No se recibieron datos del formulario')
+                            ->danger()
+                            ->send();
+                        return;
+                    }
+                    
+                    $actualizados = 0;
+                    $noActualizados = 0;
+                    $documentosNoActualizados = [];
+                    
+                    // Procesar cada archivo
+                    foreach ($data['files'] as $fileData) {
+                        $fileRecord = $record->files()->where('id', $fileData['id'])->first();
+                        
+                        if (!$fileRecord) {
+                            continue;
+                        }
+                        
+                        // Verificar si la fecha está vencida
+                        $fechaVencimiento = Carbon::parse($fileData['fecha_vencimiento']);
+                        if ($fechaVencimiento->isBefore(now()->startOfDay())) {
+                            $noActualizados++;
+                            $documentosNoActualizados[] = $fileData['name'] ?? "Documento ID {$fileData['id']}";
+                            continue;
+                        }
+                        
+                        // Actualizar fecha de vencimiento
+                        $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
+                        
+                        // Actualizar archivo solo si se subió uno nuevo
+                        // Cuando Filament procesa el FileUpload, el archivo ya está guardado
+                        // y $fileData['file'] contiene la ruta del nuevo archivo
+                        if (isset($fileData['file']) && $fileData['file'] !== $fileRecord->file) {
+                            // Si hay un archivo nuevo diferente al actual
+                            $fileRecord->file = $fileData['file'];
+                        }
+                        
+                        $fileRecord->save();
+                        $actualizados++;
+                    }
+                    
+                    // Mostrar notificación según el resultado
+                    if ($actualizados > 0 && $noActualizados === 0) {
+                        Notification::make()
+                            ->title('Documentos renovados exitosamente')
+                            ->body("Se actualizaron {$actualizados} documento(s).")
+                            ->success()
+                            ->send();
+
+                            $record->status = 'pendiente';
+                            $record->save();
+
+                    } elseif ($actualizados > 0 && $noActualizados > 0) {
+                        Notification::make()
+                            ->title('Renovación parcial')
+                            ->body("Se actualizaron {$actualizados} documento(s). Los siguientes documentos no se actualizaron por tener fechas vencidas: " . implode(', ', $documentosNoActualizados))
+                            ->warning()
+                            ->send();
+                            $record->status = 'pendiente';
+                            $record->save();
+                    } else {
+                        Notification::make()
+                            ->title('No se actualizó ningún documento')
+                            ->body('Todos los documentos tienen fechas de vencimiento inválidas (vencidas).')
+                            ->danger()
+                            ->send();
+                    }
+                })
+                ->visible(function ($record) {
+                    return  $record->vencidosFile();
+                    // $vencimientos = self::isVencimientos($record);
+                    // return $vencimientos['isVencido'];
+                });
+    }
 }
