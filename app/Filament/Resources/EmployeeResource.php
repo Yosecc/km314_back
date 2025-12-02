@@ -270,13 +270,12 @@ class EmployeeResource extends Resource
             Forms\Components\Hidden::make('name')->dehydrated(),
             DatePicker::make('fecha_vencimiento')
                 ->label('Fecha de vencimiento del documento')
-                ->extraInputAttributes(function(Get $get, $state){
+                ->extraFieldWrapperAttributes(function(Get $get, $state){
                     if(Carbon::parse($state)->isPast()){
-                        return ['style' => 'color: red;'];
+                        return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
                     }
                     return [];
                 })
-                ->extraFieldWrapperAttributes(['class' => 'components-locked'])
                 ->required(),
             Forms\Components\FileUpload::make('file')
                 ->label('Archivo')
