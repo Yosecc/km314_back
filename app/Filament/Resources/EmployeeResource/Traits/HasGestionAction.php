@@ -5,6 +5,7 @@ namespace App\Filament\Resources\EmployeeResource\Traits;
 use Carbon\Carbon;
 use Filament\Forms;
 use App\Models\User;
+use Filament\Forms\Get;
 use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Repeater;
@@ -87,6 +88,12 @@ trait HasGestionAction
                                 Forms\Components\Hidden::make('name')->dehydrated(),
                                 DatePicker::make('fecha_vencimiento')
                                     ->label('Fecha de vencimiento del documento')
+                                    ->extraFieldWrapperAttributes(function(Get $get, $state){
+                                        if(Carbon::parse($state)->isPast()){
+                                            return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
+                                        }
+                                        return [];
+                                    })
                                     ->required(),
                                 Forms\Components\FileUpload::make('file')
                                     ->label('Archivo')
@@ -293,6 +300,12 @@ trait HasGestionAction
                                 Forms\Components\Hidden::make('name')->dehydrated(),
                                 DatePicker::make('fecha_vencimiento')
                                     ->label('Fecha de vencimiento del documento')
+                                    ->extraFieldWrapperAttributes(function(Get $get, $state){
+                                        if(Carbon::parse($state)->isPast()){
+                                            return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
+                                        }
+                                        return [];
+                                    })
                                     ->required(),
                                 Forms\Components\FileUpload::make('file')
                                     ->label('Archivo')
