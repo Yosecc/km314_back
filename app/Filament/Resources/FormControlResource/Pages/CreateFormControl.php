@@ -7,6 +7,7 @@ use App\Models\User;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Notifications\Actions\Action as NotificationAction;
 
 class CreateFormControl extends CreateRecord
 {
@@ -32,13 +33,42 @@ class CreateFormControl extends CreateRecord
             // $formControl->autos
             // $formControl->mascotas
             // $formControl->files
-            
+
             $recipient = User::whereHas("roles", function($q){ 
-                $q->whereIn("name", ["super_admin"]); 
+                $q->whereIn("name", ["super_admin", "admin"]); 
             })->get();
+
+            if($formControl['income_type'] == 'Visita Temporal (24hs)'){
+
+                $formControl->estatus = 'Authorized';
+                $formControl->save();
+
+                Notification::make()
+                    ->title('Se ha creado un nuevo formulario de control')
+                    ->body('Se ha aprobado automáticamente el formulario de control para la visita espontánea 24hs.')
+                    ->actions([
+                            NotificationAction::make('Ver Formulario')
+                                ->button()
+                                ->url(route('filament.admin.resources.form-controls.view', $formControl), shouldOpenInNewTab: true)
+                        ])
+                    ->sendToDatabase($recipient);
+
+                Notification::make()
+                            ->title('Se ha aprobado automáticamente el formulario de control para la visita espontánea 24hs.')
+                            ->success()
+                            ->send();
+                return;
+            }
+            
+            
 
             Notification::make()
                 ->title('Se ha creado un nuevo formulario de control')
+                 ->actions([
+                    NotificationAction::make('Ver Formulario')
+                        ->button()
+                        ->url(route('filament.admin.resources.form-controls.view', $formControl), shouldOpenInNewTab: true)
+                ])
                 ->sendToDatabase($recipient);
 
         } catch (\Throwable $th) {

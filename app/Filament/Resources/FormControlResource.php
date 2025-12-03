@@ -180,7 +180,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 // 'is_menor' => false,
                             ]]);
 
-                                if($state == 'Visita Espontánea 24hs'){
+                                if($state == 'Visita Temporal (24hs)'){
                                     $set('start_date_range', Carbon::now()->format('Y-m-d'));
                                     $set('start_time_range', Carbon::now()->format('H:i'));
                                     $set('end_date_range', Carbon::now()->addDay()->format('Y-m-d'));
@@ -233,7 +233,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Espontánea 24hs';
+                            return $get('income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
                         ->live(),
@@ -241,7 +241,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.start_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Espontánea 24hs';
+                            return $get('income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
                         ->seconds(false),
@@ -253,7 +253,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return !$get('date_unilimited') ? true: false;
                         })
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Espontánea 24hs';
+                            return $get('income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
                         ->live(),
@@ -261,7 +261,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.end_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Espontánea 24hs';
+                            return $get('income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
                         ->seconds(false),
