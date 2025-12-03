@@ -61,7 +61,6 @@ class CreateFormControl extends CreateRecord
             }
             
             
-
             Notification::make()
                 ->title('Se ha creado un nuevo formulario de control')
                  ->actions([
