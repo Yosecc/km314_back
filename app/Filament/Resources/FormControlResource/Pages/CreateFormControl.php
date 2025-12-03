@@ -41,7 +41,7 @@ class CreateFormControl extends CreateRecord
             // dd($formControl->income_type);
             if($formControl->income_type === 'Visita Temporal (24hs)'){
 
-                $formControl->estatus = 'Authorized';
+                $formControl->status = 'Authorized';
                 $formControl->save();
 
                 Notification::make()
