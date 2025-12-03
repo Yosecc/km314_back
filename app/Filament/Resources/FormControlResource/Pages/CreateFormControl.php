@@ -73,6 +73,7 @@ class CreateFormControl extends CreateRecord
 
         } catch (\Throwable $th) {
             // Manejo de errores
+            dd($th->getMessage());
         }
     }
 }
