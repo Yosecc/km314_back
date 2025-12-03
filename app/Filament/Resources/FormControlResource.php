@@ -169,7 +169,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->columns(3)
                         ->gridDirection('row')
                         ->columnSpan(2)
-                        ->afterStateUpdated(function (Set $set) {
+                        ->afterStateUpdated(function (Set $set, $state) {
                             $set('peoples', [[
                                 // 'dni' => '',
                                 // 'first_name' => '',
@@ -179,6 +179,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 // 'is_acompanante' => false,
                                 // 'is_menor' => false,
                             ]]);
+
+                                if($state == 'Visita Espontánea 24hs'){
+                                    $set('start_date_range', Carbon::now()->format('Y-m-d'));
+                                    $set('start_time_range', Carbon::now()->format('H:i'));
+                                    $set('end_date_range', Carbon::now()->addDay()->format('Y-m-d'));
+                                    $set('end_time_range', Carbon::now()->format('H:i'));
+                                }
                         })
                         ->required(function(Get $get){
                             if($get('access_type')== null || !count($get('access_type'))){
@@ -225,10 +232,18 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return $context == 'edit' ? '' : Carbon::now()->format('Y-m-d');
                         })
                         ->required()
+                        ->disabled(function(Get $get){
+                            return $get('income_type') == 'Visita Espontánea 24hs'
+                        })
+                        ->dehydrate(true)
                         ->live(),
                     Forms\Components\TimePicker::make('start_time_range')
                         ->label(__('general.start_time_range'))
                         ->required()
+                        ->disabled(function(Get $get){
+                            return $get('income_type') == 'Visita Espontánea 24hs'
+                        })
+                        ->dehydrate(true)
                         ->seconds(false),
                     Forms\Components\DatePicker::make('end_date_range')->label(__('general.end_date_range'))
                         ->minDate(function(Get $get){
@@ -237,10 +252,18 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->required(function(Get $get){
                             return !$get('date_unilimited') ? true: false;
                         })
+                        ->disabled(function(Get $get){
+                            return $get('income_type') == 'Visita Espontánea 24hs'
+                        })
+                        ->dehydrate(true)
                         ->live(),
                     Forms\Components\TimePicker::make('end_time_range')
                         ->label(__('general.end_time_range'))
                         ->required()
+                        ->disabled(function(Get $get){
+                            return $get('income_type') == 'Visita Espontánea 24hs'
+                        })
+                        ->dehydrate(true)
                         ->seconds(false),
 
                     Forms\Components\Toggle::make('date_unilimited')
