@@ -235,7 +235,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->disabled(function(Get $get){
                             return $get('income_type') == 'Visita Espontánea 24hs';
                         })
-                        ->dehydrate(true)
+                        
                         ->live(),
                     Forms\Components\TimePicker::make('start_time_range')
                         ->label(__('general.start_time_range'))
@@ -243,7 +243,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->disabled(function(Get $get){
                             return $get('income_type') == 'Visita Espontánea 24hs';
                         })
-                        ->dehydrate(true)
+                        
                         ->seconds(false),
                     Forms\Components\DatePicker::make('end_date_range')->label(__('general.end_date_range'))
                         ->minDate(function(Get $get){
@@ -255,7 +255,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->disabled(function(Get $get){
                             return $get('income_type') == 'Visita Espontánea 24hs';
                         })
-                        ->dehydrate(true)
+                        
                         ->live(),
                     Forms\Components\TimePicker::make('end_time_range')
                         ->label(__('general.end_time_range'))
@@ -263,7 +263,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->disabled(function(Get $get){
                             return $get('income_type') == 'Visita Espontánea 24hs';
                         })
-                        ->dehydrate(true)
+                        
                         ->seconds(false),
 
                     Forms\Components\Toggle::make('date_unilimited')
