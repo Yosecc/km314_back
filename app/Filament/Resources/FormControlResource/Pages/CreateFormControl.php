@@ -38,7 +38,7 @@ class CreateFormControl extends CreateRecord
                 $q->whereIn("name", ["super_admin", "admin"]); 
             })->get();
 
-            dd($formControl->income_type);
+            // dd($formControl->income_type);
             if($formControl->income_type == 'Visita Temporal (24hs)'){
 
                 $formControl->estatus = 'Authorized';
