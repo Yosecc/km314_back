@@ -630,10 +630,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     
                     FileUpload::make('file_dni')->required()->label('DNI')
                         ->required(function(Get $get){
-                            return collect($get('../../income_type'))->contains('Inquilino') || collect($get('../../income_type'))->contains('Visita (+24hs)');
+                            return collect($get('../../income_type'))->contains('Inquilino');
                         })
                         ->visible(function(Get $get){
-                            return collect($get('../../income_type'))->contains('Inquilino') || collect($get('../../income_type'))->contains('Visita (+24hs)');
+                            return collect($get('../../income_type'))->contains('Inquilino');
                         }),
 
                 ])
