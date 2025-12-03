@@ -39,7 +39,7 @@ class CreateFormControl extends CreateRecord
             })->get();
 
             // dd($formControl->income_type);
-            if($formControl->income_type == 'Visita Temporal (24hs)'){
+            if($formControl->income_type === 'Visita Temporal (24hs)'){
 
                 $formControl->estatus = 'Authorized';
                 $formControl->save();
@@ -58,7 +58,7 @@ class CreateFormControl extends CreateRecord
                             ->title('Se ha aprobado automáticamente el formulario de control para la visita espontánea 24hs.')
                             ->success()
                             ->send();
-                return;
+               
             }
             
             
