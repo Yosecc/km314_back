@@ -233,7 +233,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Espontánea 24hs'
+                            return $get('income_type') == 'Visita Espontánea 24hs';
                         })
                         ->dehydrate(true)
                         ->live(),
@@ -241,7 +241,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.start_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Espontánea 24hs'
+                            return $get('income_type') == 'Visita Espontánea 24hs';
                         })
                         ->dehydrate(true)
                         ->seconds(false),
@@ -253,7 +253,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return !$get('date_unilimited') ? true: false;
                         })
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Espontánea 24hs'
+                            return $get('income_type') == 'Visita Espontánea 24hs';
                         })
                         ->dehydrate(true)
                         ->live(),
@@ -261,7 +261,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.end_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Espontánea 24hs'
+                            return $get('income_type') == 'Visita Espontánea 24hs';
                         })
                         ->dehydrate(true)
                         ->seconds(false),
