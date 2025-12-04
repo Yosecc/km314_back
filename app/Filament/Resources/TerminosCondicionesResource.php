@@ -26,7 +26,7 @@ class TerminosCondicionesResource extends Resource
                 Forms\Components\TextInput::make('titulo')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\MarkdownEditor::make('contenido')
+                Forms\Components\RichEditor::make('contenido')
                     ->required(),
             ]);
     }
