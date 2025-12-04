@@ -30,24 +30,7 @@ class TerminosCondicionesResource extends Resource
                     ->columnSpanFull(),
                 TiptapEditor::make('contenido')
                     ->required()
-                     ->profile('simple')
-                    // ->tools([
-                    //     'bold',
-                    //     'italic',
-                    //     'underline',
-                    //     'strike',
-                    //     'link',
-                    //     'heading',
-                    //     'bullet-list',
-                    //     'ordered-list',
-                    //     'blockquote',
-                    //     'hr',
-                    //     'align-left',
-                    //     'align-center',
-                    //     'align-right',
-                    //     'table',
-                    // ])
-                    // ->extraInputAttributes(['style' => 'min-height: 24rem;'])
+                    ->profile('default')
                     ->columnSpanFull(),
             ]);
     }
