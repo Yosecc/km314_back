@@ -9,7 +9,7 @@ class HomeController extends Controller
     public function getTerminosCondicionesFormControl(Request $request)
     {
 
-        $formControl = $request->query('form_control', false);
+        $formControl = $request->query('id', false);
 
         $terminosCondiciones = \App\Models\TerminosCondiciones::find($formControl);
         return view('terminos-condiciones-form-control', compact('terminosCondiciones'));

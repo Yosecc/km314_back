@@ -31,7 +31,7 @@ class CreateFormControl extends CreateRecord
                     \Filament\Forms\Components\Checkbox::make('acepta_terminos')
                         ->label($terminosCondiciones->titulo ?? 'Términos y Condiciones')
                         ->helperText(fn () => new \Illuminate\Support\HtmlString(
-                            'He leído y acepto los <a href="/terminos-y-condiciones?form_control=1" target="_blank" class="text-primary-600 hover:underline">términos y condiciones</a>'
+                            'He leído y acepto los <a href="/terminos-y-condiciones?id=1" target="_blank" class="text-primary-600 hover:underline">términos y condiciones</a>'
                         ))
                         ->accepted()
                         ->validationAttribute('aceptación de términos y condiciones')
