@@ -6,10 +6,12 @@ use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    public function getTerminosCondicionesFormControl()
+    public function getTerminosCondicionesFormControl(Request $request)
     {
 
-        $terminosCondiciones = \App\Models\TerminosCondiciones::first();
+        $formControl = $request->query('form_control', false);
+
+        $terminosCondiciones = \App\Models\TerminosCondiciones::find($formControl);
         return view('terminos-condiciones-form-control', compact('terminosCondiciones'));
     }
 }
