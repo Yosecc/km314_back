@@ -1,0 +1,1 @@
+{{ $terminosCondiciones->contenido ?? 'No hay términos y condiciones disponibles en este momento.' }}

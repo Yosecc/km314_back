@@ -18,6 +18,8 @@ class CreateFormControl extends CreateRecord
 
     protected function getFormActions(): array
     {
+        $terminosCondiciones = \App\Models\TerminosCondiciones::first();
+
         return [
             Actions\CreateAction::make()
                 ->requiresConfirmation()
@@ -27,7 +29,7 @@ class CreateFormControl extends CreateRecord
                 ->modalCancelActionLabel('Cancelar')
                 ->form([
                     \Filament\Forms\Components\Checkbox::make('acepta_terminos')
-                        ->label('Acepto los términos y condiciones')
+                        ->label($terminosCondiciones->titulo ?? 'Términos y Condiciones')
                         ->helperText(fn () => new \Illuminate\Support\HtmlString(
                             'He leído y acepto los <a href="/terminos-y-condiciones" target="_blank" class="text-primary-600 hover:underline">términos y condiciones</a>'
                         ))
