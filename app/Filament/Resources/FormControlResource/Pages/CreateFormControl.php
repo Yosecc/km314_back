@@ -22,11 +22,12 @@ class CreateFormControl extends CreateRecord
         $terminosCondiciones = \App\Models\TerminosCondiciones::first();
 
         return [
-            $this->getCreateFormAction()
+            Actions\Action::make('create')
+                ->label('Crear formulario')
                 ->requiresConfirmation()
                 ->modalHeading('Confirmar creación del formulario')
                 ->modalDescription('¿Está seguro de que desea crear este formulario de control? Verifique que todos los datos sean correctos.')
-                ->modalSubmitActionLabel('Crear formulario')
+                ->modalSubmitActionLabel('Sí, crear formulario')
                 ->modalCancelActionLabel('Cancelar')
                 ->form([
                     Forms\Components\Checkbox::make('acepta_terminos')
@@ -37,7 +38,8 @@ class CreateFormControl extends CreateRecord
                         ->accepted()
                         ->validationAttribute('aceptación de términos y condiciones')
                         ->required()
-                ]),
+                ])
+                ->action(fn (array $data) => $this->create())
         ];
     }
 
