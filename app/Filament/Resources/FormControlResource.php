@@ -1180,4 +1180,5 @@ class FormControlResource extends Resource implements HasShieldPermissions
             'view' => Pages\ViewFormControl::route('/{record}'),
         ];
     }
+    
 }
