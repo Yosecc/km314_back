@@ -4,6 +4,7 @@ namespace App\Filament\Resources\FormControlResource\Pages;
 
 use App\Models\User;
 use Filament\Actions;
+use Filament\Forms;
 use Illuminate\Contracts\View\View;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -21,14 +22,14 @@ class CreateFormControl extends CreateRecord
         $terminosCondiciones = \App\Models\TerminosCondiciones::first();
 
         return [
-            Actions\CreateAction::make()
+            $this->getCreateFormAction()
                 ->requiresConfirmation()
-                ->modalHeading('Confirmar creación del formulario')                                                                                                                                                                                                                                                                             
+                ->modalHeading('Confirmar creación del formulario')
                 ->modalDescription('¿Está seguro de que desea crear este formulario de control? Verifique que todos los datos sean correctos.')
-                ->modalSubmitActionLabel('Sí, crear formulario')
+                ->modalSubmitActionLabel('Crear formulario')
                 ->modalCancelActionLabel('Cancelar')
                 ->form([
-                    \Filament\Forms\Components\Checkbox::make('acepta_terminos')
+                    Forms\Components\Checkbox::make('acepta_terminos')
                         ->label($terminosCondiciones->titulo ?? 'Términos y Condiciones')
                         ->helperText(fn () => new \Illuminate\Support\HtmlString(
                             'He leído y acepto los <a href="/terminos-y-condiciones?id=1" target="_blank" class="text-primary-600 hover:underline">términos y condiciones</a>'
