@@ -11,6 +11,12 @@ class FormControlPeople extends Model
 
     protected $fillable = ['form_control_id', 'dni', 'first_name', 'last_name', 'phone', 'is_responsable', 'is_acompanante', 'is_menor'];
 
+    protected $casts = [
+        'is_responsable' => 'boolean',
+        'is_acompanante' => 'boolean',
+        'is_menor' => 'boolean',        
+    ];
+
     public function formControl()
     {
         return $this->belongsTo(FormControl::class);

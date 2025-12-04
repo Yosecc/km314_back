@@ -399,9 +399,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->label(__("general.Phone"))
                             ->tel()
                             ->numeric(),
-                        Forms\Components\Toggle::make('is_responsable')->label(__("general.Responsable")),
-                        Forms\Components\Toggle::make('is_acompanante')->label(__("general.Acompanante")),
-                        Forms\Components\Toggle::make('is_menor')->label(__("general.Minor")),
+                        Forms\Components\Toggle::make('is_responsable')->default(false)->label(__("general.Responsable")),
+                        Forms\Components\Toggle::make('is_acompanante')->default(false)->label(__("general.Acompanante")),
+                        Forms\Components\Toggle::make('is_menor')->default(false)->label(__("general.Minor")),
                     ])
                     ->columns(4)->columnSpanFull(),
 
