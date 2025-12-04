@@ -8,7 +8,7 @@ use App\Models\ConstructionCompanie;
 use App\Models\Employee;
 use App\Models\Owner;
 use App\Models\Trabajos;
-
+use Filament\Forms\Components\Placeholder;
 use App\Models\Works;
 use Carbon\Carbon;
 use Filament\Forms;
@@ -64,7 +64,15 @@ class EmployeeResource extends Resource
                     Forms\Components\Select::make('work_id')
                         ->label(__("general.Work"))
                         ->required()
+                        ->default(37)
+                        ->visible(function(){
+                            if (Auth::user()->hasRole('super_admin')) {
+                                return true;
+                            }
+                            return false;
+                        })
                         ->relationship(name: 'work', titleAttribute: 'name'),
+
                     Forms\Components\TextInput::make('dni')
                         ->label(__("general.DNI"))
                         ->required()
@@ -83,6 +91,7 @@ class EmployeeResource extends Resource
                     Forms\Components\TextInput::make('phone')
                         ->label(__("general.Phone"))
                         ->tel()
+                        ->required()
                         ->numeric(),
 
                     Forms\Components\Hidden::make('user_id')->disabled(fn($context)=> $context == 'edit')->default(Auth::user()->id),
@@ -117,8 +126,9 @@ class EmployeeResource extends Resource
                         ->live(),
 
                     DatePicker::make('fecha_vencimiento_seguro')
-                        ->label('Fecha de vencimiento del seguro')
+                        ->label('Fecha de vencimiento del seguro personal')
                         ->displayFormat('d/m/Y')
+                        ->required()
                         ->live()
                         ,
                     // Forms\Components\Select::make('owner_id')
@@ -200,20 +210,28 @@ class EmployeeResource extends Resource
                     ])
                     ->defaultItems(0)
                     ->columns(2),
+                    
+
+               
                 Forms\Components\Repeater::make('horarios')
                     ->relationship()
                     ->schema([
-                        // employee_id
+                        Placeholder::make('')->content('Selecciona el dia y el horario de trabajo')->columnSpanFull(),
                         Forms\Components\Select::make('day_of_week')
                             ->label(__("Día"))
-                            //->unique(ignoreRecord: true)
                             ->options([
                                 'Domingo' => 'Domingo', 'Lunes' => 'Lunes', 'Martes' => 'Martes', 'Miercoles' => 'Miercoles', 'Jueves' => 'Jueves', 'Viernes' => 'Viernes', 'Sabado' => 'Sabado'
-                            ]),
-                        Forms\Components\TimePicker::make('start_time')->label(__("Hora de entrada")),
-                        Forms\Components\TimePicker::make('end_time')->label(__("Hora de salida")),
+                            ])
+                            ->required(),
+                        Forms\Components\TimePicker::make('start_time')
+                            ->label(__("Hora de entrada"))
+                            ->required(),
+                        Forms\Components\TimePicker::make('end_time')
+                            ->label(__("Hora de salida"))
+                            ->required(),
                     ])
-                    ->defaultItems(0)
+                    ->minItems(1)
+                    ->defaultItems(1)
                     ->columns(3),
 
                 Repeater::make('files')
@@ -222,7 +240,7 @@ class EmployeeResource extends Resource
                     ->schema([
 
                         Forms\Components\TextInput::make('name')->label('Descripción'),
-                        DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento'),
+                        // DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento'),
                         Forms\Components\FileUpload::make('file')
                             ->label('Archivo')
                             ->required()
@@ -250,7 +268,7 @@ class EmployeeResource extends Resource
                     ->defaultItems(1)
                     ->default([
                         [
-                            'name' => 'Seguro',
+                            'name' => 'Seguro Personal',
                         ]
                     ])
                     ->columns(1)

@@ -52,6 +52,7 @@ class Employee extends Model
         }
         return Carbon::parse($this->fecha_vencimiento_seguro) < now() ? true : false;
     }
+    
     public function getFormularios()
     {
         return $this->owner->formControls

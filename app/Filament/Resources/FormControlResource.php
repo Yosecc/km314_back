@@ -41,6 +41,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Filament\Notifications\Actions\Action as NotificationAction;
+use Carbon\CarbonPeriod;
 
 class FormControlResource extends Resource implements HasShieldPermissions
 {
@@ -154,6 +156,17 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             })
                             ->columns(2)
                             ->gridDirection('row')
+                            // ->afterStateUpdated(function (Set $set) {
+                            //     $set('peoples', [[
+                            //         // 'dni' => '',
+                            //         // 'first_name' => '',
+                            //         // 'last_name' => '',
+                            //         // 'phone' => '',
+                            //         // 'is_responsable' => false,
+                            //         // 'is_acompanante' => false,
+                            //         // 'is_menor' => false,
+                            //     ]]);
+                            // })
                             ->required(function(Get $get){
                                 if($get('access_type')== null || !count($get('access_type'))){
                                     return false;
@@ -181,8 +194,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     })
                     ->live(),
 
-            ])
-            ->columns(2),
+                ])
+                ->columns(2),
 
                 Forms\Components\Fieldset::make('range')->label('Rango de fecha de estancia')
                     ->schema([
@@ -234,7 +247,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         }
                         return [];
                     })
-                      ->visible(function(Get $get){
+                    ->visible(function(Get $get){
                             // Solo visible si está seleccionado "Trabajador" Y el usuario es owner con trabajadores
                             $isWorkerSelected = collect($get('income_type'))->contains('Trabajador');
                             
@@ -262,6 +275,92 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->live()
                     ->afterStateUpdated(function (Set $set, Get $get, $state) {
                         $peoples = collect($get('peoples'));
+
+                        if($get('start_date_range') == null || $get('start_time_range') == null || $get('end_date_range') == null || $get('end_time_range')  == null){
+                            Notification::make()
+                                ->title('Seleccione primero el rango de fechas y horas.')
+                                ->danger()
+                                ->send();
+                                $set('owners', []);
+                            return; 
+                        }
+                        // dd($state);
+                        if(count($state)){
+
+                            $trabajadores = \App\Models\Employee::whereIn('id', $state)->get();
+
+                            
+                            $allHaveHorarios = true;
+                            $failedId = null;
+                            $trabajadores->each(function($trabajador) use (&$allHaveHorarios, &$failedId, $get, $set, $state) {
+                                if (!$trabajador->horarios()->exists()) {
+                                    Notification::make()
+                                        ->title('Este trabajador no tiene horarios asignados.')
+                                        ->body('Por favor, asigne un horario en la sección de trabajadores en el menú antes de continuar.')
+                                        ->danger()
+                                        ->actions([
+                                            NotificationAction::make('Ver trabajadores')
+                                                ->button()
+                                                ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true)
+                                        ])
+                                        ->send();
+                                    $allHaveHorarios = false;
+                                    $failedId = $trabajador->id;
+                                } else {
+                                    // Aquí tu lógica adicional
+                                    
+                                   $startDate = Carbon::parse($get('start_date_range') . ' ' . $get('start_time_range'));
+                                    $endDate = Carbon::parse($get('end_date_range') . ' ' . $get('end_time_range'));
+
+                                    // Obtener días de la semana configurados en los horarios del trabajador
+                                    $diasDisponibles = $trabajador->horarios->pluck('day_of_week')->unique()->values()->toArray();
+
+                                    // Mapear días de Carbon a español (ajusta si tus días están en otro idioma)
+                                    $carbonToDb = [
+                                        'Sunday' => 'Domingo',
+                                        'Monday' => 'Lunes',
+                                        'Tuesday' => 'Martes',
+                                        'Wednesday' => 'Miércoles',
+                                        'Thursday' => 'Jueves',
+                                        'Friday' => 'Viernes',
+                                        'Saturday' => 'Sábado',
+                                    ];
+
+                                    // Recorrer el rango de fechas y ver si hay coincidencia de día
+                                    $period = CarbonPeriod::create($startDate->copy()->startOfDay(), $endDate->copy()->startOfDay());
+                                    $hayCoincidencia = false;
+                                    foreach ($period as $date) {
+                                        $dia = $carbonToDb[$date->format('l')];
+                                        if (in_array($dia, $diasDisponibles)) {
+                                            $hayCoincidencia = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!$hayCoincidencia) {
+                                        $allHaveHorarios = false;
+                                        $failedId = $trabajador->id;
+
+                                        Notification::make()
+                                            ->title('Rango de fechas no válido para el trabajador')
+                                            ->body('Los días disponibles para este trabajador son: ' . implode(', ', $diasDisponibles) . '. Ajusta el rango de fechas para coincidir con alguno de estos días.')
+                                            ->danger()
+                                            ->send();
+                                        // Aquí puedes quitar el trabajador del owners si lo deseas
+                                        // $set('owners', array_values(array_filter($state, fn($id) => $id != $trabajador->id)));
+                                        // return;
+                                    }
+                                }
+                            });
+                            if (!$allHaveHorarios && $failedId) {
+                                // Quitar el id que falló del estado de owners
+                                $newOwners = array_filter($state, fn($id) => $id != $failedId);
+                                $set('owners', array_values($newOwners));
+                                return;
+                            }
+                            
+                        }
+
                         
                         // Obtener trabajadores seleccionados usando ambas relaciones
                         $trabajadores = collect();
@@ -282,7 +381,29 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 
                         // Eliminar trabajadores desmarcados
                         $peoples = $peoples->filter(function ($person) use ($trabajadores) {
-                            return $trabajadores->contains('dni', $person['dni']) || !is_null($person['dni']);
+                            $dni = trim($person['dni'] ?? '');
+                            $first = trim($person['first_name'] ?? '');
+                            $last = trim($person['last_name'] ?? '');
+
+                            // eliminar registros con campos vacíos obligatorios
+                            if ($dni === '' || $first === '' || $last === '') {
+                                return false;
+                            }
+
+                            // Comprobar si existe un empleado con este DNI para el owner actual
+                            $isEmployee = \App\Models\Employee::where(function($q){
+                                $q->whereHas('owners', function($q2) {
+                                    $q2->where('owner_id', Auth::user()->owner_id);
+                                })->orWhere('owner_id', Auth::user()->owner_id);
+                            })->where('dni', $dni)->exists();
+
+                            // Si es empleado, mantener solo si está entre los trabajadores seleccionados
+                            if ($isEmployee) {
+                                return $trabajadores->contains('dni', $dni);
+                            }
+
+                            // Si no es empleado (invitado), mantener
+                            return true;
                         });
                 
                         // Agregar trabajadores marcados
@@ -299,12 +420,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 ]);
                             }
                         }
+
+                       
                 
                         // Eliminar registros con valores nulos
                         $peoples = $peoples->filter(function ($person) {
                             return !is_null($person['dni']) && !is_null($person['first_name']) && !is_null($person['last_name']);
                         });
-                
+                 dd($pasa, $peoples);
                         // Actualizar el estado de 'peoples' sin sobrescribirlo completamente
                         $set('peoples', $peoples->values()->toArray());
                     }),
@@ -403,7 +526,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         Forms\Components\Toggle::make('is_acompanante')->default(false)->label(__("general.Acompanante")),
                         Forms\Components\Toggle::make('is_menor')->default(false)->label(__("general.Minor")),
                     ])
-                    ->columns(4)->columnSpanFull(),
+                    ->addable(function(Get $get){
+                        return !collect($get('income_type'))->contains('Trabajador') || !auth()->user()->hasRole('owner');
+                    })
+                    ->columns(4)
+                    ->columnSpanFull(),
 
                 Forms\Components\Repeater::make('autos')
                     ->relationship()
