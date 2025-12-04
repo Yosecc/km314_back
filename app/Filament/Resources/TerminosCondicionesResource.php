@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use FilamentTiptapEditor\TiptapEditor;
 
 class TerminosCondicionesResource extends Resource
 {
@@ -25,9 +26,29 @@ class TerminosCondicionesResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('titulo')
                     ->required()
-                    ->maxLength(255),
-                Forms\Components\RichEditor::make('contenido')
-                    ->required(),
+                    ->maxLength(255)
+                    ->columnSpanFull(),
+                TiptapEditor::make('contenido')
+                    ->required()
+                    ->profile('default')
+                    ->tools([
+                        'bold',
+                        'italic',
+                        'underline',
+                        'strike',
+                        'link',
+                        'heading',
+                        'bullet-list',
+                        'ordered-list',
+                        'blockquote',
+                        'hr',
+                        'align-left',
+                        'align-center',
+                        'align-right',
+                        'table',
+                    ])
+                    ->extraInputAttributes(['style' => 'min-height: 24rem;'])
+                    ->columnSpanFull(),
             ]);
     }
 
