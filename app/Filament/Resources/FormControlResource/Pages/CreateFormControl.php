@@ -13,6 +13,18 @@ class CreateFormControl extends CreateRecord
 {
     protected static string $resource = FormControlResource::class;
 
+    protected function getFormActions(): array
+    {
+        return [
+            Actions\CreateAction::make()
+                ->requiresConfirmation()
+                ->modalHeading('Confirmar creación del formulario')
+                ->modalDescription('¿Está seguro de que desea crear este formulario de control? Verifique que todos los datos sean correctos.')
+                ->modalSubmitActionLabel('Sí, crear formulario')
+                ->modalCancelActionLabel('Cancelar'),
+        ];
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Las relaciones (peoples, autos, mascotas, files) se guardan automáticamente
