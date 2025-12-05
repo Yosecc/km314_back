@@ -752,7 +752,6 @@ class ActivitiesResource extends Resource
                             ->options(function(Get $get, $context, $record){
 
 
-
                                 if($context == 'view'){
                                     $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
                                 }else{
@@ -824,22 +823,41 @@ class ActivitiesResource extends Resource
                                     Forms\Components\Repeater::make('spontaneous_visit')
                                         ->label('Visitante espontáneo')
                                         ->schema([
-                                            Forms\Components\TextInput::make('dni')->required(),
-                                            Forms\Components\TextInput::make('first_name')->required(),
-                                            Forms\Components\TextInput::make('last_name')->required(),
-                                            Forms\Components\TextInput::make('email')->required(),
-                                            Forms\Components\TextInput::make('phone')->numeric()->required(),
+                                            Forms\Components\TextInput::make('dni')->label('DNI')->required(),
+                                            Forms\Components\TextInput::make('first_name')->label('Nombre')->required(),
+                                            Forms\Components\TextInput::make('last_name')->label('Apellido')->required(),
+                                            Forms\Components\TextInput::make('email')->label('Correo electrónico')->email(),
+                                            Forms\Components\TextInput::make('phone')->label('Teléfono')->numeric()->required(),
                                         ])
                                         ->columns(2)
-                                        ->columnSpanFull(),
+                                        ->columnSpanFull()
+                                        ->defaultItems(1)
+                                        ->addActionLabel('Agregar otro visitante'),
                                 ])
                                 ->visible(function($context){
                                     return $context != 'view' ? true : false;
                                 })
-                                ->action(function (array $data, $record, Get $get) {
-
+                                ->action(function (array $data, $record, Get $get, Set $set) {
                                     self::createSpontaneusVisit($data);
-                                }),
+                                    
+                                    // Obtener los visitantes recién creados
+                                    $visitantesCreados = OwnerSpontaneousVisit::where('owner_id', $data['owner_id'])
+                                        ->whereIn('dni', collect($data['spontaneous_visit'])->pluck('dni'))
+                                        ->whereDate('created_at', now())
+                                        ->pluck('id')
+                                        ->toArray();
+                                    
+                                    // Agregar a la selección actual
+                                    $currentSelection = $get('spontaneous_visit') ?? [];
+                                    $newSelection = array_unique(array_merge($currentSelection, $visitantesCreados));
+                                    $set('spontaneous_visit', $newSelection);
+                                    
+                                    Notification::make()
+                                        ->title('Visitantes espontáneos agregados')
+                                        ->success()
+                                        ->send();
+                                })
+                                ->successNotificationTitle('Visitantes agregados correctamente'),
 
                         ]),
 
