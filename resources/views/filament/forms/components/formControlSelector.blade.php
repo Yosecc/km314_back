@@ -16,14 +16,15 @@
                     :class="{
                         'cursor-pointer hover:shadow-md': isActive,
                         'opacity-50 cursor-not-allowed': !isActive,
-                        'ring-primary-600 ring-2 bg-green-50 dark:bg-green-900': state == id && isActive,
-                        'ring-gray-950/5 bg-white dark:bg-gray-900 dark:ring-white/10': state != id || !isActive
-                    }"
-                    :style="!isActive && { 
-                        backgroundColor: status === 'Expirado' ? 'rgb(254 242 242)' : 
-                                       status === 'Vencido' ? 'rgb(254 249 195)' : 
-                                       status === 'Denied' ? 'rgb(254 226 226)' : 
-                                       'rgb(243 244 246)' 
+                        'ring-green-600 ring-2 bg-green-50 dark:bg-green-900/20': state == id && isActive && status === 'Authorized',
+                        'ring-yellow-600 ring-2 bg-yellow-50 dark:bg-yellow-900/20': state == id && isActive && status === 'Pending',
+                        'ring-red-600 ring-2 bg-red-50 dark:bg-red-900/20': state == id && isActive && status === 'Denied',
+                        'ring-gray-600 ring-2 bg-gray-50 dark:bg-gray-900/20': state == id && isActive && (status === 'Vencido' || status === 'Expirado'),
+                        'ring-gray-950/5 bg-white dark:bg-gray-900 dark:ring-white/10': state != id || !isActive,
+                        'bg-green-50 dark:bg-green-900/10': status === 'Authorized' && state != id,
+                        'bg-yellow-50 dark:bg-yellow-900/10': status === 'Pending' && state != id,
+                        'bg-red-50 dark:bg-red-900/10': status === 'Denied' && state != id,
+                        'bg-gray-50 dark:bg-gray-900/10': (status === 'Vencido' || status === 'Expirado') && state != id
                     }"
                 >
                     <!-- Header con ID y estado -->
