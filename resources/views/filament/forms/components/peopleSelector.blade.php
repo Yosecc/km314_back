@@ -1,5 +1,5 @@
 <div x-data="{
-    state: $wire.$entangle('{{ $getStatePath() }}'),
+    state: $wire.$entangle('{{ $getStatePath() }}').live,
     selectedPeople: [],
     init() {
         // Inicializar con los valores actuales
@@ -19,6 +19,7 @@
                             selectedPeople.push({{ $persona['id'] }});
                         }
                         state = selectedPeople;
+                        $wire.call('$refresh');
                     "
                     :class="{
                         'ring-2 ring-primary-600 bg-primary-50 dark:bg-primary-900/20': selectedPeople.includes({{ $persona['id'] }}),
