@@ -461,7 +461,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     'patente' => $auto->patente,
                                     'color' => $auto->color,
                                     'files' => $auto->files,
-                                ]
+                                ];
                             });
 
                             $set('autos', array_merge($autos, $autosform->toArray()));
