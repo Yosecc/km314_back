@@ -669,12 +669,12 @@ class ActivitiesResource extends Resource
                                 return ['personas' => $personas];
                             })
                             ->visible(function(Get $get, $context, $record){
-                                $peoples = $get('peoples');
-                                if($context == 'view' && isset($peoples) && !count($peoples) && $record->peoples){
+                                $peoples = $get('peoples') ?? [];
+                                if($context == 'view' && is_array($peoples) && !count($peoples) && $record && $record->peoples){
                                     $peoples = $record->peoples->pluck('id')->toArray();
                                 }
 
-                                if($context == 'view' && !count($peoples)){
+                                if($context == 'view' && (!is_array($peoples) || !count($peoples))){
                                     return false;
                                 }
                                 return true;
@@ -705,7 +705,8 @@ class ActivitiesResource extends Resource
                                     return [];
                                 }
 
-                                if($context == 'view' && !count($get('families'))){
+                                $families = $get('families') ?? [];
+                                if($context == 'view' && (!is_array($families) || !count($families))){
                                     return [];
                                 }
 
@@ -722,7 +723,8 @@ class ActivitiesResource extends Resource
                                 if(!$get('num_search') && $context != 'view'){
                                     return [];
                                 }
-                                if($context == 'view' && !count($get('families'))){
+                                $families = $get('families') ?? [];
+                                if($context == 'view' && (!is_array($families) || !count($families))){
                                     return [];
                                 }
                                 $owner_id = 0;
@@ -737,7 +739,8 @@ class ActivitiesResource extends Resource
                                 if($get('tipo_entrada') != 1){
                                     return false;
                                 }
-                                if($context == 'view' && !count($get('families'))){
+                                $families = $get('families') ?? [];
+                                if($context == 'view' && (!is_array($families) || !count($families))){
                                     return false;
                                 }
                                 return true;
@@ -775,14 +778,14 @@ class ActivitiesResource extends Resource
                         Forms\Components\CheckboxList::make('spontaneous_visit')->label(__('general.Select one or more options'))
                             ->options(function(Get $get, $context, $record){
 
-                                $owner = $get('peoples');
+                                $owner = $get('peoples') ?? [];
 
 
                                 if($context == 'view'){
-                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
+                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit') ?? [])->get();
                                 }else{
 
-                                    if(!count($owner)){
+                                    if(!is_array($owner) || !count($owner)){
                                         $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now() )->get();
                                     }else{   
                                         $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
@@ -797,11 +800,11 @@ class ActivitiesResource extends Resource
                                 return $visitantes->pluck('texto','id');
                             })
                             ->descriptions(function(Get $get, $context){
-                                $owner = $get('peoples');
+                                $owner = $get('peoples') ?? [];
                                 if($context == 'view'){
-                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
+                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit') ?? [])->get();
                                 }else{
-                                    if(!count($owner)){
+                                    if(!is_array($owner) || !count($owner)){
                                         $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now() )->get();
                                     }else{   
                                         $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
@@ -823,8 +826,8 @@ class ActivitiesResource extends Resource
                                 ->label('Agregar Visitante espontáneo')
                                 ->icon('heroicon-m-plus')
                                 ->fillForm(function(Get $get){
-                                    $owner = $get('peoples');
-                                    if(!count($owner)){
+                                    $owner = $get('peoples') ?? [];
+                                    if(!is_array($owner) || !count($owner)){
                                         return [];
                                     }
                                     return [
@@ -885,7 +888,8 @@ class ActivitiesResource extends Resource
                     ])
                     ->columns(1)
                     ->visible(function(Get $get, $context){
-                        if($context == 'view' && !count($get('spontaneous_visit'))){
+                        $spontaneous = $get('spontaneous_visit') ?? [];
+                        if($context == 'view' && (!is_array($spontaneous) || !count($spontaneous))){
                             return false;
                         }
                         return ($get('tipo_entrada') == 1 )? true : false;
@@ -912,10 +916,12 @@ class ActivitiesResource extends Resource
                                 $data = [];
 
                                 if($get('tipo_entrada') == 1){
-                                    $data = count($get('peoples')) ? self::searchOwnersAutos($get('peoples'), 'option') : [];
+                                    $peoples = $get('peoples') ?? [];
+                                    $data = (is_array($peoples) && count($peoples)) ? self::searchOwnersAutos($peoples, 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 2){
-                                    $data = count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'option') : [];
+                                    $peoples = $get('peoples') ?? [];
+                                    $data = (is_array($peoples) && count($peoples)) ? self::searchEmployeeAutos($peoples, 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
 
@@ -942,10 +948,12 @@ class ActivitiesResource extends Resource
 
                                 $data = [];
                                 if($get('tipo_entrada') == 1){
-                                    $data = count($get('peoples')) ? self::searchOwnersAutos($get('peoples'), 'descriptions') : [];
+                                    $peoples = $get('peoples') ?? [];
+                                    $data = (is_array($peoples) && count($peoples)) ? self::searchOwnersAutos($peoples, 'descriptions') : [];
                                 }
                                 if($get('tipo_entrada') == 2){
-                                    $data = count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'descriptions') : [];
+                                    $peoples = $get('peoples') ?? [];
+                                    $data = (is_array($peoples) && count($peoples)) ? self::searchEmployeeAutos($peoples, 'descriptions') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
                                     $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'descriptions') : [];
@@ -1146,7 +1154,8 @@ class ActivitiesResource extends Resource
                     ])
                     ->columns(1)
                     ->visible(function(Get $get, $context){
-                        if($context == 'view' && !count($get('autos'))){
+                        $autos = $get('autos') ?? [];
+                        if($context == 'view' && (!is_array($autos) || !count($autos))){
                             return false;
                         }
                         return $get('tipo_entrada') ? true: false;
@@ -1172,7 +1181,8 @@ class ActivitiesResource extends Resource
                             return $context == 'view' && !$get('lote_ids') ? false:true;
                         })
                         ->visible(function(Get $get, $context){
-                            if($context == 'view' && !count($get('spontaneous_visit'))){
+                            $spontaneous = $get('spontaneous_visit') ?? [];
+                            if($context == 'view' && (!is_array($spontaneous) || !count($spontaneous))){
                                 return false;
                             }
                             return ($get('tipo_entrada') == 1 || $get('tipo_entrada') == 2 )? true : false;
