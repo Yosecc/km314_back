@@ -50,8 +50,8 @@
                                 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300': status === 'Expirado',
                                 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300': status === 'Vencido'
                             }"
+                            x-text="status"
                         >
-                            @{{ status }}
                         </span>
                     </div>
 
