@@ -11,7 +11,7 @@
                         isActive: {{ $form['isActive'] ? 'true' : 'false' }},
                         status: '{{ $form['status'] }}'
                     }"
-                    @click="if(isActive) { state = {{ $form['id'] }} }"
+                    @click="if(isActive) { state = (state == {{ $form['id'] }} ? null : {{ $form['id'] }}) }"
                     class="relative rounded-xl p-4 shadow-sm ring-1 transition-all duration-200"
                     :class="{
                         'cursor-pointer hover:shadow-md': isActive,
@@ -68,7 +68,7 @@
 
 
                         @if( count($form['vencimientos']) && $form['vencimientos']['status'])
-                        <div class="text-xs text-gray-600 dark:text-gray-400">
+                        <div class="text-xs text-gray-600 dark:text-gray-400" style="background: #E74C3C;padding: 10px;border-radius: 7px;color: white;">
                             {{ $form['vencimientos']['texto'] }}
                         </div>
                         @endif
