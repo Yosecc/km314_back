@@ -921,7 +921,9 @@ class ActivitiesResource extends Resource
                                 }
                                 if($get('tipo_entrada') == 2){
                                     $peoples = $get('peoples') ?? [];
-                                    dd($peoples);
+                                   if(count($peoples)){
+                                        dd($peoples);
+                                   }
                                     $data = (is_array($peoples) && count($peoples)) ? self::searchEmployeeAutos($peoples, 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
