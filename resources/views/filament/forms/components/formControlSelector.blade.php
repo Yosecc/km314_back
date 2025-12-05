@@ -16,7 +16,7 @@
                     :class="{
                         'cursor-pointer hover:shadow-md': isActive,
                         'opacity-50 cursor-not-allowed': !isActive,
-                        'ring-primary-600 ring-2 bg-primary-50 dark:bg-primary-900/20': state == id && isActive,
+                        'ring-primary-600 ring-2 bg-green-50 dark:bg-green-900': state == id && isActive,
                         'ring-gray-950/5 bg-white dark:bg-gray-900 dark:ring-white/10': state != id || !isActive
                     }"
                     :style="!isActive && { 
