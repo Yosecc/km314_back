@@ -48,7 +48,7 @@
                     </div>
 
                     <!-- Contenido de la card -->
-                    <div class="pr-8">
+                    <div class="pr-8" style="padding-left: 30px">
                         <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-lg mb-1">
                             {{ $persona['nombre'] }}
                         </h3>
