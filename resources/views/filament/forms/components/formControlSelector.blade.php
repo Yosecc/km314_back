@@ -3,7 +3,19 @@
     :field="$field"
 >
     @if (!$isDisabled())
-        <div class="space-y-3" x-data="{state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$getStatePath()}')") }} }">
+        <div class="space-y-3" x-data="{
+            state: $wire.{{ $applyStateBindingModifiers("\$entangle('{$getStatePath()}')") }},
+            getStatusText(status) {
+                const statusMap = {
+                    'Pending': 'Pendiente',
+                    'Authorized': 'Autorizado',
+                    'Denied': 'Denegado',
+                    'Vencido': 'Vencido',
+                    'Expirado': 'Expirado'
+                };
+                return statusMap[status] || status;
+            }
+        }">
             @foreach($formularios as $form)
                 <div
                     x-data="{ 
@@ -51,7 +63,7 @@
                                 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300': status === 'Expirado',
                                 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300': status === 'Vencido'
                             }"
-                            x-text="status"
+                            x-text="getStatusText(status)"
                         >
                         </span>
                     </div>
@@ -92,7 +104,7 @@
                         x-transition
                         class="mt-2 text-xs font-medium text-red-600 dark:text-red-400"
                     >
-                        <span>Este formulario no está disponible (</span><span x-text="status"></span><span>)</span>
+                        <span>Este formulario no está disponible (</span><span x-text="getStatusText(status)"></span><span>)</span>
                     </div>
                 </div>
             @endforeach
@@ -116,7 +128,16 @@
                                 Formulario #{{ $form['id'] }}
                             </span>
                             <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-                                {{ $form['status'] }}
+                                @php
+                                    $statusMap = [
+                                        'Pending' => 'Pendiente',
+                                        'Authorized' => 'Autorizado',
+                                        'Denied' => 'Denegado',
+                                        'Vencido' => 'Vencido',
+                                        'Expirado' => 'Expirado'
+                                    ];
+                                    echo $statusMap[$form['status']] ?? $form['status'];
+                                @endphp
                             </span>
                         </div>
                         <div class="space-y-2">
