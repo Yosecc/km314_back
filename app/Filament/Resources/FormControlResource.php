@@ -460,7 +460,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     'modelo' => $auto->modelo,
                                     'patente' => $auto->patente,
                                     'color' => $auto->color,
-                                    'files' => [],
+                                    'isfiles' => false,
                                 ];
                             });
 
@@ -727,6 +727,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->maxItems(3)
                         ->addable(false)
                         ->deletable(false)
+                        ->disabled(function(Get $get){
+                            $isfiles = $get('isfiles');
+                            return $isfiles !== null && $isfiles === false;
+                        })
                         ->grid(3)
                         ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                         ->default([
