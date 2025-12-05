@@ -461,6 +461,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     'patente' => $auto->patente,
                                     'color' => $auto->color,
                                     'isfiles' => false,
+                                    'model' => 'FormControl',
+                                    'user_id' => Auth::id(),
                                 ];
                             });
 
