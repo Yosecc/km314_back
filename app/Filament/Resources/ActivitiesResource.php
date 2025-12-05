@@ -751,23 +751,18 @@ class ActivitiesResource extends Resource
                         Forms\Components\CheckboxList::make('spontaneous_visit')->label(__('general.Select one or more options'))
                             ->options(function(Get $get, $context, $record){
 
+                                $owner = $get('peoples');
+
 
                                 if($context == 'view'){
                                     $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
                                 }else{
-                                    // if($get('type') == 2){
-                                        $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
-                                        // ->where('aprobado',1)
-                                        // ->where('agregado',1)
-                                        // ->where('salida',null)
-                                        ->get();
-                                    // }else{
 
-                                    //     $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
-                                    //     ->where('agregado',null)
-                                    //     ->whereDate('created_at',now())
-                                    //     ->get();
-                                    // }
+                                    if(!count($owner)){
+                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
+                                    }else{   
+                                        $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now() )->get();
+                                    }
                                 }
 
                                 $visitantes = $visitantes->map(function($visitante){
@@ -778,13 +773,15 @@ class ActivitiesResource extends Resource
                                 return $visitantes->pluck('texto','id');
                             })
                             ->descriptions(function(Get $get, $context){
+                                $owner = $get('peoples');
                                 if($context == 'view'){
                                     $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
                                 }else{
-                                    $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
-                                                    ->where('agregado',null)
-                                                    ->whereDate('created_at',now())
-                                                    ->get();
+                                    if(!count($owner)){
+                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
+                                    }else{   
+                                        $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now() )->get();
+                                    }
                                 }
 
                                 $visitantes = $visitantes->map(function($visitante){
