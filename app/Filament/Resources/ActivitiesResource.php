@@ -456,6 +456,7 @@ class ActivitiesResource extends Resource
                                     ->label(__('general.Select a control form'))
                                     ->required()
                                     ->view('filament.forms.components.formControlSelector')
+                                    /** @phpstan-ignore-next-line */
                                     ->viewData(function(Get $get, $context): array {
                                         if(!$get('num_search') && !$get('form_control_id')){
                                             return ['formularios' => []];
@@ -477,13 +478,23 @@ class ActivitiesResource extends Resource
                                             $limite = $form['date_unilimited'] ? 'Sin fecha límite de salida' : $fechas['end'];
                                             $observacion = $form['observations'] ? ' ( Observaciones: '. $form['observations'] .' )' : '';
 
+                                            $vencimientos = [];
+
+                                            if($form['income_type'] == 'Trabajador'){
+                                                $form->peoples->map(function($people) use (&$vencimientos){
+                                                    $employee = Employee::where('dni',$people->dni)->first();
+                                                    $vencimientos = $employee->vencimientos();
+                                                });
+                                            }
+
                                             return [
                                                 'id' => $form->id,
                                                 'texto' => $income.$accesType.$lotes,
                                                 'descripcion' => __('general.'.$form->statusComputed()).' - '.$fechas['start'].' / '. $limite . $observacion,
                                                 'status' => $form->statusComputed(),
                                                 'isActive' => $form->isActive(),
-                                                'hint' => !$get('form_control_id') ? false : true
+                                                'hint' => !$get('form_control_id') ? false : true,
+                                                'vencimientos' => $vencimientos,
                                             ];
                                         };
 
