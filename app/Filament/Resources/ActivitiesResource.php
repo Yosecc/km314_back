@@ -75,15 +75,11 @@ class ActivitiesResource extends Resource
 
 
         $mapeo = function($employee) use ($type){
-
-            // dd($employee->isFormularios());
-
             if($type == 'option'){
                 $employee['texto'] = $employee['first_name']. ' '.$employee['last_name'];
                 $employee['texto'].= ' - '.__('general.Employee');
             }else{
                 $employee['texto'] = $employee->dni;
-                // wrap ternary in parentheses to ensure correct concatenation order and avoid accessing ->name on null
                 $employee['texto'] .= ' - '. ($employee->work ? $employee->work->name : '');
             }
 
@@ -351,7 +347,6 @@ class ActivitiesResource extends Resource
                         'default' => 3,
                     ])
                     ->schema([
-
                         Forms\Components\Select::make('type')
                             ->required()
                             ->options([
@@ -454,24 +449,19 @@ class ActivitiesResource extends Resource
                  */
                 Forms\Components\Fieldset::make('forms_control')->label(__('general.Forms Control'))
                     ->schema([
-                        Forms\Components\Grid::make(2)
+                        Forms\Components\Grid::make(1)
                             ->schema([
 
-                                Forms\Components\Radio::make('form_control_id')->label(__('general.Select a control form'))
+                                Forms\Components\ViewField::make('form_control_id')
+                                    ->label(__('general.Select a control form'))
                                     ->required()
-                                    ->hint(function($state, Get $get){
-                                        if(!$state){
-                                            return '';
-                                        }
-                                        return new HtmlString('<a target="_blank" href="/form-controls/'.$state.'">Ver fomulario seleccionado</a>');
-                                    })
-                                    ->options(function(Get $get,  $context ){
+                                    ->view('filament.forms.components.formControlSelector')
+                                    ->viewData(function(Get $get, $context): array {
                                         if(!$get('num_search') && !$get('form_control_id')){
-                                            return [];
+                                            return ['formularios' => []];
                                         }
 
-
-                                        $mapeo = function($form){
+                                        $mapeo = function($form) use ($get){
                                             $accesType = collect($form['access_type'])->map(function($type){
                                                 $data = ['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club hause', 'lote' => 'Lote' ];
                                                 return $data[$type];
@@ -483,22 +473,27 @@ class ActivitiesResource extends Resource
                                             $income = $income !=''  ? $income.' / ': $income;
                                             $lotes = $lotes !=''  ? ' : '.$lotes: $lotes;
 
-                                            $formInfo = 'Form: '.$form['id'].' -- ';
+                                            $fechas = $form->getFechasFormat();
+                                            $limite = $form['date_unilimited'] ? 'Sin fecha límite de salida' : $fechas['end'];
+                                            $observacion = $form['observations'] ? ' ( Observaciones: '. $form['observations'] .' )' : '';
 
-                                            $form['texto'] = $formInfo.$income.$accesType.$lotes;
-                                            $form['status'] = $form->statusComputed();
-
-
-                                            return $form;
+                                            return [
+                                                'id' => $form->id,
+                                                'texto' => $income.$accesType.$lotes,
+                                                'descripcion' => __('general.'.$form->statusComputed()).' - '.$fechas['start'].' / '. $limite . $observacion,
+                                                'status' => $form->statusComputed(),
+                                                'isActive' => $form->isActive(),
+                                                'hint' => !$get('form_control_id') ? false : true
+                                            ];
                                         };
 
                                         if($get('form_control_id') && $context != 'create'){
-                                            return FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->pluck('texto','id')->toArray();
+                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->values()->toArray();
+                                            return ['formularios' => $formularios];
                                         }
 
                                         $num = $get('num_search');
-                                        return FormControl::whereHas('peoples', function ($query) use ($num)
-                                            {
+                                        $formularios = FormControl::whereHas('peoples', function ($query) use ($num) {
                                                 $query->where('dni','like','%'.$num.'%');
                                             })
                                             ->orWhere(function($query) use ($num) {
@@ -509,53 +504,12 @@ class ActivitiesResource extends Resource
                                             ->orderBy('id','desc')
                                             ->where('start_date_range','>=',now())
                                             ->limit(10)
-                                            ->get()->map(callback: $mapeo)
-                                        //->whereNotIn('status',['Vencido','Expirado'])
-                                        ->pluck('texto','id')->toArray();
-                                    })
-                                    ->descriptions(function(Get $get, Set $set, $context){
-                                        if(!$get('num_search') && !$get('form_control_id')){
-                                            return [];
-                                        }
+                                            ->get()
+                                            ->map($mapeo)
+                                            ->values()
+                                            ->toArray();
 
-                                        $mapeo = function($form){
-
-                                            $fechas = $form->getFechasFormat();
-
-                                            $limite =  $form['date_unilimited'] ?  'Sin fecha límite de salida': $fechas['end'];
-
-                                            $observacion = $form['observations'] ? ' ( Observaciones: '. $form['observations'] .' )' : '';
-
-                                            $form['status'] = $form->statusComputed();
-
-                                            $form['texto'] = __('general.'.$form->statusComputed()).' - '.$fechas['start'].' / '. $limite . $observacion;
-                                            return $form;
-                                        };
-
-                                        if($get('form_control_id') && $context != 'create'){
-                                            return FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->pluck('texto','id')->toArray();
-                                        }
-
-                                        $num = $get('num_search');
-                                        return FormControl::whereHas('peoples', function ($query) use ($num)
-                                            {
-                                                $query->where('dni','like','%'.$num.'%');
-                                            })
-                                            ->orWhere(function($query) use ($num) {
-                                                $query->whereHas('autos', function ($query) use ($num){
-                                                    $query->where('patente','like','%'.$num.'%');
-                                                });
-                                            })
-                                            ->orderBy('id','desc')
-                                            ->whereDate('start_date_range','>=',now())
-                                            ->limit(10)->get()->map($mapeo)
-                                        // ->whereNotIn('status',['Vencido','Expirado'])
-                                        ->pluck('texto','id')->toArray();
-
-                                    })
-                                    ->disableOptionWhen(function ( $value){
-                                        $form = FormControl::find($value);
-                                        return !$form->isActive();
+                                        return ['formularios' => $formularios];
                                     })
                                     ->live(),
 
@@ -591,7 +545,8 @@ class ActivitiesResource extends Resource
                         /**
                          * PERSONAS
                          */
-                        Forms\Components\CheckboxList::make('peoples')->label(__('general.Select people one or more options'))
+                        Forms\Components\CheckboxList::make('peoples')
+                            ->label(__('general.Select people one or more options'))
                             ->searchable()
                             ->options(function(Get $get, $context, $record){
 
@@ -832,13 +787,10 @@ class ActivitiesResource extends Resource
                             })
                             ->live(),
 
-
-
                         Actions::make([
                             Action::make('add_spontaneous_visit')
                                 ->label('Agregar Visitante espontáneo')
                                 ->icon('heroicon-m-plus')
-                                // ->requiresConfirmation()
                                 ->fillForm(function(Get $get){
                                     $owner = $get('peoples');
                                     if(!count($owner)){
@@ -849,26 +801,14 @@ class ActivitiesResource extends Resource
                                     ];
                                 })
                                 ->form([
-                                    // Forms\Components\Hidden::make('owner_id'),
                                     Forms\Components\Select::make('owner_id')
                                         ->label(__("general.Owner"))
                                         ->required()
-                                        // ->relationship(name: 'owner', modifyQueryUsing: fn (Builder $query) => $query->orderBy('first_name')->orderBy('last_name'))
                                         ->options(Owner::orderBy('first_name')->orderBy('last_name')->get()->map(function($owner){
                                             $owner['name'] = "{$owner->first_name} {$owner->last_name}";
                                             return $owner;
                                         })->pluck("name","id")->toArray())
-                                        // ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
                                         ->searchable()
-                                        // ->afterStateUpdated(function(Set $set, $state){
-                                        //     $owner = Owner::find($state);
-                                        //     if(!$owner){
-                                        //         return ;
-                                        //     }
-                                        //     $set('name', $owner->first_name . ' ' . $owner->last_name);
-                                        //     $set('roles',[3]);
-                                        //     $set('email', $owner->email);
-                                        // })
                                         ->live(),
                                     Forms\Components\Repeater::make('spontaneous_visit')
                                         ->label('Visitante espontáneo')
@@ -888,8 +828,7 @@ class ActivitiesResource extends Resource
                                 ->action(function (array $data, $record, Get $get) {
 
                                     self::createSpontaneusVisit($data);
-                                })
-                                ,
+                                }),
 
                         ]),
 

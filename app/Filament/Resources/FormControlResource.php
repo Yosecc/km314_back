@@ -928,18 +928,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->visible(function(){
                         return Auth::user()->hasAnyRole([1]);
                     }),
-                // Tables\Columns\TextColumn::make('lote_ids')->label(__('general.Lote')),
                 Tables\Columns\TextColumn::make('peoples_count')->counts('peoples')->label(__('general.Visitantes')),
-                // Tables\Columns\TextColumn::make('peopleResponsible.phone')
-                //     ->copyable()
-                //     ->label(__('general.peopleResponsiblePhone'))
-                //     ->copyMessage('Phone copied')
-                //     ->copyMessageDuration(1500),
-                // Tables\Columns\TextColumn::make('autos_count')->counts('autos')->label('Autos'),
-                //
                 Tables\Columns\TextColumn::make('start_date_range')
                     ->formatStateUsing(function (FormControl $record){
-                        // return '↗ '.$record->getFechasFormat()['start'].' - <br> ↘ '.$record->getFechasFormat()['end'];
                         return Carbon::parse("{$record->start_date_range} {$record->start_time_range}")->toDayDateTimeString();
                     })
                     ->searchable()
@@ -947,8 +938,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                 Tables\Columns\TextColumn::make('end_date_range')
                     ->formatStateUsing(function (FormControl $record){
-                        // return $record->getFechasFormat()['end'];
-
                         return Carbon::parse("{$record->end_date_range} {$record->end_time_range}")->toDayDateTimeString();
                     })
                     ->searchable()
@@ -971,23 +960,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->visible(function(){
                         return Auth::user()->hasAnyRole([1]);
                     }),
-                // Tables\Columns\IconColumn::make('is_moroso')
-                //     ->boolean()
-                //     ->sortable()
-                //     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('general.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-
-                    ,
-                // Tables\Columns\TextColumn::make('updated_at')
-                //     ->dateTime()
-                //     ->sortable()
-                //     ->toggleable(isToggledHiddenByDefault: true),
-
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Filter::make('start_date_range')
@@ -1180,5 +1158,5 @@ class FormControlResource extends Resource implements HasShieldPermissions
             'view' => Pages\ViewFormControl::route('/{record}'),
         ];
     }
-    
+
 }
