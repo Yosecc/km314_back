@@ -557,17 +557,15 @@ class ActivitiesResource extends Resource
                         /**
                          * PERSONAS
                          */
-                        Forms\Components\CheckboxList::make('peoples')
+                        Forms\Components\ViewField::make('peoples')
                             ->label(__('general.Select people one or more options'))
-                            ->searchable()
-                            ->options(function(Get $get, $context, $record){
-
+                            ->view('filament.forms.components.peopleSelector')
+                            /** @phpstan-ignore-next-line */
+                            ->viewData(function(Get $get, $context, $record) {
                                 $peoplesIds = $get('peoples');
-                                 if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
-                                    //  $peoplesIds = $record->peoples->pluck('model_id')->toArray();
-
+                                
+                                if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
                                     $peoplesIds = $record->peoples->map(function($peopleActivitie){
-                                        // dd($peopleActivitie);
                                         if($peopleActivitie->type == 'Employee'){
                                             $info = $peopleActivitie->getPeople();
                                             if($info){
@@ -578,93 +576,118 @@ class ActivitiesResource extends Resource
                                                 }
                                             }
                                         }
-
                                         return $peopleActivitie;
-                                     })->pluck('model_id')->toArray();
+                                    })->pluck('model_id')->toArray();
+                                }
 
-                                 }
-                                //  dd( $record->peoples, $peoplesIds );
-                                 return self::getPeoples([
-                                     'tipo_entrada' => $get('tipo_entrada'),
-                                     'num_search' => $get('num_search') ,
-                                     'form_control_id' => $get('form_control_id'),
-                                     'tipo' => 'option',
-                                     'ids' =>  $context == 'view' ? $peoplesIds : [],
-                                     'context' => $context
-                                 ]);
-                             })
-                             ->descriptions(function(Get $get , $context, $record){
-                                 $peoples = $get('peoples');
-                                 if($context == 'view' && isset($peoples) && !count($peoples) && $record->peoples){
-                                     $peoples = $record->peoples->pluck('model_id')->toArray();
-                                 }
-                                 return self::getPeoples([
-                                     'tipo_entrada' => $get('tipo_entrada'),
-                                     'num_search' => $get('num_search') ,
-                                     'form_control_id' => $get('form_control_id'),
-                                     'tipo' => 'descriptions',
-                                     'ids' =>  $context == 'view' ? $peoples : [],
-                                     'context' => $context
-                                 ]);
-                             })
-                             ->visible(function(Get $get, $context, $record  ){
+                                // Obtener opciones y descripciones
+                                $options = self::getPeoples([
+                                    'tipo_entrada' => $get('tipo_entrada'),
+                                    'num_search' => $get('num_search'),
+                                    'form_control_id' => $get('form_control_id'),
+                                    'tipo' => 'option',
+                                    'ids' => $context == 'view' ? $peoplesIds : [],
+                                    'context' => $context
+                                ]);
 
-                                 $peoples = $get('peoples');
-                                 if($context == 'view' && isset($peoples) && !count($peoples) && $record->peoples){
-                                     $peoples = $record->peoples->pluck('id')->toArray();
-                                 }
+                                $descriptions = self::getPeoples([
+                                    'tipo_entrada' => $get('tipo_entrada'),
+                                    'num_search' => $get('num_search'),
+                                    'form_control_id' => $get('form_control_id'),
+                                    'tipo' => 'descriptions',
+                                    'ids' => $context == 'view' ? $peoplesIds : [],
+                                    'context' => $context
+                                ]);
 
-                                 if($context == 'view' && !count($peoples)){
-                                     return false;
-                                 }
-                                 return true;
-                             })
+                                // Mapear personas con información adicional
+                                $personas = collect($options)->map(function($nombre, $id) use ($descriptions, $get, $context) {
+                                    $persona = [
+                                        'id' => $id,
+                                        'nombre' => $nombre,
+                                        'descripcion' => $descriptions[$id] ?? '',
+                                        'badges' => [],
+                                        'vencimientos' => []
+                                    ];
+
+                                    // Solo agregar información de vencimientos para empleados en entrada
+                                    if($get('tipo_entrada') == 2 && $get('type') == 1 && $context == 'create') {
+                                        $employee = Employee::find($id);
+                                        if($employee) {
+                                            // Badge de estado
+                                            if($employee->owner_id) {
+                                                $persona['badges'][] = [
+                                                    'texto' => 'Con formulario',
+                                                    'color' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                                ];
+                                            }
+
+                                            // Vencimientos
+                                            if($employee->isVencidoSeguro()) {
+                                                $persona['vencimientos'][] = [
+                                                    'texto' => 'Seguro vencido',
+                                                    'color_bg' => 'bg-red-100 dark:bg-red-900/30',
+                                                    'color_text' => 'text-red-800 dark:text-red-300',
+                                                    'icon' => true
+                                                ];
+                                            }
+                                            
+                                            if($employee->vencidosFile()) {
+                                                $persona['vencimientos'][] = [
+                                                    'texto' => 'Documentos vencidos',
+                                                    'color_bg' => 'bg-orange-100 dark:bg-orange-900/30',
+                                                    'color_text' => 'text-orange-800 dark:text-orange-300',
+                                                    'icon' => true
+                                                ];
+                                            }
+                                            
+                                            if($employee->vencidosAutosFile()) {
+                                                $persona['vencimientos'][] = [
+                                                    'texto' => 'Documentos de vehículos vencidos',
+                                                    'color_bg' => 'bg-yellow-100 dark:bg-yellow-900/30',
+                                                    'color_text' => 'text-yellow-800 dark:text-yellow-300',
+                                                    'icon' => true
+                                                ];
+                                            }
+                                        }
+                                    }
+
+                                    // Badge para propietarios morosos
+                                    if($get('tipo_entrada') == 1) {
+                                        $owner = Owner::find($id);
+                                        if($owner && $owner->owner_status_id == 2) {
+                                            $persona['badges'][] = [
+                                                'texto' => 'Moroso',
+                                                'color' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                                                'icon' => true
+                                            ];
+                                        }
+                                    }
+
+                                    return $persona;
+                                })->values()->toArray();
+
+                                return ['personas' => $personas];
+                            })
+                            ->visible(function(Get $get, $context, $record){
+                                $peoples = $get('peoples');
+                                if($context == 'view' && isset($peoples) && !count($peoples) && $record->peoples){
+                                    $peoples = $record->peoples->pluck('id')->toArray();
+                                }
+
+                                if($context == 'view' && !count($peoples)){
+                                    return false;
+                                }
+                                return true;
+                            })
                             ->afterStateUpdated(function($state, Get $get, Set $set){
                                 if($get('tipo_entrada') == 1){
                                     Owner::whereIn('id',$state)->get()->each(function($owner) use ($set){
                                         $lotes = collect($owner->lotes);
-                                        // $lotesS = [];
                                         $lote = $lotes->map(function($lote){
                                             return $lote->getNombre();
                                         })->first();
-
-                                        // dd($lote );
                                         $set('lote_ids',$lote);
-                                        if($owner->owner_status_id == 2){
-                                            Notification::make()
-                                                ->title('Propietario moroso: '.$owner->nombres())
-                                                ->warning()
-                                                ->send();
-                                        }
                                     });
-
-                                }
-                                if($get('tipo_entrada') == 2){
-                                    Employee::whereIn('id',$state)->get()->each(function($employee) use ($set){
-                                       if($employee->isVencidoSeguro()){
-                                            Notification::make()
-                                                ->title('Trabajador expirado requiere atención: '.$employee->nombres())
-                                                ->warning()
-                                                ->send();
-                                       }
-                                       if($employee->vencidosFile()){
-                                        
-                                            Notification::make()
-                                                ->title('Trabajador con documentos vencidos, requiere atencion: '.$employee->nombres())
-                                                ->warning()
-                                                ->send();
-
-                                       }
-                                       if($employee->vencidosAutosFile()){
-                                        
-                                            Notification::make()
-                                                ->title('Vehículos del Trabajador posee documentos vencidos, requiere atencion: '.$employee->nombres())
-                                                ->warning()
-                                                ->send();
-
-                                       }
-                                    });
-
                                 }
                             })
                             ->live(),
