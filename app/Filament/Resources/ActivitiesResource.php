@@ -921,30 +921,8 @@ class ActivitiesResource extends Resource
                                 }
                                 if($get('tipo_entrada') == 2){
                                     $peoples = $get('peoples') ?? [];
-                                    if(is_array($peoples) && count($peoples)) {
-                                        // Obtener autos de empleados directos
-                                        $data = self::searchEmployeeAutos($peoples, 'option');
-                                        
-                                        // Verificar si algún empleado tiene formulario y buscar sus autos también
-                                        $employees = Employee::whereIn('id', $peoples)->whereNotNull('owner_id')->get();
-                                        foreach($employees as $employee) {
-                                            if($employee->isFormularios()) {
-                                                $autosFormulario = $employee->getFormularios()->map(function($formControl) use ($employee) {
-                                                    return Auto::where('model', 'FormControl')
-                                                        ->where('model_id', $formControl->id)
-                                                        ->get()
-                                                        ->map(function($auto) {
-                                                            return [
-                                                                'id' => $auto->id,
-                                                                'texto' => $auto->marca . ' - ' . $auto->modelo
-                                                            ];
-                                                        });
-                                                })->collapse();
-                                                
-                                                $data = collect($data)->union($autosFormulario->pluck('texto', 'id')->toArray())->toArray();
-                                            }
-                                        }
-                                    }
+                                    dd($peoples);
+                                    $data = (is_array($peoples) && count($peoples)) ? self::searchEmployeeAutos($peoples, 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
 
@@ -976,30 +954,7 @@ class ActivitiesResource extends Resource
                                 }
                                 if($get('tipo_entrada') == 2){
                                     $peoples = $get('peoples') ?? [];
-                                    if(is_array($peoples) && count($peoples)) {
-                                        // Obtener autos de empleados directos
-                                        $data = self::searchEmployeeAutos($peoples, 'descriptions');
-                                        
-                                        // Verificar si algún empleado tiene formulario y buscar sus autos también
-                                        $employees = Employee::whereIn('id', $peoples)->whereNotNull('owner_id')->get();
-                                        foreach($employees as $employee) {
-                                            if($employee->isFormularios()) {
-                                                $autosFormulario = $employee->getFormularios()->map(function($formControl) use ($employee) {
-                                                    return Auto::where('model', 'FormControl')
-                                                        ->where('model_id', $formControl->id)
-                                                        ->get()
-                                                        ->map(function($auto) {
-                                                            return [
-                                                                'id' => $auto->id,
-                                                                'texto' => $auto->patente . ' - ' . $auto->color
-                                                            ];
-                                                        });
-                                                })->collapse();
-                                                
-                                                $data = collect($data)->union($autosFormulario->pluck('texto', 'id')->toArray())->toArray();
-                                            }
-                                        }
-                                    }
+                                    $data = (is_array($peoples) && count($peoples)) ? self::searchEmployeeAutos($peoples, 'descriptions') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
                                     $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'descriptions') : [];
