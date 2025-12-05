@@ -759,9 +759,9 @@ class ActivitiesResource extends Resource
                                 }else{
 
                                     if(!count($owner)){
-                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
-                                    }else{   
                                         $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now() )->get();
+                                    }else{   
+                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
                                     }
                                 }
 
@@ -778,9 +778,9 @@ class ActivitiesResource extends Resource
                                     $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
                                 }else{
                                     if(!count($owner)){
-                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
-                                    }else{   
                                         $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now() )->get();
+                                    }else{   
+                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
                                     }
                                 }
 
