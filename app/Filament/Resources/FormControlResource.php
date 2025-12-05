@@ -390,8 +390,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 $failedId = $trabajador->id;
                             } 
 
-
-
                             if (!$trabajador->horarios()->exists()) {
                                 Notification::make()
                                     ->title('Este trabajador no tiene horarios asignados.')
@@ -454,7 +452,23 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 }
                             }
 
+                            $autos = $get('autos') ?? [];
+                            $autosTrabajador = $trabajador->autos;
+                            $autosform = $autosTrabajador->map(function($auto){
+                                return [
+                                    'marca' => $auto->marca,
+                                    'modelo' => $auto->modelo,
+                                    'patente' => $auto->patente,
+                                    'color' => $auto->color,
+                                    'files' => $auto->files,
+                                ]
+                            });
+
+                            $set('autos', array_merge($autos, $autosform->toArray()));
+                        
                         });
+
+
                         if (!$allHaveHorarios && $failedId) {
                             // Quitar el id que falló del estado de owners
                             $newOwners = array_filter($state, fn($id) => $id != $failedId);
