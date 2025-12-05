@@ -304,6 +304,7 @@ class ActivitiesResource extends Resource
                 'last_name' => $visitante['last_name'],
                 'email' => $visitante['email'],
                 'phone' => $visitante['phone'],
+                'aprobado'=> 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
