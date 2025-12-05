@@ -91,6 +91,39 @@ class Employee extends Model
         return $data->peoples->where('dni', $dni)->first();
     }
 
+     public function vencimientos()
+    {
+        $color = '';
+        $texto = '';
+        $status = false;
+        
+        if($this->isVencidoSeguro()){
+            $color = "warning";
+            $texto = "Trabajador pendiente de reverificación de datos.";
+            $status = true;
+        }
+
+        $vencidosFile = $this->vencidosFile();
+        if($vencidosFile){
+            $color = "danger";
+            $texto = "Documentos  vencidos: ". implode($vencidosFile);
+            $status = true;
+        }
+
+        $vencidosAutosFile = $this->vencidosAutosFile();
+        if($vencidosAutosFile){
+            $color = "danger";
+            $texto = "Documentos de autos vencidos: ". implode($vencidosAutosFile);
+            $status = true;
+        }
+
+        return [
+            'color' => $color,
+            'texto' => $texto,
+            'status' => $status,
+        ];
+    }
+
     public function vencidosFile()
     {
         if (!$this->files || $this->files->isEmpty()) {

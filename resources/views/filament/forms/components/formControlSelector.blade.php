@@ -65,6 +65,14 @@
                         <div class="text-xs text-gray-600 dark:text-gray-400">
                             {{ $form['descripcion'] }}
                         </div>
+
+
+                        @if( count($form['vencimientos']) && $form['vencimientos']['status'])
+                        <div class="text-xs text-gray-600 dark:text-gray-400">
+                            {{ $form['vencimientos']['texto'] }}
+                        </div>
+                        @endif
+
                     </div>
 
                     <!-- Indicador visual de selección -->
