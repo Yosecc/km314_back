@@ -755,19 +755,19 @@ class ActivitiesResource extends Resource
                                 if($context == 'view'){
                                     $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
                                 }else{
-                                    if($get('type') == 2){
+                                    // if($get('type') == 2){
                                         $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
-                                        ->where('aprobado',1)
-                                        ->where('agregado',1)
-                                        ->where('salida',null)
+                                        // ->where('aprobado',1)
+                                        // ->where('agregado',1)
+                                        // ->where('salida',null)
                                         ->get();
-                                    }else{
+                                    // }else{
 
-                                        $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
-                                        ->where('agregado',null)
-                                        ->whereDate('created_at',now())
-                                        ->get();
-                                    }
+                                    //     $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
+                                    //     ->where('agregado',null)
+                                    //     ->whereDate('created_at',now())
+                                    //     ->get();
+                                    // }
                                 }
 
                                 $visitantes = $visitantes->map(function($visitante){
