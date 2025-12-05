@@ -460,7 +460,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     'modelo' => $auto->modelo,
                                     'patente' => $auto->patente,
                                     'color' => $auto->color,
-                                    'files' => $auto->files,
+                                    'files' => [],
                                 ];
                             });
 
