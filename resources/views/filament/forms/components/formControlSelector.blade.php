@@ -83,7 +83,7 @@
                         x-transition
                         class="mt-2 text-xs font-medium text-red-600 dark:text-red-400"
                     >
-                        Este formulario no está disponible (@{{ status }})
+                        <span>Este formulario no está disponible (</span><span x-text="status"></span><span>)</span>
                     </div>
                 </div>
             @endforeach
