@@ -31,10 +31,10 @@
                     <span style="font-size: 14px; margin: 0px; padding: 0px">y/o familiares</span>
                     @endif
                     @if($key == 2)
-                    <span style="display: flex; flex-direction: column;">
-                        <span style="font-size: 12px; margin: 0px; padding: 0px">Km314</span>
-                        <span style="font-size: 12px; margin: 0px; padding: 0px">Compañía de construcción</span>
-                    </span>
+                    
+                        <span style="font-size: 12px; margin: 0px; padding: 0px">Km314, Constructoras</span>
+                        
+                    
                     @endif
                     @if($key == 3)
                     <span style="font-size: 14px; margin: 0px; padding: 0px">Inquilinos, visitas y trabajadores</span>
@@ -71,7 +71,7 @@
                     <span style="font-size: 14px; margin: 0px; padding: 0px">y/o familiares</span>
                     @endif
                     @if($key == 2)
-                    <span style="font-size: 14px; margin: 0px; padding: 0px">Km314</span>
+                    <span style="font-size: 12px; margin: 0px; padding: 0px">Km314, Constructoras</span>
                     @endif
                     @if($key == 3)
                     <span style="font-size: 14px; margin: 0px; padding: 0px">Inquilinos, visitas y trabajadores</span>
