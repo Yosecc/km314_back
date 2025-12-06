@@ -118,6 +118,18 @@
 let html5QrcodeScanner = null;
 
 function startQrScanner() {
+    // Verificar que el campo quick_code existe antes de abrir el scanner
+    const quickCodeInput = document.querySelector('input[name="quick_code"]');
+    
+    if (!quickCodeInput) {
+        const notification = document.createElement('div');
+        notification.style.cssText = 'position:fixed;top:20px;right:20px;background:#ef4444;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:99999;font-weight:600;max-width:300px;text-align:center;';
+        notification.innerHTML = '⚠️ El escáner solo está disponible en el formulario de Actividades';
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 4000);
+        return;
+    }
+    
     const modal = document.getElementById('qr-scanner-modal');
     modal.style.display = 'block';
     
@@ -180,17 +192,24 @@ function onScanSuccess(decodedText, decodedResult) {
         // Cerrar el scanner
         stopQrScanner();
         
-        // Notificación visual
-        if (window.Filament) {
-            new FilamentNotification()
-                .title('Código escaneado')
-                .success()
-                .send();
-        }
+        // Notificación visual usando el sistema de notificaciones de Filament
+        setTimeout(() => {
+            const notification = document.createElement('div');
+            notification.style.cssText = 'position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:99999;font-weight:600;';
+            notification.textContent = '✓ Código escaneado correctamente';
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }, 100);
     } else {
         console.error('Campo quick_code no encontrado');
-        alert('Error: Campo de código no encontrado');
         stopQrScanner();
+        
+        // Mostrar notificación más clara
+        const notification = document.createElement('div');
+        notification.style.cssText = 'position:fixed;top:20px;right:20px;background:#ef4444;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:99999;font-weight:600;max-width:300px;';
+        notification.innerHTML = '⚠️ Debes estar en el formulario de Actividades para escanear códigos QR';
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 4000);
     }
 }
 
