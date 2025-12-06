@@ -93,24 +93,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <div>
-                        <p class="text-sm font-semibold text-blue-900 mb-1">Para registrar entrada/salida:</p>
-                        <ol class="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-                            <li>Inicia sesión en el sistema</li>
-                            <li>Ve a "Entradas/Salidas"</li>
-                            <li>Ingresa este código en el campo de búsqueda rápida</li>
-                        </ol>
+                        <p class="text-sm font-semibold text-blue-900 mb-1">Muestra este código en la entrada del barrio para acceder al mismo</p>
+                        
+                        
                     </div>
                 </div>
             </div>
-
-            <!-- Botón de acción -->
-            <a href="{{ $loginUrl }}" 
-               class="block w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-lg text-center transition-all duration-200 shadow-lg hover:shadow-xl">
-                Ir al Sistema
-                <svg class="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                </svg>
-            </a>
         </div>
 
         <!-- Footer -->

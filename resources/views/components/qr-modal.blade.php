@@ -29,11 +29,10 @@
         document.body.removeChild(textArea);
     },
     shareToWhatsApp(url, code, entityType) {
-        const mensaje = `🔐 *Código de Acceso Rápido*\n\n` +
+        const mensaje = `*Código de Acceso Rápido*\n\n` +
                        `*Tipo:* ${entityType}\n` +
                        `*Código:* ${code}\n\n` +
-                       `📱 Accede directamente escaneando el QR o usando este enlace:\n${url}\n\n` +
-                       `ℹ️ Ingresa el código en el formulario de entrada para acceso rápido.`;
+                       `Accede mostrando este código en la entrada del barrio:\n${url}\n\n`;
         
         const mensajeCodificado = encodeURIComponent(mensaje);
         const whatsappUrl = `https://wa.me/?text=${mensajeCodificado}`;
