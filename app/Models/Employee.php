@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasQuickAccessCode;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,10 +11,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, SoftDeletes, HasQuickAccessCode;
 
     protected $hidden = ['created_at','updated_at'];
-    protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id','model_origen','model_origen_id','fecha_vencimiento_seguro','owner_id',"status", 'observations'];
+    protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id','model_origen','model_origen_id','fecha_vencimiento_seguro','owner_id',"status", 'observations', 'quick_access_code'];
 
     public function work()
     {

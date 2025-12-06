@@ -1074,6 +1074,20 @@ class FormControlResource extends Resource implements HasShieldPermissions
             ])
             ->filtersFormColumns(3)
             ->actions([
+                Action::make('show_qr')
+                    ->label('Ver QR')
+                    ->icon('heroicon-o-qr-code')
+                    ->color('info')
+                    ->modalHeading('Código de Acceso Rápido')
+                    ->modalDescription(fn ($record) => 'Formulario #' . $record->id)
+                    ->modalContent(fn ($record) => view('components.qr-modal', [
+                        'record' => $record,
+                        'qrCode' => $record->generateQrCode(),
+                        'entityType' => 'Formulario de Control'
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Cerrar'),
+                    
                 Action::make('aprobar')
                     ->action(function(FormControl $record){
                         $record->aprobar();

@@ -20,6 +20,7 @@
         "laraveles/spanish": "^1.5",
         "phpmailer/phpmailer": "^6.9",
         "saade/filament-fullcalendar": "^3.0",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "webklex/laravel-imap": "^5.3"
     },
     "require-dev": {

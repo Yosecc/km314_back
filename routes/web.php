@@ -27,3 +27,4 @@ use Illuminate\Support\Facades\Route;
 Route::get('/factura/pdf/{id}', [\App\Http\Controllers\InvoicePdfController::class, 'show'])->name('factura.pdf');
 Route::get('/factura/preview/{key}', [\App\Http\Controllers\InvoicePdfController::class, 'preview'])->name('invoice.preview');
 Route::get('/terminos-y-condiciones', [\App\Http\Controllers\HomeController::class, 'getTerminosCondicionesFormControl'])->name('terminos-y-condiciones');
+Route::get('/quick-access/{code}', [\App\Http\Controllers\QuickAccessController::class, 'index'])->name('quick-access');
