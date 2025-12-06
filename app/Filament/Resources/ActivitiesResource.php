@@ -633,6 +633,76 @@ class ActivitiesResource extends Resource
                             
                             if ($entity) {
                                 if ($entity instanceof Employee) {
+                                    // Validar empleado solo si es entrada
+                                    if ($get('type') == 1) {
+                                        $canSelect = true;
+                                        $errores = [];
+                                        
+                                        // Verificar seguro vencido
+                                        if($entity->isVencidoSeguro()) {
+                                            $canSelect = false;
+                                            $errores[] = '⚠️ Seguro vencido desde: ' . $entity->insurance_expiration_date->format('d/m/Y');
+                                        }
+                                        
+                                        // Verificar archivos vencidos
+                                        if($entity->vencidosFile()) {
+                                            $canSelect = false;
+                                            $vencidos = $entity->vencidosFile();
+                                            foreach($vencidos as $file) {
+                                                $errores[] = '⚠️ ' . $file->employeeFileType->name . ' vencido';
+                                            }
+                                        }
+                                        
+                                        // Verificar archivos de autos vencidos
+                                        if($entity->vencidosAutosFile()) {
+                                            $canSelect = false;
+                                            $vencidos = $entity->vencidosAutosFile();
+                                            foreach($vencidos as $file) {
+                                                $errores[] = '⚠️ Archivo de auto vencido: ' . ($file->auto->patente ?? 'Sin patente');
+                                            }
+                                        }
+                                        
+                                        // Verificar orígenes y formularios
+                                        $hasOrigenes = $entity->employeeOrigens && $entity->employeeOrigens->count() > 0;
+                                        $hasOwners = $entity->owners && $entity->owners->count() > 0;
+                                        
+                                        if($hasOwners && !$hasOrigenes) {
+                                            $hasFormularioAuthorized = false;
+                                            
+                                            foreach($entity->owners as $owner) {
+                                                $formControls = \App\Models\FormControl::where('owner_id', $owner->id)
+                                                    ->whereHas('peoples', function($query) use ($entity) {
+                                                        $query->where('dni', $entity->dni);
+                                                    })
+                                                    ->get();
+                                                
+                                                foreach($formControls as $form) {
+                                                    if($form->isActive() && $form->autorizado == 1) {
+                                                        $hasFormularioAuthorized = true;
+                                                        break 2;
+                                                    }
+                                                }
+                                            }
+                                            
+                                            if(!$hasFormularioAuthorized) {
+                                                $canSelect = false;
+                                                $errores[] = '⚠️ No tiene formularios autorizados y activos';
+                                            }
+                                        }
+                                        
+                                        if (!$canSelect) {
+                                            \Filament\Notifications\Notification::make()
+                                                ->title('Empleado no puede ingresar')
+                                                ->body($entity->first_name . ' ' . $entity->last_name . "\n\n" . implode("\n", $errores))
+                                                ->danger()
+                                                ->duration(10000)
+                                                ->send();
+                                            
+                                            $set('quick_code', '');
+                                            return;
+                                        }
+                                    }
+                                    
                                     $set('tipo_entrada', 2);
                                     $set('num_search', $entity->dni);
                                     $set('peoples', [$entity->id]);
