@@ -67,11 +67,17 @@ class ActivitiesResource extends Resource
     public static function searchEmployee($dni, $type, $ids = [])
     {
 
-        $data = Employee::where('dni', 'like', '%'.$dni.'%')->orWhere(function($query) use ($dni) {
-            $query->whereHas('autos', function ($query) use ($dni){
-                $query->where('patente','like','%'.$dni.'%');
-            });
-        })->where('model_origen','Employee')->limit(10)->get();
+        $data = Employee::where(function($query) use ($dni) {
+                $query->where('dni', 'like', '%'.$dni.'%')
+                    ->orWhereHas('autos', function ($q) use ($dni){
+                        $q->where('patente','like','%'.$dni.'%');
+                    });
+            })
+            ->whereHas('employeeOrigens', function($query) {
+                $query->whereIn('model', ['Employee', 'ConstructionCompanie']);
+            })
+            ->limit(10)
+            ->get();
 
 
         $mapeo = function($employee) use ($type){
