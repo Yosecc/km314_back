@@ -103,7 +103,8 @@ class EmployeeResource extends Resource
             Forms\Components\Hidden::make('user_id')->disabled(fn($context)=> $context == 'edit')->default(Auth::user()->id),
 
             Repeater::make('employeeOrigens')
-                ->label('Orígenes del trabajador')
+                ->label('Origen adicional del trabajador')
+                ->helperText('Solo para Compañías de Construcción o KM314. Los propietarios se gestionan más abajo.')
                 ->relationship()
                 ->schema([
                     Forms\Components\Select::make('model')
@@ -111,7 +112,6 @@ class EmployeeResource extends Resource
                         ->options([
                             'ConstructionCompanie' => 'Compañía de Construcción',
                             'Employee' => 'KM314',
-                            'Owner' => 'Propietario',
                         ])
                         ->required()
                         ->live()
@@ -123,9 +123,8 @@ class EmployeeResource extends Resource
                         ->label(function(Get $get){
                             $model = $get('model');
                             return match($model) {
-                                'ConstructionCompanie' => 'Compañía',
+                                'ConstructionCompanie' => 'Seleccione la compañía',
                                 'Employee' => 'KM314',
-                                'Owner' => 'Propietario',
                                 default => 'Seleccione el origen'
                             };
                         })
@@ -133,52 +132,30 @@ class EmployeeResource extends Resource
                             $model = $get('model');
                             return match($model) {
                                 'ConstructionCompanie' => ConstructionCompanie::get()->pluck('name', 'id')->toArray(),
-                                'Employee' => Employee::get()->map(function($employee){
-                                    return ['id' => $employee->id, 'name' => $employee->nombres()];
-                                })->pluck('name', 'id')->toArray(),
-                                'Owner' => Owner::get()->map(function($owner){
-                                    return ['id' => $owner->id, 'name' => $owner->nombres()];
-                                })->pluck('name', 'id')->toArray(),
                                 default => []
                             };
                         })
                         ->searchable()
                         ->required(function(Get $get){
                             $model = $get('model');
-                            return $model && $model !== 'Employee' ? true : false;
+                            return $model === 'ConstructionCompanie';
                         })
                         ->visible(function(Get $get){
                             $model = $get('model');
-                            return $model && $model !== 'Employee' ? true : false;
+                            return $model === 'ConstructionCompanie';
                         })
                         ->live(),
                 ])
-                ->defaultItems(function(){
-                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                        return 1;
-                    }
-                    return 0;
-                })
-                ->default(function(){
-                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                        return [[
-                            'model' => 'Owner',
-                            'model_id' => Auth::user()->owner_id,
-                        ]];
-                    }
-                    return [];
-                })
                 ->addActionLabel('Agregar origen')
                 ->columns(2)
                 ->collapsible()
+                ->defaultItems(0)
                 ->itemLabel(fn (array $state): ?string => 
-                    isset($state['model']) && isset($state['model_id']) 
-                        ? ($state['model'] === 'ConstructionCompanie' 
+                    isset($state['model']) 
+                        ? ($state['model'] === 'ConstructionCompanie' && isset($state['model_id'])
                             ? 'Compañía: ' . (ConstructionCompanie::find($state['model_id'])->name ?? 'N/A')
-                            : ($state['model'] === 'Employee'
-                                ? 'KM314: ' . (Employee::find($state['model_id'])->nombres() ?? 'N/A')
-                                : 'Propietario: ' . (Owner::find($state['model_id'])->nombres() ?? 'N/A')))
-                        : ($state['model'] === 'Employee' ? 'KM314' : 'Origen sin configurar')
+                            : ($state['model'] === 'Employee' ? 'KM314' : 'Origen sin configurar'))
+                        : 'Origen sin configurar'
                 )
                 ->visible(function(){
                     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
