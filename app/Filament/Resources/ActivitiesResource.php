@@ -626,6 +626,7 @@ class ActivitiesResource extends Resource
                                 ->label('Escanear')
                                 ->button()
                                 ->action(fn () => null)
+                                ->disabled(fn (Get $get) => !$get('type') || $get('type') == 0)
                                 ->extraAttributes([
                                     'onclick' => 'startQrScanner()',
                                     'type' => 'button'
