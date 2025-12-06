@@ -613,19 +613,19 @@ class ActivitiesResource extends Resource
                     ->visible(function($context){
                         return $context == 'view' ? false : true;
                     })
-                    ->afterStateUpdated(function($state, Set $set, Get $get) {
-                        // Enfocar el campo quick_code después de seleccionar tipo
-                        if ($state) {
-                            $set('quick_code', '');
-                        }
-                    })
                     ->live(),
 
                     Forms\Components\TextInput::make('quick_code')
                         ->label('Código de Acceso Rápido')
                         ->placeholder('Escanea QR o ingresa código (Ej: E-A1B2C3D4)')
                         ->helperText('Primero seleccione el tipo de actividad (Entrada/Salida)')
-                        ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;', 'x-init' => '$watch(() => $wire.type, (value) => { if (value) { setTimeout(() => $el.focus(), 100); } })'])
+                        ->extraInputAttributes(function(Get $get){
+                            $attrs = ['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'];
+                            if($get('type')){
+                                $attrs['autofocus'] = 'autofocus';
+                            }
+                            return $attrs;
+                        })
                         ->live(onBlur: true)
                         ->afterStateUpdated(function($state, Set $set, Get $get) {
                             if (!$state) return;
