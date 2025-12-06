@@ -400,6 +400,15 @@ class ActivitiesResource extends Resource
                 if($employee) {
                     $canSelect = true;
                     
+                    // Agregar horarios disponibles
+                    if($employee->horarios && $employee->horarios->count() > 0) {
+                        $dias = $employee->horarios->pluck('day_of_week')->unique()->implode(', ');
+                        $persona['badges'][] = [
+                            'texto' => "Días: {$dias}",
+                            'color' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                        ];
+                    }
+                    
                     // Verificar orígenes primero (se necesita para la lógica de formularios)
                     $hasOrigenes = false;
                     if($employee->employeeOrigens && $employee->employeeOrigens->count() > 0) {
