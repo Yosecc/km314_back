@@ -400,6 +400,28 @@ class ActivitiesResource extends Resource
                 if($employee) {
                     $canSelect = true;
                     
+                    // Verificar orígenes primero (se necesita para la lógica de formularios)
+                    $hasOrigenes = false;
+                    if($employee->employeeOrigens && $employee->employeeOrigens->count() > 0) {
+                        $hasOrigenes = true;
+                        foreach($employee->employeeOrigens as $origen) {
+                            if($origen->model === 'ConstructionCompanie' && $origen->model_id) {
+                                $compania = \App\Models\ConstructionCompanie::find($origen->model_id);
+                                if($compania) {
+                                    $persona['badges'][] = [
+                                        'texto' => "Compañía: {$compania->name}",
+                                        'color' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+                                    ];
+                                }
+                            } elseif($origen->model === 'Employee') {
+                                $persona['badges'][] = [
+                                    'texto' => 'KM314',
+                                    'color' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300'
+                                ];
+                            }
+                        }
+                    }
+                    
                     // Verificar formularios de control si tiene owners
                     $hasOwners = $employee->owners && $employee->owners->count() > 0;
                     $hasFormularioAuthorized = false;
@@ -431,29 +453,31 @@ class ActivitiesResource extends Resource
                         if(!$hasFormularioAuthorized) {
                             $formulariosNoAuth = FormControl::whereIn('owner_id', $ownerIds)
                                 ->whereIn('status', ['Pending', 'Denied'])
+                                ->whereHas('peoples', function($q) use ($employee) {
+                                    $q->where('dni', $employee->dni);
+                                })
                                 ->get();
                             
                             foreach($formulariosNoAuth as $form) {
                                 $status = $form->statusComputed();
                                 $hasFormularioNoAuthorized = true;
-                                $persona['badges'][] = [
-                                    'texto' => "Con formulario {$status}",
-                                    'color' => match($status) {
-                                        'Pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-                                        'Denied' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                                        'Vencido' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-                                        'Expirado' => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
-                                        default => 'bg-gray-100 text-gray-800'
-                                    }
-                                ];
+                                // No mostrar el badge si tiene orígenes
+                                if(!$hasOrigenes) {
+                                    $persona['badges'][] = [
+                                        'texto' => "Con formulario {$status}",
+                                        'color' => match($status) {
+                                            'Pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+                                            'Denied' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                                            'Vencido' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+                                            'Expirado' => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+                                            default => 'bg-gray-100 text-gray-800'
+                                        }
+                                    ];
+                                }
                                 break;
                             }
                         }
                     }
-                    
-                    // Verificar orígenes
-                    $hasOrigenes = false;
-                    if($employee->employeeOrigens && $employee->employeeOrigens->count() > 0) {
                         $hasOrigenes = true;
                         foreach($employee->employeeOrigens as $origen) {
                             if($origen->model === 'ConstructionCompanie' && $origen->model_id) {
