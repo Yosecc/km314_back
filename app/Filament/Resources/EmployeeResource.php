@@ -627,7 +627,7 @@ class EmployeeResource extends Resource
                     ]))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Cerrar')
-                    ->visble(function ($record) {
+                    ->visible(function ($record) {
                         return Auth::user()->hasRole('super_admin') || Auth::user()->hasRole('admin');
                     }),
 
