@@ -82,7 +82,7 @@
                 <!-- QR Code -->
                 <div class="flex justify-center my-4">
                     <div class="bg-white p-4 rounded-lg shadow-lg inline-block border-2 border-purple-200">
-                        {!! $entity->generateQrCode() !!}
+                        {!! $entity->generateQrCodeForScanner() !!}
                     </div>
                 </div>
 

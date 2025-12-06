@@ -39,62 +39,10 @@
         window.open(whatsappUrl, '_blank');
     }
 }" class="p-6 space-y-6">
-    <!-- Title -->
-    <div class="text-center mb-4">
-        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Códigos QR de Acceso</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Dos versiones del código QR para diferentes usos</p>
-    </div>
-
-    <!-- Dual QR Codes -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- QR para Escáner (código solo) -->
-        <div class="space-y-3">
-            <div class="text-center">
-                <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-1">
-                    Para Escáner de Vigilancia
-                </h4>
-                <p class="text-xs text-gray-600 dark:text-gray-400">
-                    Úsalo con lectores USB/Bluetooth
-                </p>
-            </div>
-            <div class="flex justify-center">
-                <div class="bg-white p-4 rounded-lg shadow-lg inline-block">
-                    {!! $record->generateQrCodeForScanner() !!}
-                </div>
-            </div>
-            <div class="text-center">
-                <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Solo Código
-                </span>
-            </div>
-        </div>
-
-        <!-- QR para Compartir (URL completa) -->
-        <div class="space-y-3">
-            <div class="text-center">
-                <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-1">
-                    Para Compartir con Visitantes
-                </h4>
-                <p class="text-xs text-gray-600 dark:text-gray-400">
-                    Úsalo para WhatsApp o email
-                </p>
-            </div>
-            <div class="flex justify-center">
-                <div class="bg-white p-4 rounded-lg shadow-lg inline-block">
-                    {!! $record->generateQrCodeForSharing() !!}
-                </div>
-            </div>
-            <div class="text-center">
-                <span class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-                    </svg>
-                    URL Completa
-                </span>
-            </div>
+    <!-- QR Code -->
+    <div class="flex justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg inline-block">
+            {!! $record->generateQrCodeForScanner() !!}
         </div>
     </div>
     
@@ -149,8 +97,7 @@
     
     <!-- Información adicional -->
     <div class="text-center text-xs text-gray-500 dark:text-gray-400 space-y-1 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <p><strong>Código QR para Escáner:</strong> Use este código QR cuando escanee con lectores físicos USB o Bluetooth en la entrada</p>
-        <p><strong>Código QR para Compartir:</strong> Use este código QR para enviar por WhatsApp o email a visitantes</p>
+        <p>Escanea el código QR o ingresa el código en el formulario de entrada</p>
         <p>Este código es único y permanente para este {{ strtolower($entityType) }}</p>
     </div>
 </div>
