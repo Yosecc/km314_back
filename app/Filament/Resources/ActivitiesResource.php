@@ -633,6 +633,10 @@ class ActivitiesResource extends Resource
                             
                             if ($entity) {
                                 if ($entity instanceof Employee) {
+                                    // Siempre rellenar tipo_entrada y num_search
+                                    $set('tipo_entrada', 2);
+                                    $set('num_search', $entity->dni);
+                                    
                                     // Validar empleado solo si es entrada
                                     if ($get('type') == 1) {
                                         $canSelect = true;
@@ -688,9 +692,9 @@ class ActivitiesResource extends Resource
                                         
                                         if (!$canSelect) {
                                             \Filament\Notifications\Notification::make()
-                                                ->title('Empleado no puede ingresar')
+                                                ->title('Empleado encontrado - NO puede ingresar')
                                                 ->body($entity->first_name . ' ' . $entity->last_name . "\n\n" . implode("\n", $errores))
-                                                ->danger()
+                                                ->warning()
                                                 ->duration(10000)
                                                 ->send();
                                             
@@ -699,8 +703,7 @@ class ActivitiesResource extends Resource
                                         }
                                     }
                                     
-                                    $set('tipo_entrada', 2);
-                                    $set('num_search', $entity->dni);
+                                    // Solo seleccionar automáticamente si pasó las validaciones o es salida
                                     $set('peoples', [$entity->id]);
                                     
                                     \Filament\Notifications\Notification::make()
