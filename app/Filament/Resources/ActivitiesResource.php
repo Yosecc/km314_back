@@ -651,7 +651,7 @@ class ActivitiesResource extends Resource
                             return $context == 'view' ? false : true ;
                         })
                         ->dehydrated(false)
-                        ->columnSpanFull(),
+                        ,
                 Forms\Components\ViewField::make('type')
                     ->required()
                     ->view('filament.forms.components.tipoActividad')
