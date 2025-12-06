@@ -185,6 +185,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     $set('start_time_range', Carbon::now()->format('H:i'));
                                     $set('end_date_range', Carbon::now()->addDay()->format('Y-m-d'));
                                     $set('end_time_range', Carbon::now()->format('H:i'));
+
+                                    Notification::make()
+                                        ->title('Este formulario será válido por 24 horas.')
+                                        ->info()
+                                        ->send();
                                 }
                         })
                         ->required(function(Get $get){
