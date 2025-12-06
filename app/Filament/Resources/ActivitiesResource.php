@@ -619,16 +619,90 @@ class ActivitiesResource extends Resource
                                     if($get('tipo_entrada') == 2 && $get('type') == 1 && $context == 'create') {
                                         $employee = Employee::find($id);
                                         if($employee) {
-                                            // Badge de estado
-                                            if($employee->owner_id) {
-                                                $persona['badges'][] = [
-                                                    'texto' => 'Con formulario',
-                                                    'color' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                                                ];
+                                            $canSelect = true;
+                                            
+                                            // Verificar formularios de control si tiene owners
+                                            $hasOwners = $employee->owners && $employee->owners->count() > 0;
+                                            $hasFormularioAuthorized = false;
+                                            $hasFormularioNoAuthorized = false;
+                                            
+                                            if($hasOwners) {
+                                                // Buscar formularios de los owners del empleado
+                                                $ownerIds = $employee->owners->pluck('id')->toArray();
+                                                $formularios = FormControl::whereIn('owner_id', $ownerIds)
+                                                    ->where('status', 'Authorized')
+                                                    ->get();
+                                                
+                                                // Verificar si hay formularios autorizados en rango de fecha
+                                                foreach($formularios as $form) {
+                                                    if($form->isDayRange()) {
+                                                        $hasFormularioAuthorized = true;
+                                                        $persona['badges'][] = [
+                                                            'texto' => 'Con formulario Autorizado',
+                                                            'color' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                                        ];
+                                                        break;
+                                                    }
+                                                }
+                                                
+                                                // Si no tiene autorizado, buscar otros estados
+                                                if(!$hasFormularioAuthorized) {
+                                                    $formulariosNoAuth = FormControl::whereIn('owner_id', $ownerIds)
+                                                        ->whereIn('status', ['Pending', 'Denied'])
+                                                        ->get();
+                                                    
+                                                    foreach($formulariosNoAuth as $form) {
+                                                        $status = $form->statusComputed();
+                                                        $hasFormularioNoAuthorized = true;
+                                                        $persona['badges'][] = [
+                                                            'texto' => "Con formulario {$status}",
+                                                            'color' => match($status) {
+                                                                'Pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+                                                                'Denied' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                                                                'Vencido' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+                                                                'Expirado' => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+                                                                default => 'bg-gray-100 text-gray-800'
+                                                            }
+                                                        ];
+                                                        break;
+                                                    }
+                                                }
                                             }
+                                            
+                                            // Verificar orígenes
+                                            $hasOrigenes = false;
+                                            if($employee->employeeOrigens && $employee->employeeOrigens->count() > 0) {
+                                                $hasOrigenes = true;
+                                                foreach($employee->employeeOrigens as $origen) {
+                                                    if($origen->model === 'ConstructionCompanie' && $origen->model_id) {
+                                                        $compania = \App\Models\ConstructionCompanie::find($origen->model_id);
+                                                        if($compania) {
+                                                            $persona['badges'][] = [
+                                                                'texto' => "Compañía: {$compania->name}",
+                                                                'color' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+                                                            ];
+                                                        }
+                                                    } elseif($origen->model === 'Employee') {
+                                                        $persona['badges'][] = [
+                                                            'texto' => 'KM314',
+                                                            'color' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300'
+                                                        ];
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // Determinar si puede seleccionarse
+                                            // Si tiene formulario no autorizado Y NO tiene otros orígenes -> NO se puede seleccionar
+                                            if($hasFormularioNoAuthorized && !$hasOrigenes) {
+                                                $canSelect = false;
+                                            }
+                                            
+                                            // Si tiene formulario autorizado o tiene orígenes -> SI se puede seleccionar
+                                            // (ya validado por defecto con $canSelect = true)
 
-                                            // Vencimientos
+                                            // Vencimientos (estos ya deshabilitan la selección)
                                             if($employee->isVencidoSeguro()) {
+                                                $canSelect = false;
                                                 $persona['vencimientos'][] = [
                                                     'texto' => 'Seguro vencido',
                                                     'color_bg' => 'bg-red-100 dark:bg-red-900/30',
@@ -638,6 +712,7 @@ class ActivitiesResource extends Resource
                                             }
                                             
                                             if($employee->vencidosFile()) {
+                                                $canSelect = false;
                                                 $persona['vencimientos'][] = [
                                                     'texto' => 'Documentos vencidos',
                                                     'color_bg' => 'bg-orange-100 dark:bg-orange-900/30',
@@ -647,6 +722,7 @@ class ActivitiesResource extends Resource
                                             }
                                             
                                             if($employee->vencidosAutosFile()) {
+                                                $canSelect = false;
                                                 $persona['vencimientos'][] = [
                                                     'texto' => 'Documentos de vehículos vencidos',
                                                     'color_bg' => 'bg-yellow-100 dark:bg-yellow-900/30',
@@ -654,6 +730,9 @@ class ActivitiesResource extends Resource
                                                     'icon' => true
                                                 ];
                                             }
+                                            
+                                            // Agregar flag para indicar si se puede seleccionar
+                                            $persona['disabled'] = !$canSelect;
                                         }
                                     }
 

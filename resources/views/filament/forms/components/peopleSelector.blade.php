@@ -13,19 +13,22 @@
             @foreach($personas as $persona)
                 <div 
                     @click="
-                        if (selectedPeople.includes({{ $persona['id'] }})) {
-                            selectedPeople = selectedPeople.filter(id => id !== {{ $persona['id'] }});
-                        } else {
-                            selectedPeople.push({{ $persona['id'] }});
-                        }
-                        state = selectedPeople;
-                        $wire.call('$refresh');
+                        @if(!isset($persona['disabled']) || !$persona['disabled'])
+                            if (selectedPeople.includes({{ $persona['id'] }})) {
+                                selectedPeople = selectedPeople.filter(id => id !== {{ $persona['id'] }});
+                            } else {
+                                selectedPeople.push({{ $persona['id'] }});
+                            }
+                            state = selectedPeople;
+                            $wire.call('$refresh');
+                        @endif
                     "
                     :class="{
                         'ring-2 ring-primary-600 bg-primary-50 dark:bg-primary-900/20': selectedPeople.includes({{ $persona['id'] }}),
-                        'ring-1 ring-gray-300 dark:ring-gray-700 hover:ring-gray-400 dark:hover:ring-gray-600': !selectedPeople.includes({{ $persona['id'] }})
+                        'ring-1 ring-gray-300 dark:ring-gray-700 hover:ring-gray-400 dark:hover:ring-gray-600': !selectedPeople.includes({{ $persona['id'] }}) && {{ !isset($persona['disabled']) || !$persona['disabled'] ? 'true' : 'false' }},
+                        'opacity-60 cursor-not-allowed ring-1 ring-red-300 dark:ring-red-700 bg-red-50 dark:bg-red-900/10': {{ isset($persona['disabled']) && $persona['disabled'] ? 'true' : 'false' }}
                     }"
-                    class="relative p-4 rounded-lg cursor-pointer transition-all duration-200"
+                    class="relative p-4 rounded-lg transition-all duration-200 {{ isset($persona['disabled']) && $persona['disabled'] ? '' : 'cursor-pointer' }}"
                 >
                     <!-- Checkbox visual -->
                     <div class="absolute top-3 right-3">
