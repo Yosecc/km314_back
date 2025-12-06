@@ -42,9 +42,18 @@ trait HasQuickAccessCode
     }
 
     /**
-     * Get the URL for quick access
+     * Get the URL for quick access (with encrypted code)
      */
     public function getQrCodeUrl(): string
+    {
+        $encryptedCode = \Illuminate\Support\Facades\Crypt::encryptString($this->quick_access_code);
+        return url('/quick-access/' . urlencode($encryptedCode));
+    }
+    
+    /**
+     * Get the plain URL for quick access (without encryption)
+     */
+    public function getPlainQrCodeUrl(): string
     {
         return url('/quick-access/' . $this->quick_access_code);
     }

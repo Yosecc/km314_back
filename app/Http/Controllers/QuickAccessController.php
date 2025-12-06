@@ -6,28 +6,41 @@ use App\Models\Employee;
 use App\Models\FormControl;
 use App\Models\Owner;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 
 class QuickAccessController extends Controller
 {
     /**
-     * Handle quick access by code
+     * Handle quick access by code (encrypted or plain)
      */
     public function index($code)
     {
+        // Intentar desencriptar si está encriptado
+        try {
+            $decryptedCode = Crypt::decryptString($code);
+        } catch (\Exception $e) {
+            // Si no se puede desencriptar, asumir que es código plano
+            $decryptedCode = $code;
+        }
+        
         // Buscar en todas las entidades
-        $entity = $this->findByCode($code);
+        $entity = $this->findByCode($decryptedCode);
         
         if (!$entity) {
             abort(404, 'Código de acceso rápido no encontrado');
         }
 
-        // Determinar tipo y redirigir a crear actividad con parámetros
+        // Determinar tipo
         $type = $this->getEntityType($entity);
+        $entityType = $this->getEntityTypeName($entity);
         
-        return redirect()->route('filament.admin.resources.activities.create', [
-            'quick_code' => $code,
-            'entity_type' => $type,
-            'entity_id' => $entity->id
+        // Mostrar página pública con información
+        return view('quick-access', [
+            'entity' => $entity,
+            'code' => $decryptedCode,
+            'type' => $type,
+            'entityType' => $entityType,
+            'loginUrl' => route('filament.admin.auth.login')
         ]);
     }
 
@@ -71,5 +84,21 @@ class QuickAccessController extends Controller
         }
 
         return 0;
+    }
+
+    /**
+     * Get entity type name
+     */
+    private function getEntityTypeName($entity): string
+    {
+        if ($entity instanceof Employee) {
+            return 'Empleado';
+        } elseif ($entity instanceof Owner) {
+            return 'Propietario';
+        } elseif ($entity instanceof FormControl) {
+            return 'Formulario de Control';
+        }
+
+        return 'Desconocido';
     }
 }
