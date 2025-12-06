@@ -537,11 +537,11 @@ class ActivitiesResource extends Resource
             if($get('tipo_entrada') == 1) {
                 $owner = Owner::find($id);
                 if($owner && $owner->owner_status_id == 2) {
-                    $persona['badges'][] = [
-                        'texto' => 'Moroso',
-                        'color' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                        'icon' => true
-                    ];
+                    // $persona['badges'][] = [
+                    //     'texto' => 'Moroso',
+                    //     'color' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                    //     'icon' => true
+                    // ];
                 }
             }
 
