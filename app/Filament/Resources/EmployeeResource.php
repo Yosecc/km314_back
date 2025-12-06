@@ -102,34 +102,82 @@ class EmployeeResource extends Resource
 
             Forms\Components\Hidden::make('user_id')->disabled(fn($context)=> $context == 'edit')->default(Auth::user()->id),
 
-            Forms\Components\Select::make('model_origen')
-                ->label('Origen')
-                ->options([
-                    'ConstructionCompanie' => 'Compañías De Construcciones',
-                    'Employee' => 'KM314',
-                    'Owner' => 'Propietario',
+            Repeater::make('employeeOrigens')
+                ->label('Orígenes del trabajador')
+                ->relationship()
+                ->schema([
+                    Forms\Components\Select::make('model')
+                        ->label('Tipo de origen')
+                        ->options([
+                            'ConstructionCompanie' => 'Compañía de Construcción',
+                            'Owner' => 'Propietario',
+                        ])
+                        ->required()
+                        ->live()
+                        ->afterStateUpdated(function(Set $set){
+                            $set('model_id', null);
+                        }),
+                    
+                    Forms\Components\Select::make('model_id')
+                        ->label(function(Get $get){
+                            $model = $get('model');
+                            return match($model) {
+                                'ConstructionCompanie' => 'Compañía',
+                                'Owner' => 'Propietario',
+                                default => 'Seleccione el origen'
+                            };
+                        })
+                        ->options(function(Get $get){
+                            $model = $get('model');
+                            return match($model) {
+                                'ConstructionCompanie' => ConstructionCompanie::get()->pluck('name', 'id')->toArray(),
+                                'Owner' => Owner::get()->map(function($owner){
+                                    return ['id' => $owner->id, 'name' => $owner->nombres()];
+                                })->pluck('name', 'id')->toArray(),
+                                default => []
+                            };
+                        })
+                        ->searchable()
+                        ->required(function(Get $get){
+                            return $get('model') ? true : false;
+                        })
+                        ->visible(function(Get $get){
+                            return $get('model') ? true : false;
+                        })
+                        ->live(),
                 ])
-                ->default(fn(Get $get) => $get('model_origen') ?? (Auth::user()->hasRole('owner') && Auth::user()->owner_id ? 'Owner' : null))
-                ->dehydrated(true)
+                ->defaultItems(function(){
+                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                        return 1;
+                    }
+                    return 0;
+                })
+                ->default(function(){
+                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                        return [[
+                            'model' => 'Owner',
+                            'model_id' => Auth::user()->owner_id,
+                        ]];
+                    }
+                    return [];
+                })
+                ->addActionLabel('Agregar origen')
+                ->columns(2)
+                ->collapsible()
+                ->itemLabel(fn (array $state): ?string => 
+                    isset($state['model']) && isset($state['model_id']) 
+                        ? ($state['model'] === 'ConstructionCompanie' 
+                            ? 'Compañía: ' . (ConstructionCompanie::find($state['model_id'])->name ?? 'N/A')
+                            : 'Propietario: ' . (Owner::find($state['model_id'])->nombres() ?? 'N/A'))
+                        : 'Origen sin configurar'
+                )
                 ->visible(function(){
                     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                         return false;
                     }
                     return true;
                 })
-                ->live(),
-
-            Forms\Components\Select::make('model_origen_id')
-                ->label('Compañía de origen')
-                ->options(function(){
-                    return ConstructionCompanie::get()->pluck('name','id')->toArray();
-                })->disabled(function(Get $get){
-                    return $get('model_origen') == 'ConstructionCompanie' ? false:true;
-                })
-                ->visible(function(Get $get){
-                    return $get('model_origen') == 'ConstructionCompanie' ? true:false;
-                })
-                ->live(),
+                ->columnSpanFull(),
 
             // DatePicker::make('fecha_vencimiento_seguro')
             //     ->label('Fecha de vencimiento del seguro personal')

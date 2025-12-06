@@ -20,6 +20,11 @@ class Employee extends Model
         return $this->belongsTo(Works::class);
     }
 
+    public function employeeOrigens()
+    {
+        return $this->hasMany(EmployeeOrigen::class);
+    }
+
     public function owners()
     {
         return $this->belongsToMany(Owner::class);
