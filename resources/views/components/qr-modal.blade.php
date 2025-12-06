@@ -1,59 +1,45 @@
-<script>
-// Definir funciones globalmente antes del contenido
-window.copyToClipboard = function(text) {
-    // Usar la API moderna de clipboard
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function() {
+<div x-data="{
+    copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✓ Código copiado: ' + text);
+            }).catch(() => {
+                this.fallbackCopy(text);
+            });
+        } else {
+            this.fallbackCopy(text);
+        }
+    },
+    fallbackCopy(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
             alert('✓ Código copiado: ' + text);
-        }).catch(function(err) {
-            // Fallback si falla
-            fallbackCopy(text);
-        });
-    } else {
-        fallbackCopy(text);
+        } catch (err) {
+            alert('Error al copiar. Código: ' + text);
+        }
+        
+        document.body.removeChild(textArea);
+    },
+    shareToWhatsApp(url, code, entityType) {
+        const mensaje = `🔐 *Código de Acceso Rápido*\n\n` +
+                       `*Tipo:* ${entityType}\n` +
+                       `*Código:* ${code}\n\n` +
+                       `📱 Accede directamente escaneando el QR o usando este enlace:\n${url}\n\n` +
+                       `ℹ️ Ingresa el código en el formulario de entrada para acceso rápido.`;
+        
+        const mensajeCodificado = encodeURIComponent(mensaje);
+        const whatsappUrl = `https://wa.me/?text=${mensajeCodificado}`;
+        window.open(whatsappUrl, '_blank');
     }
-}
-
-function fallbackCopy(text) {
-    // Método alternativo para navegadores antiguos
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.style.position = "fixed";
-    textArea.style.left = "-999999px";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    try {
-        document.execCommand('copy');
-        alert('✓ Código copiado: ' + text);
-    } catch (err) {
-        alert('Error al copiar. Código: ' + text);
-    }
-    
-    document.body.removeChild(textArea);
-}
-
-window.shareToWhatsApp = function(url, code, entityType) {
-    // Crear mensaje para WhatsApp
-    const mensaje = `🔐 *Código de Acceso Rápido*\n\n` +
-                   `*Tipo:* ${entityType}\n` +
-                   `*Código:* ${code}\n\n` +
-                   `📱 Accede directamente escaneando el QR o usando este enlace:\n${url}\n\n` +
-                   `ℹ️ Ingresa el código en el formulario de entrada para acceso rápido.`;
-    
-    // Codificar el mensaje para URL
-    const mensajeCodificado = encodeURIComponent(mensaje);
-    
-    // Abrir WhatsApp con el mensaje
-    const whatsappUrl = `https://wa.me/?text=${mensajeCodificado}`;
-    
-    // Abrir en nueva ventana
-    window.open(whatsappUrl, '_blank');
-}
-</script>
-
-<div class="p-6 space-y-6">
+}" class="p-6 space-y-6">
     <!-- QR Code -->
     <div class="flex justify-center">
         <div class="bg-white p-6 rounded-lg shadow-lg inline-block">
@@ -78,7 +64,7 @@ window.shareToWhatsApp = function(url, code, entityType) {
     <div class="flex flex-col sm:flex-row gap-3 justify-center">
         <button 
             type="button"
-            onclick="event.preventDefault(); event.stopPropagation(); copyToClipboard('{{ $record->quick_access_code }}'); return false;"
+            @click.prevent="copyToClipboard('{{ $record->quick_access_code }}')"
             class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors cursor-pointer"
         >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,7 +75,7 @@ window.shareToWhatsApp = function(url, code, entityType) {
         
         <button 
             type="button"
-            onclick="event.preventDefault(); event.stopPropagation(); window.print(); return false;"
+            @click.prevent="window.print()"
             class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors cursor-pointer"
         >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,7 +86,7 @@ window.shareToWhatsApp = function(url, code, entityType) {
 
         <button 
             type="button"
-            onclick="event.preventDefault(); event.stopPropagation(); shareToWhatsApp('{{ $record->getQrCodeUrl() }}', '{{ $record->quick_access_code }}', '{{ $entityType }}'); return false;"
+            @click.prevent="shareToWhatsApp('{{ $record->getQrCodeUrl() }}', '{{ $record->quick_access_code }}', '{{ $entityType }}')"
             class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 transition-colors cursor-pointer"
         >
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
