@@ -1,3 +1,58 @@
+<script>
+// Definir funciones globalmente antes del contenido
+window.copyToClipboard = function(text) {
+    // Usar la API moderna de clipboard
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            alert('✓ Código copiado: ' + text);
+        }).catch(function(err) {
+            // Fallback si falla
+            fallbackCopy(text);
+        });
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text) {
+    // Método alternativo para navegadores antiguos
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        alert('✓ Código copiado: ' + text);
+    } catch (err) {
+        alert('Error al copiar. Código: ' + text);
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+window.shareToWhatsApp = function(url, code, entityType) {
+    // Crear mensaje para WhatsApp
+    const mensaje = `🔐 *Código de Acceso Rápido*\n\n` +
+                   `*Tipo:* ${entityType}\n` +
+                   `*Código:* ${code}\n\n` +
+                   `📱 Accede directamente escaneando el QR o usando este enlace:\n${url}\n\n` +
+                   `ℹ️ Ingresa el código en el formulario de entrada para acceso rápido.`;
+    
+    // Codificar el mensaje para URL
+    const mensajeCodificado = encodeURIComponent(mensaje);
+    
+    // Abrir WhatsApp con el mensaje
+    const whatsappUrl = `https://wa.me/?text=${mensajeCodificado}`;
+    
+    // Abrir en nueva ventana
+    window.open(whatsappUrl, '_blank');
+}
+</script>
+
 <div class="p-6 space-y-6">
     <!-- QR Code -->
     <div class="flex justify-center">
@@ -61,65 +116,6 @@
         <p>Este código es único y permanente para este {{ strtolower($entityType) }}</p>
     </div>
 </div>
-
-<script>
-function copyToClipboard(text) {
-    // Usar la API moderna de clipboard
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function() {
-            alert('✓ Código copiado: ' + text);
-        }).catch(function(err) {
-            // Fallback si falla
-            fallbackCopy(text);
-        });
-    } else {
-        fallbackCopy(text);
-    }
-}
-
-function fallbackCopy(text) {
-    // Método alternativo para navegadores antiguos
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.style.position = "fixed";
-    textArea.style.left = "-999999px";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    try {
-        document.execCommand('copy');
-        alert('✓ Código copiado: ' + text);
-    } catch (err) {
-        alert('Error al copiar. Código: ' + text);
-    }
-    
-    document.body.removeChild(textArea);
-}
-
-function shareToWhatsApp(url, code, entityType) {
-    // Crear mensaje para WhatsApp
-    const mensaje = `🔐 *Código de Acceso Rápido*\n\n` +
-                   `*Tipo:* ${entityType}\n` +
-                   `*Código:* ${code}\n\n` +
-                   `📱 Accede directamente escaneando el QR o usando este enlace:\n${url}\n\n` +
-                   `ℹ️ Ingresa el código en el formulario de entrada para acceso rápido.`;
-    
-    // Codificar el mensaje para URL
-    const mensajeCodificado = encodeURIComponent(mensaje);
-    
-    // Abrir WhatsApp con el mensaje
-    const whatsappUrl = `https://wa.me/?text=${mensajeCodificado}`;
-    
-    // Abrir en nueva ventana
-    window.open(whatsappUrl, '_blank');
-}
-
-// Estilos de impresión
-window.addEventListener('beforeprint', function() {
-    document.body.style.backgroundColor = 'white';
-});
-</script>
 
 <style>
 @media print {
