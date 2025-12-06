@@ -79,6 +79,13 @@
                     </div>
                 @endif
 
+                <!-- QR Code -->
+                <div class="flex justify-center my-4">
+                    <div class="bg-white p-4 rounded-lg shadow-lg inline-block border-2 border-purple-200">
+                        {!! $entity->generateQrCode() !!}
+                    </div>
+                </div>
+
                 <!-- Código -->
                 <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
                     <p class="text-sm text-gray-600 mb-2 text-center">Código de acceso</p>
