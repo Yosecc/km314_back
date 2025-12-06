@@ -73,9 +73,9 @@ class ActivitiesResource extends Resource
                         $q->where('patente','like','%'.$dni.'%');
                     });
             })
-            ->whereHas('employeeOrigens', function($query) {
-                $query->whereIn('model', ['Employee', 'ConstructionCompanie']);
-            })
+            // ->whereHas('employeeOrigens', function($query) {
+            //     $query->whereIn('model', ['Employee', 'ConstructionCompanie']);
+            // })
             ->limit(10)
             ->get();
 
