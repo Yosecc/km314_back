@@ -626,7 +626,10 @@ class EmployeeResource extends Resource
                         'entityType' => 'Empleado'
                     ]))
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Cerrar'),
+                    ->modalCancelActionLabel('Cerrar')
+                    ->visble(function ($record) {
+                        return Auth::user()->hasRole('super_admin') || Auth::user()->hasRole('admin');
+                    }),
 
                 Tables\Actions\Action::make('verificar_seguro')
                     ->label('Verificar trabajador')
