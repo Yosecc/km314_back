@@ -672,7 +672,7 @@ class ActivitiesResource extends Resource
                             }
                         })
                         ->disabled(function($context, Get $get){
-                            return $context == 'view'  ? true : ($get('type') != '' ? true : false) ;
+                            return $context == 'view'  ? true : ($get('type') == '' ? true : false) ;
                         })
                         ->visible(function($context, Get $get){
                             return $context == 'view' ? false : true ;
