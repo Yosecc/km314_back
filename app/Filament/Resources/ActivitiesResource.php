@@ -648,18 +648,14 @@ class ActivitiesResource extends Resource
                                         if($entity->vencidosFile()) {
                                             $canSelect = false;
                                             $vencidos = $entity->vencidosFile();
-                                            foreach($vencidos as $file) {
-                                                $errores[] = '⚠️ ' . $file->employeeFileType->name . ' vencido';
-                                            }
+                                            $errores[] = '⚠️ Documentos vencidos: ' . implode(', ', $vencidos);
                                         }
                                         
                                         // Verificar archivos de autos vencidos
                                         if($entity->vencidosAutosFile()) {
                                             $canSelect = false;
                                             $vencidos = $entity->vencidosAutosFile();
-                                            foreach($vencidos as $file) {
-                                                $errores[] = '⚠️ Archivo de auto vencido: ' . ($file->auto->patente ?? 'Sin patente');
-                                            }
+                                            $errores[] = '⚠️ Archivos de vehículos vencidos: ' . implode(', ', $vencidos);
                                         }
                                         
                                         // Verificar orígenes y formularios
