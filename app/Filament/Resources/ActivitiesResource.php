@@ -585,12 +585,12 @@ class ActivitiesResource extends Resource
                     Forms\Components\TextInput::make('quick_code')
                         ->label('Código de Acceso Rápido')
                         ->placeholder('Escanea QR o ingresa código (Ej: E-A1B2C3D4)')
-                        ->columnSpan(['sm'=> 2])
-                        ->columnStart([
-                            'sm' => 2,
-                            'xl' => 3,
-                            '2xl' => 4,
-                        ])
+                        // ->columnSpan(['sm'=> 2])
+                        // ->columnStart([
+                        //     'sm' => 2,
+                        //     'xl' => 3,
+                        //     '2xl' => 4,
+                        // ])
                         ->live(onBlur: true)
                         ->afterStateUpdated(function($state, Set $set, Get $get) {
                             if (!$state) return;
