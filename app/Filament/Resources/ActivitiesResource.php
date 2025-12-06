@@ -338,7 +338,7 @@ class ActivitiesResource extends Resource
         }
 
         if( $data['tipo_entrada'] == 3 && isset($data['form_control_id']) && $data['form_control_id']){
-            return $data['num_search'] || count($data['ids']) ? self::searchFormControl($data['form_control_id'],  $data['tipo'], $data['ids']) : [];
+            return self::searchFormControl($data['form_control_id'],  $data['tipo'], $data['ids']);
         }
 
         return [];
