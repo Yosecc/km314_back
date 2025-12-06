@@ -648,7 +648,7 @@ class ActivitiesResource extends Resource
                             return $context == 'view' ? true : false;
                         })
                         ->visible(function($context, Get $get){
-                            return $context == 'view' ? false : ($get('tipo_entrada') ? true : false);
+                            return $context == 'view' ? false : true ;
                         })
                         ->dehydrated(false)
                         ->columnSpanFull(),
