@@ -582,6 +582,76 @@ class ActivitiesResource extends Resource
                             }),
 
                     ]),
+                    Forms\Components\TextInput::make('quick_code')
+                        ->label('Código de Acceso Rápido')
+                        ->placeholder('Escanea QR o ingresa código (Ej: E-A1B2C3D4)')
+                        ->columnSpan(['sm'=> 2])
+                        ->columnStart([
+                            'sm' => 2,
+                            'xl' => 3,
+                            '2xl' => 4,
+                        ])
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function($state, Set $set, Get $get) {
+                            if (!$state) return;
+                            
+                            // Buscar la entidad por código
+                            $employee = Employee::where('quick_access_code', $state)->first();
+                            $owner = Owner::where('quick_access_code', $state)->first();
+                            $formControl = FormControl::where('quick_access_code', $state)->first();
+                            
+                            $entity = $employee ?? $owner ?? $formControl;
+                            
+                            if ($entity) {
+                                if ($entity instanceof Employee) {
+                                    $set('tipo_entrada', 2);
+                                    $set('num_search', $entity->dni);
+                                    $set('peoples', [$entity->id]);
+                                    
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Empleado encontrado')
+                                        ->body($entity->first_name . ' ' . $entity->last_name)
+                                        ->success()
+                                        ->send();
+                                } elseif ($entity instanceof Owner) {
+                                    $set('tipo_entrada', 1);
+                                    $set('num_search', $entity->dni);
+                                    $set('peoples', [$entity->id]);
+                                    
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Propietario encontrado')
+                                        ->body($entity->first_name . ' ' . $entity->last_name)
+                                        ->success()
+                                        ->send();
+                                } elseif ($entity instanceof FormControl) {
+                                    $set('tipo_entrada', 3);
+                                    $set('form_control_id', $entity->id);
+                                    
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Formulario encontrado')
+                                        ->body('Formulario #' . $entity->id)
+                                        ->success()
+                                        ->send();
+                                }
+                                
+                                // Limpiar el campo después de usar
+                                $set('quick_code', '');
+                            } else {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Código no encontrado')
+                                    ->body('No se encontró ningún registro con este código')
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->disabled(function($context){
+                            return $context == 'view' ? true : false;
+                        })
+                        ->visible(function($context, Get $get){
+                            return $context == 'view' ? false : ($get('tipo_entrada') ? true : false);
+                        })
+                        ->dehydrated(false)
+                        ->columnSpanFull(),
                 Forms\Components\ViewField::make('type')
                     ->required()
                     ->view('filament.forms.components.tipoActividad')
@@ -613,6 +683,7 @@ class ActivitiesResource extends Resource
                         return $context == 'view' ? false : true;
                     })
                     ->live(),
+
                 /**
                  * TIPO DE ENTRADA
                  */
@@ -642,75 +713,7 @@ class ActivitiesResource extends Resource
                         '2xl' => 8,
                     ])
                     ->schema([
-                        Forms\Components\TextInput::make('quick_code')
-                            ->label('Código de Acceso Rápido')
-                            ->placeholder('Escanea QR o ingresa código (Ej: E-A1B2C3D4)')
-                            ->columnSpan(['sm'=> 2])
-                            ->columnStart([
-                                'sm' => 2,
-                                'xl' => 3,
-                                '2xl' => 4,
-                            ])
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function($state, Set $set, Get $get) {
-                                if (!$state) return;
-                                
-                                // Buscar la entidad por código
-                                $employee = Employee::where('quick_access_code', $state)->first();
-                                $owner = Owner::where('quick_access_code', $state)->first();
-                                $formControl = FormControl::where('quick_access_code', $state)->first();
-                                
-                                $entity = $employee ?? $owner ?? $formControl;
-                                
-                                if ($entity) {
-                                    if ($entity instanceof Employee) {
-                                        $set('tipo_entrada', 2);
-                                        $set('num_search', $entity->dni);
-                                        $set('peoples', [$entity->id]);
-                                        
-                                        \Filament\Notifications\Notification::make()
-                                            ->title('Empleado encontrado')
-                                            ->body($entity->first_name . ' ' . $entity->last_name)
-                                            ->success()
-                                            ->send();
-                                    } elseif ($entity instanceof Owner) {
-                                        $set('tipo_entrada', 1);
-                                        $set('num_search', $entity->dni);
-                                        $set('peoples', [$entity->id]);
-                                        
-                                        \Filament\Notifications\Notification::make()
-                                            ->title('Propietario encontrado')
-                                            ->body($entity->first_name . ' ' . $entity->last_name)
-                                            ->success()
-                                            ->send();
-                                    } elseif ($entity instanceof FormControl) {
-                                        $set('tipo_entrada', 3);
-                                        $set('form_control_id', $entity->id);
-                                        
-                                        \Filament\Notifications\Notification::make()
-                                            ->title('Formulario encontrado')
-                                            ->body('Formulario #' . $entity->id)
-                                            ->success()
-                                            ->send();
-                                    }
-                                    
-                                    // Limpiar el campo después de usar
-                                    $set('quick_code', '');
-                                } else {
-                                    \Filament\Notifications\Notification::make()
-                                        ->title('Código no encontrado')
-                                        ->body('No se encontró ningún registro con este código')
-                                        ->danger()
-                                        ->send();
-                                }
-                            })
-                            ->disabled(function($context){
-                                return $context == 'view' ? true : false;
-                            })
-                            ->visible(function($context, Get $get){
-                                return $context == 'view' ? false : ($get('tipo_entrada') ? true : false);
-                            })
-                            ->dehydrated(false),
+                        
                         
                         Forms\Components\TextInput::make('num_search')
                             ->label(__('general.DNI')."/Patente")
