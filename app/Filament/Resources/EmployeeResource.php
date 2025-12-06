@@ -110,6 +110,7 @@ class EmployeeResource extends Resource
                         ->label('Tipo de origen')
                         ->options([
                             'ConstructionCompanie' => 'Compañía de Construcción',
+                            'Employee' => 'KM314',
                             'Owner' => 'Propietario',
                         ])
                         ->required()
@@ -123,6 +124,7 @@ class EmployeeResource extends Resource
                             $model = $get('model');
                             return match($model) {
                                 'ConstructionCompanie' => 'Compañía',
+                                'Employee' => 'KM314',
                                 'Owner' => 'Propietario',
                                 default => 'Seleccione el origen'
                             };
@@ -131,6 +133,9 @@ class EmployeeResource extends Resource
                             $model = $get('model');
                             return match($model) {
                                 'ConstructionCompanie' => ConstructionCompanie::get()->pluck('name', 'id')->toArray(),
+                                'Employee' => Employee::get()->map(function($employee){
+                                    return ['id' => $employee->id, 'name' => $employee->nombres()];
+                                })->pluck('name', 'id')->toArray(),
                                 'Owner' => Owner::get()->map(function($owner){
                                     return ['id' => $owner->id, 'name' => $owner->nombres()];
                                 })->pluck('name', 'id')->toArray(),
@@ -139,10 +144,12 @@ class EmployeeResource extends Resource
                         })
                         ->searchable()
                         ->required(function(Get $get){
-                            return $get('model') ? true : false;
+                            $model = $get('model');
+                            return $model && $model !== 'Employee' ? true : false;
                         })
                         ->visible(function(Get $get){
-                            return $get('model') ? true : false;
+                            $model = $get('model');
+                            return $model && $model !== 'Employee' ? true : false;
                         })
                         ->live(),
                 ])
@@ -168,8 +175,10 @@ class EmployeeResource extends Resource
                     isset($state['model']) && isset($state['model_id']) 
                         ? ($state['model'] === 'ConstructionCompanie' 
                             ? 'Compañía: ' . (ConstructionCompanie::find($state['model_id'])->name ?? 'N/A')
-                            : 'Propietario: ' . (Owner::find($state['model_id'])->nombres() ?? 'N/A'))
-                        : 'Origen sin configurar'
+                            : ($state['model'] === 'Employee'
+                                ? 'KM314: ' . (Employee::find($state['model_id'])->nombres() ?? 'N/A')
+                                : 'Propietario: ' . (Owner::find($state['model_id'])->nombres() ?? 'N/A')))
+                        : ($state['model'] === 'Employee' ? 'KM314' : 'Origen sin configurar')
                 )
                 ->visible(function(){
                     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
