@@ -620,6 +620,17 @@ class ActivitiesResource extends Resource
                         ->placeholder('Escanea QR o ingresa código (Ej: E-A1B2C3D4)')
                         ->helperText('Primero seleccione el tipo de actividad (Entrada/Salida)')
                         ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
+                        ->suffixAction(
+                            \Filament\Forms\Components\Actions\Action::make('scan_qr')
+                                ->icon('heroicon-o-qr-code')
+                                ->label('Escanear')
+                                ->button()
+                                ->action(fn () => null)
+                                ->extraAttributes([
+                                    'onclick' => 'startQrScanner()',
+                                    'type' => 'button'
+                                ])
+                        )
                         ->live(onBlur: true)
                         ->afterStateUpdated(function($state, Set $set, Get $get) {
                             if (!$state) return;

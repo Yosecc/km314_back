@@ -86,7 +86,10 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->databaseNotifications()
-
+            ->renderHook(
+                'panels::body.end',
+                fn () => view('components.qr-scanner-modal')
+            )
             ;
     }
 }

@@ -59,9 +59,29 @@ trait HasQuickAccessCode
     }
 
     /**
-     * Generate QR Code as SVG
+     * Generate QR Code as SVG (backward compatibility - uses URL)
      */
     public function generateQrCode()
+    {
+        return $this->generateQrCodeForSharing();
+    }
+
+    /**
+     * Generate QR Code for scanner (code only, no URL)
+     * Used by vigilantes with USB/Bluetooth scanners
+     */
+    public function generateQrCodeForScanner()
+    {
+        return \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)
+            ->margin(1)
+            ->generate($this->quick_access_code);
+    }
+
+    /**
+     * Generate QR Code for sharing with visitors (full URL)
+     * Used to share via WhatsApp or other channels
+     */
+    public function generateQrCodeForSharing()
     {
         return \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)
             ->margin(1)
