@@ -478,24 +478,6 @@ class ActivitiesResource extends Resource
                             }
                         }
                     }
-                        $hasOrigenes = true;
-                        foreach($employee->employeeOrigens as $origen) {
-                            if($origen->model === 'ConstructionCompanie' && $origen->model_id) {
-                                $compania = \App\Models\ConstructionCompanie::find($origen->model_id);
-                                if($compania) {
-                                    $persona['badges'][] = [
-                                        'texto' => "Compañía: {$compania->name}",
-                                        'color' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
-                                    ];
-                                }
-                            } elseif($origen->model === 'Employee') {
-                                $persona['badges'][] = [
-                                    'texto' => 'KM314',
-                                    'color' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300'
-                                ];
-                            }
-                        }
-                    }
                     
                     // Determinar si puede seleccionarse
                     // Si tiene formulario no autorizado Y NO tiene otros orígenes -> NO se puede seleccionar
