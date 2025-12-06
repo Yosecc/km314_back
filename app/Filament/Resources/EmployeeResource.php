@@ -104,7 +104,7 @@ class EmployeeResource extends Resource
 
             Repeater::make('employeeOrigens')
                 ->label('Origen adicional del trabajador')
-                ->helperText('Solo para Compañías de Construcción o KM314. Los propietarios se gestionan más abajo.')
+                // ->helperText('Solo para Compañías de Construcción o KM314. Los propietarios se gestionan más abajo.')
                 ->relationship()
                 ->schema([
                     Forms\Components\Select::make('model')
@@ -147,7 +147,7 @@ class EmployeeResource extends Resource
                         ->live(),
                 ])
                 ->addActionLabel('Agregar origen')
-                ->columns(2)
+                ->columns(1)
                 ->collapsible()
                 ->defaultItems(0)
                 ->itemLabel(fn (array $state): ?string => 
@@ -163,7 +163,7 @@ class EmployeeResource extends Resource
                     }
                     return true;
                 })
-                ->columnSpanFull(),
+                ,
 
             // DatePicker::make('fecha_vencimiento_seguro')
             //     ->label('Fecha de vencimiento del seguro personal')
