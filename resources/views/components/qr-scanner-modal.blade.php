@@ -118,17 +118,23 @@
 let html5QrcodeScanner = null;
 
 function startQrScanner() {
-    // Verificar que el campo quick_code existe antes de abrir el scanner
-    const quickCodeInput = document.querySelector('input[name="quick_code"]');
+    // Buscar el campo quick_code de múltiples formas
+    let quickCodeInput = document.querySelector('input[name="quick_code"]') 
+                      || document.querySelector('input[wire\\:model="data.quick_code"]')
+                      || document.querySelector('input[id*="quick_code"]')
+                      || document.querySelector('.inputDNI');
     
     if (!quickCodeInput) {
+        console.error('No se encontró el campo quick_code con ningún selector');
         const notification = document.createElement('div');
         notification.style.cssText = 'position:fixed;top:20px;right:20px;background:#ef4444;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:99999;font-weight:600;max-width:300px;text-align:center;';
-        notification.innerHTML = '⚠️ El escáner solo está disponible en el formulario de Actividades';
+        notification.innerHTML = '⚠️ Error: No se puede encontrar el campo de código';
         document.body.appendChild(notification);
         setTimeout(() => notification.remove(), 4000);
         return;
     }
+    
+    console.log('Campo encontrado:', quickCodeInput);
     
     const modal = document.getElementById('qr-scanner-modal');
     modal.style.display = 'block';
@@ -177,17 +183,27 @@ function onScanSuccess(decodedText, decodedResult) {
         navigator.vibrate(200);
     }
     
-    // Encontrar el campo quick_code
-    const quickCodeInput = document.querySelector('input[name="quick_code"]');
+    // Buscar el campo quick_code de múltiples formas
+    let quickCodeInput = document.querySelector('input[name="quick_code"]') 
+                      || document.querySelector('input[wire\\:model="data.quick_code"]')
+                      || document.querySelector('input[id*="quick_code"]')
+                      || document.querySelector('.inputDNI');
     
     if (quickCodeInput) {
+        console.log('Escribiendo en el campo:', quickCodeInput);
+        
         // Establecer el valor
         quickCodeInput.value = decodedText;
+        quickCodeInput.focus();
         
         // Disparar eventos para que Livewire detecte el cambio
         quickCodeInput.dispatchEvent(new Event('input', { bubbles: true }));
         quickCodeInput.dispatchEvent(new Event('change', { bubbles: true }));
-        quickCodeInput.dispatchEvent(new Event('blur', { bubbles: true }));
+        
+        // Esperar un momento y disparar blur
+        setTimeout(() => {
+            quickCodeInput.dispatchEvent(new Event('blur', { bubbles: true }));
+        }, 100);
         
         // Cerrar el scanner
         stopQrScanner();
@@ -196,20 +212,20 @@ function onScanSuccess(decodedText, decodedResult) {
         setTimeout(() => {
             const notification = document.createElement('div');
             notification.style.cssText = 'position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:99999;font-weight:600;';
-            notification.textContent = '✓ Código escaneado correctamente';
+            notification.textContent = '✓ Código escaneado: ' + decodedText;
             document.body.appendChild(notification);
             setTimeout(() => notification.remove(), 3000);
-        }, 100);
+        }, 200);
     } else {
-        console.error('Campo quick_code no encontrado');
+        console.error('Campo quick_code no encontrado en onScanSuccess');
         stopQrScanner();
         
         // Mostrar notificación más clara
         const notification = document.createElement('div');
         notification.style.cssText = 'position:fixed;top:20px;right:20px;background:#ef4444;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:99999;font-weight:600;max-width:300px;';
-        notification.innerHTML = '⚠️ Debes estar en el formulario de Actividades para escanear códigos QR';
+        notification.innerHTML = '⚠️ Error: No se encontró el campo de código<br><small>Código escaneado: ' + decodedText + '</small>';
         document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 4000);
+        setTimeout(() => notification.remove(), 5000);
     }
 }
 
