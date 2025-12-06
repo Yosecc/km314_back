@@ -617,6 +617,7 @@ class ActivitiesResource extends Resource
                     Forms\Components\TextInput::make('quick_code')
                         ->label('Código de Acceso Rápido')
                         ->placeholder('Escanea QR o ingresa código (Ej: E-A1B2C3D4)')
+                        ->helperText('Primero seleccione el tipo de actividad (Entrada/Salida)')
                         ->live(onBlur: true)
                         ->afterStateUpdated(function($state, Set $set, Get $get) {
                             if (!$state) return;
@@ -670,8 +671,8 @@ class ActivitiesResource extends Resource
                                     ->send();
                             }
                         })
-                        ->disabled(function($context){
-                            return $context == 'view' ? true : false;
+                        ->disabled(function($context, Get $get){
+                            return $context == 'view'  ? true : $get('type') != '' ? true : false ;
                         })
                         ->visible(function($context, Get $get){
                             return $context == 'view' ? false : true ;
