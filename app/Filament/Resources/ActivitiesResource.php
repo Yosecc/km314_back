@@ -582,15 +582,41 @@ class ActivitiesResource extends Resource
                             }),
 
                     ]),
+                    
+                Forms\Components\ViewField::make('type')
+                    ->required()
+                    ->view('filament.forms.components.tipoActividad')
+                    ->label(__('general.Type'))
+                    ->default(function($state, $context){
+
+                        if(!isset($_GET['type'])){
+                            return '';
+                        }
+
+                        if($_GET['type']  == 'Entry'){
+                            return 1;
+                        }
+                        if($_GET['type']  == 'Exit'){
+                            return 2;
+                        }
+                        return 0;
+                    })
+                    ->viewData([
+                        'opciones' => [
+                            1 => __('general.Entry'),
+                            2 => __('general.Exit'),
+                        ],
+                    ])
+                    ->disabled(function($context){
+                        return $context == 'view' ? true : false;
+                    })
+                    ->visible(function($context){
+                        return $context == 'view' ? false : true;
+                    })
+                    ->live(),
                     Forms\Components\TextInput::make('quick_code')
                         ->label('Código de Acceso Rápido')
                         ->placeholder('Escanea QR o ingresa código (Ej: E-A1B2C3D4)')
-                        // ->columnSpan(['sm'=> 2])
-                        // ->columnStart([
-                        //     'sm' => 2,
-                        //     'xl' => 3,
-                        //     '2xl' => 4,
-                        // ])
                         ->live(onBlur: true)
                         ->afterStateUpdated(function($state, Set $set, Get $get) {
                             if (!$state) return;
@@ -652,37 +678,6 @@ class ActivitiesResource extends Resource
                         })
                         ->dehydrated(false)
                         ,
-                Forms\Components\ViewField::make('type')
-                    ->required()
-                    ->view('filament.forms.components.tipoActividad')
-                    ->label(__('general.Type'))
-                    ->default(function($state, $context){
-
-                        if(!isset($_GET['type'])){
-                            return '';
-                        }
-
-                        if($_GET['type']  == 'Entry'){
-                            return 1;
-                        }
-                        if($_GET['type']  == 'Exit'){
-                            return 2;
-                        }
-                        return 0;
-                    })
-                    ->viewData([
-                        'opciones' => [
-                            1 => __('general.Entry'),
-                            2 => __('general.Exit'),
-                        ],
-                    ])
-                    ->disabled(function($context){
-                        return $context == 'view' ? true : false;
-                    })
-                    ->visible(function($context){
-                        return $context == 'view' ? false : true;
-                    })
-                    ->live(),
 
                 /**
                  * TIPO DE ENTRADA
