@@ -147,6 +147,15 @@ class ActivitiesPage extends CreateRecord
         /** @var \Illuminate\Support\Collection<int, int> $peopleIds */
         $peopleIds = collect($this->data['peoples']);
 
+        // Validar que al menos se haya seleccionado una persona
+        if ($peopleIds->isEmpty()) {
+            Notification::make()
+                ->title('Debe seleccionar al menos una persona')
+                ->danger()
+                ->send();
+            $this->halt();
+        }
+
         if($this->data['type'] ==  1) {
             $this->data['type'] = 'Entry';
         }elseif($this->data['type'] ==  2){
