@@ -1099,6 +1099,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             if($record->owner && $record->owner->user){
                                 Notification::make()
                                 ->title('Formulario aprobado')
+                                ->body('Ahora las personas confioguradas en el formulario podrán acceder al barrio según los horarios establecidos')
+                                    ->actions([
+                                        NotificationAction::make('Ver Formulario')
+                                            ->button()
+                                            ->url(route('filament.admin.resources.form-controls.view', $record), shouldOpenInNewTab: true)
+                                    ])
                                 ->sendToDatabase($record->owner->user);
                             }
                     })

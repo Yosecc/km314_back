@@ -8,15 +8,19 @@ use App\Models\FormControl;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use App\Filament\Resources\FormControlResource;
+use App\Traits\HasQrCodeAction;
 
 
 class EditFormControl extends EditRecord
 {
+    use HasQrCodeAction;
+    
     protected static string $resource = FormControlResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            $this->getQrCodeAction(),
             Actions\DeleteAction::make(),
      
                     Actions\Action::make('aprobar')
@@ -35,6 +39,12 @@ class EditFormControl extends EditRecord
                                 if($record->owner && $record->owner->user){
                                     Notification::make()
                                     ->title('Formulario aprobado')
+                                    ->body('Ahora las personas confioguradas en el formulario podrán acceder al barrio según los horarios establecidos')
+                                    ->actions([
+                                        NotificationAction::make('Ver Formulario')
+                                            ->button()
+                                            ->url(route('filament.admin.resources.form-controls.view', $record), shouldOpenInNewTab: true)
+                                    ])
                                     ->sendToDatabase($record->owner->user);
                                 }
                         })
