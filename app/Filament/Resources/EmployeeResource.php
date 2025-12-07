@@ -447,17 +447,13 @@ class EmployeeResource extends Resource
                                 'Domingo' => 'Domingo', 'Lunes' => 'Lunes', 'Martes' => 'Martes', 'Miercoles' => 'Miercoles', 'Jueves' => 'Jueves', 'Viernes' => 'Viernes', 'Sabado' => 'Sabado'
                             ])
                             ->required(),
-                        Forms\Components\TimePicker::make('start_time')
+                        Forms\Components\Hidden::make('start_time')
                             ->label(__("Hora de entrada"))
                             ->required()
-                            ->default('12:00')
-                            ->hidden()
-                            ->dehydrated(),
-                        Forms\Components\TimePicker::make('end_time')
+                            ->default('12:00'),
+                        Forms\Components\Hidden::make('end_time')
                             ->label(__("Hora de salida"))
                             ->default('23:59')
-                            ->hidden()
-                            ->dehydrated()
                             ->required(),
                     ])
                     ->itemLabel('Selecciona el día de trabajo')
