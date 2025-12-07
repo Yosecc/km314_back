@@ -1551,7 +1551,8 @@ class ActivitiesResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         'Inquilino' => 'success',
                         'Trabajador' => 'gray',
-                        'Visita' => 'warning'
+                        'Visita' => 'warning',
+                        'Visita Temporal (24hs)' => 'warning',
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')
