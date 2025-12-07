@@ -80,7 +80,13 @@ class EditEmployee extends EditRecord
                     if($this->record->owner && $this->record->owner->user ){
 
                         Notification::make()
-                        ->title('Trabajador aprobado.')
+                        ->title('Tu trabajador ha sido aprobado.')
+                        ->body('Ahora podras crear un formulario de control de acceso para configurar los horarios  y otros ajustes para darle acceso al barrio.')
+                        ->actions([
+                            NotificationAction::make('crear Formulario')
+                                ->button()
+                                ->url(route('filament.admin.resources.form-controls.create'), shouldOpenInNewTab: true)
+                        ])
                         ->sendToDatabase($this->record->owner->user);
                     }
                     
