@@ -11,6 +11,8 @@ use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
 use App\Filament\Resources\EmployeeResource\Traits\HasNotesAction;
 use App\Filament\Resources\EmployeeResource\Traits\HasGestionAction;
+use Filament\Notifications\Actions\Action as NotificationAction;
+
 
 class ViewEmployeeResource extends ViewRecord
 {

@@ -48,7 +48,7 @@ class EmployeeResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationLabel = 'Gestion de Trabajadores';
+    protected static ?string $navigationLabel = 'Gestión de Trabajadores';
     protected static ?string $label = 'trabajador';
     // protected static ?string $navigationGroup = 'Web';
 
