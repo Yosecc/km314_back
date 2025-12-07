@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources\FormControlResource\Widgets;
 
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use App\Models\FormControl;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 
 class StatusOverview extends BaseWidget
 {
+     public ?FormControl $record = null;
+     
     protected function getStats(): array
     {
         if (!$this->record) {
