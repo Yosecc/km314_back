@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\FormControlResource\Pages;
 
-use App\Filament\Resources\FormControlResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ViewRecord;
+use App\Models\FormControl;
 use App\Traits\HasQrCodeAction;
+use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\FormControlResource;
 
 class ViewFormControl extends ViewRecord
 {
