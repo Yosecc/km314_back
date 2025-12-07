@@ -76,4 +76,18 @@ class ViewFormControl extends ViewRecord
                 })
         ];
     }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            FormControlResource\Widgets\StatusOverview::make(['record' => $this->record]),
+        ];
+    }
+
+    protected function getWidgetsData(): array
+    {
+        return [
+            'record' => $this->record,
+        ];
+    }
 }
