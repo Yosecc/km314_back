@@ -78,4 +78,11 @@ class EditFormControl extends EditRecord
                 
         ];
     }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            FormControlResource\Widgets\StatusOverview::make(['record' => $this->record]),
+        ];
+    }
 }
