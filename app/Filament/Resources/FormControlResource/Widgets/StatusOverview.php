@@ -50,7 +50,7 @@ class StatusOverview extends BaseWidget
 
         return [
             Stat::make('Estado del Formulario', $estadoTexto)
-                ->description($this->record->owner ? 'Propietario: ' . $this->record->owner->first_name . ' ' . $this->record->owner->last_name : 'Sin propietario')
+                // ->description($this->record->owner ? 'Propietario: ' . $this->record->owner->first_name . ' ' . $this->record->owner->last_name : 'Sin propietario')
                 ->icon($icon)
                 ->color($color),
         ];
