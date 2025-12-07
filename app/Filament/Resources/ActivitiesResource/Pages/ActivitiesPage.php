@@ -7,6 +7,7 @@ use App\Models\Owner;
 use Filament\Actions;
 use App\Models\Employee;
 use Filament\Actions\Action;
+use App\Models\FormControl;
 use App\Models\OwnerSpontaneousVisit;
 use App\Models\ActivitiesAuto;
 use App\Models\ActivitiesPeople;
@@ -225,6 +226,32 @@ class ActivitiesPage extends CreateRecord
 
         }else if($this->data['tipo_entrada'] == 3){
             $model = 'FormControl';
+            
+            // Validar que el FormControl esté dentro del rango de fechas válido
+            if (!empty($this->data['form_control_id'])) {
+                $formControl = FormControl::find($this->data['form_control_id']);
+                
+                if ($formControl) {
+                    // Validar si está autorizado
+                    if ($formControl->status !== 'Authorized') {
+                        Notification::make()
+                            ->title('El formulario seleccionado no está autorizado')
+                            ->danger()
+                            ->send();
+                        $this->halt();
+                    }
+                    
+                    // Validar si está dentro del rango de fechas
+                    if (!$formControl->isDayRange()) {
+                        Notification::make()
+                            ->title('El formulario no está dentro del rango de fechas válido')
+                            ->body($formControl->getRangeDate())
+                            ->danger()
+                            ->send();
+                        $this->halt();
+                    }
+                }
+            }
         }
 
 
