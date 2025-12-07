@@ -695,8 +695,8 @@ trait HasGestionAction
     public static function getSolicitarReverificacionPageAction()
     {
         return PageAction::make('reeverificacion')
-            ->label('Solicitar reverificación')
-            ->modalHeading('Solicitar reverificación')
+            ->label('Solicitar verificación')
+            ->modalHeading('Solicitar verificación')
             ->modalDescription('¿Está seguro de que desea solicitar la reverificación? Esto cambiará el estado del trabajador a "pendiente" y notificará a los administradores.')
             ->color('warning')
             ->icon('heroicon-o-arrow-path')
