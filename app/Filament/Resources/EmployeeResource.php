@@ -450,7 +450,7 @@ class EmployeeResource extends Resource
                         Forms\Components\Hidden::make('start_time')
                             ->label(__("Hora de entrada"))
                             ->required()
-                            ->default('12:00'),
+                            ->default('00:00'),
                         Forms\Components\Hidden::make('end_time')
                             ->label(__("Hora de salida"))
                             ->default('23:59')
