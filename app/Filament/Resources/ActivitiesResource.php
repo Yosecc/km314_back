@@ -1545,7 +1545,8 @@ class ActivitiesResource extends Resource
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'Inquilino' => 'Inquilino',
                         'Trabajador' => 'Trabajador',
-                        'Visita' => 'Visita'
+                        'Visita' => 'Visita',
+                        'Visita Temporal (24hs)' => 'Visita Temporal (24hs)'
                     })
                     ->color(fn (string $state): string => match ($state) {
                         'Inquilino' => 'success',
