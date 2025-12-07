@@ -220,6 +220,11 @@ class FormControl extends Model
 
         $start_date_range .= ' ' . ($this->start_time_range ?  $this->start_time_range : '00:00');
         $end_date_range .= ' ' . ($this->end_time_range ? $this->end_time_range : '00:00');
+        
+        // Truncar a formato Y-m-d H:i para evitar problemas con segundos
+        $start_date_range = substr($start_date_range, 0, 16);
+        $end_date_range = substr($end_date_range, 0, 16);
+        
         return Carbon::createFromFormat('Y-m-d H:i', $start_date_range)->isoFormat('LLL') . ' / ' . Carbon::createFromFormat('Y-m-d H:i', $end_date_range)->isoFormat('LLL');
     }
 }
