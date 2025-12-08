@@ -1454,6 +1454,10 @@ class ActivitiesResource extends Resource
                             }
                             return null;
                         })
+                        ->afterStateUpdated(function($state, Get $get, Set $set){
+                            // Mantener el valor actualizado cuando cambia peoples
+                        })
+                        ->live()
                         ->searchable(function(Get $get){
                             return  ( $get('tipo_entrada') == 1  ) ? false : true;
                         })
