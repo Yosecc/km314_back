@@ -728,6 +728,15 @@ class ActivitiesResource extends Resource
                                     $set('num_search', $entity->dni);
                                     $set('peoples', [$entity->id]);
                                     
+                                    // Obtener y establecer el lote del propietario
+                                    $lotes = collect($entity->lotes);
+                                    $lote = $lotes->map(function($lote){
+                                        return $lote->getNombre();
+                                    })->first();
+                                    if($lote) {
+                                        $set('lote_ids', $lote);
+                                    }
+                                    
                                     \Filament\Notifications\Notification::make()
                                         ->title('Propietario encontrado')
                                         ->body($entity->first_name . ' ' . $entity->last_name)
