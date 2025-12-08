@@ -1494,7 +1494,7 @@ class ActivitiesResource extends Resource
                     ->label('Forzar entrada a empleado (según horario configurado)')
                     ->default(true)
                     ->visible(function(Get $get, $context){
-                        return false
+                        return false;
                         // return $get('tipo_entrada') == 2 && $context == 'create' ? true: false;
                     }),
 
