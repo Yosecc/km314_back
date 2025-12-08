@@ -1439,7 +1439,24 @@ class ActivitiesResource extends Resource
                                 return $lote;
                             })->pluck('lote_name', 'lote_name')->toArray();
                         })
-                        ->searchable()
+                        ->default(function(Get $get){
+                            if($get('tipo_entrada') == 1){
+                                $peoples = $get('peoples') ?? [];
+                                if(is_array($peoples) && count($peoples)){
+                                    $owner = Owner::find($peoples[0]);
+                                    if($owner){
+                                        $lotes = collect($owner->lotes);
+                                        return $lotes->map(function($lote){
+                                            return $lote->getNombre();
+                                        })->first();
+                                    }
+                                }
+                            }
+                            return null;
+                        })
+                        ->searchable(function(Get $get){
+                            return  ( $get('tipo_entrada') == 1  ) ? false : true;
+                        })
                         ->visible(function(Get $get, $context){
                             return $context == 'view' && !$get('lote_ids') ? false:true;
                         })
