@@ -479,9 +479,9 @@ class EmployeeResource extends Resource
                         Wizard\Step::make('Vehiculos')
                             ->icon('heroicon-m-truck')
                             ->schema(self::formAutos()),
-                        Wizard\Step::make('Días de trabajo')
-                            ->icon('heroicon-m-calendar')
-                            ->schema(self::formHorarios()),
+                        // Wizard\Step::make('Días de trabajo')
+                        //     ->icon('heroicon-m-calendar')
+                        //     ->schema(self::formHorarios()),
                     ])
                     ->skippable(function ($context) {
                         return $context == 'edit' || $context == 'view';

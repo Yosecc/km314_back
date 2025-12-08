@@ -1492,8 +1492,10 @@ class ActivitiesResource extends Resource
 
                 Forms\Components\Toggle::make('is_force')
                     ->label('Forzar entrada a empleado (según horario configurado)')
+                    ->default(true)
                     ->visible(function(Get $get, $context){
-                        return $get('tipo_entrada') == 2 && $context == 'create' ? true: false;
+                        return false
+                        // return $get('tipo_entrada') == 2 && $context == 'create' ? true: false;
                     }),
 
                 Actions::make([
