@@ -96,7 +96,12 @@ class ViewEmployeeResource extends ViewRecord
                      if($this->record->owner && $this->record->owner->user ){
 
                         Notification::make()
-                        ->title('Trabajador rechazado. Ir a Gestión de trabajadores')
+                        ->title('Trabajador rechazado.')
+                        ->actions([
+                                NotificationAction::make('Ver trabajador')
+                                    ->button()
+                                    ->url(route('filament.admin.resources.employees.view', $this->record), shouldOpenInNewTab: true)
+                            ])
                         ->sendToDatabase($this->record->owner->user);
                     }
                     
