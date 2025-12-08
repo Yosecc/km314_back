@@ -20,7 +20,7 @@
                                 selectedPeople.push({{ $persona['id'] }});
                             }
                             state = selectedPeople;
-                            $wire.call('$refresh');
+                            $wire.set('{{ $getStatePath() }}', selectedPeople);
                         @endif
                     "
                     :class="{
