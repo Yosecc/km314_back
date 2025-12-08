@@ -395,67 +395,67 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 $failedId = $trabajador->id;
                             } 
 
-                            if (!$trabajador->horarios()->exists()) {
-                                Notification::make()
-                                    ->title('Este trabajador no tiene horarios asignados.')
-                                    ->body('Por favor, asigne un horario en la sección de trabajadores en el menú antes de continuar.')
-                                    ->danger()
-                                    ->actions([
-                                        NotificationAction::make('Ver trabajadores')
-                                            ->button()
-                                            ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true),
-                                        NotificationAction::make('Ver a '.$trabajador->first_name)
-                                            ->button()
-                                            ->url(route('filament.admin.resources.employees.view', $trabajador), shouldOpenInNewTab: true),
-                                    ])
-                                    ->send();
-                                $allHaveHorarios = false;
-                                $failedId = $trabajador->id;
-                            } else {
-                                // Aquí tu lógica adicional
+                            // if (!$trabajador->horarios()->exists()) {
+                            //     Notification::make()
+                            //         ->title('Este trabajador no tiene horarios asignados.')
+                            //         ->body('Por favor, asigne un horario en la sección de trabajadores en el menú antes de continuar.')
+                            //         ->danger()
+                            //         ->actions([
+                            //             NotificationAction::make('Ver trabajadores')
+                            //                 ->button()
+                            //                 ->url(route('filament.admin.resources.employees.index'), shouldOpenInNewTab: true),
+                            //             NotificationAction::make('Ver a '.$trabajador->first_name)
+                            //                 ->button()
+                            //                 ->url(route('filament.admin.resources.employees.view', $trabajador), shouldOpenInNewTab: true),
+                            //         ])
+                            //         ->send();
+                            //     $allHaveHorarios = false;
+                            //     $failedId = $trabajador->id;
+                            // } else {
+                            //     // Aquí tu lógica adicional
                                 
-                                $startDate = Carbon::parse($get('start_date_range') . ' ' . $get('start_time_range'));
-                                $endDate = Carbon::parse($get('end_date_range') . ' ' . $get('end_time_range'));
+                            //     $startDate = Carbon::parse($get('start_date_range') . ' ' . $get('start_time_range'));
+                            //     $endDate = Carbon::parse($get('end_date_range') . ' ' . $get('end_time_range'));
 
-                                // Obtener días de la semana configurados en los horarios del trabajador
-                                $diasDisponibles = $trabajador->horarios->pluck('day_of_week')->unique()->values()->toArray();
+                            //     // Obtener días de la semana configurados en los horarios del trabajador
+                            //     $diasDisponibles = $trabajador->horarios->pluck('day_of_week')->unique()->values()->toArray();
 
-                                // Mapear días de Carbon a español (ajusta si tus días están en otro idioma)
-                                $carbonToDb = [
-                                    'Sunday' => 'Domingo',
-                                    'Monday' => 'Lunes',
-                                    'Tuesday' => 'Martes',
-                                    'Wednesday' => 'Miércoles',
-                                    'Thursday' => 'Jueves',
-                                    'Friday' => 'Viernes',
-                                    'Saturday' => 'Sábado',
-                                ];
+                            //     // Mapear días de Carbon a español (ajusta si tus días están en otro idioma)
+                            //     $carbonToDb = [
+                            //         'Sunday' => 'Domingo',
+                            //         'Monday' => 'Lunes',
+                            //         'Tuesday' => 'Martes',
+                            //         'Wednesday' => 'Miércoles',
+                            //         'Thursday' => 'Jueves',
+                            //         'Friday' => 'Viernes',
+                            //         'Saturday' => 'Sábado',
+                            //     ];
 
-                                // Recorrer el rango de fechas y ver si hay coincidencia de día
-                                $period = CarbonPeriod::create($startDate->copy()->startOfDay(), $endDate->copy()->startOfDay());
-                                $hayCoincidencia = false;
-                                foreach ($period as $date) {
-                                    $dia = $carbonToDb[$date->format('l')];
-                                    if (in_array($dia, $diasDisponibles)) {
-                                        $hayCoincidencia = true;
-                                        break;
-                                    }
-                                }
+                            //     // Recorrer el rango de fechas y ver si hay coincidencia de día
+                            //     $period = CarbonPeriod::create($startDate->copy()->startOfDay(), $endDate->copy()->startOfDay());
+                            //     $hayCoincidencia = false;
+                            //     foreach ($period as $date) {
+                            //         $dia = $carbonToDb[$date->format('l')];
+                            //         if (in_array($dia, $diasDisponibles)) {
+                            //             $hayCoincidencia = true;
+                            //             break;
+                            //         }
+                            //     }
 
-                                if (!$hayCoincidencia) {
-                                    $allHaveHorarios = false;
-                                    $failedId = $trabajador->id;
+                            //     if (!$hayCoincidencia) {
+                            //         $allHaveHorarios = false;
+                            //         $failedId = $trabajador->id;
 
-                                    Notification::make()
-                                        ->title('Rango de fechas no válido para el trabajador')
-                                        ->body('Los días disponibles para este trabajador son: ' . implode(', ', $diasDisponibles) . '. Ajusta el rango de fechas para coincidir con alguno de estos días.')
-                                        ->danger()
-                                        ->send();
-                                    // Aquí puedes quitar el trabajador del owners si lo deseas
-                                    // $set('owners', array_values(array_filter($state, fn($id) => $id != $trabajador->id)));
-                                    // return;
-                                }
-                            }
+                            //         Notification::make()
+                            //             ->title('Rango de fechas no válido para el trabajador')
+                            //             ->body('Los días disponibles para este trabajador son: ' . implode(', ', $diasDisponibles) . '. Ajusta el rango de fechas para coincidir con alguno de estos días.')
+                            //             ->danger()
+                            //             ->send();
+                            //         // Aquí puedes quitar el trabajador del owners si lo deseas
+                            //         // $set('owners', array_values(array_filter($state, fn($id) => $id != $trabajador->id)));
+                            //         // return;
+                            //     }
+                            // }
 
                             $autos = $get('autos') ?? [];
                             $autosTrabajador = $trabajador->autos;
