@@ -55,7 +55,7 @@ class FormControlStats extends BaseWidget
         }
 
         if($employeesRechazados > 0) {
-            $arr[] = Stat::make('Empleados Rechazados de aprobación', $employeesRechazados)
+            $arr[] = Stat::make('Empleados Rechazados', $employeesRechazados)
                 ->icon('heroicon-o-x-circle')
                 ->description('Ver todos')
                 ->descriptionIcon('heroicon-m-arrow-up-right')
@@ -63,13 +63,7 @@ class FormControlStats extends BaseWidget
                 ->color('danger');
         }
 
-        if(auth()->user()->owner_id){
-            $arr[] = Stat::make('Mi Perfil', '')
-                ->icon('heroicon-o-user')
-                ->description('Ver perfil')
-                ->descriptionIcon('heroicon-m-arrow-up-right')
-                ->url(route('filament.admin.resources.owners.view-profile-owner', ['record' => auth()->user()->owner_id]));
-        }
+        
 
 
         return $arr;
