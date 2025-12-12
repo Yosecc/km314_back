@@ -186,21 +186,33 @@ class FormControl extends Model
         return $this->belongsTo(Owner::class);
     }
 
+    public function dateRanges()
+    {
+        return $this->hasMany(FormControlDateRange::class);
+    }
+
     public function isDayRange()
     {
+        // Si tiene rangos de fechas definidos, verificar si alguno es válido
+        if ($this->dateRanges()->exists()) {
+            foreach ($this->dateRanges as $dateRange) {
+                if ($dateRange->isInRange()) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
+        // Fallback a los campos legacy (para compatibilidad con registros antiguos)
         $start_date_range = $this->start_date_range;
         $end_date_range = $this->end_date_range ?? Carbon::now()->addMonth()->format('Y-m-d');
 
         // Concatenar las horas a las fechas si están presentes
-
         $start_date_range .= ' ' . ($this->start_time_range ?  $this->start_time_range : '00:00');
         $end_date_range .= ' ' . ($this->end_time_range ? $this->end_time_range : '00:00');
 
-       // dd( $start_date_range, $end_date_range);
         // Convertir las fechas de cadena a objetos Carbon
-
-        $start_date_range = substr($start_date_range, 0, 16); // "2024-12-10 08:00"
+        $start_date_range = substr($start_date_range, 0, 16);
         $start = Carbon::createFromFormat('Y-m-d H:i', $start_date_range);
         $end_date_range = substr($end_date_range, 0, 16);
         $end = Carbon::createFromFormat('Y-m-d H:i', $end_date_range);
@@ -214,14 +226,20 @@ class FormControl extends Model
 
     public function getRangeDate()
     {
+        // Si tiene rangos de fechas, devolver todos concatenados
+        if ($this->dateRanges()->exists()) {
+            return $this->dateRanges->map(function ($dateRange) {
+                return $dateRange->getFormattedRange();
+            })->implode(' | ');
+        }
+
+        // Fallback a los campos legacy
         $start_date_range = $this->start_date_range;
         $end_date_range = $this->end_date_range;
-        // Concatenar las horas a las fechas si están presentes
-
+        
         $start_date_range .= ' ' . ($this->start_time_range ?  $this->start_time_range : '00:00');
         $end_date_range .= ' ' . ($this->end_time_range ? $this->end_time_range : '00:00');
         
-        // Truncar a formato Y-m-d H:i para evitar problemas con segundos
         $start_date_range = substr($start_date_range, 0, 16);
         $end_date_range = substr($end_date_range, 0, 16);
         

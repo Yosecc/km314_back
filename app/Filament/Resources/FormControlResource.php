@@ -181,10 +181,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ]]);
 
                                 if($state == 'Visita Temporal (24hs)'){
-                                    $set('start_date_range', Carbon::now()->format('Y-m-d'));
-                                    $set('start_time_range', Carbon::now()->format('H:i'));
-                                    $set('end_date_range', Carbon::now()->addDay()->format('Y-m-d'));
-                                    $set('end_time_range', Carbon::now()->format('H:i'));
+                                    $set('dateRanges', [[
+                                        'start_date_range' => Carbon::now()->format('Y-m-d'),
+                                        'start_time_range' => Carbon::now()->format('H:i'),
+                                        'end_date_range' => Carbon::now()->addDay()->format('Y-m-d'),
+                                        'end_time_range' => Carbon::now()->format('H:i'),
+                                        'date_unilimited' => false,
+                                    ]]);
 
                                     Notification::make()
                                         ->title('Este formulario será válido por 24 horas.')
@@ -229,16 +232,18 @@ class FormControlResource extends Resource implements HasShieldPermissions
     public static function fechasFormulario()
     {
         return [
-            
-            Forms\Components\Fieldset::make('range')->label('Rango de fecha de estancia')
+            Forms\Components\Repeater::make('dateRanges')
+                ->label('Rangos de fecha de estancia')
+                ->relationship('dateRanges')
                 ->schema([
-                    Forms\Components\DatePicker::make('start_date_range')->label(__('general.start_date_range'))
+                    Forms\Components\DatePicker::make('start_date_range')
+                        ->label(__('general.start_date_range'))
                         ->minDate(function($context){
                             return $context == 'edit' ? '' : Carbon::now()->format('Y-m-d');
                         })
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Temporal (24hs)';
+                            return $get('../../income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
                         ->live(),
@@ -246,19 +251,20 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.start_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Temporal (24hs)';
+                            return $get('../../income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
                         ->seconds(false),
-                    Forms\Components\DatePicker::make('end_date_range')->label(__('general.end_date_range'))
+                    Forms\Components\DatePicker::make('end_date_range')
+                        ->label(__('general.end_date_range'))
                         ->minDate(function(Get $get){
                             return Carbon::parse($get('start_date_range'));
                         })
                         ->required(function(Get $get){
-                            return !$get('date_unilimited') ? true: false;
+                            return !$get('date_unilimited') ? true : false;
                         })
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Temporal (24hs)';
+                            return $get('../../income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
                         ->live(),
@@ -266,7 +272,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.end_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('income_type') == 'Visita Temporal (24hs)';
+                            return $get('../../income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
                         ->seconds(false),
@@ -281,7 +287,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return true;
                         }),
                 ])
-                ->columns(4),
+                ->columns(5)
+                ->minItems(1)
+                ->defaultItems(1)
+                ->collapsible()
+                ->itemLabel(fn (array $state): ?string => isset($state['start_date_range']) && isset($state['end_date_range']) 
+                    ? "Desde: {$state['start_date_range']} - Hasta: {$state['end_date_range']}" 
+                    : 'Nuevo rango'),
         ];
     }
 
@@ -334,9 +346,23 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
                     $peoples = collect($get('peoples'));
 
-                    if($get('start_date_range') == null || $get('start_time_range') == null || $get('end_date_range') == null || $get('end_time_range')  == null){
+                    $dateRanges = $get('dateRanges');
+                    if(empty($dateRanges) || !is_array($dateRanges) || count($dateRanges) === 0){
                         Notification::make()
-                            ->title('Seleccione primero el rango de fechas y horas.')
+                            ->title('Seleccione primero al menos un rango de fechas y horas.')
+                            ->danger()
+                            ->send();
+                            $set('owners', []);
+                        return; 
+                    }
+                    
+                    // Verificar que el primer rango tenga todos los campos requeridos
+                    $firstRange = $dateRanges[0] ?? [];
+                    if(empty($firstRange['start_date_range']) || empty($firstRange['start_time_range']) || 
+                       (empty($firstRange['end_date_range']) && !$firstRange['date_unilimited']) || 
+                       empty($firstRange['end_time_range'])){
+                        Notification::make()
+                            ->title('Complete todos los campos del rango de fechas.')
                             ->danger()
                             ->send();
                             $set('owners', []);
@@ -954,9 +980,17 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         return Auth::user()->hasAnyRole([1]);
                     }),
                 Tables\Columns\TextColumn::make('peoples_count')->counts('peoples')->label(__('general.Visitantes')),
-                Tables\Columns\TextColumn::make('start_date_range')
+                Tables\Columns\TextColumn::make('dateRanges.start_date_range')
                     ->formatStateUsing(function (FormControl $record){
-                        return Carbon::parse("{$record->start_date_range} {$record->start_time_range}")->toDayDateTimeString();
+                        if ($record->dateRanges()->exists()) {
+                            $firstRange = $record->dateRanges->first();
+                            return Carbon::parse("{$firstRange->start_date_range} {$firstRange->start_time_range}")->toDayDateTimeString();
+                        }
+                        // Fallback para registros antiguos
+                        if ($record->start_date_range && $record->start_time_range) {
+                            return Carbon::parse("{$record->start_date_range} {$record->start_time_range}")->toDayDateTimeString();
+                        }
+                        return '-';
                     })
                     ->searchable()
                     ->sortable()->label(__('general.start_date_range')),
@@ -1009,11 +1043,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         return $query
                             ->when(
                                 $data['created_from_'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('start_date_range', '>=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereHas('dateRanges', function($q) use ($date) {
+                                    $q->whereDate('start_date_range', '>=', $date);
+                                })
                             )
                             ->when(
                                 $data['created_until_'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('start_date_range', '<=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereHas('dateRanges', function($q) use ($date) {
+                                    $q->whereDate('start_date_range', '<=', $date);
+                                })
                             );
                     }),
                 Filter::make('end_date_range')
@@ -1021,8 +1059,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->form([
                         Section::make(__('general.end_date_range'))
                         ->schema([
-                            DatePicker::make('created_from')->label(__('general.created_from_')),
-                            DatePicker::make('created_until')->label(__('general.created_until_')),
+                            DatePicker::make('end_from')->label(__('general.created_from_')),
+                            DatePicker::make('end_until')->label(__('general.created_until_')),
                         ])
                     ])
                     ->columns([
@@ -1031,12 +1069,16 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
-                                $data['created_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('end_date_range', '>=', $date),
+                                $data['end_from'],
+                                fn (Builder $query, $date): Builder => $query->whereHas('dateRanges', function($q) use ($date) {
+                                    $q->whereDate('end_date_range', '>=', $date);
+                                })
                             )
                             ->when(
-                                $data['created_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('end_date_range', '<=', $date),
+                                $data['end_until'],
+                                fn (Builder $query, $date): Builder => $query->whereHas('dateRanges', function($q) use ($date) {
+                                    $q->whereDate('end_date_range', '<=', $date);
+                                })
                             );
                     }),
 
