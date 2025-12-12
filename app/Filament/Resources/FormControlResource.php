@@ -57,6 +57,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
     protected static ?string $label = 'formulario';
     protected static ?string $navigationGroup = 'Control de acceso';
 
+    // Configuración de horarios límite para trabajadores
+    protected static string $workerStartTime = '07:00';
+    protected static string $workerEndTime = '18:00';
+
     public static function getPluralModelLabel(): string
     {
         return 'formularios';
@@ -74,6 +78,20 @@ class FormControlResource extends Resource implements HasShieldPermissions
             'aprobar',
             'rechazar'
         ];
+    }
+
+    protected static function getWorkerTimeOptions(): array
+    {
+        $times = [];
+        $start = Carbon::parse(self::$workerStartTime);
+        $end = Carbon::parse(self::$workerEndTime);
+
+        while ($start->lte($end)) {
+            $times[] = $start->format('H:i');
+            $start->addMinutes(30);
+        }
+
+        return $times;
     }
 
     public static function tiposFormulario()
@@ -233,7 +251,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
     {
         return [
             Forms\Components\Repeater::make('dateRanges')
-                ->label('Rangos de fecha de estancia')
+                ->label(function(Get $get){
+                    return  collect($get('income_type'))->contains('Trabajador') ? 'Seleccione las fechas y horarios especificos que su trabajdor asistirá' : 'Rangos de fecha de estancia';
+                })
                 ->relationship('dateRanges')
                 ->schema([
                     Forms\Components\DatePicker::make('start_date_range')
@@ -261,19 +281,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated()
                         ->seconds(false)
-                        ->rule(function(Get $get){
+                        ->datalist(function(Get $get){
                             if (collect($get('../../income_type'))->contains('Trabajador')) {
-                                return function ($attribute, $value, $fail) {
-                                    $time = \Carbon\Carbon::parse($value);
-                                    $minTime = \Carbon\Carbon::parse('07:00');
-                                    $maxTime = \Carbon\Carbon::parse('17:00');
-                                    
-                                    if ($time->lt($minTime) || $time->gt($maxTime)) {
-                                        $fail('La hora debe estar entre las 07:00 y las 17:00.');
-                                    }
-                                };
+                                return self::getWorkerTimeOptions();
                             }
-                            return null;
+                            return [];
                         }),
                     Forms\Components\DatePicker::make('end_date_range')
                         ->label(__('general.end_date_range'))
@@ -296,19 +308,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated()
                         ->seconds(false)
-                        ->rule(function(Get $get){
+                        ->datalist(function(Get $get){
                             if (collect($get('../../income_type'))->contains('Trabajador')) {
-                                return function ($attribute, $value, $fail) {
-                                    $time = \Carbon\Carbon::parse($value);
-                                    $minTime = \Carbon\Carbon::parse('07:00');
-                                    $maxTime = \Carbon\Carbon::parse('17:00');
-                                    
-                                    if ($time->lt($minTime) || $time->gt($maxTime)) {
-                                        $fail('La hora debe estar entre las 07:00 y las 17:00.');
-                                    }
-                                };
+                                return self::getWorkerTimeOptions();
                             }
-                            return null;
+                            return [];
                         }),
 
                     Forms\Components\Toggle::make('date_unilimited')
