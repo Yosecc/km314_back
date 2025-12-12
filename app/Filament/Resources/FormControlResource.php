@@ -326,7 +326,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->defaultItems(1)
                 ->collapsible()
                 ->addable(function(Get $get) {
-                     return collect($get('income_type'))->contains('Trabajador') || auth()->user()->hasRole('owner') ? true : false;
+                     return collect($get('income_type'))->contains('Trabajador') || auth()->user()->hasRole(['super_admin','admin']) ? true : false;
                     //  && !auth()->user()->hasRole('owner')
                 })
                 ->itemLabel(fn (array $state): ?string => isset($state['start_date_range']) && isset($state['end_date_range']) 
