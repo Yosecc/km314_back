@@ -246,7 +246,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return $get('../../income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
-                        ->live(),
+                        ->live()
+                        ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                            // Si es Trabajador, la fecha de fin debe ser la misma que la de inicio
+                            if (collect($get('../../income_type'))->contains('Trabajador') && $state) {
+                                $set('end_date_range', $state);
+                            }
+                        }),
                     Forms\Components\TimePicker::make('start_time_range')
                         ->label(__('general.start_time_range'))
                         ->required()
@@ -254,7 +260,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return $get('../../income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
-                        ->seconds(false),
+                        ->seconds(false)
+                        ->minTime(function(Get $get){
+                            return collect($get('../../income_type'))->contains('Trabajador') ? '07:00' : null;
+                        })
+                        ->maxTime(function(Get $get){
+                            return collect($get('../../income_type'))->contains('Trabajador') ? '17:00' : null;
+                        }),
                     Forms\Components\DatePicker::make('end_date_range')
                         ->label(__('general.end_date_range'))
                         ->minDate(function(Get $get){
@@ -264,7 +276,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return !$get('date_unilimited') ? true : false;
                         })
                         ->disabled(function(Get $get){
-                            return $get('../../income_type') == 'Visita Temporal (24hs)';
+                            return $get('../../income_type') == 'Visita Temporal (24hs)' || collect($get('../../income_type'))->contains('Trabajador');
                         })
                         ->dehydrated()
                         ->live(),
@@ -275,7 +287,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return $get('../../income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
-                        ->seconds(false),
+                        ->seconds(false)
+                        ->minTime(function(Get $get){
+                            return collect($get('../../income_type'))->contains('Trabajador') ? '07:00' : null;
+                        })
+                        ->maxTime(function(Get $get){
+                            return collect($get('../../income_type'))->contains('Trabajador') ? '17:00' : null;
+                        }),
 
                     Forms\Components\Toggle::make('date_unilimited')
                         ->label(__('general.date_unilimited'))
