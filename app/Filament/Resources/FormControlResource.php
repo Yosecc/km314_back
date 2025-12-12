@@ -271,6 +271,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             // Si es Trabajador, la fecha de fin debe ser la misma que la de inicio
                             if (collect($get('../../income_type'))->contains('Trabajador') && $state) {
                                 $set('end_date_range', $state);
+                                $set('end_time_range', '18:00');
                             }
                         }),
                     Forms\Components\TimePicker::make('start_time_range')
