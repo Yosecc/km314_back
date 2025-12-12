@@ -325,6 +325,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->minItems(1)
                 ->defaultItems(1)
                 ->collapsible()
+                ->addable(function(Get $get) {
+                     return collect($get('income_type'))->contains('Trabajador') || auth()->user()->hasRole('owner') ? true : false;
+                    //  && !auth()->user()->hasRole('owner')
+                })
                 ->itemLabel(fn (array $state): ?string => isset($state['start_date_range']) && isset($state['end_date_range']) 
                     ? "Desde: {$state['start_date_range']} - Hasta: {$state['end_date_range']}" 
                     : 'Nuevo rango'),
