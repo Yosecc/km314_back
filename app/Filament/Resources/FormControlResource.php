@@ -261,11 +261,19 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated()
                         ->seconds(false)
-                        ->minTime(function(Get $get){
-                            return collect($get('../../income_type'))->contains('Trabajador') ? '07:00' : null;
-                        })
-                        ->maxTime(function(Get $get){
-                            return collect($get('../../income_type'))->contains('Trabajador') ? '17:00' : null;
+                        ->rule(function(Get $get){
+                            if (collect($get('../../income_type'))->contains('Trabajador')) {
+                                return function ($attribute, $value, $fail) {
+                                    $time = \Carbon\Carbon::parse($value);
+                                    $minTime = \Carbon\Carbon::parse('07:00');
+                                    $maxTime = \Carbon\Carbon::parse('17:00');
+                                    
+                                    if ($time->lt($minTime) || $time->gt($maxTime)) {
+                                        $fail('La hora debe estar entre las 07:00 y las 17:00.');
+                                    }
+                                };
+                            }
+                            return null;
                         }),
                     Forms\Components\DatePicker::make('end_date_range')
                         ->label(__('general.end_date_range'))
@@ -288,11 +296,19 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated()
                         ->seconds(false)
-                        ->minTime(function(Get $get){
-                            return collect($get('../../income_type'))->contains('Trabajador') ? '07:00' : null;
-                        })
-                        ->maxTime(function(Get $get){
-                            return collect($get('../../income_type'))->contains('Trabajador') ? '17:00' : null;
+                        ->rule(function(Get $get){
+                            if (collect($get('../../income_type'))->contains('Trabajador')) {
+                                return function ($attribute, $value, $fail) {
+                                    $time = \Carbon\Carbon::parse($value);
+                                    $minTime = \Carbon\Carbon::parse('07:00');
+                                    $maxTime = \Carbon\Carbon::parse('17:00');
+                                    
+                                    if ($time->lt($minTime) || $time->gt($maxTime)) {
+                                        $fail('La hora debe estar entre las 07:00 y las 17:00.');
+                                    }
+                                };
+                            }
+                            return null;
                         }),
 
                     Forms\Components\Toggle::make('date_unilimited')
