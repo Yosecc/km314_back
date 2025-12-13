@@ -298,7 +298,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         // })
                         ->afterStateUpdated(function (Set $set, Get $get, $state) {
                             // Si es Trabajador, la fecha de fin debe ser la misma que la de inicio
-                            if (collect($get('../../income_type'))->contains('Trabajador') && $state) {
+                            if (collect($get('../../income_type'))->contains('Trabajador') && $state && !auth()->user()->hasRole(['super_admin','admin'])) {
                                 // Validar que no sea domingo
                                 $date = Carbon::parse($state);
                                 if ($date->dayOfWeek === 0) {
