@@ -110,7 +110,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             'Club hause',
                             'lote' => 'Lote',
                         ])
-                        ->live()
+                        ->live(onBlur: true)
                         ->columns(2)
                         ->required()
                         ->gridDirection('row')
@@ -172,7 +172,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             }
                             return [];
                         })
-                        ->live(),
+                        ->live(onBlur: true),
 
                     Forms\Components\Radio::make('income_type')
                         ->label(__("general.TypeIncome"))
@@ -230,7 +230,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             }
                             return array_search("lote", $get('access_type')) !== false ? true : false;
                         })
-                        ->live(),
+                        ->live(onBlur: true),
 
                     Radio::make('tipo_trabajo')
                         ->options(Trabajos::get()->pluck('name','name')->toArray())
@@ -245,7 +245,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->visible(function(Get $get){
                             return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
                         })
-                        ->live(),
+                        ->live(onBlur: true),
 
                 ])
                 ->columns(4),
@@ -272,24 +272,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return $get('../../income_type') == 'Visita Temporal (24hs)';
                         })
                         ->dehydrated()
-                        ->live()
-                        // ->disabledDates(function(Get $get){
-                        //     if (collect($get('../../income_type'))->contains('Trabajador')) {
-                        //         // Deshabilitar domingos (día 0)
-                        //         $disabledDates = [];
-                        //         $start = Carbon::now();
-                        //         $end = Carbon::now()->addYear();
-                                
-                        //         for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
-                        //             if ($date->dayOfWeek === 0) { // 0 = Domingo
-                        //                 $disabledDates[] = $date->format('Y-m-d');
-                        //             }
-                        //         }
-                                
-                        //         return $disabledDates;
-                        //     }
-                        //     return [];
-                        // })
+                        ->live(onBlur: true)
                         ->afterStateUpdated(function (Set $set, Get $get, $state) {
                             // Si es Trabajador, la fecha de fin debe ser la misma que la de inicio
                             if (collect($get('../../income_type'))->contains('Trabajador') && $state) {
@@ -334,7 +317,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return $get('../../income_type') == 'Visita Temporal (24hs)' || collect($get('../../income_type'))->contains('Trabajador');
                         })
                         ->dehydrated()
-                        ->live(),
+                        ->live(onBlur: true),
                     Forms\Components\TimePicker::make('end_time_range')
                         ->label(__('general.end_time_range'))
                         ->required()
@@ -352,7 +335,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                     Forms\Components\Toggle::make('date_unilimited')
                         ->label(__('general.date_unilimited'))
-                        ->live()
+                        ->live(onBlur: true)
                         ->visible(function(){
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return false;
@@ -419,8 +402,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->dehydrated(function(){
                     return true;
                 })
-                ->live()
+                ->live(debounce: 500)
                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                    if(!count($state)) return;
+                    
                     $peoples = collect($get('peoples'));
 
                     $dateRanges = $get('dateRanges');
@@ -445,9 +430,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             $set('owners', []);
                         return; 
                     }
-                    // dd($state);
                     if(count($state)){
-                        $trabajadores = \App\Models\Employee::whereIn('id', $state)->get();
+                        $trabajadores = \App\Models\Employee::whereIn('id', $state)
+                            ->with(['autos'])
+                            ->get();
                         $allHaveHorarios = true;
                         $failedId = null;
                         $trabajadores->each(function(Employee $trabajador) use (&$allHaveHorarios, &$failedId, $get, $set, $state) {
@@ -889,7 +875,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->default(function(Get $get){
                     return $get('mascotas') && count($get('mascotas')) > 0 ? true : false;
                 })
-                ->live(),
+                ->live(onBlur: true),
 
             Forms\Components\Repeater::make('mascotas')
                 ->relationship()
@@ -980,11 +966,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             Forms\Components\Hidden::make('status')
                                 ->label(__("general.Status"))
                                 ->default('Pending')
-                                ->live(),
+                                ->live(onBlur: true),
 
                             Forms\Components\Hidden::make('authorized_user_id')
                                 ->label(__("general.AuthorizedPer"))
-                                ->live(),
+                                ->live(onBlur: true),
 
                             Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
                         ]),
