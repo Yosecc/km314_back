@@ -26,6 +26,7 @@ use App\Filament\Widgets\FormIncidentComplianceWidget;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
+use App\Filament\Resources\OwnerResource\Widgets\OwnerQr;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
@@ -71,7 +72,8 @@ class AdminPanelProvider extends PanelProvider
                 //UltimasActividades::class,
                 IncidentesStats::class,
                 FormControlStats::class,
-                Sliders::class
+                Sliders::class,
+                OwnerQr::class
             ])
             ->middleware([
                 EncryptCookies::class,
