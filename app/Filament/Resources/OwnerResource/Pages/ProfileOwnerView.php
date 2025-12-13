@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\OwnerResource\Pages;
 
 use App\Filament\Resources\OwnerResource;
+use App\Filament\Resources\OwnerResource\Widgets\OwnerQr;
 use Filament\Actions;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\ViewRecord;
@@ -13,6 +14,13 @@ class ProfileOwnerView extends ViewRecord
 
     // use HasPageShield;
     protected static string $resource = OwnerResource::class;
+    
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            OwnerQr::class,
+        ];
+    }
     public function mount(int | string $record): void
     {
         parent::mount($record);
