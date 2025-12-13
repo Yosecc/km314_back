@@ -1,3 +1,4 @@
+@if($record && $record->quick_access_code)
 <x-filament-widgets::widget>
     <x-filament::section>
         <div class="flex flex-col items-center justify-center p-6">
@@ -37,3 +38,4 @@
         </x-slot>
     </x-filament::modal>
 </x-filament-widgets::widget>
+@endif
