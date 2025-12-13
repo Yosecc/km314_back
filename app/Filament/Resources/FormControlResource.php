@@ -273,23 +273,23 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated()
                         ->live()
-                        ->disabledDates(function(Get $get){
-                            if (collect($get('../../income_type'))->contains('Trabajador')) {
-                                // Deshabilitar domingos (día 0)
-                                $disabledDates = [];
-                                $start = Carbon::now();
-                                $end = Carbon::now()->addYear();
+                        // ->disabledDates(function(Get $get){
+                        //     if (collect($get('../../income_type'))->contains('Trabajador')) {
+                        //         // Deshabilitar domingos (día 0)
+                        //         $disabledDates = [];
+                        //         $start = Carbon::now();
+                        //         $end = Carbon::now()->addYear();
                                 
-                                for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
-                                    if ($date->dayOfWeek === 0) { // 0 = Domingo
-                                        $disabledDates[] = $date->format('Y-m-d');
-                                    }
-                                }
+                        //         for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                        //             if ($date->dayOfWeek === 0) { // 0 = Domingo
+                        //                 $disabledDates[] = $date->format('Y-m-d');
+                        //             }
+                        //         }
                                 
-                                return $disabledDates;
-                            }
-                            return [];
-                        })
+                        //         return $disabledDates;
+                        //     }
+                        //     return [];
+                        // })
                         ->afterStateUpdated(function (Set $set, Get $get, $state) {
                             // Si es Trabajador, la fecha de fin debe ser la misma que la de inicio
                             if (collect($get('../../income_type'))->contains('Trabajador') && $state) {
