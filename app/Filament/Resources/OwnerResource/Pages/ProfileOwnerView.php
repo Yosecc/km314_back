@@ -18,7 +18,7 @@ class ProfileOwnerView extends ViewRecord
     protected function getHeaderWidgets(): array
     {
         return [
-            OwnerQr::class,
+            OwnerQr::make(['record' => $this->record]),
         ];
     }
     public function mount(int | string $record): void
