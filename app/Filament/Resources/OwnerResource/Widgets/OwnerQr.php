@@ -9,7 +9,12 @@ class OwnerQr extends Widget
 {
     protected static string $view = 'filament.widgets.owner-qr';
     
-    public Owner $record;
+    public ?Owner $record = null;
     
     protected int | string | array $columnSpan = 'full';
+    
+    public function mount(?Owner $record = null): void
+    {
+        $this->record = $record;
+    }
 }
