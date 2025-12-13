@@ -15,6 +15,6 @@ class OwnerQr extends Widget
     
     public function mount(?Owner $record = null): void
     {
-        $this->record = $record;
+        $this->record = auth()->user()->hasRole('owner') ? auth()->user()->owner : $record;
     }
 }
