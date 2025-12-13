@@ -3,7 +3,7 @@
         <div class="flex flex-col items-center justify-center p-6">
             <x-filament::button
                 x-data=""
-                x-on:click="$dispatch('open-modal', { id: 'qr-modal-{{ $record->id }}' })"
+                x-on:click="$dispatch('open-modal', { id: 'qr-owner-modal' })"
                 icon="heroicon-o-qr-code"
                 color="info"
                 size="lg"
@@ -13,7 +13,7 @@
         </div>
     </x-filament::section>
     
-    <x-filament::modal id="qr-modal-{{ $record->id }}" width="lg">
+    <x-filament::modal id="qr-owner-modal" width="lg">
         <x-slot name="heading">
             Código de Acceso Rápido
         </x-slot>
@@ -22,20 +22,10 @@
             Propietario: {{ $record->first_name }} {{ $record->last_name }}
         </x-slot>
         
-        <div class="flex flex-col items-center justify-center space-y-4">
-            <div class="p-4 bg-white rounded-lg">
-                {!! $record->generateQrCode() !!}
-            </div>
-            
-            <div class="text-center space-y-2">
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                    <span class="font-semibold">Tipo:</span> Propietario
-                </p>
-                <p class="text-xs text-gray-500">
-                    Escanea este código QR para acceso rápido
-                </p>
-            </div>
-        </div>
+        @include('components.qr-modal', [
+            'record' => $record,
+            'entityType' => 'Propietario'
+        ])
         
         <x-slot name="footerActions">
             <x-filament::button
