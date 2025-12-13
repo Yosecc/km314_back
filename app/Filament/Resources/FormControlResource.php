@@ -297,7 +297,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 $date = Carbon::parse($state);
                                 if ($date->dayOfWeek === 0) {
                                     Notification::make()
-                                        ->title('Los domingos no están permitidos para trabajadores')
+                                        ->title('Los domingos no están permitidos. Comuníquese con administración para mayor información.')
                                         ->danger()
                                         ->send();
                                     $set('start_date_range', null);
