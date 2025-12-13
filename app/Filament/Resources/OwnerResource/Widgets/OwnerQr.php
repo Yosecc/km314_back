@@ -17,9 +17,14 @@ class OwnerQr extends Widget implements HasActions, HasForms
     
     protected static string $view = 'filament.widgets.owner-qr';
     
-    public ?Owner $record = null;
+    public Owner $record;
     
     protected int | string | array $columnSpan = 'full';
+    
+    public function mount(Owner $record): void
+    {
+        $this->record = $record;
+    }
 
     public function showQrAction(): Action
     {
