@@ -26,20 +26,22 @@ class OwnerQr extends Widget implements HasActions, HasForms
         $this->record = $record;
     }
 
-    public function showQrAction(): Action
+    protected function getActions(): array
     {
-        return Action::make('show_qr')
-            ->label('Ver QR')
-            ->icon('heroicon-o-qr-code')
-            ->color('info')
-            ->modalHeading('Código de Acceso Rápido')
-            ->modalDescription(fn () => 'Propietario: ' . $this->record?->first_name . ' ' . $this->record?->last_name)
-            ->modalContent(fn () => view('components.qr-modal', [
-                'record' => $this->record,
-                'qrCode' => $this->record?->generateQrCode(),
-                'entityType' => 'Propietario'
-            ]))
-            ->modalSubmitAction(false)
-            ->modalCancelActionLabel('Cerrar');
+        return [
+            Action::make('show_qr')
+                ->label('Ver QR')
+                ->icon('heroicon-o-qr-code')
+                ->color('info')
+                ->modalHeading('Código de Acceso Rápido')
+                ->modalDescription('Propietario: ' . $this->record->first_name . ' ' . $this->record->last_name)
+                ->modalContent(fn () => view('components.qr-modal', [
+                    'record' => $this->record,
+                    'qrCode' => $this->record->generateQrCode(),
+                    'entityType' => 'Propietario'
+                ]))
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Cerrar'),
+        ];
     }
 }
