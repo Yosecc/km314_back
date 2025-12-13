@@ -263,6 +263,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->label(function(Get $get){
                     return  collect($get('income_type'))->contains('Trabajador') ? 'Seleccione las fechas y horarios especificos que su trabajdor asistirá' : 'Rangos de fecha de estancia';
                 })
+                ->addActionLabel('Agregar rango de fechas y horas')
                 ->relationship('dateRanges')
                 ->schema([
                     Forms\Components\DatePicker::make('start_date_range')
