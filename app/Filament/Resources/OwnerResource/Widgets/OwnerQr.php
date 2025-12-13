@@ -15,7 +15,7 @@ class OwnerQr extends Widget implements HasActions, HasForms
     use InteractsWithActions;
     use InteractsWithForms;
     
-    // protected static string $view = 'filament.widgets.owner-qr';
+    protected static string $view = 'filament.widgets.owner-qr';
     
     public ?Owner $record = null;
     
