@@ -212,10 +212,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                         ->info()
                                         ->send();
                                 }
-                            $set('start_date_range', null);
-                            $set('end_date_range', null);
-                            $set('start_time_range', null);
-                            $set('end_time_range', null);
+                           
+                            $set('dateRanges', [[
+                                'start_date_range' => null,
+                                'start_time_range' => null,
+                                'end_date_range' => null,
+                                'end_time_range' => null,
+                                'date_unilimited' => false,
+                            ]]);
                             
                         })
                         ->required(function(Get $get){
