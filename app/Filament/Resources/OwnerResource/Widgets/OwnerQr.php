@@ -4,21 +4,14 @@ namespace App\Filament\Resources\OwnerResource\Widgets;
 
 use Filament\Widgets\Widget;
 use App\Models\Owner;
-use Filament\Actions\Concerns\InteractsWithActions;
-use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use App\Traits\HasQrCodeAction;
+use Livewire\Component;
 
-class OwnerQr extends Widget implements HasActions, HasForms
+class OwnerQr extends Widget
 {
-    use InteractsWithActions;
-    use InteractsWithForms;
-    use HasQrCodeAction;
-    
     protected static string $view = 'filament.widgets.owner-qr';
     
     public ?Owner $record = null;
+    public bool $showModal = false;
     
     protected int | string | array $columnSpan = 'full';
     
@@ -27,8 +20,13 @@ class OwnerQr extends Widget implements HasActions, HasForms
         $this->record = auth()->user()->hasRole('owner') ? auth()->user()->owner : $record;
     }
     
-    public function showQrAction()
+    public function openModal()
     {
-        return $this->getQrCodeAction();
+        $this->showModal = true;
+    }
+    
+    public function closeModal()
+    {
+        $this->showModal = false;
     }
 }
