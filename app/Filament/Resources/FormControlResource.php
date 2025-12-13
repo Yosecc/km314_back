@@ -211,6 +211,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                         ->title('Este formulario será válido por 24 horas.')
                                         ->info()
                                         ->send();
+                                        return
                                 }
                            
                             $set('dateRanges', [[
