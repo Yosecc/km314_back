@@ -263,7 +263,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->schema([
                     Forms\Components\DatePicker::make('start_date_range')
                         ->label(__('general.start_date_range'))
-                        ->native(false)
+                        // ->native(false)
                         ->minDate(function($context){
                             return $context == 'edit' ? '' : Carbon::now()->format('Y-m-d');
                         })
@@ -294,15 +294,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             // Si es Trabajador, la fecha de fin debe ser la misma que la de inicio
                             if (collect($get('../../income_type'))->contains('Trabajador') && $state) {
                                 // Validar que no sea domingo
-                                // $date = Carbon::parse($state);
-                                // if ($date->dayOfWeek === 0) {
-                                //     Notification::make()
-                                //         ->title('Los domingos no están permitidos para trabajadores')
-                                //         ->danger()
-                                //         ->send();
-                                //     $set('start_date_range', null);
-                                //     return;
-                                // }
+                                $date = Carbon::parse($state);
+                                if ($date->dayOfWeek === 0) {
+                                    Notification::make()
+                                        ->title('Los domingos no están permitidos para trabajadores')
+                                        ->danger()
+                                        ->send();
+                                    $set('start_date_range', null);
+                                    return;
+                                }
                                 
                                 $set('end_date_range', $state);
                                 $set('end_time_range', '18:00');
