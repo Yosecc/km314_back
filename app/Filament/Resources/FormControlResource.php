@@ -258,6 +258,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->schema([
                     Forms\Components\DatePicker::make('start_date_range')
                         ->label(__('general.start_date_range'))
+                        ->native(false)
                         ->minDate(function($context){
                             return $context == 'edit' ? '' : Carbon::now()->format('Y-m-d');
                         })
@@ -307,6 +308,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         }),
                     Forms\Components\DatePicker::make('end_date_range')
                         ->label(__('general.end_date_range'))
+                        ->native(false)
                         ->minDate(function(Get $get){
                             return Carbon::parse($get('start_date_range'));
                         })
