@@ -39,4 +39,15 @@ class UserTermsConditionsCheck extends Widget
         }
     }
 
+    public static function canView(): bool
+    {
+        // Si el usuario no ha aceptado los términos, no puede ver el recurso
+        
+            $user = auth()->user();
+            return $user && $user->is_terms_condition && auth()->user()->can('widget_UserTermsConditionsCheck');
+        
+
+   
+    }
+
 }
