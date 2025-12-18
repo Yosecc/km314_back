@@ -1,3 +1,15 @@
+    protected function getFormSchema(): array
+    {
+        return array_merge(
+            [
+                ...parent::getFormSchema(),
+                \Filament\Forms\Components\Checkbox::make('terms')
+                    ->label('Acepto los <a href=\"#\" target=\"_blank\" class=\"underline\">términos y condiciones</a>')
+                    ->required()
+                    ->html(),
+            ]
+        );
+    }
 <?php
 
 namespace App\Http\Livewire;
