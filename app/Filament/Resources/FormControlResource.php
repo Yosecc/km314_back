@@ -82,9 +82,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
     public static function canViewAny(): bool
     {
-        $user = auth()->user();
         // Si el usuario no ha aceptado los términos, no puede ver el recurso
-        return Auth::user()->hasRole('owner') && $user && $user->is_terms_condition;
+        if(Auth::user()->hasRole('owner')){
+            $user = auth()->user();
+            return $user && $user->is_terms_condition;
+        }
     }
 
     
