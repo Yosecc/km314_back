@@ -32,8 +32,8 @@ class FormControlTypeIncomeResource extends Resource
                 Forms\Components\TextInput::make('name')->required()->maxLength(255),
                 Forms\Components\TextInput::make('color')->type('color'),
                 Forms\Components\Toggle::make('status')->required(),
-                Forms\Components\TagsInput::make('files_required')->label('Documentos requeridos'),
-                Forms\Components\RichEditor::make('terminos')->label('Términos y condiciones')
+                // Forms\Components\TagsInput::make('files_required')->label('Documentos requeridos'),
+                // Forms\Components\RichEditor::make('terminos')->label('Términos y condiciones')
             ]);
     }
 
