@@ -877,23 +877,26 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
     private static function getArchivos($type)
     {
-        $archivosNoRequeridos = FilesRequired::where('type',$type)->first()->no_required;
+        $filesRequired = FilesRequired::where('type', $type)->first();
 
-        $archivosNoRequeridos = $archivosNoRequeridos->map(function($item){
-            return [
-                'name' => $item,
-                'is_required_fecha_vencimiento' => false,
-            ];
-        });
-        
-        $archivosRequeridos = FilesRequired::where('type',$type)->first()->required;
+        $archivosNoRequeridos = collect();
+        $archivosRequeridos = collect();
 
-        $archivosRequeridos = $archivosRequeridos->map(function($item){
-            return [
-                'name' => $item,
-                'is_required_fecha_vencimiento' => true,
-            ];
-        });
+        if ($filesRequired) {
+            $archivosNoRequeridos = collect($filesRequired->no_required)->map(function($item){
+                return [
+                    'name' => $item,
+                    'is_required_fecha_vencimiento' => false,
+                ];
+            });
+
+            $archivosRequeridos = collect($filesRequired->required)->map(function($item){
+                return [
+                    'name' => $item,
+                    'is_required_fecha_vencimiento' => true,
+                ];
+            });
+        }
 
         $archivos = $archivosNoRequeridos->merge($archivosRequeridos);
 
