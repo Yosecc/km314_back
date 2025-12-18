@@ -1,5 +1,5 @@
-    <?php
-    namespace App\Http\Livewire;
+<?php
+namespace App\Http\Livewire;
 
     use Filament\Pages\Auth\Login as BaseLogin;
     use Illuminate\Validation\ValidationException;
