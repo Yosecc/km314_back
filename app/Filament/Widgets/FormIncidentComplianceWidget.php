@@ -51,6 +51,6 @@ class FormIncidentComplianceWidget extends Widget
     {
         // Solo mostrar si el usuario tiene formularios obligatorios asignados
         $user = Auth::user();
-        return $user && $user->formIncidentRequirements()->active()->exists();
+        return $user && $user->formIncidentRequirements()->active()->exists() && auth()->user()->can('widget_FormIncidentComplianceWidget');
     }
 }
