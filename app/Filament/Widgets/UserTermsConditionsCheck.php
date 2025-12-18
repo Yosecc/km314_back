@@ -51,6 +51,6 @@ class UserTermsConditionsCheck extends Widget
         //     return true;
         // }
 
-        return auth()->user()->can('view_user::terms_conditions_check');
+        return auth()->user()->can('widget_UserTermsConditionsCheck');
     }
 }
