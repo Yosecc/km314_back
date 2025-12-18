@@ -255,20 +255,20 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->live(),
 
-                    Radio::make('tipo_trabajo')
-                        ->options(Trabajos::get()->pluck('name','name')->toArray())
-                        ->visible(function(Get $get){
-                            return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
-                        }),
+                    // Radio::make('tipo_trabajo')
+                    //     ->options(Trabajos::get()->pluck('name','name')->toArray())
+                    //     ->visible(function(Get $get){
+                    //         return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
+                    //     }),
 
-                    Forms\Components\Select::make('construction_companie_id')
-                        ->options(function(){
-                            return ConstructionCompanie::get()->pluck('name','id')->toArray();
-                        })
-                        ->visible(function(Get $get){
-                            return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
-                        })
-                        ->live(),
+                    // Forms\Components\Select::make('construction_companie_id')
+                    //     ->options(function(){
+                    //         return ConstructionCompanie::get()->pluck('name','id')->toArray();
+                    //     })
+                    //     ->visible(function(Get $get){
+                    //         return collect($get('income_type'))->contains('Trabajador') && !auth()->user()->hasRole('owner');
+                    //     })
+                    //     ->live(),
 
                 ])
                 ->columns(4),
