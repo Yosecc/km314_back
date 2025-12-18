@@ -3,7 +3,7 @@
         <form x-data="{ accepted: false }" @submit.prevent="$wire.acceptTerms()" @terms-accepted.window="accepted = false" class="max-w-md mx-auto rounded-lg shadow p-6 flex flex-col gap-4">
             <div>
                 <h3>Para acceder a todas las opciones de navegación, por favor acepta los términos y condiciones.</h3>
-                <label class="flex items-start gap-3 cursor-pointer">
+                <label class="flex items-start gap-3 cursor-pointer mt-6">
                     <input type="checkbox" x-model="accepted" class="form-checkbox mt-1 h-5 w-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
                     <span class="text-sm ">
                         He leído y acepto los

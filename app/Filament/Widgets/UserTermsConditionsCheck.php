@@ -3,8 +3,9 @@
 namespace App\Filament\Widgets;
 
 
-use Filament\Widgets\Widget;
 use Livewire\Component;
+use Filament\Widgets\Widget;
+use Filament\Notifications\Notification;
 
 
 class UserTermsConditionsCheck extends Widget
@@ -21,6 +22,12 @@ class UserTermsConditionsCheck extends Widget
         if ($user && !$user->is_terms_condition) {
             $user->is_terms_condition = true;
             $user->save();
+
+            Notification::make()
+                ->title('Terminos y Condiciones aceptados')
+                ->success()
+                ->send();
+
             $this->dispatch('terms-accepted');
         }
     }
