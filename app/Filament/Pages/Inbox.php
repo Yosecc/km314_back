@@ -39,7 +39,7 @@ class Inbox extends Page implements HasForms, HasTable
         return false;
     }
 
-    public static function canAccess(  )
+    public static function canAccess(?User $user = null): bool
     {
         return false;
     }
