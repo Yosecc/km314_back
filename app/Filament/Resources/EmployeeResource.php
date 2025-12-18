@@ -248,18 +248,19 @@ class EmployeeResource extends Resource
 
     private static function getArchivos($type)
     {
-        $archivosNoRequeridos = FilesRequired::where('type',$type)->first()->no_required;
+        $filesRequired = FilesRequired::where('type', $type)->first();
+        if (!$filesRequired) {
+            return [];
+        }
 
-        $archivosNoRequeridos = $archivosNoRequeridos->map(function($item){
+        $archivosNoRequeridos = collect($filesRequired->no_required)->map(function($item){
             return [
                 'name' => $item,
                 'is_required_fecha_vencimiento' => false,
             ];
         });
-        
-        $archivosRequeridos = FilesRequired::where('type',$type)->first()->required;
 
-        $archivosRequeridos = $archivosRequeridos->map(function($item){
+        $archivosRequeridos = collect($filesRequired->required)->map(function($item){
             return [
                 'name' => $item,
                 'is_required_fecha_vencimiento' => true,
