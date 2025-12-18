@@ -10,7 +10,7 @@ class StatusOverview extends BaseWidget
 {
      public ?FormControl $record = null;
 
-    protected static ?string $heading = 'Estado del Formulario de Control';
+    protected ?string $heading = 'Estado del Formulario de Control';
 
      
     protected function getStats(): array
