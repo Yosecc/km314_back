@@ -48,12 +48,9 @@ class TerminosCondicionesResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                // No permitir acciones masivas de borrado
             ]);
     }
 
@@ -62,5 +59,10 @@ class TerminosCondicionesResource extends Resource
         return [
             'index' => Pages\ManageTerminosCondiciones::route('/'),
         ];
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
     }
 }
