@@ -10,6 +10,8 @@ use Livewire\Component;
 class UserTermsConditionsCheck extends Widget
 {
     protected static string $view = 'filament.widgets.user-terms-conditions-check';
+    protected int | string | array $columnSpan = 'full';
+
 
     public $accepted = false;
 
