@@ -10,4 +10,8 @@ class FilesRequired extends Model
     use HasFactory;
 
     protected $fillable = ['type', 'name', 'required'];
+
+    protected $casts = [
+        'required' => 'array'
+    ];
 }
