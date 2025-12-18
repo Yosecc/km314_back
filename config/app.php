@@ -156,7 +156,9 @@ return [
     |
     */
 
+
     'providers' => [
+        App\Providers\LivewireServiceProvider::class,
 
         /*
          * Laravel Framework Service Providers...
