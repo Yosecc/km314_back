@@ -52,6 +52,21 @@ class EmployeeResource extends Resource
     protected static ?string $label = 'trabajador';
     // protected static ?string $navigationGroup = 'Web';
 
+    public static function canViewAny(): bool
+    {
+        // Si el usuario no ha aceptado los términos, no puede ver el recurso
+        if(Auth::user()->hasRole('owner')){
+            $user = auth()->user();
+            return $user && $user->is_terms_condition;
+        }
+
+        if(Auth::user()->hasRole(['super_admin','admin'])){
+            return true;
+        }
+
+        return auth()->user()->can('view_any::form_control');
+    }
+
     public static function getPluralModelLabel(): string
     {
         return 'trabajadores';
