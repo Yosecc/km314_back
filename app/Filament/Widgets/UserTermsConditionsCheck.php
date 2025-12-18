@@ -7,6 +7,7 @@ use Livewire\Component;
 use Filament\Widgets\Widget;
 use Filament\Notifications\Notification;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
+use Illuminate\Support\Facades\Auth;
 
 
 class UserTermsConditionsCheck extends Widget
@@ -14,7 +15,9 @@ class UserTermsConditionsCheck extends Widget
     use HasWidgetShield;
 
     protected static string $view = 'filament.widgets.user-terms-conditions-check';
-    protected static ?string $heading = 'Confirmación de Términos y Condiciones';
+    
+    protected static string $heading = 'Confirmación de Términos y Condiciones';
+    
     protected int | string | array $columnSpan = 'full';
 
 
@@ -38,7 +41,16 @@ class UserTermsConditionsCheck extends Widget
 
     public static function canView(): bool
     {
-        $user = auth()->user();
-        return $user && !$user->is_terms_condition;
+       // Si el usuario no ha aceptado los términos, no puede ver el recurso
+        if(Auth::user()->hasRole('owner')){
+            $user = auth()->user();
+            return $user && $user->is_terms_condition;
+        }
+
+        // if(Auth::user()->hasRole(['super_admin','admin'])){
+        //     return true;
+        // }
+
+        return auth()->user()->can('view_user::terms_conditions_check');
     }
 }

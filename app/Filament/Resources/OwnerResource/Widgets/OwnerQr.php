@@ -26,14 +26,4 @@ class OwnerQr extends Widget
         $this->record = auth()->user()->hasRole('owner') ? auth()->user()->owner : $record;
     }
     
-    public function openModal()
-    {
-        $this->showModal = true;
-    }
-    
-    public function closeModal()
-    {
-        
-        $this->showModal = false;
-    }
 }
