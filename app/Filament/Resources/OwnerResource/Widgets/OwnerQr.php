@@ -25,5 +25,16 @@ class OwnerQr extends Widget
     {
         $this->record = auth()->user()->hasRole('owner') ? auth()->user()->owner : $record;
     }
+
+    public static function canView(): bool
+    {
+       // Si el usuario no ha aceptado los términos, no puede ver el recurso
+        if(Auth::user()->hasRole('owner')){
+            $user = auth()->user();
+            return $user && $user->is_terms_condition;
+        }
+
+        return auth()->user()->can('widget_OwnerQr');
+    }
     
 }

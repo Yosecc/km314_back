@@ -39,18 +39,4 @@ class UserTermsConditionsCheck extends Widget
         }
     }
 
-    public static function canView(): bool
-    {
-       // Si el usuario no ha aceptado los términos, no puede ver el recurso
-        if(Auth::user()->hasRole('owner')){
-            $user = auth()->user();
-            return $user && $user->is_terms_condition;
-        }
-
-        // if(Auth::user()->hasRole(['super_admin','admin'])){
-        //     return true;
-        // }
-
-        return auth()->user()->can('widget_UserTermsConditionsCheck');
-    }
 }
