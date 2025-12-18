@@ -72,7 +72,7 @@ class AdminPanelProvider extends PanelProvider
                 FormIncidentComplianceWidget::class,
                 FormIncidentStatsWidget::class,
                 //UltimasActividades::class,
-                IncidentesStats::class,
+                // IncidentesStats::class,
                 FormControlStats::class,
                 Sliders::class,
                 OwnerQr::class
