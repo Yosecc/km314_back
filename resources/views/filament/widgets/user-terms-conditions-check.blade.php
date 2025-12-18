@@ -1,6 +1,6 @@
 <x-filament-widgets::widget>
     <x-filament::section>
-        <form x-data="{ accepted: false }" @submit.prevent="$wire.acceptTerms()" @terms-accepted.window="accepted = false" class="max-w-md mx-auto rounded-lg shadow p-6 flex flex-col gap-4">
+        <form x-data="{ accepted: false }" @submit.prevent="$wire.acceptTerms()" @terms-accepted.window="accepted = false; window.location.reload();" class="max-w-md mx-auto rounded-lg shadow p-6 flex flex-col gap-4">
             <div>
                 <h3>Para acceder a todas las opciones de navegación, por favor acepta los términos y condiciones.</h3>
                 <label class="flex items-start gap-3 cursor-pointer mt-6">
