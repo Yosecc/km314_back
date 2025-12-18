@@ -1,6 +1,6 @@
 <x-filament-widgets::widget>
     <x-filament::section>
-        <form x-data="{ accepted: false }" @submit.prevent="if(!accepted){ alert('Debes aceptar los términos y condiciones.'); return false; }">
+        <form x-data="{ accepted: false }" @submit.prevent="$wire.acceptTerms()" @terms-accepted.window="accepted = false">
             <label class="flex items-center space-x-2">
                 <input type="checkbox" x-model="accepted" class="form-checkbox">
                 <span class="text-sm">Acepto los <a href="/terminos-y-condiciones" class="underline text-primary-600" target="_blank">términos y condiciones</a></span>
