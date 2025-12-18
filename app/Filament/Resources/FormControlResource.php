@@ -87,6 +87,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
             $user = auth()->user();
             return $user && $user->is_terms_condition;
         }
+
+        return auth()->user()->can('view_any::form::control');
     }
 
     
