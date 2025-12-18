@@ -33,6 +33,12 @@ class Inbox extends Page implements HasForms, HasTable
     protected static ?string $navigationLabel = 'Mensajes';
     public string $activeTab = 'tablaMail';
 
+    public static function canView()
+    {
+        
+        return false;
+    }
+
     // Método para renderizar la tabla de correos
     public function tableMail(): Table
     {
