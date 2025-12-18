@@ -19,6 +19,17 @@ class FilesRequiredResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationLabel = 'Documentos requeridos';
+
+    protected static ?string $navigationGroup = 'Configuración';
+
+    protected static ?string $label = 'documento requerido';
+
+    public static function getPluralModelLabel(): string
+    {
+        return 'documentos requeridos';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -37,7 +48,7 @@ class FilesRequiredResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('type')->label('Tipo')->searchable(),
+                // Tables\Columns\TextColumn::make('type')->label('Tipo')->searchable(),
                 Tables\Columns\TextColumn::make('name')->label('Nombre')->searchable(),
                 Tables\Columns\TextColumn::make('required')->label('Documentos requeridos')->limit(50)->wrap(),
             ])
