@@ -5,14 +5,20 @@ namespace App\Filament\Widgets;
 use App\Services\FormIncidentComplianceService;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 class FormIncidentComplianceWidget extends Widget
 {
+    use HasWidgetShield;
+
     protected static string $view = 'filament.widgets.form-incident-compliance-widget';
 
     protected int | string | array $columnSpan = 'full';
 
      protected static ?int $sort = -97;
+
+    protected static ?string $heading = 'Formularios de Incidentes';
+
 
     public function getViewData(): array
     {

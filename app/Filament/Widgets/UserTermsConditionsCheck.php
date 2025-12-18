@@ -6,11 +6,15 @@ namespace App\Filament\Widgets;
 use Livewire\Component;
 use Filament\Widgets\Widget;
 use Filament\Notifications\Notification;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 
 class UserTermsConditionsCheck extends Widget
 {
+    use HasWidgetShield;
+
     protected static string $view = 'filament.widgets.user-terms-conditions-check';
+    protected static ?string $heading = 'Confirmación de Términos y Condiciones';
     protected int | string | array $columnSpan = 'full';
 
 

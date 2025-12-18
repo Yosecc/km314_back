@@ -9,6 +9,9 @@ use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 class StatusOverview extends BaseWidget
 {
      public ?FormControl $record = null;
+
+    protected static ?string $heading = 'Estado del Formulario de Control';
+
      
     protected function getStats(): array
     {

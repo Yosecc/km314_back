@@ -44,6 +44,9 @@ class CalendarWidget extends FullCalendarWidget
 
     use HasWidgetShield;
     public Model | string | null $model = ServiceRequest::class;
+    
+    protected static ?string $heading = 'Calendario de Reservas de Servicios';
+
 
     public function config(): array
     {

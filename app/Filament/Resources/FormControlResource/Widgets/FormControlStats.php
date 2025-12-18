@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 class FormControlStats extends BaseWidget
 {
     use HasWidgetShield;
+    protected static ?string $heading = 'Estadísticas de Formularios de Control';
+
     protected function getStats(): array
     {
         $numPending = FormControl::where('owner_id', Auth::user()->owner_id)

@@ -5,10 +5,15 @@ namespace App\Filament\Resources\OwnerResource\Widgets;
 use Filament\Widgets\Widget;
 use App\Models\Owner;
 use Livewire\Component;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 class OwnerQr extends Widget
 {
+    use HasWidgetShield;
+
     protected static string $view = 'filament.widgets.owner-qr';
+    protected static ?string $heading = 'Código QR del Propietario';
+
     
     public ?Owner $record = null;
     public bool $showModal = false;

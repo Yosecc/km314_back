@@ -4,17 +4,24 @@ namespace App\Filament\Widgets;
 
 use Filament\Widgets\Widget;
 use Illuminate\Contracts\View\View;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
+    
 
 class MovementsTableWidget extends Widget
 {
+    use HasWidgetShield;
+
     public ?object $record = null;
-protected static ?int $sort = null; 
+    protected static ?int $sort = null; 
     protected static string $view = 'filament.widgets.movements-table-widget';
-public static function isVisible(): bool
-{
+
+    protected static ?string $heading = 'Movimientos Financieros (BETA)';
+    
+    public static function isVisible(): bool
+    {
     return false;
-}
-public static function canView(): bool
+    }
+    public static function canView(): bool
     {
         return false;
     }
