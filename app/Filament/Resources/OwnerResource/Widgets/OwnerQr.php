@@ -27,6 +27,7 @@ class OwnerQr extends Widget
     
     public function closeModal()
     {
+        
         $this->showModal = false;
     }
 }
