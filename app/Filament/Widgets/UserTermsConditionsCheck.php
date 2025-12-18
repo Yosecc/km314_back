@@ -19,7 +19,7 @@ class UserTermsConditionsCheck extends Widget
         if ($user && !$user->is_terms_condition) {
             $user->is_terms_condition = true;
             $user->save();
-            $this->dispatchBrowserEvent('terms-accepted');
+            $this->dispatch('terms-accepted');
         }
     }
 
