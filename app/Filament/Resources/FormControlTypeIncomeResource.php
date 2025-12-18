@@ -17,7 +17,7 @@ class FormControlTypeIncomeResource extends Resource
 {
     protected static ?string $model = FormControlTypeIncome::class;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Configuración - Formulario';
+    protected static ?string $navigationGroup = 'Configuración';
     protected static ?string $navigationLabel = 'Tipo de ingreso';
     protected static ?string $label = 'tipo de ingreso';
     public static function getPluralModelLabel(): string
