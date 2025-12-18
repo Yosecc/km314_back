@@ -9,13 +9,13 @@ class CustomLogin extends BaseLogin
 {
     public $terms = false;
 
-    public function authenticate()
+    public function authenticate(): ?\Filament\Http\Responses\Auth\Contracts\LoginResponse
     {
         if (! $this->terms) {
             throw ValidationException::withMessages([
                 'terms' => 'Debes aceptar los términos y condiciones para continuar.',
             ]);
         }
-        parent::authenticate();
+        return parent::authenticate();
     }
 }
