@@ -6,6 +6,7 @@ use Filament\Widgets\Widget;
 use App\Models\Owner;
 use Livewire\Component;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
+use Illuminate\Support\Facades\Auth;
 
 class OwnerQr extends Widget
 {
