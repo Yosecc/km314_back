@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class FormControlStats extends BaseWidget
 {
     use HasWidgetShield;
-    protected static ?string $heading = 'Estadísticas de Formularios de Control';
+    protected ?string $heading = 'Estadísticas de Formularios de Control';
 
     protected function getStats(): array
     {
