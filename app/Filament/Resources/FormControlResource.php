@@ -88,6 +88,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
             return $user && $user->is_terms_condition;
         }
 
+        if(Auth::user()->hasRole(['super_admin','admin'])){
+            return true;
+        }
+
         return auth()->user()->can('view_any::form::control');
     }
 
