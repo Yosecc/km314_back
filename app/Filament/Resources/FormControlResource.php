@@ -2,50 +2,51 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\FormControlResource\Pages;
-use App\Filament\Resources\FormControlResource\RelationManagers;
-use App\Models\ConstructionCompanie;
-use App\Models\FormControl;
-use App\Models\FormControlTypeIncome;
-use App\Models\Lote;
-use App\Models\Owner;
-use App\Models\Trabajos;
-use App\Models\User;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Carbon\Carbon;
 use Filament\Forms;
-use Filament\Forms\Components\Actions;
-use Filament\Forms\Components\Actions\Action as FormAction;
-use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Radio;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
+use App\Models\Lote;
+use App\Models\User;
+use Filament\Tables;
+use App\Models\Owner;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
-use Filament\Notifications\Notification;
+use App\Models\Employee;
+use App\Models\Trabajos;
+use Carbon\CarbonPeriod;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
+use App\Models\FormControl;
+use App\Models\FilesRequired;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Forms\Components\Tabs;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Filters\Filter;
+use App\Models\ConstructionCompanie;
+use Filament\Forms\Components\Radio;
+use Illuminate\Support\Facades\Auth;
+use App\Models\FormControlTypeIncome;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Wizard;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Repeater;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Actions\ViewAction;
-use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\CheckboxList;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Auth;
-use Filament\Forms\Components\Wizard;
+use App\Filament\Resources\FormControlResource\Pages;
+use Filament\Forms\Components\Actions\Action as FormAction;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use App\Filament\Resources\FormControlResource\RelationManagers;
 use Filament\Notifications\Actions\Action as NotificationAction;
-use Carbon\CarbonPeriod;
-use Filament\Forms\Components\Placeholder;
-use App\Models\Employee;
 
 class FormControlResource extends Resource implements HasShieldPermissions
 {
@@ -845,10 +846,16 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     }
                                     return [];
                                 })
-                                ->required(),
+                                ->required(function(Get $get, Set $set, $context){
+                                    $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                    return $is_required;
+                                }),
                             Forms\Components\FileUpload::make('file')
                                 ->label('Archivo')
-                                ->required()
+                                ->required(function(Get $get, Set $set, $context){
+                                    $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                    return $is_required;
+                                })
                                 ->storeFileNamesIn('attachment_file_names')
                                 ->openable()
                                 ->getUploadedFileNameForStorageUsing(function ($file, $record) {
@@ -866,17 +873,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->grid(3)
                         ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                        ->default([
-                            [
-                                'name' => 'Seguro del Vehículo',
-                            ],
-                            [
-                                'name' => 'VTV',
-                            ],
-                            [
-                                'name' => 'Cédula del Vehículo',
-                            ],
-                        ])
+                        ->default( self::getArchivos('auto') )
                         ->columns(1)
                         ->columnSpanFull(),
                 ])
@@ -884,6 +881,31 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->defaultItems(0)
                 ->columnSpanFull()
         ];
+    }
+
+    private static function getArchivos($type)
+    {
+        $archivosNoRequeridos = FilesRequired::where('type',$type)->first()->no_required;
+
+        $archivosNoRequeridos = $archivosNoRequeridos->map(function($item){
+            return [
+                'name' => $item,
+                'is_required_fecha_vencimiento' => false,
+            ];
+        });
+        
+        $archivosRequeridos = FilesRequired::where('type',$type)->first()->required;
+
+        $archivosRequeridos = $archivosRequeridos->map(function($item){
+            return [
+                'name' => $item,
+                'is_required_fecha_vencimiento' => true,
+            ];
+        });
+
+        $archivos = $archivosNoRequeridos->merge($archivosRequeridos);
+
+        return $archivos->toArray();
     }
 
     public static function informacionExtraFormulario()

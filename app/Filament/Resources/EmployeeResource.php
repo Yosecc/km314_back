@@ -2,41 +2,42 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\EmployeeResource\Pages;
-use App\Filament\Resources\EmployeeResource\RelationManagers;
-use App\Filament\Resources\EmployeeResource\Traits\HasNotesAction;
-use App\Filament\Resources\EmployeeResource\Traits\HasGestionAction;
-use App\Models\ConstructionCompanie;
-use App\Models\Employee;
-use App\Models\Owner;
-use App\Models\User;
-use App\Models\Trabajos;
-use Filament\Forms\Components\Placeholder;
-use App\Models\Works;
 use Carbon\Carbon;
 use Filament\Forms;
-use Filament\Forms\Components\Actions;
-use Filament\Forms\Components\Actions\Action;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Form;
+use App\Models\User;
+use Filament\Tables;
+use App\Models\Owner;
+use App\Models\Works;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
-use Filament\Resources\Resource;
-use Filament\Tables;
+use App\Models\Employee;
+use App\Models\Trabajos;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Notifications\Notification;
-use Filament\Infolists\Components\TextEntry;
+use App\Models\FilesRequired;
+use Filament\Resources\Resource;
 use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Fieldset;
+use App\Models\ConstructionCompanie;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\Wizard;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Repeater;
+use Filament\Tables\Columns\IconColumn;
+use Illuminate\Support\Facades\Storage;
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Forms\Components\DatePicker;
+use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\Placeholder;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Forms\Components\Actions\Action;
+use App\Filament\Resources\EmployeeResource\Pages;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\EmployeeResource\RelationManagers;
 use Filament\Notifications\Actions\Action as NotificationAction;
+use App\Filament\Resources\EmployeeResource\Traits\HasNotesAction;
+use App\Filament\Resources\EmployeeResource\Traits\HasGestionAction;
 
 
 
@@ -245,8 +246,36 @@ class EmployeeResource extends Resource
         ];
     }
 
+    private static function getArchivos($type)
+    {
+        $archivosNoRequeridos = FilesRequired::where('type',$type)->first()->no_required;
+
+        $archivosNoRequeridos = $archivosNoRequeridos->map(function($item){
+            return [
+                'name' => $item,
+                'is_required_fecha_vencimiento' => false,
+            ];
+        });
+        
+        $archivosRequeridos = FilesRequired::where('type',$type)->first()->required;
+
+        $archivosRequeridos = $archivosRequeridos->map(function($item){
+            return [
+                'name' => $item,
+                'is_required_fecha_vencimiento' => true,
+            ];
+        });
+
+        $archivos = $archivosNoRequeridos->merge($archivosRequeridos);
+
+        return $archivos->toArray();
+    }
+
     private static function formArchivosPersonales()
     {
+
+        
+
         return [
             Repeater::make('files')
                     ->relationship()
@@ -275,7 +304,10 @@ class EmployeeResource extends Resource
                             }),
                         Forms\Components\FileUpload::make('file')
                             ->label('Archivo')
-                            ->required()
+                            ->required(function(Get $get, Set $set, $context){
+                                $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                return $is_required;
+                            })
                             ->storeFileNamesIn('attachment_file_names')
                             ->openable()
                             ->getUploadedFileNameForStorageUsing(function ($file, $record) {
@@ -291,29 +323,7 @@ class EmployeeResource extends Resource
                     ->addable(false)
                     ->deletable(false)
                     ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                    ->default([
-                        [
-                            'name' => 'DNI (Frente)',
-                            'is_required_fecha_vencimiento' => false,
-                        ],
-                        [
-                            'name' => 'DNI (Trasero)',
-                            'is_required_fecha_vencimiento' => false,
-                        ],
-                        [
-                            'name' => 'Seguro de Accidentes Personales',
-                            'is_required_fecha_vencimiento' => true,
-                        ],
-                        [
-                            'name' => 'Antecedentes Penales',
-                            'is_required_fecha_vencimiento' => true,
-                        ],
-                        [
-                            'name' => 'Monotributo',
-                            'is_required_fecha_vencimiento' => true,
-                        ],
-
-                    ])
+                    ->default(self::getArchivos('employee'))
                     ->grid(2)
                     ->columns(1)
         ];
@@ -331,10 +341,16 @@ class EmployeeResource extends Resource
                     }
                     return [];
                 })
-                ->required(),
+                ->required(function(Get $get, Set $set, $context){
+                                $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                return $is_required;
+                            }),
             Forms\Components\FileUpload::make('file')
                 ->label('Archivo')
-                ->required()
+                ->required(function(Get $get, Set $set, $context){
+                                $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                return $is_required;
+                            })
                 ->storeFileNamesIn('attachment_file_names')
                 ->openable()
                 ->getUploadedFileNameForStorageUsing(function ($file, $record) {
@@ -374,17 +390,7 @@ class EmployeeResource extends Resource
                 ->deletable(false)
                 ->grid(2)
                 ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                ->default([
-                    [
-                        'name' => 'Seguro del Vehículo',
-                    ],
-                    [
-                        'name' => 'VTV',
-                    ],
-                    [
-                        'name' => 'Cédula del Vehículo',
-                    ],
-                ])
+                ->default(self::getArchivos('auto'))
                 ->columns(1)
                 ->columnSpanFull(),
         ];
@@ -428,17 +434,7 @@ class EmployeeResource extends Resource
                             ->deletable(false)
                             ->grid(2)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->default([
-                                [
-                                    'name' => 'Seguro del Vehículo',
-                                ],
-                                [
-                                    'name' => 'VTV',
-                                ],
-                                [
-                                    'name' => 'Cédula del Vehículo',
-                                ],
-                            ])
+                            ->default(self::getArchivos('auto'))
                             ->columns(1)
                             ->columnSpanFull(),
                     ])

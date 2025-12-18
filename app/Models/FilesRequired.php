@@ -9,9 +9,10 @@ class FilesRequired extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['type', 'name', 'required'];
+    protected $fillable = ['type', 'name', 'required','no_required'];
 
     protected $casts = [
-        'required' => 'array'
+        'no_required' => 'array',
+        'required' => 'array',
     ];
 }
