@@ -206,15 +206,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->gridDirection('row')
                         ->columnSpan(2)
                         ->afterStateUpdated(function (Set $set, $state) {
-                            $set('peoples', [[
-                                // 'dni' => '',
-                                // 'first_name' => '',
-                                // 'last_name' => '',
-                                // 'phone' => '',
-                                // 'is_responsable' => false,
-                                // 'is_acompanante' => false,
-                                // 'is_menor' => false,
-                            ]]);
+                            $set('peoples', [[]]);
 
                                 if($state == 'Visita Temporal (24hs)'){
                                     $set('dateRanges', [[
