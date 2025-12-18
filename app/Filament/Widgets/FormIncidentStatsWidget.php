@@ -12,7 +12,7 @@ class FormIncidentStatsWidget extends BaseWidget
 {
     protected static ?string $pollingInterval = '30s';
     protected static ?int $sort = -98;
-    protected static ?string $heading = 'Formularios de Incidentes (Estadísticas)';
+    protected  ?string $heading = 'Formularios de Incidentes (Estadísticas)';
 
 
     protected function getStats(): array
