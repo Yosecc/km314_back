@@ -2,7 +2,7 @@
 
 namespace App\Http\Livewire;
 
-use Filament\Http\Livewire\Auth\Login as BaseLogin;
+use Filament\Pages\Auth\Login as BaseLogin;
 use Illuminate\Validation\ValidationException;
 
 class CustomLogin extends BaseLogin
