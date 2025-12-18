@@ -21,6 +21,7 @@ use App\Filament\Widgets\PropietariosEnElBarrio;
 use App\Filament\Widgets\TrabajadoresEnElBarrio;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\Widgets\FormIncidentStatsWidget;
+use App\Filament\Widgets\UserTermsConditionsCheck;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use App\Filament\Widgets\FormIncidentComplianceWidget;
 use Illuminate\Session\Middleware\AuthenticateSession;
@@ -66,6 +67,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                UserTermsConditionsCheck::class,
                 EnElBarrio::class,
                 FormIncidentComplianceWidget::class,
                 FormIncidentStatsWidget::class,
