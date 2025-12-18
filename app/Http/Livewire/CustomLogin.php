@@ -10,8 +10,8 @@
             ]
         );
     }
-<?php
 
+<?php
 namespace App\Http\Livewire;
 
 use Filament\Pages\Auth\Login as BaseLogin;
