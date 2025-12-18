@@ -5,8 +5,8 @@
     <x-filament::section>
         <div class="flex flex-row items-center justify-center gap-8 p-6">
             <!-- QR a la izquierda -->
-            <div class="bg-white p-4 rounded-lg shadow flex-shrink-0">
-                {!! $record->generateQrCodeForScanner() !!}
+            <div class="bg-white p-2 rounded-lg shadow flex-shrink-0">
+                {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(120)->margin(1)->generate($record->quick_access_code) !!}
             </div>
 
             <!-- Opciones a la derecha -->
