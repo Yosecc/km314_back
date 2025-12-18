@@ -11,11 +11,12 @@ class OwnerQr extends Widget
 {
     use HasWidgetShield;
 
+    public ?Owner $record = null;
+
     protected static string $view = 'filament.widgets.owner-qr';
+    
     protected static ?string $heading = 'Código QR del Propietario';
 
-    
-    public ?Owner $record = null;
     public bool $showModal = false;
     
     protected int | string | array $columnSpan = 'full';
