@@ -7,7 +7,6 @@
             <!-- QR a la izquierda -->
             <div class="bg-white p-2 rounded-lg shadow flex-shrink-0 text-center">
                 {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(120)->margin(1)->generate($record->quick_access_code) !!}
-                <div class="text-xs text-gray-500 mt-2">Presente este QR en la entrada para tener acceso al barrio</div>
             </div>
 
             <!-- Opciones a la derecha -->
@@ -24,7 +23,9 @@
                     <button type="button" @click="window.open('https://wa.me/?text=' + encodeURIComponent('Código de Acceso Rápido%0A%0ATipo: Propietario%0ACódigo: {{ $record->quick_access_code }}%0A%0AAccede mostrando este código en la entrada del barrio:%0A{{ $record->getQrCodeUrl() }}'), '_blank')" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">Compartir por WhatsApp</button>
                 </div>
             </div>
-            
+        </div>
+        <div class="w-full text-center mt-6">
+            <div class="text-xs text-gray-500">Presente este QR en la entrada para tener acceso al barrio</div>
         </div>
     </x-filament::section>
 </x-filament-widgets::widget>
