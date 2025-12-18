@@ -46,7 +46,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('/')
-            ->login(\App\Http\Livewire\CustomLogin::class)
+            ->login()
             ->brandLogo(asset('images/logo-blue.png'))
             ->darkModeBrandLogo(asset('images/logo.png'))
             ->brandLogoHeight('4rem')
