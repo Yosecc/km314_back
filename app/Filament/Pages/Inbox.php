@@ -39,6 +39,11 @@ class Inbox extends Page implements HasForms, HasTable
         return false;
     }
 
+    public static function canAccess(  )
+    {
+        return false;
+    }
+
     // Método para renderizar la tabla de correos
     public function tableMail(): Table
     {
