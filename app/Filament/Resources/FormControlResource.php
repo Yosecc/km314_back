@@ -92,7 +92,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
             return true;
         }
 
-        return auth()->user()->can('view_any::form::control');
+        return auth()->user()->can('view_any::form_control');
     }
 
     
