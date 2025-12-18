@@ -20,6 +20,14 @@ class TerminosCondicionesResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'Configuración';
+    protected static ?string $navigationLabel = 'Términos y condiciones';
+    protected static ?string $label = 'Término y condición';
+    public static function getPluralModelLabel(): string
+    {
+        return 'Términos y condiciones';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
