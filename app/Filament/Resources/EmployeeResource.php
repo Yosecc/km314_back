@@ -391,7 +391,7 @@ class EmployeeResource extends Resource
                 ->deletable(false)
                 ->grid(2)
                 ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                ->default(self::getArchivos('auto'))
+                ->default(self::getArchivos('car'))
                 ->columns(1)
                 ->columnSpanFull(),
         ];
@@ -435,7 +435,7 @@ class EmployeeResource extends Resource
                             ->deletable(false)
                             ->grid(2)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->default(self::getArchivos('auto'))
+                            ->default(self::getArchivos('car'))
                             ->columns(1)
                             ->columnSpanFull(),
                     ])
