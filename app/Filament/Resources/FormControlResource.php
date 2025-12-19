@@ -865,7 +865,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->grid(3)
                         ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                        ->default( self::getArchivos('auto') )
+                        ->default( self::getArchivos('car') )
                         ->columns(1)
                         ->columnSpanFull(),
                 ])
