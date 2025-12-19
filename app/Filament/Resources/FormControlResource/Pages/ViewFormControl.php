@@ -8,6 +8,7 @@ use App\Traits\HasQrCodeAction;
 use Filament\Resources\Pages\ViewRecord;
 use App\Filament\Resources\FormControlResource;
 use Filament\Notifications\Notification;
+use Filament\Notifications\Actions\Action as NotificationAction;
 
 class ViewFormControl extends ViewRecord
 {
