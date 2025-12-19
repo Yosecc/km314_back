@@ -41,6 +41,8 @@ class FilesRequiredResource extends Resource
                         'employee' => 'Empleado',
                     ]),
                 Forms\Components\TagsInput::make('required')->label('Documentos requeridos'),
+                Forms\Components\TagsInput::make('no_required')->label('Documentos requeridos'),
+                
             ]);
     }
 
