@@ -39,9 +39,19 @@ class FilesRequiredResource extends Resource
                     ->options([
                         'car' => 'Auto',
                         'employee' => 'Empleado',
+                        'inquilino' => 'Inquilino',
+                        'Visita (+24hs)' => 'Visita (+24hs)',
+                        'Visita Temporal (24hs)' => 'Visita Temporal (24hs)',
                     ]),
-                Forms\Components\TagsInput::make('required')->label('Documentos requeridos'),
-                Forms\Components\TagsInput::make('no_required')->label('Documentos requeridos'),
+                    Repeater::make('required')
+                        ->schema([
+                            Forms\Components\TextInput::make('document')->label('Nombre del documento')->required()->maxLength(255),
+                            Forms\Components\Toggle::make('is_required')->label('¿Es requerido?')->required(),
+                            Forms\Components\Toggle::make('date_is_required')->label('La fecha de vencimiento ¿Es requerido?')->required(),
+                        ])
+                        ->columns(2)
+                // Forms\Components\TagsInput::make('required')->label('Documentos requeridos'),
+                // Forms\Components\TagsInput::make('no_required')->label('Documentos no requeridos'),
                 
             ]);
     }
