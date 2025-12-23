@@ -45,9 +45,9 @@ class FilesRequiredResource extends Resource
                     ]),
                     Repeater::make('required')
                         ->schema([
-                            Forms\Components\TextInput::make('document')->label('Nombre del documento')->required()->maxLength(255),
-                            Forms\Components\Toggle::make('is_required')->label('¿Es requerido?')->required(),
-                            Forms\Components\Toggle::make('date_is_required')->label('La fecha de vencimiento ¿Es requerido?')->required(),
+                            Forms\Components\TextInput::make('document')->label('Nombre del documento')->maxLength(255),
+                            Forms\Components\Toggle::make('is_required')->label('¿Es requerido?'),
+                            Forms\Components\Toggle::make('date_is_required')->label('La fecha de vencimiento ¿Es requerido?'),
                         ])
                         ->columns(2)
                         ->columnSpanFull(),
