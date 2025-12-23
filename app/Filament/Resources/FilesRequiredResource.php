@@ -50,6 +50,7 @@ class FilesRequiredResource extends Resource
                             Forms\Components\Toggle::make('date_is_required')->label('La fecha de vencimiento ¿Es requerido?')->required(),
                         ])
                         ->columns(2)
+                        ->columnSpanFull()
                 // Forms\Components\TagsInput::make('required')->label('Documentos requeridos'),
                 // Forms\Components\TagsInput::make('no_required')->label('Documentos no requeridos'),
                 
