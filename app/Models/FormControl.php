@@ -190,6 +190,10 @@ class FormControl extends Model
     {
         return $this->hasMany(FormControlDateRange::class);
     }
+    public function filesPeople()
+    {
+        return $this->hasMany(FormControlPeopleFile::class);
+    }
 
     public function isDayRange()
     {

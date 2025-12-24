@@ -391,7 +391,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
     private static function formArchivosPersonales()
     {
         return [
-            Repeater::make('files')
+            Repeater::make('filesPeople')
+                    ->relationship()
                     ->label('Documentos')
                     ->schema([
                         // TextEntry::make('name'),
