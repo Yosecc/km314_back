@@ -96,8 +96,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
         return auth()->user()->can('view_any::form_control');
     }
 
-    
-
     protected static function getWorkerTimeOptions(): array
     {
         $times = [];
@@ -387,6 +385,63 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->itemLabel(fn (array $state): ?string => isset($state['start_date_range']) && isset($state['end_date_range']) 
                     ? "Desde: {$state['start_date_range']} - Hasta: {$state['end_date_range']}" 
                     : 'Nuevo rango'),
+        ];
+    }
+
+    private static function formArchivosPersonales()
+    {
+        return [
+            Repeater::make('files')
+                    ->relationship()
+                    ->label('Documentos')
+                    ->schema([
+                        // TextEntry::make('name'),
+                        Forms\Components\Hidden::make('name')->dehydrated(),
+                        DatePicker::make('fecha_vencimiento')
+                            ->label('Fecha de vencimiento del documento')
+                            ->extraFieldWrapperAttributes(function(Get $get, $state){
+                                        if($state  && Carbon::parse($state)->isPast()){
+                                            return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
+                                        }
+                                        return [];
+                                    })
+                            ->hidden(function(Get $get, Set $set, $context){
+                                if($context == 'edit' || $context == 'view'){
+                                    return false;
+                                }
+                                $is_required = $context == 'create' && $get('is_required_fecha_vencimiento') ?? false;
+                                return !$is_required;
+                            })
+                            ->required(function(Get $get, Set $set, $context){
+                                $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                return $is_required;
+                            }),
+                        Forms\Components\FileUpload::make('file')
+                            ->label('Archivo')
+                            ->required(function(Get $get, Set $set, $context){
+                                $is_required = $get('is_required') ?? false;
+                                return $is_required;
+                            })
+                            ->storeFileNamesIn('attachment_file_names')
+                            ->openable()
+                            ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                return $file ? $file->getClientOriginalName() : $record->file;
+                            })
+                            ->disabled(function($context, Get $get){
+                                return $context == 'edit' ? true:false;
+                            }),
+                    ])
+                    ->defaultItems(1)
+                    ->minItems(1)
+                    ->maxItems(5)
+                    ->addable(false)
+                    ->deletable(false)
+                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                    ->default(function(Get $get){
+                        return self::getArchivos($get('../../income_type'));
+                    })
+                    ->grid(2)
+                    ->columns(1)
         ];
     }
 
@@ -714,13 +769,16 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     Forms\Components\Toggle::make('is_acompanante')->default(false)->label(__("general.Acompanante")),
                     Forms\Components\Toggle::make('is_menor')->default(false)->label(__("general.Minor")),
                     
-                    FileUpload::make('file_dni')->required()->label('DNI')
-                        ->required(function(Get $get){
-                            return collect($get('../../income_type'))->contains('Inquilino');
-                        })
-                        ->visible(function(Get $get){
-                            return collect($get('../../income_type'))->contains('Inquilino');
-                        }),
+                    // FileUpload::make('file_dni')->required()->label('DNI')
+                    //     ->required(function(Get $get){
+                    //         return collect($get('../../income_type'))->contains('Inquilino');
+                    //     })
+                    //     ->visible(function(Get $get){
+                    //         return collect($get('../../income_type'))->contains('Inquilino');
+                    //     }),
+                    ...self::formArchivosPersonales(),
+
+                    
 
                 ])
                 ->addable(function(Get $get){
@@ -791,7 +849,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             Forms\Components\FileUpload::make('file')
                                 ->label('Archivo')
                                 ->required(function(Get $get, Set $set, $context){
-                                    $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                    $is_required = $get('is_required') ?? false;
                                     return $is_required;
                                 })
                                 ->storeFileNamesIn('attachment_file_names')
@@ -825,26 +883,18 @@ class FormControlResource extends Resource implements HasShieldPermissions
     {
         $filesRequired = FilesRequired::where('type', $type)->first();
 
-        $archivosNoRequeridos = collect();
-        $archivosRequeridos = collect();
+        $archivos = collect();
 
         if ($filesRequired) {
-            $archivosNoRequeridos = collect($filesRequired->no_required)->map(function($item){
+            
+            $archivos = collect($filesRequired->required)->map(function($item){
                 return [
-                    'name' => $item,
-                    'is_required_fecha_vencimiento' => false,
-                ];
-            });
-
-            $archivosRequeridos = collect($filesRequired->required)->map(function($item){
-                return [
-                    'name' => $item,
-                    'is_required_fecha_vencimiento' => true,
+                    'name' => $item['document'],
+                    'is_required_fecha_vencimiento' => $item['date_is_required'],
+                    'is_required' => $item['is_required'],
                 ];
             });
         }
-
-        $archivos = $archivosNoRequeridos->merge($archivosRequeridos);
 
         return $archivos->toArray();
     }

@@ -63,7 +63,7 @@ class FilesRequiredResource extends Resource
             ->columns([
                 // Tables\Columns\TextColumn::make('type')->label('Tipo')->searchable(),
                 Tables\Columns\TextColumn::make('name')->label('Nombre')->searchable(),
-                Tables\Columns\TextColumn::make('required')->label('Documentos requeridos')->limit(50)->wrap(),
+                // Tables\Columns\TextColumn::make('required')->label('Documentos requeridos')->limit(50)->wrap(),
             ])
             ->filters([
                 //

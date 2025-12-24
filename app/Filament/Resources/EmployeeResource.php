@@ -253,21 +253,13 @@ class EmployeeResource extends Resource
             return [];
         }
 
-        $archivosNoRequeridos = collect($filesRequired->no_required)->map(function($item){
+        $archivos = collect($filesRequired->required)->map(function($item){
             return [
-                'name' => $item,
-                'is_required_fecha_vencimiento' => false,
+                'name' => $item['document'],
+                'is_required_fecha_vencimiento' => $item['date_is_required'],
+                'is_required' => $item['is_required'],
             ];
         });
-
-        $archivosRequeridos = collect($filesRequired->required)->map(function($item){
-            return [
-                'name' => $item,
-                'is_required_fecha_vencimiento' => true,
-            ];
-        });
-
-        $archivos = $archivosNoRequeridos->merge($archivosRequeridos);
 
         return $archivos->toArray();
     }
@@ -306,7 +298,7 @@ class EmployeeResource extends Resource
                         Forms\Components\FileUpload::make('file')
                             ->label('Archivo')
                             ->required(function(Get $get, Set $set, $context){
-                                $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                $is_required = $get('is_required') ?? false;
                                 return $is_required;
                             })
                             ->storeFileNamesIn('attachment_file_names')
@@ -349,7 +341,7 @@ class EmployeeResource extends Resource
             Forms\Components\FileUpload::make('file')
                 ->label('Archivo')
                 ->required(function(Get $get, Set $set, $context){
-                                $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                $is_required = $get('is_required') ?? false;
                                 return $is_required;
                             })
                 ->storeFileNamesIn('attachment_file_names')
