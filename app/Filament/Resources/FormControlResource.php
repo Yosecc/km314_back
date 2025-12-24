@@ -438,14 +438,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->deletable(false)
                     ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                     ->default(function(Get $get){
-                        if($get('../../income_type')!= null){
-                            $d = self::getArchivos($get('../../income_type'));
-                            dd($d);
-                        }
+                        \Log::info('Entró al default de archivos personales', [$get('../../income_type')]);
                         return self::getArchivos($get('../../income_type'));
                     })
                     ->grid(2)
                     ->columns(1)
+                    ->columnSpanFull()
         ];
     }
 
