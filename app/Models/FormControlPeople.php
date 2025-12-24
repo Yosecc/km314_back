@@ -25,6 +25,11 @@ class FormControlPeople extends Model
 
     }
 
+    public function files()
+    {
+        return $this->hasMany(FormControlPeopleFile::class);
+    }
+
     public function activitiePeople()
     {
         return $this->hasOne(ActivitiesPeople::class,'model_id')->where('model','FormControl')->latest();
