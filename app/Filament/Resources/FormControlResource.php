@@ -232,7 +232,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                             $peoples = $get('peoples') ?? [];
                             foreach ($peoples as $index => $person) {
-                                $set("peoples.{$index}.files", self::getArchivos($state));
+                                $set("peoples.{$index}.files", \App\Filament\Resources\FormControlResource::getArchivos($state));
                             }
                             
                         })
