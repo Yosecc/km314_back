@@ -440,7 +440,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->default(function(Get $get){
                         $incomeType = $get('../.../../income_type');
                         
-                        dd($get('../'));
+                        dd($get('../../'));
                         return [];
                         // return self::getArchivos($get('../../income_type'));
                     })
