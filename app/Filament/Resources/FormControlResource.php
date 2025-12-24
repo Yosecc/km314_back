@@ -882,9 +882,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
     private static function getArchivos($type)
     {
 
-        if($type){
-            dd($type);
-        }
+        
         $filesRequired = FilesRequired::where('type', $type)->first();
 
         $archivos = collect();
