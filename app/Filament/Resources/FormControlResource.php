@@ -438,11 +438,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->deletable(false)
                     ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                     ->default(function(Get $get){
-                        $incomeType = $get('../.../../income_type');
                         
-                        dd($get('../../'));
-                        return [];
-                        // return self::getArchivos($get('../../income_type'));
+                        
+                        dd($get('../../income_type'));
+                        
+                        return self::getArchivos($get('../../income_type'));
                     })
                     ->grid(2)
                     ->columns(1)
