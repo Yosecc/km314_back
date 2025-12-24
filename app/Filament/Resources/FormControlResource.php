@@ -203,7 +203,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->columns(3)
                         ->gridDirection('row')
                         ->columnSpan(2)
-                        ->afterStateUpdated(function (Set $set, $state) {
+                        ->afterStateUpdated(function (Set $set, $state, Get $get) {
                             $set('peoples', [[]]);
 
                                 if($state == 'Visita Temporal (24hs)'){
@@ -229,6 +229,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 'end_time_range' => null,
                                 'date_unilimited' => false,
                             ]]);
+
+                            $peoples = $get('peoples') ?? [];
+                            foreach ($peoples as $index => $person) {
+                                $set("peoples.{$index}.files", self::getArchivos($state));
+                            }
                             
                         })
                         ->required(function(Get $get){
