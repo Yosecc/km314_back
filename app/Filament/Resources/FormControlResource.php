@@ -438,10 +438,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->deletable(false)
                     ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                     ->default(function(Get $get){
-                        
-                        
-                        dd($get('../../income_type'));
-                        
                         return self::getArchivos($get('../../income_type'));
                     })
                     ->grid(2)
@@ -885,6 +881,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
     private static function getArchivos($type)
     {
+
+        if($type){
+            dd($type);
+        }
         $filesRequired = FilesRequired::where('type', $type)->first();
 
         $archivos = collect();
