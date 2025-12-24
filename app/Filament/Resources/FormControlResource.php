@@ -392,7 +392,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
     {
         return [
             Repeater::make('files')
-                    ->relationship()
                     ->label('Documentos')
                     ->schema([
                         // TextEntry::make('name'),
