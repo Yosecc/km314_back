@@ -450,62 +450,74 @@ class FormControlResource extends Resource implements HasShieldPermissions
     public static function personasFormulario()
     {
         return [
-            CheckboxList::make('owners')->label('Trabajadores')
-                ->options(function() {
-                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                        $trabajadores = Auth::user()->owner->getAllTrabajadores();
-                        
-                        // Verificar que no sea null y sea una colección
-                        if ($trabajadores && $trabajadores->isNotEmpty()) {
-                            return $trabajadores->map(function($trabajador) {
-                                return [
-                                    'id' => $trabajador->id,
-                                    'name' => $trabajador->first_name . ' ' . $trabajador->last_name
-                                ];
-                            })->pluck('name', 'id')->toArray();
-                        }
-                    }
-                    return [];
-                })
-                ->visible(function(Get $get){
-                        // Solo visible si está seleccionado "Trabajador" Y el usuario es owner con trabajadores
-                        $isWorkerSelected = collect($get('income_type'))->contains('Trabajador');
-                        
-                        if (!$isWorkerSelected) {
-                            return false;
-                        }
-
-                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                        // Verificar si hay trabajadores en cualquiera de las dos relaciones
-                        $hasEmployees = \App\Models\Employee::whereHas('owners', function($query) {
-                            $query->where('owner_id', Auth::user()->owner_id);
-                        })->exists();
-                        
-                        if (!$hasEmployees) {
-                            $hasEmployees = \App\Models\Employee::where('owner_id', Auth::user()->owner_id)->exists();
-                        }
-                        
-                        return $hasEmployees;
-                    }
-                    return false;
-                })
-                ->dehydrated(function(){
-                    return true;
-                })
-                ->live()
+            // Forzar actualización de archivos personales cuando cambia income_type
+            Forms\Components\Radio::make('income_type_refresh')
+                ->label('')
+                ->hidden()
                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                    $peoples = collect($get('peoples'));
-
-                    $dateRanges = $get('dateRanges');
-                    if(empty($dateRanges) || !is_array($dateRanges) || count($dateRanges) === 0){
-                        Notification::make()
-                            ->title('Seleccione primero al menos un rango de fechas y horas.')
-                            ->danger()
-                            ->send();
-                            $set('owners', []);
-                        return; 
+                    // Forzar refresco de archivos personales en todos los peoples
+                    $peoples = $get('peoples') ?? [];
+                    foreach ($peoples as $idx => $person) {
+                        $peoples[$idx]['files'] = self::getArchivos($get('income_type'));
                     }
-                    
+                    $set('peoples', $peoples);
+                }),
+            CheckboxList::make('owners')->label('Trabajadores')
+                return [
+                    Repeater::make('files')
+                        ->relationship()
+                        ->label('Documentos')
+                        ->schema([
+                            // TextEntry::make('name'),
+                            Forms\Components\Hidden::make('name')->dehydrated(),
+                            DatePicker::make('fecha_vencimiento')
+                                ->label('Fecha de vencimiento del documento')
+                                ->extraFieldWrapperAttributes(function(Get $get, $state){
+                                    if($state  && Carbon::parse($state)->isPast()){
+                                        return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
+                                    }
+                                    return [];
+                                })
+                                ->hidden(function(Get $get, Set $set, $context){
+                                    if($context == 'edit' || $context == 'view'){
+                                        return false;
+                                    }
+                                    $is_required = $context == 'create' && $get('is_required_fecha_vencimiento') ?? false;
+                                    return !$is_required;
+                                })
+                                ->required(function(Get $get, Set $set, $context){
+                                    $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                                    return $is_required;
+                                }),
+                            Forms\Components\FileUpload::make('file')
+                                ->label('Archivo')
+                                ->required(function(Get $get, Set $set, $context){
+                                    $is_required = $get('is_required') ?? false;
+                                    return $is_required;
+                                })
+                                ->storeFileNamesIn('attachment_file_names')
+                                ->openable()
+                                ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                    return $file ? $file->getClientOriginalName() : $record->file;
+                                })
+                                ->disabled(function($context, Get $get){
+                                    return $context == 'edit' ? true:false;
+                                }),
+                        ])
+                        ->defaultItems(1)
+                        ->minItems(1)
+                        ->maxItems(5)
+                        ->addable(false)
+                        ->deletable(false)
+                        ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                        ->default(function(Get $get){
+                            // El valor por defecto se ajusta dinámicamente desde afterStateUpdated en income_type_refresh
+                            return self::getArchivos($get('../../income_type'));
+                        })
+                        ->grid(2)
+                        ->columns(1)
+                        ->columnSpanFull()
+                ];
                     // Verificar que el primer rango tenga todos los campos requeridos
                     $firstRange = $dateRanges[0] ?? [];
                     if(empty($firstRange['start_date_range']) || empty($firstRange['start_time_range']) || 
