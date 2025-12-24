@@ -438,7 +438,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->deletable(false)
                     ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                     ->default(function(Get $get){
-                        $incomeType = $get('../../income_type');
+                        $incomeType = $get('../.../../income_type');
                         if(!isset($incomeType)){
                             return [];
                         }
