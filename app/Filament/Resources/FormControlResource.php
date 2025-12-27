@@ -440,6 +440,18 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->grid(2)
                 ->columns(1)
                 ->columnSpanFull()
+                ->mutateRelationshipDataBeforeCreateUsing(function (array $data, Get $get) {
+                    $incomeType = $get('income_type');
+                    // dd($incomeType);    
+                    $data['files'] = self::getArchivos($incomeType);
+                    return $data;
+                })
+                ->mutateRelationshipDataBeforeFillUsing(function (array $data, Get $get) {
+                    $incomeType = $get('income_type');
+                    // dd($incomeType);    
+                    $data['files'] = self::getArchivos($incomeType);
+                    return $data;
+                })
         ];
         
     }
@@ -775,18 +787,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->columns(4)
                 ->addActionLabel('Agregar persona')
                 ->columnSpanFull()
-                ->mutateRelationshipDataBeforeCreateUsing(function (array $data, Get $get) {
-                    $incomeType = $get('income_type');
-                    // dd($incomeType);    
-                    $data['files'] = self::getArchivos($incomeType);
-                    return $data;
-                })
-                ->mutateRelationshipDataBeforeFillUsing(function (array $data, Get $get) {
-                    $incomeType = $get('income_type');
-                    // dd($incomeType);    
-                    $data['files'] = self::getArchivos($incomeType);
-                    return $data;
-                })
+                
                 // ->afterStateUpdated(function (Set $set, Get $get, $state) {
                 //     // Inicializa archivos requeridos de forma segura, sin referencias, y fuerza refresco visual
                 //     $incomeType = $get('income_type');
