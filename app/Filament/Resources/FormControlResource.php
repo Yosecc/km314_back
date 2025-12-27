@@ -396,7 +396,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->relationship()
                 ->label('Documentos')
                 ->schema([
-                    Forms\Components\Hidden::make('name')->dehydrated(),
+                    Forms\Components\TextInput::make('name')->dehydrated(),
                     DatePicker::make('fecha_vencimiento')
                         ->label('Fecha de vencimiento del documento')
                         ->extraFieldWrapperAttributes(function(Get $get, $state){
