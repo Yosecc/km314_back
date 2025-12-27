@@ -206,22 +206,22 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->afterStateUpdated(function (Set $set, $state, Get $get) {
                             $set('peoples', [[]]);
 
-                                if($state == 'Visita Temporal (24hs)'){
-                                    $set('dateRanges', [[
-                                        'start_date_range' => Carbon::now()->format('Y-m-d'),
-                                        'start_time_range' => Carbon::now()->format('H:i'),
-                                        'end_date_range' => Carbon::now()->addDay()->format('Y-m-d'),
-                                        'end_time_range' => Carbon::now()->format('H:i'),
-                                        'date_unilimited' => false,
-                                    ]]);
+                            if($state == 'Visita Temporal (24hs)'){
+                                $set('dateRanges', [[
+                                    'start_date_range' => Carbon::now()->format('Y-m-d'),
+                                    'start_time_range' => Carbon::now()->format('H:i'),
+                                    'end_date_range' => Carbon::now()->addDay()->format('Y-m-d'),
+                                    'end_time_range' => Carbon::now()->format('H:i'),
+                                    'date_unilimited' => false,
+                                ]]);
 
-                                    Notification::make()
-                                        ->title('Este formulario será válido por 24 horas.')
-                                        ->info()
-                                        ->send();
-                                        return;
-                                }
-                           
+                                Notification::make()
+                                    ->title('Este formulario será válido por 24 horas.')
+                                    ->info()
+                                    ->send();
+                                return;
+                            }
+
                             $set('dateRanges', [[
                                 'start_date_range' => null,
                                 'start_time_range' => null,
@@ -230,11 +230,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 'date_unilimited' => false,
                             ]]);
 
+                            // ACTUALIZA archivos personales de cada persona
                             $peoples = $get('peoples') ?? [];
                             foreach ($peoples as $index => $person) {
-                                $set("peoples.{$index}.files", \App\Filament\Resources\FormControlResource::getArchivos($state));
+                                \Log::debug('act ar',['s'=> self::getArchivos($state), 'get' => $get() ]);
+                                $set("peoples.{$index}.files", self::getArchivos($state));
                             }
-                            
                         })
                         ->required(function(Get $get){
                             if($get('access_type')== null || !count($get('access_type'))){
@@ -442,9 +443,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
             ->addable(false)
             ->deletable(false)
             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-            ->default(function(Get $get){
-                return self::getArchivos($get('../../income_type'));
-            })
+            // ->default(function(Get $get){
+            //     return self::getArchivos($get('../../income_type'));
+            // })
             ->reactive() // <-- ESTA LÍNEA ES LA CLAVE
             ->grid(2)
             ->columns(1)
