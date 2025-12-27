@@ -269,7 +269,10 @@ class ActivitiesPage extends CreateRecord
 
         if ($this->data['type'] == 'Exit') {
             $this->isSalidaValidate($peopleIds, $model);
-            
+            // Validar salida de familiares (OwnerFamily)
+            if ($familiesIds->isNotEmpty()) {
+                $this->isSalidaValidate($familiesIds, 'OwnerFamily');
+            }
             // Validar visitantes espontáneos
             if (!empty($this->data['spontaneous_visit'])) {
                 $visitantesIds = collect($this->data['spontaneous_visit']);
@@ -277,7 +280,10 @@ class ActivitiesPage extends CreateRecord
             }
         } else if ($this->data['type'] == 'Entry') {
             $this->isEntradaValidate($peopleIds, $model);
-            
+            // Validar entrada de familiares (OwnerFamily)
+            if ($familiesIds->isNotEmpty()) {
+                $this->isEntradaValidate($familiesIds, 'OwnerFamily');
+            }
             // Validar visitantes espontáneos
             if (!empty($this->data['spontaneous_visit'])) {
                 $visitantesIds = collect($this->data['spontaneous_visit']);
