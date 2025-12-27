@@ -397,7 +397,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->label('Documentos')
                 ->schema([
                     Forms\Components\TextInput::make('name')
-                        ->required()
+                        // ->required()
+                        ->disabled()
+                        ->dehydrated()
                         ->label('Nombre del documento'),
                     DatePicker::make('fecha_vencimiento')
                         ->label('Fecha de vencimiento del documento')
