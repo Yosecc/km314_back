@@ -95,6 +95,7 @@ class EnElBarrio extends BaseWidget
                 })
                 ->requiresConfirmation()
                 ->color('danger')
+                ->visible(auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('admin'))
                 ->icon('heroicon-o-arrow-right-end-on-rectangle'),
         ])
          ->bulkActions([
@@ -130,6 +131,7 @@ class EnElBarrio extends BaseWidget
                         ]);
                     }
                 })
+                ->visible(auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('admin'))
                 ->requiresConfirmation()
                 ->color('danger')
                 ->icon('heroicon-o-arrow-right-end-on-rectangle'),

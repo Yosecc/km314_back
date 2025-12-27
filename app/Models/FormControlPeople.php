@@ -19,6 +19,12 @@ class FormControlPeople extends Model
 
     
 
+    protected $casts = [
+        'is_responsable' => 'boolean',
+        'is_acompanante' => 'boolean',
+        'is_menor' => 'boolean',        
+    ];
+
     public function formControl()
     {
         return $this->belongsTo(FormControl::class);
