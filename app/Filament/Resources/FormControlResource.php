@@ -793,6 +793,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             $set("peoples.{$index}.files", $archivos);
                         }
                     }
+
+                    dd($get());
                 }),
         ];
     }
