@@ -93,7 +93,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
             return true;
         }
 
-        return auth()->user()->can('view_any::form_control');
+        return auth()->user()->can('view_any_form::control');
     }
 
     protected static function getWorkerTimeOptions(): array
