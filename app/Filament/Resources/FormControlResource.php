@@ -728,6 +728,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 }),
             
                 
+            Forms\Components\Hidden::make('refresh_peoples'),
             Forms\Components\Repeater::make('peoples')
                 ->label('Cargue los datos de las personas que ingresarán al barrio')
                 ->relationship()
@@ -775,7 +776,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->addActionLabel('Agregar persona')
                 ->columnSpanFull()
                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                    // Inicializa archivos requeridos de forma segura, sin referencias
+                    // Inicializa archivos requeridos de forma segura, sin referencias, y fuerza refresco visual
                     $incomeType = $get('income_type');
                     $archivos = self::getArchivos($incomeType);
                     $nuevoPeoples = [];
@@ -799,6 +800,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     }
                     if ($changed) {
                         $set('peoples', $nuevoPeoples);
+                        $set('refresh_peoples', uniqid());
                     }
                 }),
         ];
