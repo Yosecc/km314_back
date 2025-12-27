@@ -776,12 +776,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     // Cuando se agrega un nuevo elemento, inicializa su campo files
                     $incomeType = $get('income_type');
 
-                    // dd($incomeType, $get() );
+                    
                     foreach ($state as $index => $person) {
                         if (!isset($person['files']) || !is_array($person['files']) || count($person['files']) === 0) {
                             $set("peoples.{$index}.files", self::getArchivos($incomeType));
                         }
                     }
+
+                    dd( $incomeType, $get(), self::getArchivos($incomeType) );
                 }),
         ];
     }
