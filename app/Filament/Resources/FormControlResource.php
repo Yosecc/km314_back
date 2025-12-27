@@ -410,50 +410,50 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 return false;
                             }
                             $is_required = $context == 'create' && $get('is_required_fecha_vencimiento') ?? false;
-                            return [
-                                Repeater::make('files')
-                                    ->relationship()
-                                    ->label('Documentos')
-                                    ->schema([
-                                        Forms\Components\TextInput::make('name')->disabled()->dehydrated(),
-                                        DatePicker::make('fecha_vencimiento')
-                                            ->label('Fecha de vencimiento del documento')
-                                            ->extraFieldWrapperAttributes(function(Get $get, $state){
-                                                if($state  && Carbon::parse($state)->isPast()){ return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;']; }
-                                                return [];
-                                            })
-                                            ->hidden(function(Get $get, Set $set, $context){
-                                                if($context == 'edit' || $context == 'view'){ return false; }
-                                                $is_required = $context == 'create' && $get('is_required_fecha_vencimiento') ?? false;
-                                                return !$is_required;
-                                            })
-                                            ->required(function(Get $get, Set $set, $context){
-                                                $is_required = $get('is_required_fecha_vencimiento') ?? false;
-                                                return $is_required;
-                                            }),
-                                        Forms\Components\FileUpload::make('file')
-                                            ->label('Archivo')
-                                            ->required(function(Get $get, Set $set, $context){
-                                                $is_required = $get('is_required') ?? false;
-                                                return $is_required;
-                                            })
-                                            ->storeFileNamesIn('attachment_file_names')
-                                            ->openable()
-                                            ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                                                return $file ? $file->getClientOriginalName() : $record->file;
-                                            })
-                                            ->disabled(function($context, Get $get){
-                                                return $context == 'edit' ? true:false;
-                                            }),
-                                    ])
-                                    ->addable(false)
-                                    ->deletable(false)
-                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                                    ->reactive()
-                                    ->grid(2)
-                                    ->columns(1)
-                                    ->columnSpanFull()
-                            ];
+                            return !$is_required;
+                        })
+                        ->required(function(Get $get, Set $set, $context){
+                            $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                            return $is_required;
+                        }),
+                    Forms\Components\FileUpload::make('file')
+                        ->label('Archivo')
+                        ->required(function(Get $get, Set $set, $context){
+                            $is_required = $get('is_required') ?? false;
+                            return $is_required;
+                        })
+                        ->storeFileNamesIn('attachment_file_names')
+                        ->openable()
+                        ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                            return $file ? $file->getClientOriginalName() : $record->file;
+                        })
+                        ->disabled(function($context, Get $get){
+                            return $context == 'edit' ? true:false;
+                        }),
+                ])
+                ->addable(false)
+                ->deletable(false)
+                ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                ->reactive() // <-- ESTA LÍNEA ES LA CLAVE
+                ->grid(2)
+                ->columns(1)
+                ->columnSpanFull()
+        ];
+        
+    }
+
+    public static function personasFormulario()
+    {
+        return [
+            CheckboxList::make('owners')->label('Trabajadores')
+                ->options(function() {
+                    if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+                        $trabajadores = Auth::user()->owner->getAllTrabajadores();
+                        
+                        // Verificar que no sea null y sea una colección
+                        if ($trabajadores && $trabajadores->isNotEmpty()) {
+                            return $trabajadores->map(function($trabajador) {
+                                return [
                                     'id' => $trabajador->id,
                                     'name' => $trabajador->first_name . ' ' . $trabajador->last_name
                                 ];
