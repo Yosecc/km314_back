@@ -440,18 +440,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->grid(2)
                 ->columns(1)
                 ->columnSpanFull()
-                ->mutateRelationshipDataBeforeCreateUsing(function (array $data, Get $get) {
-                    $incomeType = $get('income_type');
-                    // dd($incomeType);    
-                    $data['files'] = self::getArchivos($incomeType);
-                    return $data;
-                })
-                ->mutateRelationshipDataBeforeFillUsing(function (array $data, Get $get) {
-                    $incomeType = $get('income_type');
-                    // dd($incomeType);    
-                    $data['files'] = self::getArchivos($incomeType);
-                    return $data;
-                })
+                
         ];
         
     }
@@ -787,35 +776,24 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->columns(4)
                 ->addActionLabel('Agregar persona')
                 ->columnSpanFull()
-                
-                // ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                //     // Inicializa archivos requeridos de forma segura, sin referencias, y fuerza refresco visual
-                //     $incomeType = $get('income_type');
-                //     $archivos = self::getArchivos($incomeType);
-                //     $nuevoPeoples = [];
-                //     $changed = false;
-                //     foreach ($state as $index => $person) {
-                //         $files = $person['files'] ?? [];
-                //         $needsInit = false;
-                //         if (!is_array($files) || count($files) === 0) {
-                //             $needsInit = true;
-                //         } else {
-                //             $first = is_array($files) ? reset($files) : null;
-                //             if (!is_array($first) || !array_key_exists('name', $first)) {
-                //                 $needsInit = true;
-                //             }
-                //         }
-                //         if ($needsInit) {
-                //             $person['files'] = $archivos;
-                //             $changed = true;
-                //         }
-                //         $nuevoPeoples[$index] = $person;
-                //     }
-                //     if ($changed) {
-                //         $set('peoples', $nuevoPeoples);
-                //         $set('refresh_peoples', uniqid());
-                //     }
-                // })
+                ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                    static $lastCount = 0;
+                    $incomeType = $get('income_type');
+                    $archivos = self::getArchivos($incomeType);
+                    $currentCount = is_array($state) ? count($state) : 0;
+                    // Detectar si se agregó un nuevo ítem
+                    if ($currentCount > $lastCount) {
+                        // Buscar el/los nuevos (sin files o files vacío)
+                        foreach ($state as $index => $person) {
+                            $files = $person['files'] ?? [];
+                            if (!is_array($files) || count($files) === 0) {
+                                $state[$index]['files'] = $archivos;
+                            }
+                        }
+                        $set('peoples', $state);
+                    }
+                    $lastCount = $currentCount;
+                })
                 ,
         ];
     }
