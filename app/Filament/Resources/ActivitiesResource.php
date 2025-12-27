@@ -434,7 +434,7 @@ Log::info('ActivitiesResource:viewDataPeople - Antes de mapeo personas', [
                 'vencimientos' => []
             ];
 Log::info('ActivitiesResource:viewDataPeople - Después de mapeo personas', [
-    'personas' => $personas
+    'personas' => $persona
 ]);
             // Solo agregar información de vencimientos para empleados en entrada
             if($get('tipo_entrada') == 2 && $get('type') == 1 && $context == 'create') {
