@@ -772,6 +772,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->addable(function(Get $get){
                     return !collect($get('income_type'))->contains('Trabajador') || !auth()->user()->hasRole('owner');
                 })
+                ->afterItemAdded(function (Set $set, Get $get, $state, $index) {
+                    // $index es el índice del nuevo elemento agregado
+                    $incomeType = $get('../../income_type');
+                    $set("peoples.{$index}.files", self::getArchivos($incomeType));
+                })
                 ->itemLabel(fn (array $state): ?string => $state['first_name'] ?? null)
                 ->columns(4)
                 ->addActionLabel('Agregar persona')
