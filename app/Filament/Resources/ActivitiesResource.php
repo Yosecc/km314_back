@@ -142,16 +142,16 @@ class ActivitiesResource extends Resource
     public static function searchOwnerFamily($dni, $type , $ids = [], $owner_id)
     {
         // Buscar familiares por DNI
-        $dniMatches = OwnerFamily::where('dni','like','%'.$dni.'%')->get();
+        $dniMatches = OwnerFamily::where('dni','like','%'.$dni.'%')->with('familiarPrincipal')->get();
         $ownerIds = $dniMatches->pluck('owner_id')->unique()->filter();
 
         // Si hay coincidencias por DNI, traer toda la familia de esos owner_id
         if ($dniMatches->count() > 0) {
-            $data = OwnerFamily::whereIn('owner_id', $ownerIds)->get();
+            $data = OwnerFamily::whereIn('owner_id', $ownerIds)->with('familiarPrincipal')->get();
         } else if ($owner_id != 0) {
-            $data = OwnerFamily::where('owner_id', $owner_id)->get();
+            $data = OwnerFamily::where('owner_id', $owner_id)->with('familiarPrincipal')->get();
         } else if (count($ids)) {
-            $data = OwnerFamily::whereIn('id', $ids)->get();
+            $data = OwnerFamily::whereIn('id', $ids)->with('familiarPrincipal')->get();
         } else {
             $data = collect();
         }
@@ -1171,7 +1171,6 @@ class ActivitiesResource extends Resource
                             // ->relationship(titleAttribute: 'activities_auto_id')
                             ->searchable()
                             ->options(function(Get $get, $context){
-
                                 if($context == 'view'){
                                     return self::searchAutos($get('autos'),'option');
                                 }
@@ -1187,14 +1186,26 @@ class ActivitiesResource extends Resource
                                     $data = (is_array($peoples) && count($peoples)) ? self::searchEmployeeAutos($peoples, 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
-
                                     $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'option') : [];
                                 }
 
+                                // Autos de familiares (OwnerFamily)
                                 if($get('families')){
-                                    $datas = $get('families') ? self::searchAutosModel($get('families'),'option','OwnerFamily') : [];
-                                    $data = collect($data)->union($datas)->toArray();
-								}
+                                    $families = $get('families');
+                                    $datas = $families ? self::searchAutosModel($families,'option','OwnerFamily') : [];
+                                    $data = collect($data)->union($datas);
+
+                                    // Autos de owner principal de cada familiar
+                                    $ownerIds = [];
+                                    if(is_array($families) && count($families)){
+                                        $ownerIds = \App\Models\OwnerFamily::whereIn('id', $families)->pluck('owner_id')->unique()->filter()->toArray();
+                                        if(count($ownerIds)){
+                                            $ownerAutos = self::searchOwnersAutos($ownerIds, 'option');
+                                            $data = $data->union($ownerAutos);
+                                        }
+                                    }
+                                    $data = $data->toArray();
+                                }
 
                                 if($get('spontaneous_visit')){
                                     $datas = $get('spontaneous_visit') ? self::searchAutosModel($get('spontaneous_visit'),'option','OwnerSpontaneousVisit') : [];
@@ -1204,7 +1215,6 @@ class ActivitiesResource extends Resource
                                 return $data;
                             })
                             ->descriptions(function(Get $get, $context){
-
                                 if($context == 'view'){
                                     return self::searchAutos($get('autos'),'descriptions');
                                 }
@@ -1221,10 +1231,24 @@ class ActivitiesResource extends Resource
                                 if($get('tipo_entrada') == 3){
                                     $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'descriptions') : [];
                                 }
+
+                                // Autos de familiares (OwnerFamily)
                                 if($get('families')){
-                                    $datas = $get('families') ? self::searchAutosModel($get('families'),'descriptions','OwnerFamily') : [];
-                                    $data = collect($data)->union($datas)->toArray();
-								}
+                                    $families = $get('families');
+                                    $datas = $families ? self::searchAutosModel($families,'descriptions','OwnerFamily') : [];
+                                    $data = collect($data)->union($datas);
+
+                                    // Autos de owner principal de cada familiar
+                                    $ownerIds = [];
+                                    if(is_array($families) && count($families)){
+                                        $ownerIds = \App\Models\OwnerFamily::whereIn('id', $families)->pluck('owner_id')->unique()->filter()->toArray();
+                                        if(count($ownerIds)){
+                                            $ownerAutos = self::searchOwnersAutos($ownerIds, 'descriptions');
+                                            $data = $data->union($ownerAutos);
+                                        }
+                                    }
+                                    $data = $data->toArray();
+                                }
 
                                 if($get('spontaneous_visit')){
                                     $datas = $get('spontaneous_visit') ? self::searchAutosModel($get('spontaneous_visit'),'descriptions','OwnerSpontaneousVisit') : [];

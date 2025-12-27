@@ -144,13 +144,15 @@ class ActivitiesPage extends CreateRecord
 
         //dd($this->data);
 
-        /** @var \Illuminate\Support\Collection<int, int> $peopleIds */
-        $peopleIds = collect($this->data['peoples']);
 
-        // Validar que al menos se haya seleccionado una persona
-        if ($peopleIds->isEmpty()) {
+        /** @var \Illuminate\Support\Collection<int, int> $peopleIds */
+        $peopleIds = collect($this->data['peoples'] ?? []);
+        $familiesIds = collect($this->data['families'] ?? []);
+
+        // Validar que al menos se haya seleccionado una persona o familiar
+        if ($peopleIds->isEmpty() && $familiesIds->isEmpty()) {
             Notification::make()
-                ->title('Debe seleccionar al menos una persona')
+                ->title('Debe seleccionar al menos una persona o familiar')
                 ->danger()
                 ->send();
             $this->halt();
@@ -267,7 +269,10 @@ class ActivitiesPage extends CreateRecord
 
         if ($this->data['type'] == 'Exit') {
             $this->isSalidaValidate($peopleIds, $model);
-            
+            // Validar salida de familiares (OwnerFamily)
+            if ($familiesIds->isNotEmpty()) {
+                $this->isSalidaValidate($familiesIds, 'OwnerFamily');
+            }
             // Validar visitantes espontáneos
             if (!empty($this->data['spontaneous_visit'])) {
                 $visitantesIds = collect($this->data['spontaneous_visit']);
@@ -275,7 +280,10 @@ class ActivitiesPage extends CreateRecord
             }
         } else if ($this->data['type'] == 'Entry') {
             $this->isEntradaValidate($peopleIds, $model);
-            
+            // Validar entrada de familiares (OwnerFamily)
+            if ($familiesIds->isNotEmpty()) {
+                $this->isEntradaValidate($familiesIds, 'OwnerFamily');
+            }
             // Validar visitantes espontáneos
             if (!empty($this->data['spontaneous_visit'])) {
                 $visitantesIds = collect($this->data['spontaneous_visit']);
@@ -310,9 +318,14 @@ class ActivitiesPage extends CreateRecord
             $personas = Employee::whereIn('id', $peopleIds->toArray())->get();
         } else if ($model == 'FormControl') {
             $personas = FormControlPeople::whereIn('id', $peopleIds->toArray())->get();
+        } else if ($model == 'OwnerFamily') {
+            $personas = \App\Models\OwnerFamily::whereIn('id', $peopleIds->toArray())->get();
+        } else {
+            $personas = collect();
         }
 
         return $personas->map(function($people) {
+            
             return $people['first_name'].' '.$people['last_name'];
         });
     }
