@@ -318,9 +318,14 @@ class ActivitiesPage extends CreateRecord
             $personas = Employee::whereIn('id', $peopleIds->toArray())->get();
         } else if ($model == 'FormControl') {
             $personas = FormControlPeople::whereIn('id', $peopleIds->toArray())->get();
+        } else if ($model == 'OwnerFamily') {
+            $personas = \App\Models\OwnerFamily::whereIn('id', $peopleIds->toArray())->get();
+        } else {
+            $personas = collect();
         }
 
         return $personas->map(function($people) {
+            
             return $people['first_name'].' '.$people['last_name'];
         });
     }
