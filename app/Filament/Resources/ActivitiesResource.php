@@ -1171,7 +1171,6 @@ class ActivitiesResource extends Resource
                             // ->relationship(titleAttribute: 'activities_auto_id')
                             ->searchable()
                             ->options(function(Get $get, $context){
-
                                 if($context == 'view'){
                                     return self::searchAutos($get('autos'),'option');
                                 }
@@ -1187,14 +1186,26 @@ class ActivitiesResource extends Resource
                                     $data = (is_array($peoples) && count($peoples)) ? self::searchEmployeeAutos($peoples, 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
-
                                     $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'option') : [];
                                 }
 
+                                // Autos de familiares (OwnerFamily)
                                 if($get('families')){
-                                    $datas = $get('families') ? self::searchAutosModel($get('families'),'option','OwnerFamily') : [];
-                                    $data = collect($data)->union($datas)->toArray();
-								}
+                                    $families = $get('families');
+                                    $datas = $families ? self::searchAutosModel($families,'option','OwnerFamily') : [];
+                                    $data = collect($data)->union($datas);
+
+                                    // Autos de owner principal de cada familiar
+                                    $ownerIds = [];
+                                    if(is_array($families) && count($families)){
+                                        $ownerIds = \App\Models\OwnerFamily::whereIn('id', $families)->pluck('owner_id')->unique()->filter()->toArray();
+                                        if(count($ownerIds)){
+                                            $ownerAutos = self::searchOwnersAutos($ownerIds, 'option');
+                                            $data = $data->union($ownerAutos);
+                                        }
+                                    }
+                                    $data = $data->toArray();
+                                }
 
                                 if($get('spontaneous_visit')){
                                     $datas = $get('spontaneous_visit') ? self::searchAutosModel($get('spontaneous_visit'),'option','OwnerSpontaneousVisit') : [];
@@ -1204,7 +1215,6 @@ class ActivitiesResource extends Resource
                                 return $data;
                             })
                             ->descriptions(function(Get $get, $context){
-
                                 if($context == 'view'){
                                     return self::searchAutos($get('autos'),'descriptions');
                                 }
@@ -1221,10 +1231,24 @@ class ActivitiesResource extends Resource
                                 if($get('tipo_entrada') == 3){
                                     $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'descriptions') : [];
                                 }
+
+                                // Autos de familiares (OwnerFamily)
                                 if($get('families')){
-                                    $datas = $get('families') ? self::searchAutosModel($get('families'),'descriptions','OwnerFamily') : [];
-                                    $data = collect($data)->union($datas)->toArray();
-								}
+                                    $families = $get('families');
+                                    $datas = $families ? self::searchAutosModel($families,'descriptions','OwnerFamily') : [];
+                                    $data = collect($data)->union($datas);
+
+                                    // Autos de owner principal de cada familiar
+                                    $ownerIds = [];
+                                    if(is_array($families) && count($families)){
+                                        $ownerIds = \App\Models\OwnerFamily::whereIn('id', $families)->pluck('owner_id')->unique()->filter()->toArray();
+                                        if(count($ownerIds)){
+                                            $ownerAutos = self::searchOwnersAutos($ownerIds, 'descriptions');
+                                            $data = $data->union($ownerAutos);
+                                        }
+                                    }
+                                    $data = $data->toArray();
+                                }
 
                                 if($get('spontaneous_visit')){
                                     $datas = $get('spontaneous_visit') ? self::searchAutosModel($get('spontaneous_visit'),'descriptions','OwnerSpontaneousVisit') : [];
