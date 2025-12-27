@@ -773,9 +773,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->addActionLabel('Agregar persona')
                 ->columnSpanFull()
                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                    // dd('sss');
-                    // Inicializa los files solo de las personas que no los tengan
+                    // Cuando se agrega un nuevo elemento, inicializa su campo files
                     $incomeType = $get('../../income_type');
+
+                    dd($incomeType, $get() );
                     foreach ($state as $index => $person) {
                         if (!isset($person['files']) || !is_array($person['files']) || count($person['files']) === 0) {
                             $set("peoples.{$index}.files", self::getArchivos($incomeType));
