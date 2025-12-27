@@ -773,7 +773,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->addActionLabel('Agregar persona')
                 ->columnSpanFull()
                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                    dd('sss');
+                    // dd('sss');
                     // Inicializa los files solo de las personas que no los tengan
                     $incomeType = $get('../../income_type');
                     foreach ($state as $index => $person) {
