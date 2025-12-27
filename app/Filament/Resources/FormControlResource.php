@@ -392,60 +392,53 @@ class FormControlResource extends Resource implements HasShieldPermissions
     private static function formArchivosPersonales()
     {
         return [
-          
-        Repeater::make('files')
-            ->relationship()
-            ->label('Documentos')
-            ->schema([
-                Forms\Components\Hidden::make('name')->dehydrated(),
-                DatePicker::make('fecha_vencimiento')
-                    ->label('Fecha de vencimiento del documento')
-                    ->extraFieldWrapperAttributes(function(Get $get, $state){
-                        if($state  && Carbon::parse($state)->isPast()){
-                            return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
-                        }
-                        return [];
-                    })
-                    ->hidden(function(Get $get, Set $set, $context){
-                        if($context == 'edit' || $context == 'view'){
-                            return false;
-                        }
-                        $is_required = $context == 'create' && $get('is_required_fecha_vencimiento') ?? false;
-                        return !$is_required;
-                    })
-                    ->required(function(Get $get, Set $set, $context){
-                        $is_required = $get('is_required_fecha_vencimiento') ?? false;
-                        return $is_required;
-                    }),
-                Forms\Components\FileUpload::make('file')
-                    ->label('Archivo')
-                    ->required(function(Get $get, Set $set, $context){
-                        $is_required = $get('is_required') ?? false;
-                        return $is_required;
-                    })
-                    ->storeFileNamesIn('attachment_file_names')
-                    ->openable()
-                    ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                        return $file ? $file->getClientOriginalName() : $record->file;
-                    })
-                    ->disabled(function($context, Get $get){
-                        return $context == 'edit' ? true:false;
-                    }),
-            ])
-            ->defaultItems(1)
-            ->minItems(1)
-            ->maxItems(5)
-            ->addable(false)
-            ->deletable(false)
-            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-            // ->default(function(Get $get){
-            //     return self::getArchivos($get('../../income_type'));
-            // })
-            ->reactive() // <-- ESTA LÍNEA ES LA CLAVE
-            ->grid(2)
-            ->columns(1)
-            ->columnSpanFull()
-    ];
+            Repeater::make('files')
+                ->relationship()
+                ->label('Documentos')
+                ->schema([
+                    Forms\Components\Hidden::make('name')->dehydrated(),
+                    DatePicker::make('fecha_vencimiento')
+                        ->label('Fecha de vencimiento del documento')
+                        ->extraFieldWrapperAttributes(function(Get $get, $state){
+                            if($state  && Carbon::parse($state)->isPast()){
+                                return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
+                            }
+                            return [];
+                        })
+                        ->hidden(function(Get $get, Set $set, $context){
+                            if($context == 'edit' || $context == 'view'){
+                                return false;
+                            }
+                            $is_required = $context == 'create' && $get('is_required_fecha_vencimiento') ?? false;
+                            return !$is_required;
+                        })
+                        ->required(function(Get $get, Set $set, $context){
+                            $is_required = $get('is_required_fecha_vencimiento') ?? false;
+                            return $is_required;
+                        }),
+                    Forms\Components\FileUpload::make('file')
+                        ->label('Archivo')
+                        ->required(function(Get $get, Set $set, $context){
+                            $is_required = $get('is_required') ?? false;
+                            return $is_required;
+                        })
+                        ->storeFileNamesIn('attachment_file_names')
+                        ->openable()
+                        ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                            return $file ? $file->getClientOriginalName() : $record->file;
+                        })
+                        ->disabled(function($context, Get $get){
+                            return $context == 'edit' ? true:false;
+                        }),
+                ])
+                ->addable(false)
+                ->deletable(false)
+                ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                ->reactive() // <-- ESTA LÍNEA ES LA CLAVE
+                ->grid(2)
+                ->columns(1)
+                ->columnSpanFull()
+        ];
         
     }
 
@@ -773,16 +766,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     Forms\Components\Toggle::make('is_acompanante')->default(false)->label(__("general.Acompanante")),
                     Forms\Components\Toggle::make('is_menor')->default(false)->label(__("general.Minor")),
                     
-                    // FileUpload::make('file_dni')->required()->label('DNI')
-                    //     ->required(function(Get $get){
-                    //         return collect($get('../../income_type'))->contains('Inquilino');
-                    //     })
-                    //     ->visible(function(Get $get){
-                    //         return collect($get('../../income_type'))->contains('Inquilino');
-                    //     }),
                     ...self::formArchivosPersonales(),
-
-                    
 
                 ])
                 ->addable(function(Get $get){
