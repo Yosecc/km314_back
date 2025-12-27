@@ -849,7 +849,9 @@ class ActivitiesResource extends Resource
                                             if($form['income_type'] == 'Trabajador'){
                                                 $form->peoples->map(function($people) use (&$vencimientos){
                                                     $employee = Employee::where('dni',$people->dni)->first();
-                                                    $vencimientos = $employee->vencimientos();
+                                                    if ($employee) {
+                                                        $vencimientos = $employee->vencimientos();
+                                                    }
                                                 });
                                             }
 
