@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class OwnerFamily extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HasQuickAccessCode;
 
-    protected $fillable = ['owner_id','dni','first_name','last_name','parentage','is_menor','phone'];
+    protected $fillable = ['owner_id','dni','first_name','last_name','parentage','is_menor','phone','quick_access_code'];
 
     public function familiarPrincipal()
     {

@@ -164,7 +164,13 @@ class ActivitiesResource extends Resource
                 $people['texto'] = $people->dni;
                 $people['texto'] .= ' - Familiar de: '.$people->familiarPrincipal->first_name . " " . $people->familiarPrincipal->last_name ;
             }
-
+            // Agregar el código y el QR si existe
+            $people['quick_access_code'] = $people->quick_access_code;
+            if (method_exists($people, 'generateQrCodeForSharing')) {
+                $people['qr_svg'] = $people->generateQrCodeForSharing();
+            } else {
+                $people['qr_svg'] = null;
+            }
             return $people;
         };
 
@@ -635,59 +641,45 @@ class ActivitiesResource extends Resource
                         ->live(onBlur: true)
                         ->afterStateUpdated(function($state, Set $set, Get $get) {
                             if (!$state) return;
-                            
                             // Buscar la entidad por código
                             $employee = Employee::where('quick_access_code', $state)->first();
                             $owner = Owner::where('quick_access_code', $state)->first();
                             $formControl = FormControl::where('quick_access_code', $state)->first();
-                            
-                            $entity = $employee ?? $owner ?? $formControl;
-                            
+                            $ownerFamily = \App\Models\OwnerFamily::where('quick_access_code', $state)->first();
+
+                            $entity = $employee ?? $owner ?? $formControl ?? $ownerFamily;
+
                             if ($entity) {
                                 if ($entity instanceof Employee) {
-                                    // Siempre rellenar tipo_entrada y num_search
                                     $set('tipo_entrada', 2);
                                     $set('num_search', $entity->dni);
-                                    
-                                    // Validar empleado solo si es entrada
                                     if ($get('type') == 1) {
                                         $canSelect = true;
                                         $errores = [];
-                                        
-                                        // Verificar seguro vencido
                                         if($entity->isVencidoSeguro()) {
                                             $canSelect = false;
                                             $errores[] = '⚠️ Seguro vencido desde: ' . $entity->insurance_expiration_date->format('d/m/Y');
                                         }
-                                        
-                                        // Verificar archivos vencidos
                                         if($entity->vencidosFile()) {
                                             $canSelect = false;
                                             $vencidos = $entity->vencidosFile();
                                             $errores[] = '⚠️ Documentos vencidos: ' . implode(', ', $vencidos);
                                         }
-                                        
-                                        // Verificar archivos de autos vencidos
                                         if($entity->vencidosAutosFile()) {
                                             $canSelect = false;
                                             $vencidos = $entity->vencidosAutosFile();
                                             $errores[] = '⚠️ Archivos de vehículos vencidos: ' . implode(', ', $vencidos);
                                         }
-                                        
-                                        // Verificar orígenes y formularios
                                         $hasOrigenes = $entity->employeeOrigens && $entity->employeeOrigens->count() > 0;
                                         $hasOwners = $entity->owners && $entity->owners->count() > 0;
-                                        
                                         if($hasOwners && !$hasOrigenes) {
                                             $hasFormularioAuthorized = false;
-                                            
                                             foreach($entity->owners as $owner) {
                                                 $formControls = \App\Models\FormControl::where('owner_id', $owner->id)
                                                     ->whereHas('peoples', function($query) use ($entity) {
                                                         $query->where('dni', $entity->dni);
                                                     })
                                                     ->get();
-                                                
                                                 foreach($formControls as $form) {
                                                     if($form->isActive() && $form->autorizado == 1) {
                                                         $hasFormularioAuthorized = true;
@@ -695,13 +687,11 @@ class ActivitiesResource extends Resource
                                                     }
                                                 }
                                             }
-                                            
                                             if(!$hasFormularioAuthorized) {
                                                 $canSelect = false;
                                                 $errores[] = '⚠️ No tiene formularios autorizados y activos';
                                             }
                                         }
-                                        
                                         if (!$canSelect) {
                                             \Filament\Notifications\Notification::make()
                                                 ->title('Empleado encontrado - NO puede ingresar')
@@ -709,15 +699,11 @@ class ActivitiesResource extends Resource
                                                 ->warning()
                                                 ->duration(10000)
                                                 ->send();
-                                            
                                             $set('quick_code', '');
                                             return;
                                         }
                                     }
-                                    
-                                    // Solo seleccionar automáticamente si pasó las validaciones o es salida
                                     $set('peoples', [$entity->id]);
-                                    
                                     \Filament\Notifications\Notification::make()
                                         ->title('Empleado encontrado')
                                         ->body($entity->first_name . ' ' . $entity->last_name)
@@ -727,8 +713,6 @@ class ActivitiesResource extends Resource
                                     $set('tipo_entrada', 1);
                                     $set('num_search', $entity->dni);
                                     $set('peoples', [$entity->id]);
-                                    
-                                    // Obtener y establecer el lote del propietario
                                     $lotes = collect($entity->lotes);
                                     $lote = $lotes->map(function($lote){
                                         return $lote->getNombre();
@@ -736,7 +720,6 @@ class ActivitiesResource extends Resource
                                     if($lote) {
                                         $set('lote_ids', $lote);
                                     }
-                                    
                                     \Filament\Notifications\Notification::make()
                                         ->title('Propietario encontrado')
                                         ->body($entity->first_name . ' ' . $entity->last_name)
@@ -745,15 +728,21 @@ class ActivitiesResource extends Resource
                                 } elseif ($entity instanceof FormControl) {
                                     $set('tipo_entrada', 3);
                                     $set('form_control_id', $entity->id);
-                                    
                                     \Filament\Notifications\Notification::make()
                                         ->title('Formulario encontrado')
                                         ->body('Formulario #' . $entity->id)
                                         ->success()
                                         ->send();
+                                } elseif ($entity instanceof \App\Models\OwnerFamily) {
+                                    $set('tipo_entrada', 1);
+                                    $set('families', [$entity->id]);
+                                    $set('num_search', $entity->dni);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Familiar encontrado')
+                                        ->body($entity->first_name . ' ' . $entity->last_name)
+                                        ->success()
+                                        ->send();
                                 }
-                                
-                                // Limpiar el campo después de usar
                                 $set('quick_code', '');
                             } else {
                                 \Filament\Notifications\Notification::make()
