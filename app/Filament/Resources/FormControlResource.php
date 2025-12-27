@@ -774,7 +774,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->columnSpanFull()
                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
                     // Cuando se agrega un nuevo elemento, inicializa su campo files
-                    $incomeType = $get('../../income_type');
+                    $incomeType = $get('income_type');
 
                     dd($incomeType, $get() );
                     foreach ($state as $index => $person) {
