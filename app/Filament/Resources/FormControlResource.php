@@ -47,6 +47,7 @@ use Filament\Forms\Components\Actions\Action as FormAction;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use App\Filament\Resources\FormControlResource\RelationManagers;
 use Filament\Notifications\Actions\Action as NotificationAction;
+use Mockery\Matcher\Not;
 
 class FormControlResource extends Resource implements HasShieldPermissions
 {
@@ -293,26 +294,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated()
                         ->live()
-                        // ->disabledDates(function(Get $get){
-                        //     if (collect($get('../../income_type'))->contains('Trabajador')) {
-                        //         // Deshabilitar domingos (día 0)
-                        //         $disabledDates = [];
-                        //         $start = Carbon::now();
-                        //         $end = Carbon::now()->addYear();
-                                
-                        //         for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
-                        //             if ($date->dayOfWeek === 0) { // 0 = Domingo
-                        //                 $disabledDates[] = $date->format('Y-m-d');
-                        //             }
-                        //         }
-                                
-                        //         return $disabledDates;
-                        //     }
-                        //     return [];
-                        // })
                         ->afterStateUpdated(function (Set $set, Get $get, $state) {
                             // Si es Trabajador, la fecha de fin debe ser la misma que la de inicio
-                            if (collect($get('../../income_type'))->contains('Trabajador') && $state && !auth()->user()->hasRole(['super_admin','admin'])) {
+                            if (collect($get('../../income_type'))->contains('Trabajador') && $state) {
                                 // Validar que no sea domingo
                                 $date = Carbon::parse($state);
                                 if ($date->dayOfWeek === 0) {
@@ -360,6 +344,17 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->required()
                         ->disabled(function(Get $get){
                             return $get('../../income_type') == 'Visita Temporal (24hs)';
+                        })
+                        ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                            // Si es Trabajador, la hora de fin debe ser 18:00
+                            if (collect($get('../../income_type'))->contains('Trabajador') && $state) {
+                                $set('end_time_range', '18:00');
+
+                                Notification::make()
+                                    ->title('La hora de finalización para trabajadores es hasta las 18:00 hs.')
+                                    ->info()
+                                    ->send();
+                            }
                         })
                         ->dehydrated()
                         ->seconds(false)
