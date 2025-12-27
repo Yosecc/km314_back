@@ -738,8 +738,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated(true)
                         ->numeric(),
-                                            
-                                            
                     Forms\Components\TextInput::make('first_name')
                         ->label(__("general.FirstName"))
                         ->required()
@@ -765,22 +763,24 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     Forms\Components\Toggle::make('is_responsable')->default(false)->label(__("general.Responsable")),
                     Forms\Components\Toggle::make('is_acompanante')->default(false)->label(__("general.Acompanante")),
                     Forms\Components\Toggle::make('is_menor')->default(false)->label(__("general.Minor")),
-                    
                     ...self::formArchivosPersonales(),
-
                 ])
                 ->addable(function(Get $get){
                     return !collect($get('income_type'))->contains('Trabajador') || !auth()->user()->hasRole('owner');
                 })
-                ->afterItemAdded(function (Set $set, Get $get, $state, $index) {
-                    // $index es el índice del nuevo elemento agregado
-                    $incomeType = $get('../../income_type');
-                    $set("peoples.{$index}.files", self::getArchivos($incomeType));
-                })
                 ->itemLabel(fn (array $state): ?string => $state['first_name'] ?? null)
                 ->columns(4)
                 ->addActionLabel('Agregar persona')
-                ->columnSpanFull(),
+                ->columnSpanFull()
+                ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                    // Cuando se agrega un nuevo elemento, inicializa su campo files
+                    $incomeType = $get('../../income_type');
+                    foreach ($state as $index => $person) {
+                        if (!isset($person['files']) || !is_array($person['files']) || count($person['files']) === 0) {
+                            $set("peoples.{$index}.files", self::getArchivos($incomeType));
+                        }
+                    }
+                }),
         ];
     }
     
