@@ -2,37 +2,40 @@
 
 namespace App\Providers\Filament;
 
-use  App\Filament\Resources\IncidentResource\Widgets\IncidentesStats;
-use App\Filament\Resources\ActivitiesResource\Widgets\UltimasActividades;
-use App\Filament\Resources\FormControlResource\Widgets\FormControlStats;
-use App\Filament\Widgets\EmpleadosEnElBarrio;
-use App\Filament\Widgets\EnElBarrio;
-use App\Filament\Widgets\Entry;
-use App\Filament\Widgets\FormIncidentComplianceWidget;
-use App\Filament\Widgets\FormIncidentStatsWidget;
-use App\Filament\Widgets\InquilinosEnElBarrio;
-use App\Filament\Widgets\Personas;
-use App\Filament\Widgets\PropietariosEnElBarrio;
-use App\Filament\Widgets\TrabajadoresEnElBarrio;
-use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\NavigationBuilder;
-use Filament\Navigation\NavigationGroup;
-use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
-use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\Widgets;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
-use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
-use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\Session\Middleware\AuthenticateSession;
+use Filament\PanelProvider;
+use App\Filament\Widgets\Entry;
+use App\Filament\Widgets\Personas;
+use Filament\Support\Colors\Color;
+use App\Filament\Widgets\EnElBarrio;
+use Filament\Navigation\NavigationItem;
+use Filament\Navigation\NavigationGroup;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Navigation\NavigationBuilder;
+use App\Filament\Widgets\EmpleadosEnElBarrio;
+use App\Filament\Widgets\InquilinosEnElBarrio;
 use Illuminate\Session\Middleware\StartSession;
+use App\Filament\Widgets\PropietariosEnElBarrio;
+use App\Filament\Widgets\TrabajadoresEnElBarrio;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use App\Filament\Widgets\FormIncidentStatsWidget;
+use App\Filament\Widgets\UserTermsConditionsCheck;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use App\Filament\Widgets\FormIncidentComplianceWidget;
+use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use App\Filament\Resources\OwnerResource\Widgets\OwnerQr;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
+use App\Filament\Resources\SlidersResource\Widgets\Sliders;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use  App\Filament\Resources\IncidentResource\Widgets\IncidentesStats;
+use App\Filament\Resources\FormControlResource\Widgets\FormControlStats;
+use App\Filament\Resources\ActivitiesResource\Widgets\UltimasActividades;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -64,12 +67,15 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                UserTermsConditionsCheck::class,
                 EnElBarrio::class,
                 FormIncidentComplianceWidget::class,
                 FormIncidentStatsWidget::class,
                 //UltimasActividades::class,
-                IncidentesStats::class,
+                // IncidentesStats::class,
                 FormControlStats::class,
+                Sliders::class,
+                OwnerQr::class
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -86,7 +92,10 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->databaseNotifications()
-
+            ->renderHook(
+                'panels::body.end',
+                fn () => view('components.qr-scanner-modal')
+            )
             ;
     }
 }

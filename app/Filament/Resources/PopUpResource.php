@@ -19,6 +19,9 @@ class PopUpResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'App';
+
+
     public static function form(Form $form): Form
     {
         return $form

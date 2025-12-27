@@ -38,6 +38,12 @@ class IncidentResource extends Resource
     protected static ?string $navigationLabel = 'Incidencias';
     protected static ?string $label = 'incidiencia';
     // protected static ?string $navigationGroup = 'Configuración';
+
+    public static function canViewAny(): bool
+    {
+        return false;
+    }
+    
     public static function form(Form $form): Form
     {
         return $form

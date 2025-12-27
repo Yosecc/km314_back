@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasQuickAccessCode;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
@@ -9,11 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 class FormControl extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory, SoftDeletes, HasQuickAccessCode;
 
 
-    protected $fillable = ['owner_id','access_type','income_type','tipo_trabajo','is_moroso', 'lote_ids','start_date_range', 'start_time_range', 'end_date_range', 'end_time_range', 'status', 'category', 'authorized_user_id','denied_user_id','user_id','date_unilimited','observations','construction_companie_id'];
+    protected $fillable = ['owner_id','access_type','income_type','tipo_trabajo','is_moroso', 'lote_ids','start_date_range', 'start_time_range', 'end_date_range', 'end_time_range', 'status', 'category', 'authorized_user_id','denied_user_id','user_id','date_unilimited','observations','construction_companie_id', 'quick_access_code'];
 
     protected $casts = [
         'lote_ids' => 'array',
@@ -156,6 +156,11 @@ class FormControl extends Model
         return $this->belongsTo(User::class,'authorized_user_id');
     }
 
+    public function mascotas()
+    {
+        return $this->hasMany(FormControlMascota::class);
+    }
+
     public function deniedUser()
     {
         return $this->belongsTo(User::class,'denied_user_id');
@@ -181,21 +186,34 @@ class FormControl extends Model
         return $this->belongsTo(Owner::class);
     }
 
+    public function dateRanges()
+    {
+        return $this->hasMany(FormControlDateRange::class);
+    }
+    
+
     public function isDayRange()
     {
+        // Si tiene rangos de fechas definidos, verificar si alguno es válido
+        if ($this->dateRanges()->exists()) {
+            foreach ($this->dateRanges as $dateRange) {
+                if ($dateRange->isInRange()) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
+        // Fallback a los campos legacy (para compatibilidad con registros antiguos)
         $start_date_range = $this->start_date_range;
         $end_date_range = $this->end_date_range ?? Carbon::now()->addMonth()->format('Y-m-d');
 
         // Concatenar las horas a las fechas si están presentes
-
         $start_date_range .= ' ' . ($this->start_time_range ?  $this->start_time_range : '00:00');
         $end_date_range .= ' ' . ($this->end_time_range ? $this->end_time_range : '00:00');
 
-       // dd( $start_date_range, $end_date_range);
         // Convertir las fechas de cadena a objetos Carbon
-
-        $start_date_range = substr($start_date_range, 0, 16); // "2024-12-10 08:00"
+        $start_date_range = substr($start_date_range, 0, 16);
         $start = Carbon::createFromFormat('Y-m-d H:i', $start_date_range);
         $end_date_range = substr($end_date_range, 0, 16);
         $end = Carbon::createFromFormat('Y-m-d H:i', $end_date_range);
@@ -209,12 +227,23 @@ class FormControl extends Model
 
     public function getRangeDate()
     {
+        // Si tiene rangos de fechas, devolver todos concatenados
+        if ($this->dateRanges()->exists()) {
+            return $this->dateRanges->map(function ($dateRange) {
+                return $dateRange->getFormattedRange();
+            })->implode(' | ');
+        }
+
+        // Fallback a los campos legacy
         $start_date_range = $this->start_date_range;
         $end_date_range = $this->end_date_range;
-        // Concatenar las horas a las fechas si están presentes
-
+        
         $start_date_range .= ' ' . ($this->start_time_range ?  $this->start_time_range : '00:00');
         $end_date_range .= ' ' . ($this->end_time_range ? $this->end_time_range : '00:00');
+        
+        $start_date_range = substr($start_date_range, 0, 16);
+        $end_date_range = substr($end_date_range, 0, 16);
+        
         return Carbon::createFromFormat('Y-m-d H:i', $start_date_range)->isoFormat('LLL') . ' / ' . Carbon::createFromFormat('Y-m-d H:i', $end_date_range)->isoFormat('LLL');
     }
 }

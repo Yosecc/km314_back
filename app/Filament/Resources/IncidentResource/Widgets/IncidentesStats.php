@@ -10,6 +10,17 @@ class IncidentesStats extends BaseWidget
 {
     use HasWidgetShield;
 
+    protected ?string $heading = 'Estadísticas de Incidentes';
+
+    public static function isVisible(): bool
+    {
+    return false;
+    }
+    public static function canView(): bool
+    {
+        return false;
+    }
+
     protected function getStats(): array
     {
         return [

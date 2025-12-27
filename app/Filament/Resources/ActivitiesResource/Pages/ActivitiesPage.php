@@ -7,6 +7,7 @@ use App\Models\Owner;
 use Filament\Actions;
 use App\Models\Employee;
 use Filament\Actions\Action;
+use App\Models\FormControl;
 use App\Models\OwnerSpontaneousVisit;
 use App\Models\ActivitiesAuto;
 use App\Models\ActivitiesPeople;
@@ -56,6 +57,34 @@ class ActivitiesPage extends CreateRecord
         }
     }
 
+    protected function isSalidaValidateSpontaneous($visitantesIds): void
+    {
+        // Validar salida de visitantes espontáneos
+        $visitantesInside = ActivitiesPeople::whereIn('model_id', $visitantesIds)
+            ->where('model', 'OwnerSpontaneousVisit')
+            ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
+            ->select('activities_people.model_id', DB::raw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) as entries'), DB::raw('SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END) as exits'))
+            ->groupBy('activities_people.model_id')
+            ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
+            ->pluck('model_id')->toArray();
+
+        $visitantesNotInside = $visitantesIds->diff($visitantesInside);
+
+        if ($visitantesNotInside->isNotEmpty()) {
+            $visitantes = OwnerSpontaneousVisit::whereIn('id', $visitantesNotInside->toArray())->get();
+            $nombres = $visitantes->map(function($visitante) {
+                return $visitante->first_name . ' ' . $visitante->last_name;
+            });
+
+            Notification::make()
+                ->title('Algunos visitantes espontáneos no han entrado aún: ' . implode(', ', $nombres->toArray()))
+                ->danger()
+                ->send();
+
+            $this->halt();
+        }
+    }
+
     protected function isEntradaValidate($peopleIds, $model): void
     {
         $peopleOutside = ActivitiesPeople::whereIn('model_id', $peopleIds)
@@ -80,6 +109,33 @@ class ActivitiesPage extends CreateRecord
             }
     }
 
+    protected function isEntradaValidateSpontaneous($visitantesIds): void
+    {
+        // Validar entrada de visitantes espontáneos
+        $visitantesAlreadyInside = ActivitiesPeople::whereIn('model_id', $visitantesIds)
+                ->where('model', 'OwnerSpontaneousVisit')
+                ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
+                ->select('activities_people.model_id', DB::raw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) as entries'), DB::raw('SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END) as exits'))
+                ->groupBy('activities_people.model_id')
+                ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
+                ->pluck('model_id')->toArray();
+
+        $visitantesAlreadyInside = $visitantesIds->intersect($visitantesAlreadyInside);
+
+        if ($visitantesAlreadyInside->isNotEmpty()) {
+            $visitantes = OwnerSpontaneousVisit::whereIn('id', $visitantesAlreadyInside->toArray())->get();
+            $nombres = $visitantes->map(function($visitante) {
+                return $visitante->first_name . ' ' . $visitante->last_name;
+            });
+
+            Notification::make()
+                ->title('Algunos visitantes espontáneos no han salido aún: ' . implode(', ', $nombres->toArray()))
+                ->danger()
+                ->send();
+            $this->halt();
+        }
+    }
+
     protected function beforeCreate(): void
     {
         // Runs before the form fields are saved to the database.
@@ -90,6 +146,15 @@ class ActivitiesPage extends CreateRecord
 
         /** @var \Illuminate\Support\Collection<int, int> $peopleIds */
         $peopleIds = collect($this->data['peoples']);
+
+        // Validar que al menos se haya seleccionado una persona
+        if ($peopleIds->isEmpty()) {
+            Notification::make()
+                ->title('Debe seleccionar al menos una persona')
+                ->danger()
+                ->send();
+            $this->halt();
+        }
 
         if($this->data['type'] ==  1) {
             $this->data['type'] = 'Entry';
@@ -170,14 +235,52 @@ class ActivitiesPage extends CreateRecord
 
         }else if($this->data['tipo_entrada'] == 3){
             $model = 'FormControl';
+            
+            // Validar que el FormControl esté dentro del rango de fechas válido
+            if (!empty($this->data['form_control_id'])) {
+                $formControl = FormControl::find($this->data['form_control_id']);
+                
+                if ($formControl) {
+                    // Validar si está autorizado
+                    if ($formControl->status !== 'Authorized') {
+                        Notification::make()
+                            ->title('El formulario seleccionado no está autorizado')
+                            ->danger()
+                            ->send();
+                        $this->halt();
+                    }
+                    
+                    // Validar si está dentro del rango de fechas
+                    if (!$formControl->isDayRange()) {
+                        Notification::make()
+                            ->title('El formulario no está dentro del rango de fechas válido')
+                            ->body($formControl->getRangeDate())
+                            ->danger()
+                            ->send();
+                        $this->halt();
+                    }
+                }
+            }
         }
 
 
 
         if ($this->data['type'] == 'Exit') {
             $this->isSalidaValidate($peopleIds, $model);
+            
+            // Validar visitantes espontáneos
+            if (!empty($this->data['spontaneous_visit'])) {
+                $visitantesIds = collect($this->data['spontaneous_visit']);
+                $this->isSalidaValidateSpontaneous($visitantesIds);
+            }
         } else if ($this->data['type'] == 'Entry') {
             $this->isEntradaValidate($peopleIds, $model);
+            
+            // Validar visitantes espontáneos
+            if (!empty($this->data['spontaneous_visit'])) {
+                $visitantesIds = collect($this->data['spontaneous_visit']);
+                $this->isEntradaValidateSpontaneous($visitantesIds);
+            }
         }
 
         if (!empty($this->data['spontaneous_visit'])) {

@@ -1,0 +1,999 @@
+<?php
+
+namespace App\Filament\Resources\EmployeeResource\Traits;
+
+use Carbon\Carbon;
+use Filament\Forms;
+use App\Models\User;
+use Filament\Forms\Get;
+use App\Models\Employee;
+use Illuminate\Support\Facades\Auth;
+use Filament\Forms\Components\Repeater;
+use Illuminate\Support\Facades\Storage;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\DatePicker;
+use Filament\Actions\Action as PageAction;
+use Filament\Forms\Components\Placeholder;
+use Filament\Tables\Actions\Action as TableAction;
+use Filament\Notifications\Actions\Action as NotificationAction;
+
+
+trait HasGestionAction
+{
+    /**
+     * Action para gestionar autos en TABLA
+     */
+    public static function getGestionarAutosTableAction(): TableAction
+    {
+        return TableAction::make('gestionarAutos')
+            ->label('Gestionar vehículos')
+            ->icon('heroicon-o-truck')
+            ->color('primary')
+            ->visible(function ($record) {
+                return $record->status === 'aprobado';
+            })
+            ->fillForm(function (Employee $record): array {
+                return [
+                    'autos' => $record->autos->map(function ($auto) {
+                        return [
+                            'id' => $auto->id,
+                            'marca' => $auto->marca,
+                            'modelo' => $auto->modelo,
+                            'patente' => $auto->patente,
+                            'color' => $auto->color,
+                            'user_id' => $auto->user_id,
+                            'model' => $auto->model,
+                            'files' => $auto->files->map(function ($file) {
+                                return [
+                                    'id' => $file->id,
+                                    'name' => $file->name,
+                                    'fecha_vencimiento' => $file->fecha_vencimiento,
+                                    'file' => $file->file,
+                                ];
+                            })->toArray()
+                        ];
+                    })->toArray()
+                ];
+            })
+            ->form([
+                Placeholder::make('')
+                    ->content('Aquí puedes gestionar los vehículos del trabajador. Puedes agregar nuevos vehículos o eliminar los existentes. Los cambios pasarán por un proceso de verificación.')
+                    ->columnSpanFull(),
+
+                Forms\Components\Repeater::make('autos')
+                    ->label('Vehículos')
+                    ->schema([
+                        Forms\Components\Hidden::make('id'),
+                        Forms\Components\TextInput::make('marca')
+                            ->label(__("general.Marca"))
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('modelo')
+                            ->label(__("general.Modelo"))
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('patente')
+                            ->label(__("general.Patente"))
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('color')
+                            ->label(__("general.Color"))
+                            ->maxLength(255),
+                        Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+                        Forms\Components\Hidden::make('model')->default('Employee'),
+                        Repeater::make('files')
+                            ->label('Documentos del vehículo')
+                            ->schema([
+                                Forms\Components\Hidden::make('id'),
+                                Forms\Components\Hidden::make('name')->dehydrated(),
+                                DatePicker::make('fecha_vencimiento')
+                                    ->label('Fecha de vencimiento del documento')
+                                    ->extraFieldWrapperAttributes(function(Get $get, $state){
+                                        if(Carbon::parse($state)->isPast()){
+                                            return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
+                                        }
+                                        return [];
+                                    })
+                                    ->required(),
+                                Forms\Components\FileUpload::make('file')
+                                    ->label('Archivo')
+                                    ->required()
+                                    ->storeFileNamesIn('attachment_file_names')
+                                    ->openable()
+                                    ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                        return $file ? $file->getClientOriginalName() : ($record ? $record->file : null);
+                                    })
+                            ])
+                            ->defaultItems(3)
+                            ->minItems(3)
+                            ->maxItems(3)
+                            ->addable(false)
+                            ->deletable(false)
+                            ->grid(2)
+                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                            ->default([
+                                [
+                                    'name' => 'Seguro del Vehículo',
+                                ],
+                                [
+                                    'name' => 'VTV',
+                                ],
+                                [
+                                    'name' => 'Cédula del Vehículo',
+                                ],
+                            ])
+                            ->columns(1)
+                            ->columnSpanFull(),
+                    ])
+                    ->itemLabel(fn (array $state): ?string => 
+                        isset($state['patente']) ? "Vehículo: {$state['patente']}" : 'Nuevo vehículo'
+                    )
+                    ->addActionLabel('Agregar vehículo')
+                    ->defaultItems(0)
+                    ->deletable(true)
+                    ->reorderable(false)
+                    ->columns(2)
+                    ->columnSpanFull()
+            ])
+            ->action(function (Employee $record, array $data): void {
+                $autosActuales = $record->autos->pluck('id')->toArray();
+                $autosFormulario = collect($data['autos'])->pluck('id')->filter()->toArray();
+                
+                // Autos a eliminar (están en BD pero no en el formulario)
+                $autosEliminar = array_diff($autosActuales, $autosFormulario);
+                
+                // Eliminar autos y sus archivos
+                foreach ($autosEliminar as $autoId) {
+                    $auto = $record->autos()->find($autoId);
+                    if ($auto) {
+                        // Eliminar archivos físicos
+                        foreach ($auto->files as $file) {
+                            if (Storage::exists($file->file)) {
+                                Storage::delete($file->file);
+                            }
+                            $file->delete();
+                        }
+                        $auto->delete();
+                    }
+                }
+                
+                // Procesar autos del formulario
+                foreach ($data['autos'] as $autoData) {
+                    if (isset($autoData['id']) && $autoData['id']) {
+                        // Actualizar auto existente
+                        $auto = $record->autos()->find($autoData['id']);
+                        if ($auto) {
+                            $auto->update([
+                                'marca' => $autoData['marca'],
+                                'modelo' => $autoData['modelo'],
+                                'patente' => $autoData['patente'],
+                                'color' => $autoData['color'],
+                            ]);
+                            
+                            // Actualizar archivos
+                            foreach ($autoData['files'] as $fileData) {
+                                if (isset($fileData['id']) && $fileData['id']) {
+                                    $file = $auto->files()->find($fileData['id']);
+                                    if ($file) {
+                                        $file->update([
+                                            'fecha_vencimiento' => $fileData['fecha_vencimiento'],
+                                            'file' => is_array($fileData['file']) ? $fileData['file'][0] : $fileData['file'],
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Crear nuevo auto
+                        $nuevoAuto = $record->autos()->create([
+                            'marca' => $autoData['marca'],
+                            'modelo' => $autoData['modelo'],
+                            'patente' => $autoData['patente'],
+                            'color' => $autoData['color'],
+                            'user_id' => Auth::user()->id,
+                            'model' => 'Employee',
+                            'model_id' => $record->id,
+                        ]);
+                        
+                        // Crear archivos para el nuevo auto
+                        foreach ($autoData['files'] as $fileData) {
+                            if (isset($fileData['file'])) {
+                                $nuevoAuto->files()->create([
+                                    'name' => $fileData['name'],
+                                    'fecha_vencimiento' => $fileData['fecha_vencimiento'],
+                                    'file' => is_array($fileData['file']) ? $fileData['file'][0] : $fileData['file'],
+                                ]);
+                            }
+                        }
+                    }
+                }
+                
+                Notification::make()
+                    ->title('Vehículos actualizados')
+                    ->body('Los cambios en los vehículos pasarán por un proceso de verificación.')
+                    ->success()
+                    ->send();
+
+                $recipient = User::whereHas("roles", function($q){ 
+                    $q->whereIn("name", ["super_admin","admin"]); 
+                })->get();
+
+                Notification::make()
+                    ->title('Un propietario ha modificado los vehículos de un trabajador aprobado.')
+                    ->actions([
+                            NotificationAction::make('Ver trabajador')
+                                ->button()
+                                ->url(route('filament.admin.resources.employees.view', $record), shouldOpenInNewTab: true)
+                        ])
+                    ->sendToDatabase($recipient);
+
+                $record->status = 'pendiente';
+                $record->save();
+            });
+    }
+
+    /**
+     * Action para gestionar autos en PÁGINA
+     */
+    public static function getGestionarAutosPageAction(): PageAction
+    {
+        return PageAction::make('gestionarAutos')
+            ->label('Gestionar vehículos')
+            ->icon('heroicon-o-truck')
+            ->color('primary')
+            ->visible(function ($record) {
+                return $record->status === 'aprobado';
+            })
+            ->fillForm(function (Employee $record): array {
+                return [
+                    'autos' => $record->autos->map(function ($auto) {
+                        return [
+                            'id' => $auto->id,
+                            'marca' => $auto->marca,
+                            'modelo' => $auto->modelo,
+                            'patente' => $auto->patente,
+                            'color' => $auto->color,
+                            'user_id' => $auto->user_id,
+                            'model' => $auto->model,
+                            'files' => $auto->files->map(function ($file) {
+                                return [
+                                    'id' => $file->id,
+                                    'name' => $file->name,
+                                    'fecha_vencimiento' => $file->fecha_vencimiento,
+                                    'file' => $file->file,
+                                ];
+                            })->toArray()
+                        ];
+                    })->toArray()
+                ];
+            })
+            ->form([
+                Placeholder::make('')
+                    ->content('Aquí puedes gestionar los vehículos del trabajador. Puedes agregar nuevos vehículos o eliminar los existentes. Los cambios pasarán por un proceso de verificación.')
+                    ->columnSpanFull(),
+
+                Forms\Components\Repeater::make('autos')
+                    ->label('Vehículos')
+                    ->schema([
+                        Forms\Components\Hidden::make('id'),
+                        Forms\Components\TextInput::make('marca')
+                            ->label(__("general.Marca"))
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('modelo')
+                            ->label(__("general.Modelo"))
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('patente')
+                            ->label(__("general.Patente"))
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('color')
+                            ->label(__("general.Color"))
+                            ->maxLength(255),
+                        Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
+                        Forms\Components\Hidden::make('model')->default('Employee'),
+                        Repeater::make('files')
+                            ->label('Documentos del vehículo')
+                            ->schema([
+                                Forms\Components\Hidden::make('id'),
+                                Forms\Components\Hidden::make('name')->dehydrated(),
+                                DatePicker::make('fecha_vencimiento')
+                                    ->label('Fecha de vencimiento del documento')
+                                    ->extraFieldWrapperAttributes(function(Get $get, $state){
+                                        if(Carbon::parse($state)->isPast()){
+                                            return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
+                                        }
+                                        return [];
+                                    })
+                                    ->required(),
+                                Forms\Components\FileUpload::make('file')
+                                    ->label('Archivo')
+                                    ->required()
+                                    ->storeFileNamesIn('attachment_file_names')
+                                    ->openable()
+                                    ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                        return $file ? $file->getClientOriginalName() : ($record ? $record->file : null);
+                                    })
+                            ])
+                            ->defaultItems(3)
+                            ->minItems(3)
+                            ->maxItems(3)
+                            ->addable(false)
+                            ->deletable(false)
+                            ->grid(2)
+                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                            ->default([
+                                [
+                                    'name' => 'Seguro del Vehículo',
+                                ],
+                                [
+                                    'name' => 'VTV',
+                                ],
+                                [
+                                    'name' => 'Cédula del Vehículo',
+                                ],
+                            ])
+                            ->columns(1)
+                            ->columnSpanFull(),
+                    ])
+                    ->itemLabel(fn (array $state): ?string => 
+                        isset($state['patente']) ? "Vehículo: {$state['patente']}" : 'Nuevo vehículo'
+                    )
+                    ->addActionLabel('Agregar vehículo')
+                    ->defaultItems(0)
+                    ->deletable(true)
+                    ->reorderable(false)
+                    ->columns(2)
+                    ->columnSpanFull()
+            ])
+            ->action(function (Employee $record, array $data): void {
+                $autosActuales = $record->autos->pluck('id')->toArray();
+                $autosFormulario = collect($data['autos'])->pluck('id')->filter()->toArray();
+                
+                // Autos a eliminar (están en BD pero no en el formulario)
+                $autosEliminar = array_diff($autosActuales, $autosFormulario);
+                
+                // Eliminar autos y sus archivos
+                foreach ($autosEliminar as $autoId) {
+                    $auto = $record->autos()->find($autoId);
+                    if ($auto) {
+                        // Eliminar archivos físicos
+                        foreach ($auto->files as $file) {
+                            if (Storage::exists($file->file)) {
+                                Storage::delete($file->file);
+                            }
+                            $file->delete();
+                        }
+                        $auto->delete();
+                    }
+                }
+                
+                // Procesar autos del formulario
+                foreach ($data['autos'] as $autoData) {
+                    if (isset($autoData['id']) && $autoData['id']) {
+                        // Actualizar auto existente
+                        $auto = $record->autos()->find($autoData['id']);
+                        if ($auto) {
+                            $auto->update([
+                                'marca' => $autoData['marca'],
+                                'modelo' => $autoData['modelo'],
+                                'patente' => $autoData['patente'],
+                                'color' => $autoData['color'],
+                            ]);
+                            
+                            // Actualizar archivos
+                            foreach ($autoData['files'] as $fileData) {
+                                if (isset($fileData['id']) && $fileData['id']) {
+                                    $file = $auto->files()->find($fileData['id']);
+                                    if ($file) {
+                                        $file->update([
+                                            'fecha_vencimiento' => $fileData['fecha_vencimiento'],
+                                            'file' => is_array($fileData['file']) ? $fileData['file'][0] : $fileData['file'],
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Crear nuevo auto
+                        $nuevoAuto = $record->autos()->create([
+                            'marca' => $autoData['marca'],
+                            'modelo' => $autoData['modelo'],
+                            'patente' => $autoData['patente'],
+                            'color' => $autoData['color'],
+                            'user_id' => Auth::user()->id,
+                            'model' => 'Employee',
+                            'model_id' => $record->id,
+                        ]);
+                        
+                        // Crear archivos para el nuevo auto
+                        foreach ($autoData['files'] as $fileData) {
+                            if (isset($fileData['file'])) {
+                                $nuevoAuto->files()->create([
+                                    'name' => $fileData['name'],
+                                    'fecha_vencimiento' => $fileData['fecha_vencimiento'],
+                                    'file' => is_array($fileData['file']) ? $fileData['file'][0] : $fileData['file'],
+                                ]);
+                            }
+                        }
+                    }
+                }
+                
+                Notification::make()
+                    ->title('Vehículos actualizados')
+                    ->body('Los cambios en los vehículos pasarán por un proceso de verificación.')
+                    ->success()
+                    ->send();
+
+                $recipient = User::whereHas("roles", function($q){ 
+                    $q->whereIn("name", ["super_admin","admin"]); 
+                })->get();
+
+                Notification::make()
+                    ->title('Un propietario ha modificado los vehículos de un trabajador aprobado.')
+                    ->actions([
+                            NotificationAction::make('Ver trabajador')
+                                ->button()
+                                ->url(route('filament.admin.resources.employees.view', $record), shouldOpenInNewTab: true)
+                        ])
+                    ->sendToDatabase($recipient);
+
+                $record->status = 'pendiente';
+                $record->save();
+            });
+    }
+
+    /**
+     * Action para gestionar horarios en TABLA
+     */
+    public static function getGestionarHorariosTableAction(): TableAction
+    {
+        return TableAction::make('gestionarHorarios')
+            ->label('Gestionar horarios')
+            ->icon('heroicon-o-clock')
+            ->color('info')
+            ->visible(function ($record) {
+                return $record->status === 'aprobado';
+            })
+            ->fillForm(function (Employee $record): array {
+                return [
+                    'horarios' => $record->horarios->map(function ($horario) {
+                        return [
+                            'id' => $horario->id,
+                            'day_of_week' => $horario->day_of_week,
+                            'start_time' => $horario->start_time,
+                            'end_time' => $horario->end_time,
+                        ];
+                    })->toArray()
+                ];
+            })
+            ->form([
+                Placeholder::make('')
+                    ->content('Aquí puedes gestionar los días de trabajo del empleado. Puedes agregar nuevos días o eliminar los existentes. Los cambios pasarán por un proceso de verificación.')
+                    ->columnSpanFull(),
+
+                Forms\Components\Repeater::make('horarios')
+                    ->label('Horarios de trabajo')
+                    ->schema([
+                        Forms\Components\Hidden::make('id'),
+                        Forms\Components\Select::make('day_of_week')
+                            ->label('Día de la semana')
+                            ->options([
+                                'Domingo' => 'Domingo',
+                                'Lunes' => 'Lunes',
+                                'Martes' => 'Martes',
+                                'Miercoles' => 'Miércoles',
+                                'Jueves' => 'Jueves',
+                                'Viernes' => 'Viernes',
+                                'Sabado' => 'Sábado'
+                            ])
+                            ->required()
+                            ->columnSpan(2),
+                        Forms\Components\Hidden::make('start_time')
+                            ->default('00:00')
+                            ->dehydrated(),
+                        Forms\Components\Hidden::make('end_time')
+                            ->default('23:59')
+                            ->dehydrated(),
+                    ])
+                    ->itemLabel(fn (array $state): ?string => 
+                        isset($state['day_of_week']) ? $state['day_of_week'] : 'Nuevo horario'
+                    )
+                    ->addActionLabel('Agregar día de trabajo')
+                    ->defaultItems(0)
+                    ->deletable(true)
+                    ->reorderable(false)
+                    ->grid(2)
+                    ->columns(1)
+                    ->columnSpanFull()
+            ])
+            ->action(function (Employee $record, array $data): void {
+                $horariosActuales = $record->horarios->pluck('id')->toArray();
+                $horariosFormulario = collect($data['horarios'])->pluck('id')->filter()->toArray();
+                
+                // Horarios a eliminar (están en BD pero no en el formulario)
+                $horariosEliminar = array_diff($horariosActuales, $horariosFormulario);
+                
+                // Eliminar horarios
+                foreach ($horariosEliminar as $horarioId) {
+                    $horario = $record->horarios()->find($horarioId);
+                    if ($horario) {
+                        $horario->delete();
+                    }
+                }
+                
+                // Procesar horarios del formulario
+                foreach ($data['horarios'] as $horarioData) {
+                    if (isset($horarioData['id']) && $horarioData['id']) {
+                        // Actualizar horario existente
+                        $horario = $record->horarios()->find($horarioData['id']);
+                        if ($horario) {
+                            $horario->update([
+                                'day_of_week' => $horarioData['day_of_week'],
+                                'start_time' => $horarioData['start_time'],
+                                'end_time' => $horarioData['end_time'],
+                            ]);
+                        }
+                    } else {
+                        // Crear nuevo horario
+                        $record->horarios()->create([
+                            'day_of_week' => $horarioData['day_of_week'],
+                            'start_time' => $horarioData['start_time'],
+                            'end_time' => $horarioData['end_time'],
+                        ]);
+                    }
+                }
+                
+                Notification::make()
+                    ->title('Horarios actualizados')
+                    ->body('Los cambios en los horarios pasarán por un proceso de verificación.')
+                    ->success()
+                    ->send();
+
+                $recipient = User::whereHas("roles", function($q){ 
+                    $q->whereIn("name", ["super_admin","admin"]); 
+                })->get();
+
+                Notification::make()
+                    ->title('Un propietario ha modificado los horarios de un trabajador aprobado.')
+                    ->danger()
+                    ->actions([
+                            NotificationAction::make('Ver trabajador')
+                                ->button()
+                                ->url(route('filament.admin.resources.employees.view', $record), shouldOpenInNewTab: true)
+                        ])
+                    ->sendToDatabase($recipient);
+
+                $record->status = 'pendiente';
+                $record->save();
+            });
+    }
+
+    public static function getGestionarHorariosPageAction(): PageAction
+    {
+        return PageAction::make('gestionarHorarios')
+            ->label('Gestionar horarios')
+            ->icon('heroicon-o-clock')
+            ->color('info')
+            ->visible(function ($record) {
+                return $record->status === 'aprobado';
+            })
+            ->fillForm(function (Employee $record): array {
+                return [
+                    'horarios' => $record->horarios->map(function ($horario) {
+                        return [
+                            'id' => $horario->id,
+                            'day_of_week' => $horario->day_of_week,
+                            'start_time' => $horario->start_time,
+                            'end_time' => $horario->end_time,
+                        ];
+                    })->toArray()
+                ];
+            })
+            ->form([
+                Placeholder::make('')
+                    ->content('Aquí puedes gestionar los días de trabajo del empleado. Puedes agregar nuevos días o eliminar los existentes. Los cambios pasarán por un proceso de verificación.')
+                    ->columnSpanFull(),
+
+                Forms\Components\Repeater::make('horarios')
+                    ->label('Horarios de trabajo')
+                    ->schema([
+                        Forms\Components\Hidden::make('id'),
+                        Forms\Components\Select::make('day_of_week')
+                            ->label('Día de la semana')
+                            ->options([
+                                'Domingo' => 'Domingo',
+                                'Lunes' => 'Lunes',
+                                'Martes' => 'Martes',
+                                'Miercoles' => 'Miércoles',
+                                'Jueves' => 'Jueves',
+                                'Viernes' => 'Viernes',
+                                'Sabado' => 'Sábado'
+                            ])
+                            ->required()
+                            ->columnSpan(2),
+                        Forms\Components\Hidden::make('start_time')
+                            ->default('12:00')
+                            ->dehydrated(),
+                        Forms\Components\Hidden::make('end_time')
+                            ->default('23:59')
+                            ->dehydrated(),
+                    ])
+                    ->itemLabel(fn (array $state): ?string => 
+                        isset($state['day_of_week']) ? $state['day_of_week'] : 'Nuevo horario'
+                    )
+                    ->addActionLabel('Agregar día de trabajo')
+                    ->defaultItems(0)
+                    ->deletable(true)
+                    ->reorderable(false)
+                    ->grid(2)
+                    ->columns(1)
+                    ->columnSpanFull()
+            ])
+            ->action(function (Employee $record, array $data): void {
+                $horariosActuales = $record->horarios->pluck('id')->toArray();
+                $horariosFormulario = collect($data['horarios'])->pluck('id')->filter()->toArray();
+                
+                // Horarios a eliminar (están en BD pero no en el formulario)
+                $horariosEliminar = array_diff($horariosActuales, $horariosFormulario);
+                
+                // Eliminar horarios
+                foreach ($horariosEliminar as $horarioId) {
+                    $horario = $record->horarios()->find($horarioId);
+                    if ($horario) {
+                        $horario->delete();
+                    }
+                }
+                
+                // Procesar horarios del formulario
+                foreach ($data['horarios'] as $horarioData) {
+                    if (isset($horarioData['id']) && $horarioData['id']) {
+                        // Actualizar horario existente
+                        $horario = $record->horarios()->find($horarioData['id']);
+                        if ($horario) {
+                            $horario->update([
+                                'day_of_week' => $horarioData['day_of_week'],
+                                'start_time' => $horarioData['start_time'],
+                                'end_time' => $horarioData['end_time'],
+                            ]);
+                        }
+                    } else {
+                        // Crear nuevo horario
+                        $record->horarios()->create([
+                            'day_of_week' => $horarioData['day_of_week'],
+                            'start_time' => $horarioData['start_time'],
+                            'end_time' => $horarioData['end_time'],
+                        ]);
+                    }
+                }
+                
+                Notification::make()
+                    ->title('Horarios actualizados')
+                    ->body('Los cambios en los horarios pasarán por un proceso de verificación.')
+                    ->success()
+                    ->send();
+
+                $recipient = User::whereHas("roles", function($q){ 
+                    $q->whereIn("name", ["super_admin","admin"]); 
+                })->get();
+
+                Notification::make()
+                    ->title('Un propietario ha modificado los horarios de un trabajador aprobado.')
+                    ->actions([
+                            NotificationAction::make('Ver trabajador')
+                                ->button()
+                                ->url(route('filament.admin.resources.employees.view', $record), shouldOpenInNewTab: true)
+                        ])
+                    ->sendToDatabase($recipient);
+
+                $record->status = 'pendiente';
+                $record->save();
+            });
+    }
+
+    public static function getSolicitarReverificacionPageAction()
+    {
+        return PageAction::make('reeverificacion')
+            ->label('Solicitar verificación')
+            ->modalHeading('Solicitar verificación')
+            ->modalDescription('¿Está seguro de que desea solicitar la reverificación? Esto cambiará el estado del trabajador a "pendiente" y notificará a los administradores.')
+            ->color('warning')
+            ->icon('heroicon-o-arrow-path')
+            ->requiresConfirmation()
+            ->visible(function ($record) {
+                return $record->status === 'aprobado' && Carbon::parse($record->fecha_vencimiento)->isPast();
+            })
+            ->action(function (Employee $record) {
+                $record->status = 'pendiente';
+                $record->save();
+
+                Notification::make()
+                    ->title('Reverificación solicitada')
+                    ->body('Se ha solicitado la reverificación del trabajador.')
+                    ->success()
+                    ->send();
+
+                $recipient = User::whereHas("roles", function($q){ 
+                    $q->whereIn("name", ["super_admin","admin"]); 
+                })->get();
+
+                Notification::make()
+                    ->title('Un propietario ha solicitado la reverificación de un trabajador aprobado.')
+                    ->actions([
+                            NotificationAction::make('Ver trabajador')
+                                ->button()
+                                ->url(route('filament.admin.resources.employees.view', $record), shouldOpenInNewTab: true)
+                        ])
+                    ->sendToDatabase($recipient);
+            });
+    }
+
+    public static function getRenovarDocumentosTableAction()
+    {
+        return TableAction::make('renovar_documentos')
+                ->label('Renovar documentos')
+                ->icon('heroicon-o-arrow-path')
+                ->color('warning')
+                ->fillForm(function (Employee $record): array {
+                    return [
+                        'files' => $record->files()
+                            ->where('fecha_vencimiento', '<', now())
+                            ->get()
+                            ->map(function ($file) {
+                                return [
+                                    'id' => $file->id,
+                                    'fecha_vencimiento' => $file->fecha_vencimiento,
+                                    'file' => [$file->file],
+                                    'name' => $file->name,
+                                ];
+                            })->toArray()
+                    ];
+                })
+                ->form([
+                    Placeholder::make('')
+                        ->content('Remplaza los documentos vencidos con nuevos archivos y fechas de vencimiento actualizadas. Todos los documentos deben actualizarse para proceder con la renovación.')
+                        ->columnSpanFull(),   
+                    Repeater::make('files')
+                        ->label('Documentos vencidos a renovar')
+                        ->addable(false)
+                        ->deletable(false)
+                        ->reorderable(false)
+                        ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                        ->grid(2)
+                        ->schema([
+                            Forms\Components\Hidden::make('id'),
+                            Forms\Components\Hidden::make('name'),
+                            DatePicker::make('fecha_vencimiento')
+                                ->label('Fecha de vencimiento del documento')
+                                ->extraFieldWrapperAttributes(function(Get $get, $state){
+                                        if(Carbon::parse($state)->isPast()){
+                                            return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
+                                        }
+                                        return [];
+                                    })
+                                ->required(),
+                            Forms\Components\FileUpload::make('file')
+                                ->label('Archivo')
+                                ->helperText('Presiona la X para eliminar el archivo actual y subir uno nuevo.')
+                                ->required()
+                                ->storeFileNamesIn('attachment_file_names')
+                                ->openable()
+                                ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                    return $file ? $file->getClientOriginalName() : $record->file;
+                                }),
+                        ])
+                ])
+                ->action(function (array $data, Employee $record): void {
+                    // Validar que haya datos
+                    if (empty($data['files'])) {
+                        Notification::make()
+                            ->title('No se recibieron datos del formulario')
+                            ->danger()
+                            ->send();
+                        return;
+                    }
+                    
+                    $actualizados = 0;
+                    $noActualizados = 0;
+                    $documentosNoActualizados = [];
+                    
+                    // Procesar cada archivo
+                    foreach ($data['files'] as $fileData) {
+                        $fileRecord = $record->files()->where('id', $fileData['id'])->first();
+                        
+                        if (!$fileRecord) {
+                            continue;
+                        }
+                        
+                        // Verificar si la fecha está vencida
+                        $fechaVencimiento = Carbon::parse($fileData['fecha_vencimiento']);
+                        if ($fechaVencimiento->isBefore(now()->startOfDay())) {
+                            $noActualizados++;
+                            $documentosNoActualizados[] = $fileData['name'] ?? "Documento ID {$fileData['id']}";
+                            continue;
+                        }
+                        
+                        // Actualizar fecha de vencimiento
+                        $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
+                        
+                        // Actualizar archivo solo si se subió uno nuevo
+                        // Cuando Filament procesa el FileUpload, el archivo ya está guardado
+                        // y $fileData['file'] contiene la ruta del nuevo archivo
+                        if (isset($fileData['file']) && $fileData['file'] !== $fileRecord->file) {
+                            // Si hay un archivo nuevo diferente al actual
+                            $fileRecord->file = $fileData['file'];
+                        }
+                        
+                        $fileRecord->save();
+                        $actualizados++;
+                    }
+                    
+                    // Mostrar notificación según el resultado
+                    if ($actualizados > 0 && $noActualizados === 0) {
+                        Notification::make()
+                            ->title('Documentos renovados exitosamente')
+                            ->body("Se actualizaron {$actualizados} documento(s).")
+                            ->success()
+                            ->send();
+
+                            $record->status = 'pendiente';
+                            $record->save();
+
+                    } elseif ($actualizados > 0 && $noActualizados > 0) {
+                        Notification::make()
+                            ->title('Renovación parcial')
+                            ->body("Se actualizaron {$actualizados} documento(s). Los siguientes documentos no se actualizaron por tener fechas vencidas: " . implode(', ', $documentosNoActualizados))
+                            ->warning()
+                            ->send();
+                            $record->status = 'pendiente';
+                            $record->save();
+                    } else {
+                        Notification::make()
+                            ->title('No se actualizó ningún documento')
+                            ->body('Todos los documentos tienen fechas de vencimiento inválidas (vencidas).')
+                            ->danger()
+                            ->send();
+                    }
+                })
+                ->visible(function ($record) {
+                    return  $record->vencidosFile();
+                    // $vencimientos = self::isVencimientos($record);
+                    // return $vencimientos['isVencido'];
+                });
+    }
+
+    public static function getRenovarDocumentosPageAction()
+    {
+        return PageAction::make('renovar_documentos')
+                ->label('Renovar documentos')
+                ->icon('heroicon-o-arrow-path')
+                ->color('warning')
+                ->fillForm(function (Employee $record): array {
+                    return [
+                        'files' => $record->files()
+                            ->where('fecha_vencimiento', '<', now())
+                            ->get()
+                            ->map(function ($file) {
+                                return [
+                                    'id' => $file->id,
+                                    'fecha_vencimiento' => $file->fecha_vencimiento,
+                                    'file' => [$file->file],
+                                    'name' => $file->name,
+                                ];
+                            })->toArray()
+                    ];
+                })
+                ->form([
+                    Placeholder::make('')
+                        ->content('Remplaza los documentos vencidos con nuevos archivos y fechas de vencimiento actualizadas. Todos los documentos deben actualizarse para proceder con la renovación.')
+                        ->columnSpanFull(),   
+                    Repeater::make('files')
+                        ->label('Documentos vencidos a renovar')
+                        ->addable(false)
+                        ->deletable(false)
+                        ->reorderable(false)
+                        ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                        ->grid(2)
+                        ->schema([
+                            Forms\Components\Hidden::make('id'),
+                            Forms\Components\Hidden::make('name'),
+                            DatePicker::make('fecha_vencimiento')
+                                ->label('Fecha de vencimiento del documento')
+                                ->extraFieldWrapperAttributes(function(Get $get, $state){
+                                        if(Carbon::parse($state)->isPast()){
+                                            return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
+                                        }
+                                        return [];
+                                    })
+                                ->required(),
+                            Forms\Components\FileUpload::make('file')
+                                ->label('Archivo')
+                                ->helperText('Presiona la X para eliminar el archivo actual y subir uno nuevo.')
+                                ->required()
+                                ->storeFileNamesIn('attachment_file_names')
+                                ->openable()
+                                ->getUploadedFileNameForStorageUsing(function ($file, $record) {
+                                    return $file ? $file->getClientOriginalName() : $record->file;
+                                }),
+                        ])
+                ])
+                ->action(function (array $data, Employee $record): void {
+                    // Validar que haya datos
+                    if (empty($data['files'])) {
+                        Notification::make()
+                            ->title('No se recibieron datos del formulario')
+                            ->danger()
+                            ->send();
+                        return;
+                    }
+                    
+                    $actualizados = 0;
+                    $noActualizados = 0;
+                    $documentosNoActualizados = [];
+                    
+                    // Procesar cada archivo
+                    foreach ($data['files'] as $fileData) {
+                        $fileRecord = $record->files()->where('id', $fileData['id'])->first();
+                        
+                        if (!$fileRecord) {
+                            continue;
+                        }
+                        
+                        // Verificar si la fecha está vencida
+                        $fechaVencimiento = Carbon::parse($fileData['fecha_vencimiento']);
+                        if ($fechaVencimiento->isBefore(now()->startOfDay())) {
+                            $noActualizados++;
+                            $documentosNoActualizados[] = $fileData['name'] ?? "Documento ID {$fileData['id']}";
+                            continue;
+                        }
+                        
+                        // Actualizar fecha de vencimiento
+                        $fileRecord->fecha_vencimiento = $fileData['fecha_vencimiento'];
+                        
+                        // Actualizar archivo solo si se subió uno nuevo
+                        // Cuando Filament procesa el FileUpload, el archivo ya está guardado
+                        // y $fileData['file'] contiene la ruta del nuevo archivo
+                        if (isset($fileData['file']) && $fileData['file'] !== $fileRecord->file) {
+                            // Si hay un archivo nuevo diferente al actual
+                            $fileRecord->file = $fileData['file'];
+                        }
+                        
+                        $fileRecord->save();
+                        $actualizados++;
+                    }
+                    
+                    // Mostrar notificación según el resultado
+                    if ($actualizados > 0 && $noActualizados === 0) {
+                        Notification::make()
+                            ->title('Documentos renovados exitosamente')
+                            ->body("Se actualizaron {$actualizados} documento(s).")
+                            ->success()
+                            ->send();
+
+                            $record->status = 'pendiente';
+                            $record->save();
+
+                    } elseif ($actualizados > 0 && $noActualizados > 0) {
+                        Notification::make()
+                            ->title('Renovación parcial')
+                            ->body("Se actualizaron {$actualizados} documento(s). Los siguientes documentos no se actualizaron por tener fechas vencidas: " . implode(', ', $documentosNoActualizados))
+                            ->warning()
+                            ->send();
+                            $record->status = 'pendiente';
+                            $record->save();
+                    } else {
+                        Notification::make()
+                            ->title('No se actualizó ningún documento')
+                            ->body('Todos los documentos tienen fechas de vencimiento inválidas (vencidas).')
+                            ->danger()
+                            ->send();
+                    }
+                })
+                ->visible(function ($record) {
+                    return  $record->vencidosFile();
+                    // $vencimientos = self::isVencimientos($record);
+                    // return $vencimientos['isVencido'];
+                });
+    }
+}

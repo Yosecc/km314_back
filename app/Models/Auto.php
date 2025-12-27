@@ -13,4 +13,9 @@ class Auto extends Model
 
     protected $hidden = ['user_id','model','model_id','created_at','updated_at'];
 
+    public function files()
+    {
+        return $this->hasMany(AutoFile::class,'auto_id');
+    }
+
 }

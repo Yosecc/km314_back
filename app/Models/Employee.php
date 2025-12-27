@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasQuickAccessCode;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,14 +11,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, SoftDeletes, HasQuickAccessCode;
 
     protected $hidden = ['created_at','updated_at'];
-    protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id','model_origen','model_origen_id','fecha_vencimiento_seguro','owner_id',"status"];
+    protected $fillable = ['work_id','dni','first_name','last_name','phone','user_id','model_origen','model_origen_id','fecha_vencimiento_seguro','owner_id',"status", 'observations', 'quick_access_code'];
 
     public function work()
     {
         return $this->belongsTo(Works::class);
+    }
+
+    public function employeeOrigens()
+    {
+        return $this->hasMany(EmployeeOrigen::class);
     }
 
     public function owners()
@@ -33,6 +39,11 @@ class Employee extends Model
     public function autos()
     {
         return $this->hasMany(Auto::class,'model_id')->where('model','Employee');
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(EmployeeNote::class,'employee_id');
     }
 
     public function trabajos()
@@ -86,6 +97,39 @@ class Employee extends Model
         return $data->peoples->where('dni', $dni)->first();
     }
 
+     public function vencimientos()
+    {
+        $color = '';
+        $texto = '';
+        $status = false;
+        
+        if($this->isVencidoSeguro()){
+            $color = "warning";
+            $texto = "Trabajador pendiente de reverificación de datos.";
+            $status = true;
+        }
+
+        $vencidosFile = $this->vencidosFile();
+        if($vencidosFile){
+            $color = "danger";
+            $texto = "Documentos  vencidos: ". implode($vencidosFile);
+            $status = true;
+        }
+
+        $vencidosAutosFile = $this->vencidosAutosFile();
+        if($vencidosAutosFile){
+            $color = "danger";
+            $texto = "Documentos de autos vencidos: ". implode($vencidosAutosFile);
+            $status = true;
+        }
+
+        return [
+            'color' => $color,
+            'texto' => $texto,
+            'status' => $status,
+        ];
+    }
+
     public function vencidosFile()
     {
         if (!$this->files || $this->files->isEmpty()) {
@@ -94,10 +138,31 @@ class Employee extends Model
 
         $files = $this->files
             ->filter(function ($file) {
-                return Carbon::parse($file->fecha_vencimiento)->isPast();
+                return $file->fecha_vencimiento && Carbon::parse($file->fecha_vencimiento)->isPast();
             })
             ->pluck('name')
             ->toArray();
+
+        return !empty($files) ? $files : null;
+    }
+
+    public function vencidosAutosFile()
+    {
+        if (!$this->autos || $this->autos->isEmpty()) {
+            return null;
+        }
+
+        $files = $this->autos->flatMap(function ($auto) {
+            if (!$auto->files || $auto->files->isEmpty()) {
+                return [];
+            }
+            
+            return $auto->files
+                ->filter(function ($file) {
+                    return $file->fecha_vencimiento && Carbon::parse($file->fecha_vencimiento)->isPast();
+                })
+                ->pluck('name');
+        })->toArray();
 
         return !empty($files) ? $files : null;
     }

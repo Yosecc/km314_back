@@ -67,23 +67,25 @@ class ActivitiesResource extends Resource
     public static function searchEmployee($dni, $type, $ids = [])
     {
 
-        $data = Employee::where('dni', 'like', '%'.$dni.'%')->orWhere(function($query) use ($dni) {
-            $query->whereHas('autos', function ($query) use ($dni){
-                $query->where('patente','like','%'.$dni.'%');
-            });
-        })->where('model_origen','Employee')->limit(10)->get();
+        $data = Employee::where(function($query) use ($dni) {
+                $query->where('dni', 'like', '%'.$dni.'%')
+                    ->orWhereHas('autos', function ($q) use ($dni){
+                        $q->where('patente','like','%'.$dni.'%');
+                    });
+            })
+            // ->whereHas('employeeOrigens', function($query) {
+            //     $query->whereIn('model', ['Employee', 'ConstructionCompanie']);
+            // })
+            ->limit(10)
+            ->get();
 
 
         $mapeo = function($employee) use ($type){
-
-            // dd($employee->isFormularios());
-
             if($type == 'option'){
                 $employee['texto'] = $employee['first_name']. ' '.$employee['last_name'];
                 $employee['texto'].= ' - '.__('general.Employee');
             }else{
                 $employee['texto'] = $employee->dni;
-                // wrap ternary in parentheses to ensure correct concatenation order and avoid accessing ->name on null
                 $employee['texto'] .= ' - '. ($employee->work ? $employee->work->name : '');
             }
 
@@ -162,7 +164,13 @@ class ActivitiesResource extends Resource
                 $people['texto'] = $people->dni;
                 $people['texto'] .= ' - Familiar de: '.$people->familiarPrincipal->first_name . " " . $people->familiarPrincipal->last_name ;
             }
-
+            // Agregar el código y el QR si existe
+            $people['quick_access_code'] = $people->quick_access_code;
+            if (method_exists($people, 'generateQrCodeForSharing')) {
+                $people['qr_svg'] = $people->generateQrCodeForSharing();
+            } else {
+                $people['qr_svg'] = null;
+            }
             return $people;
         };
 
@@ -261,11 +269,7 @@ class ActivitiesResource extends Resource
             return $auto;
         })->pluck('texto','id')->toArray();
     }
-
-
-
-
-
+    
     public static function createAuto($data, $config)
     {
         $data = collect($data)->map(function($auto) use ($config){
@@ -312,6 +316,7 @@ class ActivitiesResource extends Resource
                 'last_name' => $visitante['last_name'],
                 'email' => $visitante['email'],
                 'phone' => $visitante['phone'],
+                'aprobado'=> 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -339,10 +344,217 @@ class ActivitiesResource extends Resource
         }
 
         if( $data['tipo_entrada'] == 3 && isset($data['form_control_id']) && $data['form_control_id']){
-            return $data['num_search'] || count($data['ids']) ? self::searchFormControl($data['form_control_id'],  $data['tipo'], $data['ids']) : [];
+            return self::searchFormControl($data['form_control_id'],  $data['tipo'], $data['ids']);
         }
 
         return [];
+    }
+
+
+    public static function viewDataPeople(Get $get, $context, $record)
+    {
+        $peoplesIds = $get('peoples');
+                                
+        if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
+            $peoplesIds = $record->peoples->map(function($peopleActivitie){
+                if($peopleActivitie->type == 'Employee'){
+                    $info = $peopleActivitie->getPeople();
+                    if($info){
+                        $employee = Employee::where('dni',$info->dni)->first();
+                        if($employee){
+                            $peopleActivitie->model_id = $employee->id;
+                            $peopleActivitie->model = 'Employee';
+                        }
+                    }
+                }
+                return $peopleActivitie;
+            })->pluck('model_id')->toArray();
+        }
+
+        // Obtener opciones y descripciones
+        $options = self::getPeoples([
+            'tipo_entrada' => $get('tipo_entrada'),
+            'num_search' => $get('num_search'),
+            'form_control_id' => $get('form_control_id'),
+            'tipo' => 'option',
+            'ids' => $context == 'view' ? $peoplesIds : [],
+            'context' => $context
+        ]);
+
+        $descriptions = self::getPeoples([
+            'tipo_entrada' => $get('tipo_entrada'),
+            'num_search' => $get('num_search'),
+            'form_control_id' => $get('form_control_id'),
+            'tipo' => 'descriptions',
+            'ids' => $context == 'view' ? $peoplesIds : [],
+            'context' => $context
+        ]);
+
+        // Mapear personas con información adicional
+        $personas = collect($options)->map(function($nombre, $id) use ($descriptions, $get, $context) {
+            $persona = [
+                'id' => $id,
+                'nombre' => $nombre,
+                'descripcion' => $descriptions[$id] ?? '',
+                'badges' => [],
+                'vencimientos' => []
+            ];
+
+            // Solo agregar información de vencimientos para empleados en entrada
+            if($get('tipo_entrada') == 2 && $get('type') == 1 && $context == 'create') {
+                $employee = Employee::find($id);
+                if($employee) {
+                    $canSelect = true;
+                    
+                    // Agregar horarios disponibles
+                    if($employee->horarios && $employee->horarios->count() > 0) {
+                        $dias = $employee->horarios->pluck('day_of_week')->unique()->implode(', ');
+                        $persona['badges'][] = [
+                            'texto' => "Días: {$dias}",
+                            'color' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                        ];
+                    }
+                    
+                    // Verificar orígenes primero (se necesita para la lógica de formularios)
+                    $hasOrigenes = false;
+                    if($employee->employeeOrigens && $employee->employeeOrigens->count() > 0) {
+                        $hasOrigenes = true;
+                        foreach($employee->employeeOrigens as $origen) {
+                            if($origen->model === 'ConstructionCompanie' && $origen->model_id) {
+                                $compania = \App\Models\ConstructionCompanie::find($origen->model_id);
+                                if($compania) {
+                                    $persona['badges'][] = [
+                                        'texto' => "Compañía: {$compania->name}",
+                                        'color' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+                                    ];
+                                }
+                            } elseif($origen->model === 'Employee') {
+                                $persona['badges'][] = [
+                                    'texto' => 'KM314',
+                                    'color' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300'
+                                ];
+                            }
+                        }
+                    }
+                    
+                    // Verificar formularios de control si tiene owners
+                    $hasOwners = $employee->owners && $employee->owners->count() > 0;
+                    $hasFormularioAuthorized = false;
+                    $hasFormularioNoAuthorized = false;
+                    
+                    if($hasOwners) {
+                        // Buscar formularios de los owners del empleado
+                        $ownerIds = $employee->owners->pluck('id')->toArray();
+                        $formularios = FormControl::whereIn('owner_id', $ownerIds)
+                            ->where('status', 'Authorized')
+                            ->whereHas('peoples', function($q) use ($employee) {
+                                $q->where('dni', $employee->dni);
+                            })
+                            ->get();
+                        
+                        // Verificar si hay formularios autorizados en rango de fecha
+                        foreach($formularios as $form) {
+                            if($form->isDayRange()) {
+                                $hasFormularioAuthorized = true;
+                                $persona['badges'][] = [
+                                    'texto' => 'Con formulario Autorizado',
+                                    'color' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                ];
+                                break;
+                            }
+                        }
+                        
+                        // Si no tiene autorizado, buscar otros estados
+                        if(!$hasFormularioAuthorized) {
+                            $formulariosNoAuth = FormControl::whereIn('owner_id', $ownerIds)
+                                ->whereIn('status', ['Pending', 'Denied'])
+                                ->whereHas('peoples', function($q) use ($employee) {
+                                    $q->where('dni', $employee->dni);
+                                })
+                                ->get();
+                            
+                            foreach($formulariosNoAuth as $form) {
+                                $status = $form->statusComputed();
+                                $hasFormularioNoAuthorized = true;
+                                // No mostrar el badge si tiene orígenes
+                                if(!$hasOrigenes) {
+                                    $persona['badges'][] = [
+                                        'texto' => "Con formulario {$status}",
+                                        'color' => match($status) {
+                                            'Pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+                                            'Denied' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                                            'Vencido' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+                                            'Expirado' => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+                                            default => 'bg-gray-100 text-gray-800'
+                                        }
+                                    ];
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Determinar si puede seleccionarse
+                    // Si tiene formulario no autorizado Y NO tiene otros orígenes -> NO se puede seleccionar
+                    if($hasFormularioNoAuthorized && !$hasOrigenes) {
+                        $canSelect = false;
+                    }
+                    
+                    // Si tiene formulario autorizado o tiene orígenes -> SI se puede seleccionar
+                    // (ya validado por defecto con $canSelect = true)
+
+                    // Vencimientos (estos ya deshabilitan la selección)
+                    if($employee->isVencidoSeguro()) {
+                        $canSelect = false;
+                        $persona['vencimientos'][] = [
+                            'texto' => 'Seguro vencido',
+                            'color_bg' => 'bg-red-100 dark:bg-red-900/30',
+                            'color_text' => 'text-red-800 dark:text-red-300',
+                            'icon' => true
+                        ];
+                    }
+                    
+                    if($employee->vencidosFile()) {
+                        $canSelect = false;
+                        $persona['vencimientos'][] = [
+                            'texto' => 'Documentos vencidos',
+                            'color_bg' => 'bg-orange-100 dark:bg-orange-900/30',
+                            'color_text' => 'text-orange-800 dark:text-orange-300',
+                            'icon' => true
+                        ];
+                    }
+                    
+                    if($employee->vencidosAutosFile()) {
+                        $canSelect = false;
+                        $persona['vencimientos'][] = [
+                            'texto' => 'Documentos de vehículos vencidos',
+                            'color_bg' => 'bg-yellow-100 dark:bg-yellow-900/30',
+                            'color_text' => 'text-yellow-800 dark:text-yellow-300',
+                            'icon' => true
+                        ];
+                    }
+                    
+                    // Agregar flag para indicar si se puede seleccionar
+                    $persona['disabled'] = !$canSelect;
+                }
+            }
+
+            // Badge para propietarios morosos
+            if($get('tipo_entrada') == 1) {
+                $owner = Owner::find($id);
+                if($owner && $owner->owner_status_id == 2) {
+                    // $persona['badges'][] = [
+                    //     'texto' => 'Moroso',
+                    //     'color' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                    //     'icon' => true
+                    // ];
+                }
+            }
+
+            return $persona;
+        })->values()->toArray();
+
+        return ['personas' => $personas];
     }
 
 
@@ -355,7 +567,6 @@ class ActivitiesResource extends Resource
                         'default' => 3,
                     ])
                     ->schema([
-
                         Forms\Components\Select::make('type')
                             ->required()
                             ->options([
@@ -377,6 +588,7 @@ class ActivitiesResource extends Resource
                             }),
 
                     ]),
+                    
                 Forms\Components\ViewField::make('type')
                     ->required()
                     ->view('filament.forms.components.tipoActividad')
@@ -408,6 +620,147 @@ class ActivitiesResource extends Resource
                         return $context == 'view' ? false : true;
                     })
                     ->live(),
+
+                    Forms\Components\TextInput::make('quick_code')
+                        ->label('Código de Acceso Rápido')
+                        ->placeholder('Escanea QR o ingresa código (Ej: E-A1B2C3D4)')
+                        ->helperText('Primero seleccione el tipo de actividad (Entrada/Salida)')
+                        ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
+                        ->suffixAction(
+                            \Filament\Forms\Components\Actions\Action::make('scan_qr')
+                                ->icon('heroicon-o-qr-code')
+                                ->label('Escanear')
+                                ->button()
+                                ->action(fn () => null)
+                                ->disabled(fn (Get $get) => !$get('type') || $get('type') == 0)
+                                ->extraAttributes([
+                                    'onclick' => 'startQrScanner()',
+                                    'type' => 'button'
+                                ])
+                        )
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function($state, Set $set, Get $get) {
+                            if (!$state) return;
+                            // Buscar la entidad por código
+                            $employee = Employee::where('quick_access_code', $state)->first();
+                            $owner = Owner::where('quick_access_code', $state)->first();
+                            $formControl = FormControl::where('quick_access_code', $state)->first();
+                            $ownerFamily = \App\Models\OwnerFamily::where('quick_access_code', $state)->first();
+
+                            $entity = $employee ?? $owner ?? $formControl ?? $ownerFamily;
+
+                            if ($entity) {
+                                if ($entity instanceof Employee) {
+                                    $set('tipo_entrada', 2);
+                                    $set('num_search', $entity->dni);
+                                    if ($get('type') == 1) {
+                                        $canSelect = true;
+                                        $errores = [];
+                                        if($entity->isVencidoSeguro()) {
+                                            $canSelect = false;
+                                            $errores[] = '⚠️ Seguro vencido desde: ' . $entity->insurance_expiration_date->format('d/m/Y');
+                                        }
+                                        if($entity->vencidosFile()) {
+                                            $canSelect = false;
+                                            $vencidos = $entity->vencidosFile();
+                                            $errores[] = '⚠️ Documentos vencidos: ' . implode(', ', $vencidos);
+                                        }
+                                        if($entity->vencidosAutosFile()) {
+                                            $canSelect = false;
+                                            $vencidos = $entity->vencidosAutosFile();
+                                            $errores[] = '⚠️ Archivos de vehículos vencidos: ' . implode(', ', $vencidos);
+                                        }
+                                        $hasOrigenes = $entity->employeeOrigens && $entity->employeeOrigens->count() > 0;
+                                        $hasOwners = $entity->owners && $entity->owners->count() > 0;
+                                        if($hasOwners && !$hasOrigenes) {
+                                            $hasFormularioAuthorized = false;
+                                            foreach($entity->owners as $owner) {
+                                                $formControls = \App\Models\FormControl::where('owner_id', $owner->id)
+                                                    ->whereHas('peoples', function($query) use ($entity) {
+                                                        $query->where('dni', $entity->dni);
+                                                    })
+                                                    ->get();
+                                                foreach($formControls as $form) {
+                                                    if($form->isActive() && $form->autorizado == 1) {
+                                                        $hasFormularioAuthorized = true;
+                                                        break 2;
+                                                    }
+                                                }
+                                            }
+                                            if(!$hasFormularioAuthorized) {
+                                                $canSelect = false;
+                                                $errores[] = '⚠️ No tiene formularios autorizados y activos';
+                                            }
+                                        }
+                                        if (!$canSelect) {
+                                            \Filament\Notifications\Notification::make()
+                                                ->title('Empleado encontrado - NO puede ingresar')
+                                                ->body($entity->first_name . ' ' . $entity->last_name . "\n\n" . implode("\n", $errores))
+                                                ->warning()
+                                                ->duration(10000)
+                                                ->send();
+                                            $set('quick_code', '');
+                                            return;
+                                        }
+                                    }
+                                    $set('peoples', [$entity->id]);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Empleado encontrado')
+                                        ->body($entity->first_name . ' ' . $entity->last_name)
+                                        ->success()
+                                        ->send();
+                                } elseif ($entity instanceof Owner) {
+                                    $set('tipo_entrada', 1);
+                                    $set('num_search', $entity->dni);
+                                    $set('peoples', [$entity->id]);
+                                    $lotes = collect($entity->lotes);
+                                    $lote = $lotes->map(function($lote){
+                                        return $lote->getNombre();
+                                    })->first();
+                                    if($lote) {
+                                        $set('lote_ids', $lote);
+                                    }
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Propietario encontrado')
+                                        ->body($entity->first_name . ' ' . $entity->last_name)
+                                        ->success()
+                                        ->send();
+                                } elseif ($entity instanceof FormControl) {
+                                    $set('tipo_entrada', 3);
+                                    $set('form_control_id', $entity->id);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Formulario encontrado')
+                                        ->body('Formulario #' . $entity->id)
+                                        ->success()
+                                        ->send();
+                                } elseif ($entity instanceof \App\Models\OwnerFamily) {
+                                    $set('tipo_entrada', 1);
+                                    $set('families', [$entity->id]);
+                                    $set('num_search', $entity->dni);
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Familiar encontrado')
+                                        ->body($entity->first_name . ' ' . $entity->last_name)
+                                        ->success()
+                                        ->send();
+                                }
+                                $set('quick_code', '');
+                            } else {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Código no encontrado')
+                                    ->body('No se encontró ningún registro con este código')
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->disabled(function($context, Get $get){
+                            return $context == 'view'  ? true : ($get('type') == '' ? true : false) ;
+                        })
+                        ->visible(function($context, Get $get){
+                            return $context == 'view' ? false : true ;
+                        })
+                        ->dehydrated(false)
+                        ,
+
                 /**
                  * TIPO DE ENTRADA
                  */
@@ -437,6 +790,8 @@ class ActivitiesResource extends Resource
                         '2xl' => 8,
                     ])
                     ->schema([
+                        
+                        
                         Forms\Components\TextInput::make('num_search')
                             ->label(__('general.DNI')."/Patente")
                             ->columnSpan(['sm'=> 2])
@@ -454,28 +809,26 @@ class ActivitiesResource extends Resource
                     }),
                 /**
                  * ///////////
-                 * FORMULARIOS
+                 * FORMULARIOS 
                  */
                 Forms\Components\Fieldset::make('forms_control')->label(__('general.Forms Control'))
                     ->schema([
-                        Forms\Components\Grid::make(2)
+                        Forms\Components\Grid::make(1)
                             ->schema([
 
-                                Forms\Components\Radio::make('form_control_id')->label(__('general.Select a control form'))
+                                Forms\Components\ViewField::make('form_control_id')
+                                    ->label(__('general.Select a control form'))
                                     ->required()
-                                    ->hint(function($state, Get $get){
-                                        if(!$state){
-                                            return '';
-                                        }
-                                        return new HtmlString('<a target="_blank" href="/form-controls/'.$state.'">Ver fomulario seleccionado</a>');
-                                    })
-                                    ->options(function(Get $get,  $context ){
+                                    ->view('filament.forms.components.formControlSelector')
+                                    /** @phpstan-ignore-next-line */
+                                    ->viewData(function(Get $get, $context): array {
+
+                                        
                                         if(!$get('num_search') && !$get('form_control_id')){
-                                            return [];
+                                            return ['formularios' => []];
                                         }
 
-
-                                        $mapeo = function($form){
+                                        $mapeo = function($form) use ($get){
                                             $accesType = collect($form['access_type'])->map(function($type){
                                                 $data = ['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club hause', 'lote' => 'Lote' ];
                                                 return $data[$type];
@@ -487,22 +840,37 @@ class ActivitiesResource extends Resource
                                             $income = $income !=''  ? $income.' / ': $income;
                                             $lotes = $lotes !=''  ? ' : '.$lotes: $lotes;
 
-                                            $formInfo = 'Form: '.$form['id'].' -- ';
+                                            $fechas = $form->getFechasFormat();
+                                            $limite = $form['date_unilimited'] ? 'Sin fecha límite de salida' : $fechas['end'];
+                                            $observacion = $form['observations'] ? ' ( Observaciones: '. $form['observations'] .' )' : '';
 
-                                            $form['texto'] = $formInfo.$income.$accesType.$lotes;
-                                            $form['status'] = $form->statusComputed();
+                                            $vencimientos = [];
 
+                                            if($form['income_type'] == 'Trabajador'){
+                                                $form->peoples->map(function($people) use (&$vencimientos){
+                                                    $employee = Employee::where('dni',$people->dni)->first();
+                                                    $vencimientos = $employee->vencimientos();
+                                                });
+                                            }
 
-                                            return $form;
+                                            return [
+                                                'id' => $form->id,
+                                                'texto' => $income.$accesType.$lotes,
+                                                'descripcion' => __('general.'.$form->statusComputed()).' - '.$fechas['start'].' / '. $limite . $observacion,
+                                                'status' => $form->statusComputed(),
+                                                'isActive' => $form->isActive(),
+                                                'hint' => !$get('form_control_id') ? false : true,
+                                                'vencimientos' => $vencimientos,
+                                            ];
                                         };
 
                                         if($get('form_control_id') && $context != 'create'){
-                                            return FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->pluck('texto','id')->toArray();
+                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->values()->toArray();
+                                            return ['formularios' => $formularios];
                                         }
 
                                         $num = $get('num_search');
-                                        return FormControl::whereHas('peoples', function ($query) use ($num)
-                                            {
+                                        $formularios = FormControl::whereHas('peoples', function ($query) use ($num) {
                                                 $query->where('dni','like','%'.$num.'%');
                                             })
                                             ->orWhere(function($query) use ($num) {
@@ -513,53 +881,12 @@ class ActivitiesResource extends Resource
                                             ->orderBy('id','desc')
                                             ->where('start_date_range','>=',now())
                                             ->limit(10)
-                                            ->get()->map(callback: $mapeo)
-                                        //->whereNotIn('status',['Vencido','Expirado'])
-                                        ->pluck('texto','id')->toArray();
-                                    })
-                                    ->descriptions(function(Get $get, Set $set, $context){
-                                        if(!$get('num_search') && !$get('form_control_id')){
-                                            return [];
-                                        }
+                                            ->get()
+                                            ->map($mapeo)
+                                            ->values()
+                                            ->toArray();
 
-                                        $mapeo = function($form){
-
-                                            $fechas = $form->getFechasFormat();
-
-                                            $limite =  $form['date_unilimited'] ?  'Sin fecha límite de salida': $fechas['end'];
-
-                                            $observacion = $form['observations'] ? ' ( Observaciones: '. $form['observations'] .' )' : '';
-
-                                            $form['status'] = $form->statusComputed();
-
-                                            $form['texto'] = __('general.'.$form->statusComputed()).' - '.$fechas['start'].' / '. $limite . $observacion;
-                                            return $form;
-                                        };
-
-                                        if($get('form_control_id') && $context != 'create'){
-                                            return FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->pluck('texto','id')->toArray();
-                                        }
-
-                                        $num = $get('num_search');
-                                        return FormControl::whereHas('peoples', function ($query) use ($num)
-                                            {
-                                                $query->where('dni','like','%'.$num.'%');
-                                            })
-                                            ->orWhere(function($query) use ($num) {
-                                                $query->whereHas('autos', function ($query) use ($num){
-                                                    $query->where('patente','like','%'.$num.'%');
-                                                });
-                                            })
-                                            ->orderBy('id','desc')
-                                            ->whereDate('start_date_range','>=',now())
-                                            ->limit(10)->get()->map($mapeo)
-                                        // ->whereNotIn('status',['Vencido','Expirado'])
-                                        ->pluck('texto','id')->toArray();
-
-                                    })
-                                    ->disableOptionWhen(function ( $value){
-                                        $form = FormControl::find($value);
-                                        return !$form->isActive();
+                                        return ['formularios' => $formularios];
                                     })
                                     ->live(),
 
@@ -595,97 +922,33 @@ class ActivitiesResource extends Resource
                         /**
                          * PERSONAS
                          */
-                        Forms\Components\CheckboxList::make('peoples')->label(__('general.Select people one or more options'))
-                            ->searchable()
-                            ->options(function(Get $get, $context, $record){
+                        Forms\Components\ViewField::make('peoples')
+                            ->label(__('general.Select people one or more options'))
+                            ->view('filament.forms.components.peopleSelector')
+                            /** @phpstan-ignore-next-line */
+                            ->viewData(function(Get $get, $context, $record) {
+                                return  self::viewDataPeople($get, $context, $record);
+                            })
+                            ->visible(function(Get $get, $context, $record){
+                                $peoples = $get('peoples') ?? [];
+                                if($context == 'view' && is_array($peoples) && !count($peoples) && $record && $record->peoples){
+                                    $peoples = $record->peoples->pluck('id')->toArray();
+                                }
 
-                                $peoplesIds = $get('peoples');
-                                 if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
-                                    //  $peoplesIds = $record->peoples->pluck('model_id')->toArray();
-
-                                    $peoplesIds = $record->peoples->map(function($peopleActivitie){
-                                        // dd($peopleActivitie);
-                                        if($peopleActivitie->type == 'Employee'){
-                                            $info = $peopleActivitie->getPeople();
-                                            if($info){
-                                                $employee = Employee::where('dni',$info->dni)->first();
-                                                if($employee){
-                                                    $peopleActivitie->model_id = $employee->id;
-                                                    $peopleActivitie->model = 'Employee';
-                                                }
-                                            }
-                                        }
-
-                                        return $peopleActivitie;
-                                     })->pluck('model_id')->toArray();
-
-                                 }
-                                //  dd( $record->peoples, $peoplesIds );
-                                 return self::getPeoples([
-                                     'tipo_entrada' => $get('tipo_entrada'),
-                                     'num_search' => $get('num_search') ,
-                                     'form_control_id' => $get('form_control_id'),
-                                     'tipo' => 'option',
-                                     'ids' =>  $context == 'view' ? $peoplesIds : [],
-                                     'context' => $context
-                                 ]);
-                             })
-                             ->descriptions(function(Get $get , $context, $record){
-                                 $peoples = $get('peoples');
-                                 if($context == 'view' && isset($peoples) && !count($peoples) && $record->peoples){
-                                     $peoples = $record->peoples->pluck('model_id')->toArray();
-                                 }
-                                 return self::getPeoples([
-                                     'tipo_entrada' => $get('tipo_entrada'),
-                                     'num_search' => $get('num_search') ,
-                                     'form_control_id' => $get('form_control_id'),
-                                     'tipo' => 'descriptions',
-                                     'ids' =>  $context == 'view' ? $peoples : [],
-                                     'context' => $context
-                                 ]);
-                             })
-                             ->visible(function(Get $get, $context, $record  ){
-
-                                 $peoples = $get('peoples');
-                                 if($context == 'view' && isset($peoples) && !count($peoples) && $record->peoples){
-                                     $peoples = $record->peoples->pluck('id')->toArray();
-                                 }
-
-                                 if($context == 'view' && !count($peoples)){
-                                     return false;
-                                 }
-                                 return true;
-                             })
+                                if($context == 'view' && (!is_array($peoples) || !count($peoples))){
+                                    return false;
+                                }
+                                return true;
+                            })
                             ->afterStateUpdated(function($state, Get $get, Set $set){
                                 if($get('tipo_entrada') == 1){
                                     Owner::whereIn('id',$state)->get()->each(function($owner) use ($set){
                                         $lotes = collect($owner->lotes);
-                                        // $lotesS = [];
                                         $lote = $lotes->map(function($lote){
                                             return $lote->getNombre();
                                         })->first();
-
-                                        // dd($lote );
                                         $set('lote_ids',$lote);
-                                        if($owner->owner_status_id == 2){
-                                            Notification::make()
-                                                ->title('Propietario moroso: '.$owner->nombres())
-                                                ->warning()
-                                                ->send();
-                                        }
                                     });
-
-                                }
-                                if($get('tipo_entrada') == 2){
-                                    Employee::whereIn('id',$state)->get()->each(function($employee) use ($set){
-                                       if($employee->isVencidoSeguro()){
-                                            Notification::make()
-                                                ->title('Empleado con seguro vencido: '.$employee->nombres())
-                                                ->warning()
-                                                ->send();
-                                       }
-                                    });
-
                                 }
                             })
                             ->live(),
@@ -703,7 +966,8 @@ class ActivitiesResource extends Resource
                                     return [];
                                 }
 
-                                if($context == 'view' && !count($get('families'))){
+                                $families = $get('families') ?? [];
+                                if($context == 'view' && (!is_array($families) || !count($families))){
                                     return [];
                                 }
 
@@ -720,7 +984,8 @@ class ActivitiesResource extends Resource
                                 if(!$get('num_search') && $context != 'view'){
                                     return [];
                                 }
-                                if($context == 'view' && !count($get('families'))){
+                                $families = $get('families') ?? [];
+                                if($context == 'view' && (!is_array($families) || !count($families))){
                                     return [];
                                 }
                                 $owner_id = 0;
@@ -735,7 +1000,8 @@ class ActivitiesResource extends Resource
                                 if($get('tipo_entrada') != 1){
                                     return false;
                                 }
-                                if($context == 'view' && !count($get('families'))){
+                                $families = $get('families') ?? [];
+                                if($context == 'view' && (!is_array($families) || !count($families))){
                                     return false;
                                 }
                                 return true;
@@ -773,23 +1039,17 @@ class ActivitiesResource extends Resource
                         Forms\Components\CheckboxList::make('spontaneous_visit')->label(__('general.Select one or more options'))
                             ->options(function(Get $get, $context, $record){
 
+                                $owner = $get('peoples') ?? [];
 
 
                                 if($context == 'view'){
-                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
+                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit') ?? [])->get();
                                 }else{
-                                    if($get('type') == 2){
-                                        $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
-                                        ->where('aprobado',1)
-                                        ->where('agregado',1)
-                                        ->where('salida',null)
-                                        ->get();
-                                    }else{
 
-                                        $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
-                                        ->where('agregado',null)
-                                        ->whereDate('created_at',now())
-                                        ->get();
+                                    if(!is_array($owner) || !count($owner)){
+                                        $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now() )->get();
+                                    }else{   
+                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
                                     }
                                 }
 
@@ -801,13 +1061,15 @@ class ActivitiesResource extends Resource
                                 return $visitantes->pluck('texto','id');
                             })
                             ->descriptions(function(Get $get, $context){
+                                $owner = $get('peoples') ?? [];
                                 if($context == 'view'){
-                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit'))->get();
+                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit') ?? [])->get();
                                 }else{
-                                    $visitantes = OwnerSpontaneousVisit::Dni($get('num_search'))
-                                                    ->where('agregado',null)
-                                                    ->whereDate('created_at',now())
-                                                    ->get();
+                                    if(!is_array($owner) || !count($owner)){
+                                        $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now() )->get();
+                                    }else{   
+                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
+                                    }
                                 }
 
                                 $visitantes = $visitantes->map(function($visitante){
@@ -820,16 +1082,13 @@ class ActivitiesResource extends Resource
                             })
                             ->live(),
 
-
-
                         Actions::make([
                             Action::make('add_spontaneous_visit')
                                 ->label('Agregar Visitante espontáneo')
                                 ->icon('heroicon-m-plus')
-                                // ->requiresConfirmation()
                                 ->fillForm(function(Get $get){
-                                    $owner = $get('peoples');
-                                    if(!count($owner)){
+                                    $owner = $get('peoples') ?? [];
+                                    if(!is_array($owner) || !count($owner)){
                                         return [];
                                     }
                                     return [
@@ -837,54 +1096,61 @@ class ActivitiesResource extends Resource
                                     ];
                                 })
                                 ->form([
-                                    // Forms\Components\Hidden::make('owner_id'),
                                     Forms\Components\Select::make('owner_id')
                                         ->label(__("general.Owner"))
                                         ->required()
-                                        // ->relationship(name: 'owner', modifyQueryUsing: fn (Builder $query) => $query->orderBy('first_name')->orderBy('last_name'))
                                         ->options(Owner::orderBy('first_name')->orderBy('last_name')->get()->map(function($owner){
                                             $owner['name'] = "{$owner->first_name} {$owner->last_name}";
                                             return $owner;
                                         })->pluck("name","id")->toArray())
-                                        // ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}")
                                         ->searchable()
-                                        // ->afterStateUpdated(function(Set $set, $state){
-                                        //     $owner = Owner::find($state);
-                                        //     if(!$owner){
-                                        //         return ;
-                                        //     }
-                                        //     $set('name', $owner->first_name . ' ' . $owner->last_name);
-                                        //     $set('roles',[3]);
-                                        //     $set('email', $owner->email);
-                                        // })
                                         ->live(),
                                     Forms\Components\Repeater::make('spontaneous_visit')
                                         ->label('Visitante espontáneo')
                                         ->schema([
-                                            Forms\Components\TextInput::make('dni')->required(),
-                                            Forms\Components\TextInput::make('first_name')->required(),
-                                            Forms\Components\TextInput::make('last_name')->required(),
-                                            Forms\Components\TextInput::make('email')->required(),
-                                            Forms\Components\TextInput::make('phone')->numeric()->required(),
+                                            Forms\Components\TextInput::make('dni')->label('DNI')->required(),
+                                            Forms\Components\TextInput::make('first_name')->label('Nombre')->required(),
+                                            Forms\Components\TextInput::make('last_name')->label('Apellido')->required(),
+                                            Forms\Components\TextInput::make('email')->label('Correo electrónico')->email(),
+                                            Forms\Components\TextInput::make('phone')->label('Teléfono')->numeric()->required(),
                                         ])
                                         ->columns(2)
-                                        ->columnSpanFull(),
+                                        ->columnSpanFull()
+                                        ->defaultItems(1)
+                                        ->addActionLabel('Agregar otro visitante'),
                                 ])
                                 ->visible(function($context){
                                     return $context != 'view' ? true : false;
                                 })
-                                ->action(function (array $data, $record, Get $get) {
-
+                                ->action(function (array $data, $record, Get $get, Set $set) {
                                     self::createSpontaneusVisit($data);
+                                    
+                                    // Obtener los visitantes recién creados
+                                    $visitantesCreados = OwnerSpontaneousVisit::where('owner_id', $data['owner_id'])
+                                        ->whereIn('dni', collect($data['spontaneous_visit'])->pluck('dni'))
+                                        ->whereDate('created_at', now())
+                                        ->pluck('id')
+                                        ->toArray();
+                                    
+                                    // Agregar a la selección actual
+                                    $currentSelection = $get('spontaneous_visit') ?? [];
+                                    $newSelection = array_unique(array_merge($currentSelection, $visitantesCreados));
+                                    $set('spontaneous_visit', $newSelection);
+                                    
+                                    Notification::make()
+                                        ->title('Visitantes espontáneos agregados')
+                                        ->success()
+                                        ->send();
                                 })
-                                ,
+                                ->successNotificationTitle('Visitantes agregados correctamente'),
 
                         ]),
 
                     ])
                     ->columns(1)
                     ->visible(function(Get $get, $context){
-                        if($context == 'view' && !count($get('spontaneous_visit'))){
+                        $spontaneous = $get('spontaneous_visit') ?? [];
+                        if($context == 'view' && (!is_array($spontaneous) || !count($spontaneous))){
                             return false;
                         }
                         return ($get('tipo_entrada') == 1 )? true : false;
@@ -911,10 +1177,12 @@ class ActivitiesResource extends Resource
                                 $data = [];
 
                                 if($get('tipo_entrada') == 1){
-                                    $data = count($get('peoples')) ? self::searchOwnersAutos($get('peoples'), 'option') : [];
+                                    $peoples = $get('peoples') ?? [];
+                                    $data = (is_array($peoples) && count($peoples)) ? self::searchOwnersAutos($peoples, 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 2){
-                                    $data = count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'option') : [];
+                                    $peoples = $get('peoples') ?? [];
+                                    $data = (is_array($peoples) && count($peoples)) ? self::searchEmployeeAutos($peoples, 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
 
@@ -941,10 +1209,12 @@ class ActivitiesResource extends Resource
 
                                 $data = [];
                                 if($get('tipo_entrada') == 1){
-                                    $data = count($get('peoples')) ? self::searchOwnersAutos($get('peoples'), 'descriptions') : [];
+                                    $peoples = $get('peoples') ?? [];
+                                    $data = (is_array($peoples) && count($peoples)) ? self::searchOwnersAutos($peoples, 'descriptions') : [];
                                 }
                                 if($get('tipo_entrada') == 2){
-                                    $data = count($get('peoples')) ? self::searchEmployeeAutos($get('peoples'), 'descriptions') : [];
+                                    $peoples = $get('peoples') ?? [];
+                                    $data = (is_array($peoples) && count($peoples)) ? self::searchEmployeeAutos($peoples, 'descriptions') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
                                     $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'descriptions') : [];
@@ -1145,7 +1415,8 @@ class ActivitiesResource extends Resource
                     ])
                     ->columns(1)
                     ->visible(function(Get $get, $context){
-                        if($context == 'view' && !count($get('autos'))){
+                        $autos = $get('autos') ?? [];
+                        if($context == 'view' && (!is_array($autos) || !count($autos))){
                             return false;
                         }
                         return $get('tipo_entrada') ? true: false;
@@ -1166,12 +1437,34 @@ class ActivitiesResource extends Resource
                                 return $lote;
                             })->pluck('lote_name', 'lote_name')->toArray();
                         })
-                        ->searchable()
+                        ->default(function(Get $get){
+                            if($get('tipo_entrada') == 1){
+                                $peoples = $get('peoples') ?? [];
+                                if(is_array($peoples) && count($peoples)){
+                                    $owner = Owner::find($peoples[0]);
+                                    if($owner){
+                                        $lotes = collect($owner->lotes);
+                                        return $lotes->map(function($lote){
+                                            return $lote->getNombre();
+                                        })->first();
+                                    }
+                                }
+                            }
+                            return null;
+                        })
+                        ->afterStateUpdated(function($state, Get $get, Set $set){
+                            // Mantener el valor actualizado cuando cambia peoples
+                        })
+                        ->live()
+                        ->searchable(function(Get $get){
+                            return  ( $get('tipo_entrada') == 1  ) ? false : true;
+                        })
                         ->visible(function(Get $get, $context){
                             return $context == 'view' && !$get('lote_ids') ? false:true;
                         })
                         ->visible(function(Get $get, $context){
-                            if($context == 'view' && !count($get('spontaneous_visit'))){
+                            $spontaneous = $get('spontaneous_visit') ?? [];
+                            if($context == 'view' && (!is_array($spontaneous) || !count($spontaneous))){
                                 return false;
                             }
                             return ($get('tipo_entrada') == 1 || $get('tipo_entrada') == 2 )? true : false;
@@ -1188,8 +1481,10 @@ class ActivitiesResource extends Resource
 
                 Forms\Components\Toggle::make('is_force')
                     ->label('Forzar entrada a empleado (según horario configurado)')
+                    ->default(true)
                     ->visible(function(Get $get, $context){
-                        return $get('tipo_entrada') == 2 && $context == 'create' ? true: false;
+                        return false;
+                        // return $get('tipo_entrada') == 2 && $context == 'create' ? true: false;
                     }),
 
                 Actions::make([
@@ -1271,12 +1566,14 @@ class ActivitiesResource extends Resource
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'Inquilino' => 'Inquilino',
                         'Trabajador' => 'Trabajador',
-                        'Visita' => 'Visita'
+                        'Visita' => 'Visita',
+                        'Visita Temporal (24hs)' => 'Visita Temporal (24hs)'
                     })
                     ->color(fn (string $state): string => match ($state) {
                         'Inquilino' => 'success',
                         'Trabajador' => 'gray',
-                        'Visita' => 'warning'
+                        'Visita' => 'warning',
+                        'Visita Temporal (24hs)' => 'warning',
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')

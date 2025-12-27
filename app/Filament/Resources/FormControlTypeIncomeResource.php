@@ -17,7 +17,7 @@ class FormControlTypeIncomeResource extends Resource
 {
     protected static ?string $model = FormControlTypeIncome::class;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Configuración - Formulario';
+    protected static ?string $navigationGroup = 'Configuración';
     protected static ?string $navigationLabel = 'Tipo de ingreso';
     protected static ?string $label = 'tipo de ingreso';
     public static function getPluralModelLabel(): string
@@ -32,8 +32,8 @@ class FormControlTypeIncomeResource extends Resource
                 Forms\Components\TextInput::make('name')->required()->maxLength(255),
                 Forms\Components\TextInput::make('color')->type('color'),
                 Forms\Components\Toggle::make('status')->required(),
-                Forms\Components\TagsInput::make('files_required')->label('Documentos requeridos'),
-                Forms\Components\RichEditor::make('terminos')->label('Términos y condiciones')
+                // Forms\Components\TagsInput::make('files_required')->label('Documentos requeridos'),
+                // Forms\Components\RichEditor::make('terminos')->label('Términos y condiciones')
             ]);
     }
 

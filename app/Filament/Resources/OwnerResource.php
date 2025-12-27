@@ -295,6 +295,20 @@ class OwnerResource extends Resource implements HasShieldPermissions
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('show_qr')
+                    ->label('Ver QR')
+                    ->icon('heroicon-o-qr-code')
+                    ->color('info')
+                    ->modalHeading('Código de Acceso Rápido')
+                    ->modalDescription(fn ($record) => $record->first_name . ' ' . $record->last_name)
+                    ->modalContent(fn ($record) => view('components.qr-modal', [
+                        'record' => $record,
+                        'qrCode' => $record->generateQrCode(),
+                        'entityType' => 'Propietario'
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Cerrar'),
+                    
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
                 Action::make('createUser')
