@@ -19,6 +19,7 @@ use App\Models\Owner;
 use App\Models\OwnerAutos;
 use App\Models\OwnerFamily;
 use App\Models\OwnerSpontaneousVisit;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Actions;
@@ -359,8 +360,19 @@ class ActivitiesResource extends Resource
         if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
             // Cargar peoples con sus modelos relacionados de una vez
             $record->load(['peoples.owner', 'peoples.ownerFamily.familiarPrincipal', 'peoples.employee', 'peoples.formControlPeople', 'peoples.ownerSpontaneousVisit.owner']);
+            // Log para depuración
+            Log::info('ActivitiesResource:viewDataPeople - peoples en view', [
+                'activities_id' => $record->id ?? null,
+                'peoples' => $record->peoples->map(function($p) {
+                    return [
+                        'id' => $p->id,
+                        'model' => $p->model,
+                        'model_id' => $p->model_id,
+                        'type' => $p->type,
+                    ];
+                })->toArray()
+            ]);
             $peoplesIds = $record->peoples->map(function($peopleActivitie){
-                // No hacer queries aquí, solo devolver el model_id
                 return $peopleActivitie->model_id;
             })->toArray();
         }
