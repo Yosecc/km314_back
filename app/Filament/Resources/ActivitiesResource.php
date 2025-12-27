@@ -142,16 +142,16 @@ class ActivitiesResource extends Resource
     public static function searchOwnerFamily($dni, $type , $ids = [], $owner_id)
     {
         // Buscar familiares por DNI
-        $dniMatches = OwnerFamily::where('dni','like','%'.$dni.'%')->get();
+        $dniMatches = OwnerFamily::where('dni','like','%'.$dni.'%')->with('familiarPrincipal')->get();
         $ownerIds = $dniMatches->pluck('owner_id')->unique()->filter();
 
         // Si hay coincidencias por DNI, traer toda la familia de esos owner_id
         if ($dniMatches->count() > 0) {
-            $data = OwnerFamily::whereIn('owner_id', $ownerIds)->get();
+            $data = OwnerFamily::whereIn('owner_id', $ownerIds)->with('familiarPrincipal')->get();
         } else if ($owner_id != 0) {
-            $data = OwnerFamily::where('owner_id', $owner_id)->get();
+            $data = OwnerFamily::where('owner_id', $owner_id)->with('familiarPrincipal')->get();
         } else if (count($ids)) {
-            $data = OwnerFamily::whereIn('id', $ids)->get();
+            $data = OwnerFamily::whereIn('id', $ids)->with('familiarPrincipal')->get();
         } else {
             $data = collect();
         }
