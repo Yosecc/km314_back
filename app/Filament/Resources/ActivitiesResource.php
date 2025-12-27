@@ -354,6 +354,10 @@ class ActivitiesResource extends Resource
 
     public static function viewDataPeople(Get $get, $context, $record)
     {
+        Log::info('ActivitiesResource:viewDataPeople - INICIO', [
+    'context' => $context,
+    'record_id' => $record->id ?? null,
+]);
         $peoplesIds = $get('peoples');
                                 
         // OPTIMIZACIÓN: eager loading para evitar N+1 queries en el view
@@ -377,6 +381,10 @@ class ActivitiesResource extends Resource
             })->toArray();
         }
 
+        Log::info('ActivitiesResource:viewDataPeople - Antes de getPeoples: option', [
+    'ids' => $context == 'view' ? $peoplesIds : [],
+    'tipo_entrada' => $get('tipo_entrada'),
+]);
         // Obtener opciones y descripciones
         $options = self::getPeoples([
             'tipo_entrada' => $get('tipo_entrada'),
@@ -386,7 +394,14 @@ class ActivitiesResource extends Resource
             'ids' => $context == 'view' ? $peoplesIds : [],
             'context' => $context
         ]);
-
+        Log::info('ActivitiesResource:viewDataPeople - Después de getPeoples: option', [
+    'options_count' => is_array($options) ? count($options) : 0,
+    'options' => $options
+]);
+Log::info('ActivitiesResource:viewDataPeople - Antes de getPeoples: descriptions', [
+    'ids' => $context == 'view' ? $peoplesIds : [],
+    'tipo_entrada' => $get('tipo_entrada'),
+]);
         $descriptions = self::getPeoples([
             'tipo_entrada' => $get('tipo_entrada'),
             'num_search' => $get('num_search'),
@@ -395,9 +410,22 @@ class ActivitiesResource extends Resource
             'ids' => $context == 'view' ? $peoplesIds : [],
             'context' => $context
         ]);
-
+        Log::info('ActivitiesResource:viewDataPeople - Después de getPeoples: descriptions', [
+    'descriptions_count' => is_array($descriptions) ? count($descriptions) : 0,
+    'descriptions' => $descriptions
+]);
+Log::info('ActivitiesResource:viewDataPeople - Antes de mapeo personas', [
+    'options' => $options,
+    'descriptions' => $descriptions
+]);
         // Mapear personas con información adicional
         $personas = collect($options)->map(function($nombre, $id) use ($descriptions, $get, $context) {
+            Log::info('ActivitiesResource:viewDataPeople - Mapeando persona', [
+    'id' => $id,
+    'nombre' => $nombre,
+    'descripcion' => $descriptions[$id] ?? null
+]);
+
             $persona = [
                 'id' => $id,
                 'nombre' => $nombre,
@@ -405,7 +433,9 @@ class ActivitiesResource extends Resource
                 'badges' => [],
                 'vencimientos' => []
             ];
-
+Log::info('ActivitiesResource:viewDataPeople - Después de mapeo personas', [
+    'personas' => $personas
+]);
             // Solo agregar información de vencimientos para empleados en entrada
             if($get('tipo_entrada') == 2 && $get('type') == 1 && $context == 'create') {
                 $employee = Employee::find($id);
