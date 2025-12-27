@@ -777,22 +777,22 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->addActionLabel('Agregar persona')
                 ->columnSpanFull()
                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                    static $lastCount = 0;
                     $incomeType = $get('income_type');
-                    $archivos = self::getArchivos($incomeType);
-                    $currentCount = is_array($state) ? count($state) : 0;
-                    // Detectar si se agregó un nuevo ítem
-                    if ($currentCount > $lastCount) {
-                        // Buscar el/los nuevos (sin files o files vacío)
-                        foreach ($state as $index => $person) {
-                            $files = $person['files'] ?? [];
-                            if (!is_array($files) || count($files) === 0) {
-                                $state[$index]['files'] = $archivos;
-                            }
+                    $archivosRequeridos = self::getArchivos($incomeType);
+                    $cantidadRequerida = count($archivosRequeridos);
+                    $changed = false;
+                    foreach ($state as $index => $person) {
+                        $files = $person['files'] ?? [];
+                        // Si files no es array o la cantidad no coincide, forzar reemplazo
+                        if (!is_array($files) || count($files) !== $cantidadRequerida) {
+                            // Asignar SIEMPRE una copia fresca
+                            $state[$index]['files'] = array_map(function($item) { return $item; }, $archivosRequeridos);
+                            $changed = true;
                         }
+                    }
+                    if ($changed) {
                         $set('peoples', $state);
                     }
-                    $lastCount = $currentCount;
                 })
                 ,
         ];
