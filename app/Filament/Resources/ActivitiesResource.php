@@ -802,7 +802,7 @@ class ActivitiesResource extends Resource
                             ])
                             ->extraAttributes(['onkeydown' => "if(event.key === 'Enter') { event.preventDefault(); return false; }"])
                             ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
-                            ->live(),
+                            ->live(onBlur: true),
                     ])
                     ->visible(function(Get $get, $context){
                         return $get('tipo_entrada') && $context != 'view' ? true: false;
