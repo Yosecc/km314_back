@@ -780,34 +780,35 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     $data['files'] = self::getArchivos($incomeType);
                     return $data;
                 })
-                ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                    // Inicializa archivos requeridos de forma segura, sin referencias, y fuerza refresco visual
-                    $incomeType = $get('income_type');
-                    $archivos = self::getArchivos($incomeType);
-                    $nuevoPeoples = [];
-                    $changed = false;
-                    foreach ($state as $index => $person) {
-                        $files = $person['files'] ?? [];
-                        $needsInit = false;
-                        if (!is_array($files) || count($files) === 0) {
-                            $needsInit = true;
-                        } else {
-                            $first = is_array($files) ? reset($files) : null;
-                            if (!is_array($first) || !array_key_exists('name', $first)) {
-                                $needsInit = true;
-                            }
-                        }
-                        if ($needsInit) {
-                            $person['files'] = $archivos;
-                            $changed = true;
-                        }
-                        $nuevoPeoples[$index] = $person;
-                    }
-                    if ($changed) {
-                        $set('peoples', $nuevoPeoples);
-                        $set('refresh_peoples', uniqid());
-                    }
-                }),
+                // ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                //     // Inicializa archivos requeridos de forma segura, sin referencias, y fuerza refresco visual
+                //     $incomeType = $get('income_type');
+                //     $archivos = self::getArchivos($incomeType);
+                //     $nuevoPeoples = [];
+                //     $changed = false;
+                //     foreach ($state as $index => $person) {
+                //         $files = $person['files'] ?? [];
+                //         $needsInit = false;
+                //         if (!is_array($files) || count($files) === 0) {
+                //             $needsInit = true;
+                //         } else {
+                //             $first = is_array($files) ? reset($files) : null;
+                //             if (!is_array($first) || !array_key_exists('name', $first)) {
+                //                 $needsInit = true;
+                //             }
+                //         }
+                //         if ($needsInit) {
+                //             $person['files'] = $archivos;
+                //             $changed = true;
+                //         }
+                //         $nuevoPeoples[$index] = $person;
+                //     }
+                //     if ($changed) {
+                //         $set('peoples', $nuevoPeoples);
+                //         $set('refresh_peoples', uniqid());
+                //     }
+                // })
+                ,
         ];
     }
     
