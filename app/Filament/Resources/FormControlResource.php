@@ -777,7 +777,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->columnSpanFull()
                 ->mutateRelationshipDataBeforeCreateUsing(function (array $data, Get $get) {
                     $incomeType = $get('income_type');
-                    dd($incomeType);    
+                    // dd($incomeType);    
+                    $data['files'] = self::getArchivos($incomeType);
+                    return $data;
+                })
+                ->mutateRelationshipDataBeforeFillUsing(function (array $data, Get $get) {
+                    $incomeType = $get('income_type');
+                    // dd($incomeType);    
                     $data['files'] = self::getArchivos($incomeType);
                     return $data;
                 })
