@@ -396,7 +396,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->relationship()
                 ->label('Documentos')
                 ->schema([
-                    Forms\Components\TextInput::make('name')->disabled()->dehydrated(),
+                    Forms\Components\TextInput::make('name')
+                        // ->required()
+                        ->disabled()
+                        ->dehydrated()
+                        ->label('Nombre del documento'),
                     DatePicker::make('fecha_vencimiento')
                         ->label('Fecha de vencimiento del documento')
                         ->extraFieldWrapperAttributes(function(Get $get, $state){
@@ -438,6 +442,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->grid(2)
                 ->columns(1)
                 ->columnSpanFull()
+                
         ];
         
     }
@@ -726,6 +731,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 }),
             
                 
+            Forms\Components\Hidden::make('refresh_peoples'),
             Forms\Components\Repeater::make('peoples')
                 ->label('Cargue los datos de las personas que ingresarán al barrio')
                 ->relationship()
@@ -738,8 +744,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated(true)
                         ->numeric(),
-                                            
-                                            
                     Forms\Components\TextInput::make('first_name')
                         ->label(__("general.FirstName"))
                         ->required()
@@ -765,9 +769,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     Forms\Components\Toggle::make('is_responsable')->default(false)->label(__("general.Responsable")),
                     Forms\Components\Toggle::make('is_acompanante')->default(false)->label(__("general.Acompanante")),
                     Forms\Components\Toggle::make('is_menor')->default(false)->label(__("general.Minor")),
-                    
                     ...self::formArchivosPersonales(),
-
                 ])
                 ->addable(function(Get $get){
                     return !collect($get('income_type'))->contains('Trabajador') || !auth()->user()->hasRole('owner');
@@ -775,7 +777,26 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->itemLabel(fn (array $state): ?string => $state['first_name'] ?? null)
                 ->columns(4)
                 ->addActionLabel('Agregar persona')
-                ->columnSpanFull(),
+                ->columnSpanFull()
+                ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                    $incomeType = $get('income_type');
+                    $archivosRequeridos = self::getArchivos($incomeType);
+                    $cantidadRequerida = count($archivosRequeridos);
+                    $changed = false;
+                    foreach ($state as $index => $person) {
+                        $files = $person['files'] ?? [];
+                        // Si files no es array o la cantidad no coincide, forzar reemplazo
+                        if (!is_array($files) || count($files) !== $cantidadRequerida) {
+                            // Asignar SIEMPRE una copia fresca
+                            $state[$index]['files'] = array_map(function($item) { return $item; }, $archivosRequeridos);
+                            $changed = true;
+                        }
+                    }
+                    if ($changed) {
+                        $set('peoples', $state);
+                    }
+                })
+                ,
         ];
     }
     
