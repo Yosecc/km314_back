@@ -355,20 +355,14 @@ class ActivitiesResource extends Resource
     {
         $peoplesIds = $get('peoples');
                                 
+        // OPTIMIZACIÓN: eager loading para evitar N+1 queries en el view
         if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
+            // Cargar peoples con sus modelos relacionados de una vez
+            $record->load(['peoples.owner', 'peoples.ownerFamily.familiarPrincipal', 'peoples.employee', 'peoples.formControlPeople', 'peoples.ownerSpontaneousVisit.owner']);
             $peoplesIds = $record->peoples->map(function($peopleActivitie){
-                if($peopleActivitie->type == 'Employee'){
-                    $info = $peopleActivitie->getPeople();
-                    if($info){
-                        $employee = Employee::where('dni',$info->dni)->first();
-                        if($employee){
-                            $peopleActivitie->model_id = $employee->id;
-                            $peopleActivitie->model = 'Employee';
-                        }
-                    }
-                }
-                return $peopleActivitie;
-            })->pluck('model_id')->toArray();
+                // No hacer queries aquí, solo devolver el model_id
+                return $peopleActivitie->model_id;
+            })->toArray();
         }
 
         // Obtener opciones y descripciones
