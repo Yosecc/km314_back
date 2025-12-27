@@ -16,9 +16,6 @@ class FormControlPeople extends Model
         'is_acompanante' => 'boolean',
         'is_menor' => 'boolean',
     ];
-
-    
-
     public function formControl()
     {
         return $this->belongsTo(FormControl::class);
