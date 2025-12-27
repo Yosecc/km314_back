@@ -233,7 +233,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             // ACTUALIZA archivos personales de cada persona
                             $peoples = $get('peoples') ?? [];
                             foreach ($peoples as $index => $person) {
-                                \Log::debug('act ar',['s'=> self::getArchivos($state), 'get' => $get() ]);
+                                // \Log::debug('act ar',['s'=> self::getArchivos($state), 'get' => $get() ]);
                                 $set("peoples.{$index}.files", self::getArchivos($state));
                             }
                         })
