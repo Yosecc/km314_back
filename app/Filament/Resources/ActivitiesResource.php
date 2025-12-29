@@ -19,6 +19,7 @@ use App\Models\Owner;
 use App\Models\OwnerAutos;
 use App\Models\OwnerFamily;
 use App\Models\OwnerSpontaneousVisit;
+use App\Models\FormControlTypeIncome;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Filament\Forms;
@@ -355,87 +356,87 @@ class ActivitiesResource extends Resource
     public static function viewDataPeople(Get $get, $context, $record)
     {
         Log::info('ActivitiesResource:viewDataPeople - INICIO', [
-    'context' => $context,
-    'record_id' => $record->id ?? null,
-]);
-        $peoplesIds = $get('peoples');
-                                
-        // OPTIMIZACIÓN: eager loading para evitar N+1 queries en el view
-        if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
-            // Cargar peoples con sus modelos relacionados de una vez
-            $record->load(['peoples.owner', 'peoples.ownerFamily.familiarPrincipal', 'peoples.employee', 'peoples.formControlPeople', 'peoples.ownerSpontaneousVisit.owner']);
-            // Log para depuración
-            Log::info('ActivitiesResource:viewDataPeople - peoples en view', [
-                'activities_id' => $record->id ?? null,
-                'peoples' => $record->peoples->map(function($p) {
-                    return [
-                        'id' => $p->id,
-                        'model' => $p->model,
-                        'model_id' => $p->model_id,
-                        'type' => $p->type,
-                    ];
-                })->toArray()
-            ]);
-            $peoplesIds = $record->peoples->map(function($peopleActivitie){
-                return $peopleActivitie->model_id;
-            })->toArray();
-        }
+                    'context' => $context,
+                    'record_id' => $record->id ?? null,
+                ]);
+                        $peoplesIds = $get('peoples');
+                                                
+                        // OPTIMIZACIÓN: eager loading para evitar N+1 queries en el view
+                        if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
+                            // Cargar peoples con sus modelos relacionados de una vez
+                            $record->load(['peoples.owner', 'peoples.ownerFamily.familiarPrincipal', 'peoples.employee', 'peoples.formControlPeople', 'peoples.ownerSpontaneousVisit.owner']);
+                            // Log para depuración
+                            Log::info('ActivitiesResource:viewDataPeople - peoples en view', [
+                                'activities_id' => $record->id ?? null,
+                                'peoples' => $record->peoples->map(function($p) {
+                                    return [
+                                        'id' => $p->id,
+                                        'model' => $p->model,
+                                        'model_id' => $p->model_id,
+                                        'type' => $p->type,
+                                    ];
+                                })->toArray()
+                            ]);
+                            $peoplesIds = $record->peoples->map(function($peopleActivitie){
+                                return $peopleActivitie->model_id;
+                            })->toArray();
+                        }
 
-        Log::info('ActivitiesResource:viewDataPeople - Antes de getPeoples: option', [
-    'ids' => $context == 'view' ? $peoplesIds : [],
-    'tipo_entrada' => $get('tipo_entrada'),
-]);
-        // Obtener opciones y descripciones
-        $options = self::getPeoples([
-            'tipo_entrada' => $get('tipo_entrada'),
-            'num_search' => $get('num_search'),
-            'form_control_id' => $get('form_control_id'),
-            'tipo' => 'option',
-            'ids' => $context == 'view' ? $peoplesIds : [],
-            'context' => $context
-        ]);
-        Log::info('ActivitiesResource:viewDataPeople - Después de getPeoples: option', [
-    'options_count' => is_array($options) ? count($options) : 0,
-    'options' => $options
-]);
-Log::info('ActivitiesResource:viewDataPeople - Antes de getPeoples: descriptions', [
-    'ids' => $context == 'view' ? $peoplesIds : [],
-    'tipo_entrada' => $get('tipo_entrada'),
-]);
-        $descriptions = self::getPeoples([
-            'tipo_entrada' => $get('tipo_entrada'),
-            'num_search' => $get('num_search'),
-            'form_control_id' => $get('form_control_id'),
-            'tipo' => 'descriptions',
-            'ids' => $context == 'view' ? $peoplesIds : [],
-            'context' => $context
-        ]);
-        Log::info('ActivitiesResource:viewDataPeople - Después de getPeoples: descriptions', [
-    'descriptions_count' => is_array($descriptions) ? count($descriptions) : 0,
-    'descriptions' => $descriptions
-]);
-Log::info('ActivitiesResource:viewDataPeople - Antes de mapeo personas', [
-    'options' => $options,
-    'descriptions' => $descriptions
-]);
-        // Mapear personas con información adicional
-        $personas = collect($options)->map(function($nombre, $id) use ($descriptions, $get, $context) {
-            Log::info('ActivitiesResource:viewDataPeople - Mapeando persona', [
-    'id' => $id,
-    'nombre' => $nombre,
-    'descripcion' => $descriptions[$id] ?? null
-]);
+                        Log::info('ActivitiesResource:viewDataPeople - Antes de getPeoples: option', [
+                    'ids' => $context == 'view' ? $peoplesIds : [],
+                    'tipo_entrada' => $get('tipo_entrada'),
+                ]);
+                        // Obtener opciones y descripciones
+                        $options = self::getPeoples([
+                            'tipo_entrada' => $get('tipo_entrada'),
+                            'num_search' => $get('num_search'),
+                            'form_control_id' => $get('form_control_id'),
+                            'tipo' => 'option',
+                            'ids' => $context == 'view' ? $peoplesIds : [],
+                            'context' => $context
+                        ]);
+                        Log::info('ActivitiesResource:viewDataPeople - Después de getPeoples: option', [
+                    'options_count' => is_array($options) ? count($options) : 0,
+                    'options' => $options
+                ]);
+                Log::info('ActivitiesResource:viewDataPeople - Antes de getPeoples: descriptions', [
+                    'ids' => $context == 'view' ? $peoplesIds : [],
+                    'tipo_entrada' => $get('tipo_entrada'),
+                ]);
+                        $descriptions = self::getPeoples([
+                            'tipo_entrada' => $get('tipo_entrada'),
+                            'num_search' => $get('num_search'),
+                            'form_control_id' => $get('form_control_id'),
+                            'tipo' => 'descriptions',
+                            'ids' => $context == 'view' ? $peoplesIds : [],
+                            'context' => $context
+                        ]);
+                        Log::info('ActivitiesResource:viewDataPeople - Después de getPeoples: descriptions', [
+                    'descriptions_count' => is_array($descriptions) ? count($descriptions) : 0,
+                    'descriptions' => $descriptions
+                ]);
+                Log::info('ActivitiesResource:viewDataPeople - Antes de mapeo personas', [
+                    'options' => $options,
+                    'descriptions' => $descriptions
+                ]);
+                        // Mapear personas con información adicional
+                        $personas = collect($options)->map(function($nombre, $id) use ($descriptions, $get, $context) {
+                            Log::info('ActivitiesResource:viewDataPeople - Mapeando persona', [
+                    'id' => $id,
+                    'nombre' => $nombre,
+                    'descripcion' => $descriptions[$id] ?? null
+                ]);
 
-            $persona = [
-                'id' => $id,
-                'nombre' => $nombre,
-                'descripcion' => $descriptions[$id] ?? '',
-                'badges' => [],
-                'vencimientos' => []
-            ];
-Log::info('ActivitiesResource:viewDataPeople - Después de mapeo personas', [
-    'personas' => $persona
-]);
+                            $persona = [
+                                'id' => $id,
+                                'nombre' => $nombre,
+                                'descripcion' => $descriptions[$id] ?? '',
+                                'badges' => [],
+                                'vencimientos' => []
+                            ];
+                Log::info('ActivitiesResource:viewDataPeople - Después de mapeo personas', [
+                    'personas' => $persona
+                ]);
             // Solo agregar información de vencimientos para empleados en entrada
             if($get('tipo_entrada') == 2 && $get('type') == 1 && $context == 'create') {
                 $employee = Employee::find($id);
@@ -1625,17 +1626,23 @@ Log::info('ActivitiesResource:viewDataPeople - Después de mapeo personas', [
                 Tables\Columns\TextColumn::make('formControl.income_type')
                     ->badge()
                     ->label(__("general.TypeIncome"))
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'Inquilino' => 'Inquilino',
-                        'Trabajador' => 'Trabajador',
-                        'Visita' => 'Visita',
-                        'Visita Temporal (24hs)' => 'Visita Temporal (24hs)'
+                    ->formatStateUsing(function (string $state) {
+                        static $labels = null;
+                        if ($labels === null) {
+                            $labels = FormControlTypeIncome::where('status', 1)
+                                ->pluck('name', 'name')
+                                ->toArray();
+                        }
+                        return $labels[$state] ?? $state;
                     })
-                    ->color(fn (string $state): string => match ($state) {
-                        'Inquilino' => 'success',
-                        'Trabajador' => 'gray',
-                        'Visita' => 'warning',
-                        'Visita Temporal (24hs)' => 'warning',
+                    ->color(function (string $state) {
+                        static $colors = null;
+                        if ($colors === null) {
+                            $colors = FormControlTypeIncome::where('status', 1)
+                                ->pluck('color', 'name')
+                                ->toArray();
+                        }
+                        return $colors[$state] ?? 'gray';
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')
