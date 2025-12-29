@@ -790,6 +790,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     $cantidadRequerida = count($archivosRequeridos);
                     $changed = false;
                     foreach ($state as $index => $person) {
+                        \Log::debug('change', ['files' => $person['files'] ]);
                         $files = $person['files'] ?? [];
                         if (!is_array($files) || count($files) !== $cantidadRequerida) {
                             $state[$index]['files'] = array_map(function($item) { return $item; }, $archivosRequeridos);
