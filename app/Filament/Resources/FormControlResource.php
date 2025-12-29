@@ -781,27 +781,22 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->addActionLabel('Agregar persona')
                 ->columnSpanFull()
                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
-
-                    
                     $incomeType = $get('income_type');
-                    \Log::debug('asssss',['s'=> self::getArchivos($incomeType), 'get' => $get() ]);
-
                     $archivosRequeridos = self::getArchivos($incomeType);
                     $cantidadRequerida = count($archivosRequeridos);
                     $changed = false;
                     foreach ($state as $index => $person) {
-                        \Log::debug('change', ['files' => $person['files'] ]);
                         $files = $person['files'] ?? [];
-                        if (!is_array($files) || count($files) !== $cantidadRequerida) {
+                        // Si files no es un array indexado, o la cantidad no coincide, o el primer elemento no tiene 'name', forzar reemplazo
+                        $isIndexed = array_is_list($files);
+                        $needsReplace = !$isIndexed || count($files) !== $cantidadRequerida || (isset($files[0]) && !isset($files[0]['name']));
+                        if ($needsReplace) {
                             $state[$index]['files'] = array_map(function($item) { return $item; }, $archivosRequeridos);
                             $changed = true;
                         }
                     }
                     if ($changed) {
-                        \Log::debug('asssss2',['s'=> $state, 'get' => $get('peoples') ]);
                         $set('peoples', $state);
-                        \Log::debug('asssss3',['s'=> $state, 'get' => $get('peoples') ]);
-
                     }
                 })
                 ,
