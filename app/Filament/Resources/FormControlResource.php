@@ -207,6 +207,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->afterStateUpdated(function (Set $set, $state, Get $get) {
                             $set('peoples', [[]]);
 
+                            // ACTUALIZA archivos personales de cada persona
+                            $peoples = $get('peoples') ?? [];
+                            foreach ($peoples as $index => $person) {
+                                \Log::debug('act ar',['s'=> self::getArchivos($state), 'get' => $get() ]);
+                                $set("peoples.{$index}.files", self::getArchivos($state));
+                            }
+
                             if($state == 'Visita Temporal (24hs)'){
                                 $set('dateRanges', [[
                                     'start_date_range' => Carbon::now()->format('Y-m-d'),
@@ -231,12 +238,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 'date_unilimited' => false,
                             ]]);
 
-                            // ACTUALIZA archivos personales de cada persona
-                            $peoples = $get('peoples') ?? [];
-                            foreach ($peoples as $index => $person) {
-                                // \Log::debug('act ar',['s'=> self::getArchivos($state), 'get' => $get() ]);
-                                $set("peoples.{$index}.files", self::getArchivos($state));
-                            }
+                            
                         })
                         ->required(function(Get $get){
                             if($get('access_type')== null || !count($get('access_type'))){
