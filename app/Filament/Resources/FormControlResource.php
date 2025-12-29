@@ -797,7 +797,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         }
                     }
                     if ($changed) {
+                        \Log::debug('asssss2',['s'=> $state, 'get' => $get('peoples') ]);
                         $set('peoples', $state);
+                        \Log::debug('asssss3',['s'=> $state, 'get' => $get('peoples') ]);
+
                     }
                 })
                 ,
