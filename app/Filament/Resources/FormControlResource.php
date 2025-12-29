@@ -210,7 +210,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             // ACTUALIZA archivos personales de cada persona
                             $peoples = $get('peoples') ?? [];
                             foreach ($peoples as $index => $person) {
-                                \Log::debug('act ar',['s'=> self::getArchivos($state), 'get' => $get() ]);
+                                // \Log::debug('act ar',['s'=> self::getArchivos($state), 'get' => $get() ]);
                                 $set("peoples.{$index}.files", self::getArchivos($state));
                             }
 
@@ -787,9 +787,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     $changed = false;
                     foreach ($state as $index => $person) {
                         $files = $person['files'] ?? [];
-                        // Si files no es array o la cantidad no coincide, forzar reemplazo
                         if (!is_array($files) || count($files) !== $cantidadRequerida) {
-                            // Asignar SIEMPRE una copia fresca
                             $state[$index]['files'] = array_map(function($item) { return $item; }, $archivosRequeridos);
                             $changed = true;
                         }
