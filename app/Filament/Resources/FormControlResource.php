@@ -207,6 +207,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->afterStateUpdated(function (Set $set, $state, Get $get) {
                             $set('peoples', [[]]);
 
+                            // ACTUALIZA archivos personales de cada persona
+                            $peoples = $get('peoples') ?? [];
+                            foreach ($peoples as $index => $person) {
+                                // \Log::debug('act ar',['s'=> self::getArchivos($state), 'get' => $get() ]);
+                                $set("peoples.{$index}.files", self::getArchivos($state));
+                            }
+
                             if($state == 'Visita Temporal (24hs)'){
                                 $set('dateRanges', [[
                                     'start_date_range' => Carbon::now()->format('Y-m-d'),
@@ -231,12 +238,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 'date_unilimited' => false,
                             ]]);
 
-                            // ACTUALIZA archivos personales de cada persona
-                            $peoples = $get('peoples') ?? [];
-                            foreach ($peoples as $index => $person) {
-                                // \Log::debug('act ar',['s'=> self::getArchivos($state), 'get' => $get() ]);
-                                $set("peoples.{$index}.files", self::getArchivos($state));
-                            }
+                            
                         })
                         ->required(function(Get $get){
                             if($get('access_type')== null || !count($get('access_type'))){
@@ -752,7 +754,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated(true)
                         ->maxLength(255)
-                        ->lazy(),
+                        ,
                     Forms\Components\TextInput::make('last_name')
                         ->label(__("general.LastName"))
                         ->required()
@@ -761,7 +763,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated(true)
                         ->maxLength(255)
-                        ->lazy(),
+                        ,
                     Forms\Components\TextInput::make('phone')
                         ->label(__("general.Phone"))
                         ->tel()
@@ -785,9 +787,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     $changed = false;
                     foreach ($state as $index => $person) {
                         $files = $person['files'] ?? [];
-                        // Si files no es array o la cantidad no coincide, forzar reemplazo
-                        if (!is_array($files) || count($files) !== $cantidadRequerida) {
-                            // Asignar SIEMPRE una copia fresca
+                        // Si files no es un array indexado, o la cantidad no coincide, o el primer elemento no tiene 'name', forzar reemplazo
+                        $isIndexed = array_is_list($files);
+                        $needsReplace = !$isIndexed || count($files) !== $cantidadRequerida || (isset($files[0]) && !isset($files[0]['name']));
+                        if ($needsReplace) {
                             $state[$index]['files'] = array_map(function($item) { return $item; }, $archivosRequeridos);
                             $changed = true;
                         }
