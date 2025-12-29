@@ -65,7 +65,7 @@ class EmployeeResource extends Resource
             return true;
         }
 
-        return auth()->user()->can('view_any::form_control');
+        return auth()->user()->can('view_any_employee');
     }
 
     public static function getPluralModelLabel(): string
