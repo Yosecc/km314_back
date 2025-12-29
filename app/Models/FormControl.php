@@ -120,25 +120,26 @@ class FormControl extends Model
 
     public function getFechasFormat()
     {
-
         Carbon::setLocale('es');
 
-        $fechaStart = Carbon::parse($this->start_date_range);
-        $horaStart = Carbon::parse($this->start_time_range)->format('H');
-        $minutoStart = Carbon::parse($this->start_time_range)->format('i');
-        $fechaStart->setTime($horaStart, $minutoStart);
-
-        $fechaend = Carbon::parse($this->end_date_range);
-        $horaend = Carbon::parse($this->end_time_range)->format('H');
-        $minutoend = Carbon::parse($this->end_time_range)->format('i');
-        $fechaend->setTime($horaend, $minutoend);
+        // Si hay dateRanges, toma el primero (o el que corresponda)
+        if ($this->dateRanges && $this->dateRanges->count() > 0) {
+            $range = $this->dateRanges->first();
+            $start = Carbon::parse($range->start_date_range . ' ' . $range->start_time_range);
+            $end = Carbon::parse($range->end_date_range . ' ' . $range->end_time_range);
+        } else {
+            // Fallback a los campos propios (por compatibilidad)
+            $start = Carbon::parse($this->start_date_range . ' ' . $this->start_time_range);
+            $end = Carbon::parse($this->end_date_range . ' ' . $this->end_time_range);
+        }
 
         return [
-            'start' => $fechaStart->translatedFormat('l, F d, Y h:i A'),
-            'end' =>  $fechaend->translatedFormat('l, F d, Y h:i A'),
-            '_start' => $fechaStart,
-            '_end'=> $fechaend,
+            'start' => $start->isoFormat('dddd, D [de] MMMM [de] YYYY hh:mm a'),
+            'end' => $end->isoFormat('dddd, D [de] MMMM [de] YYYY hh:mm a'),
+            '_start' => $start,
+            '_end'=> $end,
         ];
+
     }
 
     public function lotes()
