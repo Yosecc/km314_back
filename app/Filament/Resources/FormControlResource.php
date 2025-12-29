@@ -752,7 +752,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated(true)
                         ->maxLength(255)
-                        ->lazy(),
+                        ,
                     Forms\Components\TextInput::make('last_name')
                         ->label(__("general.LastName"))
                         ->required()
@@ -761,7 +761,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->dehydrated(true)
                         ->maxLength(255)
-                        ->lazy(),
+                        ,
                     Forms\Components\TextInput::make('phone')
                         ->label(__("general.Phone"))
                         ->tel()
