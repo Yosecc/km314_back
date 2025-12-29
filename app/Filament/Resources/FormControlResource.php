@@ -781,7 +781,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->addActionLabel('Agregar persona')
                 ->columnSpanFull()
                 ->afterStateUpdated(function (Set $set, Get $get, $state) {
+
+                    
                     $incomeType = $get('income_type');
+                    \Log::debug('asssss',['s'=> self::getArchivos($incomeType), 'get' => $get() ]);
+
                     $archivosRequeridos = self::getArchivos($incomeType);
                     $cantidadRequerida = count($archivosRequeridos);
                     $changed = false;
