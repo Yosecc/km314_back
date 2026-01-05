@@ -1109,15 +1109,26 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('peoples_count')->counts('peoples')->label(__('general.Visitantes')),
                                
                 Tables\Columns\TextColumn::make('dateRanges_range')
-                        ->formatStateUsing(function (FormControl $record) {
-                            // Usar el método getRangeDate() del modelo para mostrar los rangos
-                            $range = $record->getRangeDate();
-                            return $range ?: '-';
-                        })
-                        ->html() // Permite mostrar saltos de línea si hay varios rangos
-                        ->searchable()
-                        ->sortable()
-                        ->label('Rango de fechas'),
+                            ->formatStateUsing(function (FormControl $record) {
+                                // Mostrar la primera y última fecha del array de rangos
+                                if ($record->dateRanges  && $record->dateRanges->count() > 0) {
+                                    $first = $record->dateRanges->first();
+                                    $last = $record->dateRanges->last();
+                                    $start = Carbon::parse($first->start_date_range . ' ' . $first->start_time_range)->isoFormat('DD/MM/YYYY HH:mm');
+                                    $end = Carbon::parse($last->end_date_range . ' ' . $last->end_time_range)->isoFormat('DD/MM/YYYY HH:mm');
+                                    return "{$start} - {$end}";
+                                }
+                                // Fallback para registros antiguos
+                                if ($record->start_date_range && $record->start_time_range && $record->end_date_range && $record->end_time_range) {
+                                    $start = Carbon::parse($record->start_date_range . ' ' . $record->start_time_range)->isoFormat('DD/MM/YYYY HH:mm');
+                                    $end = Carbon::parse($record->end_date_range . ' ' . $record->end_time_range)->isoFormat('DD/MM/YYYY HH:mm');
+                                    return "{$start} - {$end}";
+                                }
+                                return '-';
+                            })
+                            ->searchable()
+                            ->sortable()
+                            ->label('Rango de fechas'),
 
                 Tables\Columns\TextColumn::make('authorizedUser.name')
                     ->numeric()
