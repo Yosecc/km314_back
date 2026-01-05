@@ -1120,14 +1120,24 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         return '-';
                     })
                     ->searchable()
-                    ->sortable()->label(__('general.start_date_range')),
+                    ->sortable()
+                    ->label(__('general.start_date_range')),
 
-                Tables\Columns\TextColumn::make('end_date_range')
+                Tables\Columns\TextColumn::make('dateRanges.end_date_range')
                     ->formatStateUsing(function (FormControl $record){
-                        return Carbon::parse("{$record->end_date_range} {$record->end_time_range}")->toDayDateTimeString();
+                        if ($record->dateRanges()->exists()) {
+                            $firstRange = $record->dateRanges->first();
+                            return Carbon::parse("{$firstRange->end_date_range} {$firstRange->end_time_range}")->toDayDateTimeString();
+                        }
+                        // Fallback para registros antiguos
+                        if ($record->end_date_range && $record->end_time_range) {
+                            return Carbon::parse("{$record->end_date_range} {$record->end_time_range}")->toDayDateTimeString();
+                        }
+                        return '-';
                     })
                     ->searchable()
-                    ->sortable()->label(__('general.end_date_range')),
+                    ->sortable()
+                    ->label(__('general.end_date_range')),
 
                 Tables\Columns\TextColumn::make('authorizedUser.name')
                     ->numeric()

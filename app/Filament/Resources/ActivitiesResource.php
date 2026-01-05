@@ -900,6 +900,7 @@ class ActivitiesResource extends Resource
                                                 'isActive' => $form->isActive(),
                                                 'hint' => !$get('form_control_id') ? false : true,
                                                 'vencimientos' => $vencimientos,
+                                                
                                             ];
                                         };
 
