@@ -1117,7 +1117,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->html() // Permite mostrar saltos de línea si hay varios rangos
                         ->searchable()
                         ->sortable()
-                        ->label(__('general.date_range')),
+                        ->label('Rango de fechas'),
 
                 Tables\Columns\TextColumn::make('authorizedUser.name')
                     ->numeric()
