@@ -1109,27 +1109,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('peoples_count')->counts('peoples')->label(__('general.Visitantes')),
                                
                 Tables\Columns\TextColumn::make('dateRanges_range')
-                    ->formatStateUsing(function (FormControl $record) {
-                        if ($record->dateRanges()->exists()) {
-                            // Mostrar todos los rangos, separados por salto de línea
-                            return $record->dateRanges->map(function($range) {
-                                $start = Carbon::parse("{$range->start_date_range} {$range->start_time_range}")->toDayDateTimeString();
-                                $end = Carbon::parse("{$range->end_date_range} {$range->end_time_range}")->toDayDateTimeString();
-                                return "{$start} - {$end}";
-                            })->implode('<br>');
-                        }
-                        // Fallback para registros antiguos
-                        if ($record->start_date_range && $record->start_time_range && $record->end_date_range && $record->end_time_range) {
-                            $start = Carbon::parse("{$record->start_date_range} {$record->start_time_range}")->toDayDateTimeString();
-                            $end = Carbon::parse("{$record->end_date_range} {$record->end_time_range}")->toDayDateTimeString();
-                            return "{$start} - {$end}";
-                        }
-                        return '-';
-                    })
-                    ->html() // Permite mostrar saltos de línea en la tabla
-                    ->searchable()
-                    ->sortable()
-                    ->label(__('general.date_range')),
+                        ->formatStateUsing(function (FormControl $record) {
+                            // Usar el método getRangeDate() del modelo para mostrar los rangos
+                            $range = $record->getRangeDate();
+                            return $range ?: '-';
+                        })
+                        ->html() // Permite mostrar saltos de línea si hay varios rangos
+                        ->searchable()
+                        ->sortable()
+                        ->label(__('general.date_range')),
 
                 Tables\Columns\TextColumn::make('authorizedUser.name')
                     ->numeric()
