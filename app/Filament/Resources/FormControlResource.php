@@ -1107,27 +1107,25 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         return Auth::user()->hasAnyRole([1]);
                     }),
                 Tables\Columns\TextColumn::make('peoples_count')->counts('peoples')->label(__('general.Visitantes')),
-                Tables\Columns\TextColumn::make('dateRanges.start_date_range')
-                    ->formatStateUsing(function (FormControl $record){
+                Tables\Columns\TextColumn::make('dateRanges_range')
+                    ->formatStateUsing(function (FormControl $record) {
                         if ($record->dateRanges()->exists()) {
                             $firstRange = $record->dateRanges->first();
-                            return Carbon::parse("{$firstRange->start_date_range} {$firstRange->start_time_range}")->toDayDateTimeString();
+                            $start = Carbon::parse("{$firstRange->start_date_range} {$firstRange->start_time_range}")->toDayDateTimeString();
+                            $end = Carbon::parse("{$firstRange->end_date_range} {$firstRange->end_time_range}")->toDayDateTimeString();
+                            return "{$start} - {$end}";
                         }
                         // Fallback para registros antiguos
-                        if ($record->start_date_range && $record->start_time_range) {
-                            return Carbon::parse("{$record->start_date_range} {$record->start_time_range}")->toDayDateTimeString();
+                        if ($record->start_date_range && $record->start_time_range && $record->end_date_range && $record->end_time_range) {
+                            $start = Carbon::parse("{$record->start_date_range} {$record->start_time_range}")->toDayDateTimeString();
+                            $end = Carbon::parse("{$record->end_date_range} {$record->end_time_range}")->toDayDateTimeString();
+                            return "{$start} - {$end}";
                         }
                         return '-';
                     })
                     ->searchable()
-                    ->sortable()->label(__('general.start_date_range')),
-
-                Tables\Columns\TextColumn::make('end_date_range')
-                    ->formatStateUsing(function (FormControl $record){
-                        return Carbon::parse("{$record->end_date_range} {$record->end_time_range}")->toDayDateTimeString();
-                    })
-                    ->searchable()
-                    ->sortable()->label(__('general.end_date_range')),
+                    ->sortable()
+                    ->label(__('general.date_range')),
 
                 Tables\Columns\TextColumn::make('authorizedUser.name')
                     ->numeric()
