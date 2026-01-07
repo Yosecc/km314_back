@@ -44,7 +44,7 @@ use App\Filament\Resources\EmployeeResource\Traits\HasGestionAction;
 class EmployeeResource extends Resource
 {
     use HasNotesAction, HasGestionAction;
-    
+
     protected static ?string $model = Employee::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -134,7 +134,7 @@ class EmployeeResource extends Resource
                         ->afterStateUpdated(function(Set $set){
                             $set('model_id', null);
                         }),
-                    
+
                     Forms\Components\Select::make('model_id')
                         ->label(function(Get $get){
                             $model = $get('model');
@@ -166,8 +166,8 @@ class EmployeeResource extends Resource
                 ->columns(1)
                 ->collapsible()
                 ->defaultItems(0)
-                ->itemLabel(fn (array $state): ?string => 
-                    isset($state['model']) 
+                ->itemLabel(fn (array $state): ?string =>
+                    isset($state['model'])
                         ? ($state['model'] === 'ConstructionCompanie' && isset($state['model_id'])
                             ? 'Compañía: ' . (ConstructionCompanie::find($state['model_id'])->name ?? 'N/A')
                             : ($state['model'] === 'Employee' ? 'KM314' : 'Origen sin configurar'))
@@ -267,7 +267,7 @@ class EmployeeResource extends Resource
     private static function formArchivosPersonales()
     {
 
-        
+
 
         return [
             Repeater::make('files')
@@ -312,7 +312,7 @@ class EmployeeResource extends Resource
                     ])
                     ->defaultItems(1)
                     ->minItems(1)
-                    ->maxItems(5)
+                    // ->maxItems(5)
                     ->addable(false)
                     ->deletable(false)
                     ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
@@ -489,7 +489,7 @@ class EmployeeResource extends Resource
                     ])
                     ->skippable(function ($context) {
                         return $context == 'edit' || $context == 'view';
-                    }),                  
+                    }),
             ])->columns(1);
     }
 
@@ -498,7 +498,7 @@ class EmployeeResource extends Resource
         $color = '';
         $texto = '';
         $status = false;
-        
+
         if($record->isVencidoSeguro()){
             $color = "warning";
             $texto = "Trabajador pendiente de reverificación de datos.";
@@ -648,14 +648,14 @@ class EmployeeResource extends Resource
                     ->visible(function ($record) {
                         return Auth::user()->hasRole('super_admin') && $record->isVencidoSeguro();
                     }),
-                                
+
                 self::getRenovarDocumentosTableAction(),
-                
+
                 ActionGroup::make([
                     self::getGestionarAutosTableAction(),
                     self::getGestionarHorariosTableAction(),
                 ])->color('info'),
-                
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
