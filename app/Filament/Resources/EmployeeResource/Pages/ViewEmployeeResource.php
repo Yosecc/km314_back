@@ -28,7 +28,7 @@ class ViewEmployeeResource extends ViewRecord
             self::getNotesPageAction(),
 
             self::getGestionarAutosPageAction(),
-            self::getGestionarHorariosPageAction(),
+            // self::getGestionarHorariosPageAction(),
             self::getSolicitarReverificacionPageAction(),
             self::getRenovarDocumentosPageAction(),
             
