@@ -360,15 +360,15 @@ class ActivitiesResource extends Resource
                     'record_id' => $record->id ?? null,
                 ]);
                         $peoplesIds = $get('peoples');
-                                                
-                        // OPTIMIZACIÓN: eager loading para evitar N+1 queries en el view
-                    $peoplesIds = $get('peoples');
-                    // Log para depuración: mostrar los IDs seleccionados en el frontend
-                    \Illuminate\Support\Facades\Log::info('IDs seleccionados en peoples (Livewire):', [
+
+                         Log::info('IDs seleccionados en peoples (Livewire):', [
                         'peoples' => $peoplesIds,
                         'context' => $context,
                         'record' => $record ? $record->id : null
                     ]);
+                                                
+                        // OPTIMIZACIÓN: eager loading para evitar N+1 queries en el view
+                        if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
                             // Cargar peoples con sus modelos relacionados de una vez
                             $record->load(['peoples.owner', 'peoples.ownerFamily.familiarPrincipal', 'peoples.employee', 'peoples.formControlPeople', 'peoples.ownerSpontaneousVisit.owner']);
                             // Log para depuración
