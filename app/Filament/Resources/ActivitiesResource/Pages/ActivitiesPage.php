@@ -138,14 +138,7 @@ class ActivitiesPage extends CreateRecord
 
     protected function beforeCreate(): void
     {
-            // LOG: Ver qué datos llegan antes de procesar
-            \Log::info('beforeCreate - Datos recibidos', [
-                'peoples' => $this->data['peoples'] ?? null,
-                'families' => $this->data['families'] ?? null,
-                'form_control_id' => $this->data['form_control_id'] ?? null,
-                'tipo_entrada' => $this->data['tipo_entrada'] ?? null,
-                'type' => $this->data['type'] ?? null,
-            ]);
+            // ...existing code...
         // Runs before the form fields are saved to the database.
 
         $model = '';
@@ -260,14 +253,17 @@ class ActivitiesPage extends CreateRecord
                         $this->halt();
                     }
                     
-                    // Validar si está dentro del rango de fechas
-                    if (!$formControl->isDayRange()) {
-                        Notification::make()
+                    if( $this->data['type'] = 'Entry'){
+
+                        // Validar si está dentro del rango de fechas
+                        if (!$formControl->isDayRange()) {
+                            Notification::make()
                             ->title('El formulario no está dentro del rango de fechas válido')
                             ->body($formControl->getRangeDate())
                             ->danger()
                             ->send();
-                        $this->halt();
+                            $this->halt();
+                        }
                     }
                 }
             }
@@ -380,13 +376,7 @@ class ActivitiesPage extends CreateRecord
                         ];
                     });
 
-                     // LOG: Ver qué personas se van a insertar
-            \Log::info('afterCreate - Personas a insertar en ActivitiesPeople', [
-                'people' => $people->toArray(),
-                'people_original' => $this->data['peoples'] ?? null,
-                'tipo_entrada' => $this->data['tipo_entrada'] ?? null,
-                'model' => $model,
-            ]);
+            // ...existing code...
 
         if($formControlId){
             $record->form_control_id = $formControlId;
