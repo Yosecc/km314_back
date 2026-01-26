@@ -362,7 +362,13 @@ class ActivitiesResource extends Resource
                         $peoplesIds = $get('peoples');
                                                 
                         // OPTIMIZACIÓN: eager loading para evitar N+1 queries en el view
-                        if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
+                    $peoplesIds = $get('peoples');
+                    // Log para depuración: mostrar los IDs seleccionados en el frontend
+                    \Illuminate\Support\Facades\Log::info('IDs seleccionados en peoples (Livewire):', [
+                        'peoples' => $peoplesIds,
+                        'context' => $context,
+                        'record' => $record ? $record->id : null
+                    ]);
                             // Cargar peoples con sus modelos relacionados de una vez
                             $record->load(['peoples.owner', 'peoples.ownerFamily.familiarPrincipal', 'peoples.employee', 'peoples.formControlPeople', 'peoples.ownerSpontaneousVisit.owner']);
                             // Log para depuración
@@ -867,7 +873,7 @@ class ActivitiesResource extends Resource
 
                                         $mapeo = function($form) use ($get){
                                             $accesType = collect($form['access_type'])->map(function($type){
-                                                $data = ['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club hause', 'lote' => 'Lote' ];
+                                                $data = ['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club house', 'lote' => 'Lote' ];
                                                 return $data[$type];
                                             })->implode(' - ');
 
@@ -1615,7 +1621,7 @@ class ActivitiesResource extends Resource
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'general' => 'Entrada general',
                         'playa' => 'Clud playa',
-                        'hause' => 'Club hause',
+                        'hause' => 'Club house',
                         'lote' => 'Lote',
                     })
                     ->color(fn (string $state): string => match ($state) {
