@@ -253,7 +253,7 @@ class ActivitiesPage extends CreateRecord
                         $this->halt();
                     }
                     
-                    if( $this->data['type'] = 'Entry'){
+                    if( $this->data['type'] == 'Entry'){
 
                         // Validar si está dentro del rango de fechas
                         if (!$formControl->isDayRange()) {
