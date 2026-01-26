@@ -138,6 +138,7 @@ class ActivitiesPage extends CreateRecord
 
     protected function beforeCreate(): void
     {
+            // ...existing code...
         // Runs before the form fields are saved to the database.
 
         $model = '';
@@ -252,14 +253,17 @@ class ActivitiesPage extends CreateRecord
                         $this->halt();
                     }
                     
-                    // Validar si está dentro del rango de fechas
-                    if (!$formControl->isDayRange()) {
-                        Notification::make()
+                    if( $this->data['type'] == 'Entry'){
+
+                        // Validar si está dentro del rango de fechas
+                        if (!$formControl->isDayRange()) {
+                            Notification::make()
                             ->title('El formulario no está dentro del rango de fechas válido')
                             ->body($formControl->getRangeDate())
                             ->danger()
                             ->send();
-                        $this->halt();
+                            $this->halt();
+                        }
                     }
                 }
             }
@@ -332,6 +336,7 @@ class ActivitiesPage extends CreateRecord
 
     protected function afterCreate(): void
     {
+           
         // dd('SI',$this->record, $this->data);
 
         $model = '';
@@ -370,6 +375,8 @@ class ActivitiesPage extends CreateRecord
                             'updated_at' => Carbon::now(),
                         ];
                     });
+
+            // ...existing code...
 
         if($formControlId){
             $record->form_control_id = $formControlId;

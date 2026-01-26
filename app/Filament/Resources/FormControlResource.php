@@ -124,7 +124,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ] : [
                             'general' => 'Entrada general',
                             'playa' => 'Clud playa', 'hause' =>
-                            'Club hause',
+                            'Club house',
                             'lote' => 'Lote',
                         ])
                         ->live()
@@ -1094,7 +1094,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'general' => 'Entrada general',
                         'playa' => 'Clud playa',
-                        'hause' => 'Club hause',
+                        'hause' => 'Club house',
                         'lote' => 'Lote',
                     })
                     ->color(fn (string $state): string => match ($state) {

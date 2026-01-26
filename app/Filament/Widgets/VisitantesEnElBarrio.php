@@ -52,7 +52,7 @@ class VisitantesEnElBarrio extends BaseWidget
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'general' => 'Entrada general',
                         'playa' => 'Clud playa',
-                        'hause' => 'Club hause',
+                        'hause' => 'Club house',
                         'lote' => 'Lote',
                     })
                     ->color(fn (string $state): string => match ($state) {

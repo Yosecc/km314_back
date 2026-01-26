@@ -360,6 +360,12 @@ class ActivitiesResource extends Resource
                     'record_id' => $record->id ?? null,
                 ]);
                         $peoplesIds = $get('peoples');
+
+                         Log::info('IDs seleccionados en peoples (Livewire):', [
+                        'peoples' => $peoplesIds,
+                        'context' => $context,
+                        'record' => $record ? $record->id : null
+                    ]);
                                                 
                         // OPTIMIZACIÓN: eager loading para evitar N+1 queries en el view
                         if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
@@ -867,7 +873,7 @@ class ActivitiesResource extends Resource
 
                                         $mapeo = function($form) use ($get){
                                             $accesType = collect($form['access_type'])->map(function($type){
-                                                $data = ['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club hause', 'lote' => 'Lote' ];
+                                                $data = ['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club house', 'lote' => 'Lote' ];
                                                 return $data[$type];
                                             })->implode(' - ');
 
@@ -1615,7 +1621,7 @@ class ActivitiesResource extends Resource
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'general' => 'Entrada general',
                         'playa' => 'Clud playa',
-                        'hause' => 'Club hause',
+                        'hause' => 'Club house',
                         'lote' => 'Lote',
                     })
                     ->color(fn (string $state): string => match ($state) {

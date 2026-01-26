@@ -4,8 +4,12 @@
     init() {
         // Inicializar con los valores actuales
         if (Array.isArray(this.state)) {
-            this.selectedPeople = this.state;
+            this.selectedPeople = [...this.state];
         }
+        // Watcher para mantener sincronizado con Livewire
+        this.$watch('state', value => {
+            this.selectedPeople = Array.isArray(value) ? [...value] : [];
+        });
     }
 }" class="space-y-4">
     @if(count($personas) > 0)
