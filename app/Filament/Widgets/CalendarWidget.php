@@ -311,7 +311,7 @@ class CalendarWidget extends FullCalendarWidget
                 // Si los campos *_time existen y no son nulos, combínalos con la fecha
                 $start = $range->start_date_range;
                 $end = $range->end_date_range;
-                start_time_range
+                
 
                 if (!empty($range->start_time_range)) {
                     $start .= ' ' . $range->start_time_range;
