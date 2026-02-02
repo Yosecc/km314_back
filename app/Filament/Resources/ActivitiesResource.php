@@ -600,10 +600,7 @@ class ActivitiesResource extends Resource
         return ['personas' => $personas];
     }
 
-    public static function formControlSelectorViewData(Get $get, $context, $record)
-    {
-
-    }
+   
 
 
     public static function form(Form $form): Form
@@ -970,7 +967,7 @@ class ActivitiesResource extends Resource
                                             ->where('start_date_range','>=',now())
                                             ->limit(10)
                                             ->get()
-                                            ->map( self::formControlSelectorViewData )
+                                            ->map( $mapeo )
                                             ->values()
                                             ->toArray();
 
