@@ -306,14 +306,22 @@ class CalendarWidget extends FullCalendarWidget
             if (!$formControl) return [];
             // Obtener todos los rangos de fechas autorizados
             $dateRanges = $formControl->dateRanges()
-                ->where('end_date_range', '>=', Carbon::now()->format('Y-m-d'))
                 ->get();
             return $dateRanges->map(function($range) use ($person, $formControl) {
+                // Si los campos *_time existen y no son nulos, combínalos con la fecha
+                $start = $range->start_date_range;
+                $end = $range->end_date_range;
+                if (!empty($range->start_time)) {
+                    $start .= ' ' . $range->start_time;
+                }
+                if (!empty($range->end_time)) {
+                    $end .= ' ' . $range->end_time;
+                }
                 return [
                     'title' => $person->first_name . ' ' . $person->last_name . ' ' . $range->start_date_range,
                     'id' => 'People'.$person->id.'_'.$range->id,
-                    'start' => $range->start_date_range,
-                    'end' => $range->end_date_range,
+                    'start' => $start,
+                    'end' => $end,
                     'url' => route('filament.admin.resources.form-controls.view', $formControl),
                     'shouldOpenUrlInNewTab' => true
                 ];
