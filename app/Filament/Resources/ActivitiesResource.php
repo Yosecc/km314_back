@@ -864,14 +864,15 @@ class ActivitiesResource extends Resource
                                     ->required()
                                     ->view('filament.forms.components.formControlSelector')
                                     /** @phpstan-ignore-next-line */
-                                    ->viewData(function(Get $get, $context): array {
+                                    ->viewData(function(Get $get, $context) {
 
                                         
                                         if(!$get('num_search') && !$get('form_control_id')){
                                             return ['formularios' => []];
                                         }
 
-                                        $mapeo = function($form) use ($get){
+                                        $mapeo = function(FormControl $form) use ($get){
+
                                             $accesType = collect($form['access_type'])->map(function($type){
                                                 $data = ['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club house', 'lote' => 'Lote' ];
                                                 return $data[$type];
@@ -883,8 +884,47 @@ class ActivitiesResource extends Resource
                                             $income = $income !=''  ? $income.' / ': $income;
                                             $lotes = $lotes !=''  ? ' : '.$lotes: $lotes;
 
-                                            $fechas = $form->getFechasFormat();
+                                            if ($form->dateRanges && $form->dateRanges->count() > 0) {
+                                               
+                                                // Ajuste: convertir string a fecha antes de formatear
+                                                $range = $form->dateRanges->map(function($dateRange) {
+                                                    $start = $dateRange->start_date_range ? \Carbon\Carbon::parse($dateRange->start_date_range) : null;
+                                                    $end = $dateRange->end_date_range ? \Carbon\Carbon::parse($dateRange->end_date_range) : null;
+                                                    return [
+                                                        'start' => $start ? $start->format('d/m/Y') : null,
+                                                        'end' => $dateRange->date_unilimited ? 'Sin fecha límite de salida' : ($end ? $end->format('d/m/Y') : null),
+                                                        '_start' => $start,
+                                                        '_end' => $end,
+                                                        'date_unilimited' => $dateRange->date_unilimited,
+                                                    ];
+                                                });
+
+                                                $hoy = \Carbon\Carbon::now();
+                                                $rangoHoy = $range->first(function($item) use ($hoy) {
+                                                    if ($item['date_unilimited']) {
+                                                        return $item['_start'] && $item['_start']->lessThanOrEqualTo($hoy);
+                                                    }
+                                                    return $item['_start'] && $item['_end'] && $hoy->between($item['_start'], $item['_end']);
+                                                });
+
+                                                if ($rangoHoy) {
+                                                    $fechas = [
+                                                        'start' => $rangoHoy['start'],
+                                                        'end' => $rangoHoy['end'],
+                                                    ];
+                                                } else {
+                                                    $fechas = [
+                                                        'start' => $range->first()['start'],
+                                                        'end' => $range->last()['end'],
+                                                    ];
+                                                }
+
+                                            }else{
+                                                $fechas = $form->getFechasFormat();
+                                            }
+
                                             $limite = $form['date_unilimited'] ? 'Sin fecha límite de salida' : $fechas['end'];
+                                            
                                             $observacion = $form['observations'] ? ' ( Observaciones: '. $form['observations'] .' )' : '';
 
                                             $vencimientos = [];
