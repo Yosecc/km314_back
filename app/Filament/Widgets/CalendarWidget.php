@@ -326,6 +326,8 @@ class CalendarWidget extends FullCalendarWidget
                         'id' => 'People'.$person->id.'_'.$range->id.'_'.$current->format('Ymd'),
                         'start' => $start,
                         'end' => $end,
+                        'backgroundColor' => '#c8e6c9', // verde claro
+                        'borderColor' => '#388e3c', // verde oscuro
                         'url' => route('filament.admin.resources.form-controls.view', $formControl),
                         'shouldOpenUrlInNewTab' => true
                     ]);
