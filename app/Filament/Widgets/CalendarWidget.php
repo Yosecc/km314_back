@@ -327,13 +327,13 @@ class CalendarWidget extends FullCalendarWidget
                     }
                     // Determinar color según el turno
                     // Si la hora de inicio está entre 07:00 y 18:00 => verde, si está entre 18:00 y 07:00 => azul
-                    $colorFondo = '#c8e6c9'; // verde claro por defecto
+                    $colorFondo = '#244e27'; // verde claro por defecto
                     $colorBorde = '#388e3c'; // verde oscuro por defecto
                     $horaComparar = $horaInicio ?? $horaFin;
                     if ($horaComparar) {
                         $hora = intval(substr($horaComparar, 0, 2));
                         if ($hora >= 18 || $hora < 7) {
-                            $colorFondo = '#bbdefb'; // azul claro
+                            $colorFondo = '#185592'; // azul claro
                             $colorBorde = '#1976d2'; // azul oscuro
                         }
                     }
