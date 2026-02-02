@@ -600,6 +600,11 @@ class ActivitiesResource extends Resource
         return ['personas' => $personas];
     }
 
+    public static function formControlSelectorViewData(Get $get, $context, $record)
+    {
+
+    }
+
 
     public static function form(Form $form): Form
     {
@@ -901,9 +906,6 @@ class ActivitiesResource extends Resource
 
                                                 $hoy = \Carbon\Carbon::now();
                                                 $rangoHoy = $range->first(function($item) use ($hoy) {
-                                                    if ($item['date_unilimited']) {
-                                                        return $item['_start'] && $item['_start']->lessThanOrEqualTo($hoy);
-                                                    }
                                                     return $item['_start'] && $item['_end'] && $hoy->between($item['_start'], $item['_end']);
                                                 });
 
@@ -968,7 +970,7 @@ class ActivitiesResource extends Resource
                                             ->where('start_date_range','>=',now())
                                             ->limit(10)
                                             ->get()
-                                            ->map($mapeo)
+                                            ->map( self::formControlSelectorViewData )
                                             ->values()
                                             ->toArray();
 
