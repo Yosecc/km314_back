@@ -292,20 +292,16 @@ class CalendarWidget extends FullCalendarWidget
         )
         ->all();
 
+        $now = Carbon::now()->format('Y-m-d');
+
         $formControlPeople = FormControlPeople::query()
-        ->whereHas('formControl', function ($query) {
-            $query->where('status', 'Authorized')
-                ->whereHas('dateRanges', function($q) {
-                    $q->where(function($sub) {
-                        $now = Carbon::now()->format('Y-m-d');
-                        $sub->where('start_date_range', '<=', $now)
-                            ->where(function($sub2) use ($now) {
-                                $sub2->where('end_date_range', '>=', $now)
-                                    ->orWhereNull('end_date_range');
-                            });
+            ->whereHas('formControl', function ($query) use ($now) {
+                $now = Carbon::now()->format('Y-m-d');
+                $query->where('status', 'Authorized')
+                    ->whereHas('dateRanges', function($q) use ($now) {
+                        $q->where('end_date_range', '>=', $now);
                     });
-                });
-        })
+            })
         ->get()
         ->map(
             fn (FormControlPeople $event) => [
