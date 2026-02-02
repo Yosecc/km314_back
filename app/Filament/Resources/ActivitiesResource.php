@@ -909,8 +909,8 @@ class ActivitiesResource extends Resource
 
                                                 if ($rangoHoy) {
                                                     $fechas = [
-                                                        'start' => $hoy->format('d/m/Y'),
-                                                        'end' => $rangoHoy['_end'] ? $rangoHoy['_end']->format('d/m/Y') : $rangoHoy['end'],
+                                                        'start' => $rangoHoy['start'],
+                                                        'end' => $rangoHoy['end'],
                                                     ];
                                                 } else {
                                                     $fechas = [
