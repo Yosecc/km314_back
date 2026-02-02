@@ -355,43 +355,22 @@ class ActivitiesResource extends Resource
 
     public static function viewDataPeople(Get $get, $context, $record)
     {
-        Log::info('ActivitiesResource:viewDataPeople - INICIO', [
-                    'context' => $context,
-                    'record_id' => $record->id ?? null,
-                ]);
-                        $peoplesIds = $get('peoples');
+       
+        $peoplesIds = $get('peoples');
 
-                         Log::info('IDs seleccionados en peoples (Livewire):', [
-                        'peoples' => $peoplesIds,
-                        'context' => $context,
-                        'record' => $record ? $record->id : null
-                    ]);
+                       
                                                 
                         // OPTIMIZACIÓN: eager loading para evitar N+1 queries en el view
                         if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
                             // Cargar peoples con sus modelos relacionados de una vez
                             $record->load(['peoples.owner', 'peoples.ownerFamily.familiarPrincipal', 'peoples.employee', 'peoples.formControlPeople', 'peoples.ownerSpontaneousVisit.owner']);
-                            // Log para depuración
-                            Log::info('ActivitiesResource:viewDataPeople - peoples en view', [
-                                'activities_id' => $record->id ?? null,
-                                'peoples' => $record->peoples->map(function($p) {
-                                    return [
-                                        'id' => $p->id,
-                                        'model' => $p->model,
-                                        'model_id' => $p->model_id,
-                                        'type' => $p->type,
-                                    ];
-                                })->toArray()
-                            ]);
+                            
                             $peoplesIds = $record->peoples->map(function($peopleActivitie){
                                 return $peopleActivitie->model_id;
                             })->toArray();
                         }
 
-                        Log::info('ActivitiesResource:viewDataPeople - Antes de getPeoples: option', [
-                    'ids' => $context == 'view' ? $peoplesIds : [],
-                    'tipo_entrada' => $get('tipo_entrada'),
-                ]);
+                     
                         // Obtener opciones y descripciones
                         $options = self::getPeoples([
                             'tipo_entrada' => $get('tipo_entrada'),
@@ -401,14 +380,7 @@ class ActivitiesResource extends Resource
                             'ids' => $context == 'view' ? $peoplesIds : [],
                             'context' => $context
                         ]);
-                        Log::info('ActivitiesResource:viewDataPeople - Después de getPeoples: option', [
-                    'options_count' => is_array($options) ? count($options) : 0,
-                    'options' => $options
-                ]);
-                Log::info('ActivitiesResource:viewDataPeople - Antes de getPeoples: descriptions', [
-                    'ids' => $context == 'view' ? $peoplesIds : [],
-                    'tipo_entrada' => $get('tipo_entrada'),
-                ]);
+                   
                         $descriptions = self::getPeoples([
                             'tipo_entrada' => $get('tipo_entrada'),
                             'num_search' => $get('num_search'),
@@ -417,21 +389,10 @@ class ActivitiesResource extends Resource
                             'ids' => $context == 'view' ? $peoplesIds : [],
                             'context' => $context
                         ]);
-                        Log::info('ActivitiesResource:viewDataPeople - Después de getPeoples: descriptions', [
-                    'descriptions_count' => is_array($descriptions) ? count($descriptions) : 0,
-                    'descriptions' => $descriptions
-                ]);
-                Log::info('ActivitiesResource:viewDataPeople - Antes de mapeo personas', [
-                    'options' => $options,
-                    'descriptions' => $descriptions
-                ]);
+                 
                         // Mapear personas con información adicional
                         $personas = collect($options)->map(function($nombre, $id) use ($descriptions, $get, $context) {
-                            Log::info('ActivitiesResource:viewDataPeople - Mapeando persona', [
-                    'id' => $id,
-                    'nombre' => $nombre,
-                    'descripcion' => $descriptions[$id] ?? null
-                ]);
+                     
 
                             $persona = [
                                 'id' => $id,
@@ -440,9 +401,7 @@ class ActivitiesResource extends Resource
                                 'badges' => [],
                                 'vencimientos' => []
                             ];
-                Log::info('ActivitiesResource:viewDataPeople - Después de mapeo personas', [
-                    'personas' => $persona
-                ]);
+               
             // Solo agregar información de vencimientos para empleados en entrada
             if($get('tipo_entrada') == 2 && $get('type') == 1 && $context == 'create') {
                 $employee = Employee::find($id);
@@ -599,6 +558,8 @@ class ActivitiesResource extends Resource
 
         return ['personas' => $personas];
     }
+
+   
 
 
     public static function form(Form $form): Form
@@ -864,14 +825,16 @@ class ActivitiesResource extends Resource
                                     ->required()
                                     ->view('filament.forms.components.formControlSelector')
                                     /** @phpstan-ignore-next-line */
-                                    ->viewData(function(Get $get, $context): array {
+                                    ->viewData(function(Get $get, $context) {
 
                                         
                                         if(!$get('num_search') && !$get('form_control_id')){
                                             return ['formularios' => []];
                                         }
 
-                                        $mapeo = function($form) use ($get){
+                                        
+                                        $mapeo = function(FormControl $form) use ($get){
+
                                             $accesType = collect($form['access_type'])->map(function($type){
                                                 $data = ['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club house', 'lote' => 'Lote' ];
                                                 return $data[$type];
@@ -883,8 +846,44 @@ class ActivitiesResource extends Resource
                                             $income = $income !=''  ? $income.' / ': $income;
                                             $lotes = $lotes !=''  ? ' : '.$lotes: $lotes;
 
-                                            $fechas = $form->getFechasFormat();
+                                            if ($form->dateRanges && $form->dateRanges->count() > 0) {
+                                               
+                                                // Ajuste: convertir string a fecha antes de formatear
+                                                $range = $form->dateRanges->map(function($dateRange) {
+                                                    $start = $dateRange->start_date_range ? \Carbon\Carbon::parse($dateRange->start_date_range) : null;
+                                                    $end = $dateRange->end_date_range ? \Carbon\Carbon::parse($dateRange->end_date_range) : null;
+                                                    return [
+                                                        'start' => $start ? $start->format('d/m/Y') : null,
+                                                        'end' => $dateRange->date_unilimited ? 'Sin fecha límite de salida' : ($end ? $end->format('d/m/Y') : null),
+                                                        '_start' => $start,
+                                                        '_end' => $end,
+                                                        'date_unilimited' => $dateRange->date_unilimited,
+                                                    ];
+                                                });
+
+                                                $hoy = \Carbon\Carbon::now();
+                                                $rangoHoy = $range->first(function($item) use ($hoy) {
+                                                    return $hoy->format('d/m/Y') == $item['_start']->format('d/m/Y');
+                                                });
+
+                                                if ($rangoHoy) {
+                                                    $fechas = [
+                                                        'start' => $rangoHoy['start'],
+                                                        'end' => $rangoHoy['end'],
+                                                    ];
+                                                } else {
+                                                    $fechas = [
+                                                        'start' => $range->first()['start'],
+                                                        'end' => $range->last()['end'],
+                                                    ];
+                                                }
+
+                                            }else{
+                                                $fechas = $form->getFechasFormat();
+                                            }
+
                                             $limite = $form['date_unilimited'] ? 'Sin fecha límite de salida' : $fechas['end'];
+                                            
                                             $observacion = $form['observations'] ? ' ( Observaciones: '. $form['observations'] .' )' : '';
 
                                             $vencimientos = [];
@@ -915,6 +914,11 @@ class ActivitiesResource extends Resource
                                             return ['formularios' => $formularios];
                                         }
 
+                                          if($get('form_control_id') && $context == 'create'){
+                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->values()->toArray();
+                                            return ['formularios' => $formularios];
+                                        }
+
                                         $num = $get('num_search');
                                         $formularios = FormControl::whereHas('peoples', function ($query) use ($num) {
                                                 $query->where('dni','like','%'.$num.'%');
@@ -928,7 +932,7 @@ class ActivitiesResource extends Resource
                                             ->where('start_date_range','>=',now())
                                             ->limit(10)
                                             ->get()
-                                            ->map($mapeo)
+                                            ->map( $mapeo )
                                             ->values()
                                             ->toArray();
 

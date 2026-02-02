@@ -293,22 +293,65 @@ class CalendarWidget extends FullCalendarWidget
         ->all();
 
         $formControlPeople = FormControlPeople::query()
-        ->whereHas('formControl', function ($query) {
-            $query->where('status', 'Authorized')->whereRaw('CONCAT(start_date_range, " ", COALESCE(start_time_range, "00:00:00")) >= ?', [Carbon::now()]);
-        })
+            ->whereHas('formControl', function ($query) use ($fetchInfo) {
+                $query->where('status', 'Authorized')
+                    ->whereHas('dateRanges', function($q) use ($fetchInfo) {
+                        $q->where('start_date_range', '<=', $fetchInfo['end'])
+                          ->where('end_date_range', '>=', $fetchInfo['start']);
+                    });
+            })
         ->get()
-        ->map(
-            fn (FormControlPeople $event) => [
-                'title' =>  $event->first_name ." ".$event->last_name,
-                'id' => 'People'.$event->id,
-                'start' => $event->formControl->getFechasFormat()['_start'],
-                //'end' => $event->formControl->getFechasFormat()['_end'],
-                //'backgroundColor' => "#c8e6c9",
-                //'borderColor' => "#1b5e20",
-                'url' => route('filament.admin.resources.form-controls.view', $event->formControl ),
-                'shouldOpenUrlInNewTab' => true
-            ]
-        )
+        ->flatMap(function (FormControlPeople $person) {
+            $formControl = $person->formControl;
+            if (!$formControl) return [];
+            $dateRanges = $formControl->dateRanges()->get();
+            $events = collect();
+            foreach ($dateRanges as $range) {
+                $startDate = Carbon::parse($range->start_date_range);
+                $endDate = Carbon::parse($range->end_date_range);
+                $current = $startDate->copy();
+                while ($current->lte($endDate)) {
+                    $start = $current->format('Y-m-d');
+                    $end = $current->format('Y-m-d');
+                    $horaInicio = null;
+                    $horaFin = null;
+                    // Si es el primer día y hay hora de inicio, agrégala
+                    if ($current->eq($startDate) && !empty($range->start_time_range)) {
+                        $start .= ' ' . $range->start_time_range;
+                        $horaInicio = $range->start_time_range;
+                    }
+                    // Si es el último día y hay hora de fin, agrégala
+                    if ($current->eq($endDate) && !empty($range->end_time_range)) {
+                        $end .= ' ' . $range->end_time_range;
+                        $horaFin = $range->end_time_range;
+                    }
+                    // Determinar color según el turno
+                    // Si la hora de inicio está entre 07:00 y 18:00 => verde, si está entre 18:00 y 07:00 => azul
+                    $colorFondo = '#244e27'; // verde claro por defecto
+                    $colorBorde = '#388e3c'; // verde oscuro por defecto
+                    $horaComparar = $horaInicio ?? $horaFin;
+                    if ($horaComparar) {
+                        $hora = intval(substr($horaComparar, 0, 2));
+                        if ($hora >= 18 || $hora < 7) {
+                            $colorFondo = '#185592'; // azul claro
+                            $colorBorde = '#1976d2'; // azul oscuro
+                        }
+                    }
+                    $events->push([
+                        'title' => $person->first_name . ' ' . $person->last_name ,
+                        'id' => 'People'.$person->id.'_'.$range->id.'_'.$current->format('Ymd'),
+                        'start' => $start,
+                        'end' => $end,
+                        'backgroundColor' => $colorFondo,
+                        'borderColor' => $colorBorde,
+                        'url' => route('filament.admin.resources.form-controls.view', $formControl),
+                        'shouldOpenUrlInNewTab' => true
+                    ]);
+                    $current->addDay();
+                }
+            }
+            return $events;
+        })
         ->all();
 
         return array_merge($serviceRequest,$formControlPeople);
