@@ -296,10 +296,10 @@ class CalendarWidget extends FullCalendarWidget
 
         $formControlPeople = FormControlPeople::query()
             ->whereHas('formControl', function ($query) use ($now) {
-                $now = Carbon::now()->format('Y-m-d');
                 $query->where('status', 'Authorized')
                     ->whereHas('dateRanges', function($q) use ($now) {
-                        $q->where('end_date_range', '>=', $now);
+                        $q->where('start_date_range', '>=', $now)
+                          ->where('end_date_range', '>=', $now);
                     });
             })
         ->get()
