@@ -322,7 +322,7 @@ class CalendarWidget extends FullCalendarWidget
                         $end .= ' ' . $range->end_time_range;
                     }
                     $events->push([
-                        'title' => $person->first_name . ' ' . $person->last_name . ' ' . $current->format('d/m/Y'),
+                        'title' => $person->first_name . ' ' . $person->last_name ,
                         'id' => 'People'.$person->id.'_'.$range->id.'_'.$current->format('Ymd'),
                         'start' => $start,
                         'end' => $end,
