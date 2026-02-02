@@ -355,43 +355,22 @@ class ActivitiesResource extends Resource
 
     public static function viewDataPeople(Get $get, $context, $record)
     {
-        Log::info('ActivitiesResource:viewDataPeople - INICIO', [
-                    'context' => $context,
-                    'record_id' => $record->id ?? null,
-                ]);
-                        $peoplesIds = $get('peoples');
+       
+        $peoplesIds = $get('peoples');
 
-                         Log::info('IDs seleccionados en peoples (Livewire):', [
-                        'peoples' => $peoplesIds,
-                        'context' => $context,
-                        'record' => $record ? $record->id : null
-                    ]);
+                       
                                                 
                         // OPTIMIZACIÓN: eager loading para evitar N+1 queries en el view
                         if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
                             // Cargar peoples con sus modelos relacionados de una vez
                             $record->load(['peoples.owner', 'peoples.ownerFamily.familiarPrincipal', 'peoples.employee', 'peoples.formControlPeople', 'peoples.ownerSpontaneousVisit.owner']);
-                            // Log para depuración
-                            Log::info('ActivitiesResource:viewDataPeople - peoples en view', [
-                                'activities_id' => $record->id ?? null,
-                                'peoples' => $record->peoples->map(function($p) {
-                                    return [
-                                        'id' => $p->id,
-                                        'model' => $p->model,
-                                        'model_id' => $p->model_id,
-                                        'type' => $p->type,
-                                    ];
-                                })->toArray()
-                            ]);
+                            
                             $peoplesIds = $record->peoples->map(function($peopleActivitie){
                                 return $peopleActivitie->model_id;
                             })->toArray();
                         }
 
-                        Log::info('ActivitiesResource:viewDataPeople - Antes de getPeoples: option', [
-                    'ids' => $context == 'view' ? $peoplesIds : [],
-                    'tipo_entrada' => $get('tipo_entrada'),
-                ]);
+                     
                         // Obtener opciones y descripciones
                         $options = self::getPeoples([
                             'tipo_entrada' => $get('tipo_entrada'),
@@ -401,14 +380,7 @@ class ActivitiesResource extends Resource
                             'ids' => $context == 'view' ? $peoplesIds : [],
                             'context' => $context
                         ]);
-                        Log::info('ActivitiesResource:viewDataPeople - Después de getPeoples: option', [
-                    'options_count' => is_array($options) ? count($options) : 0,
-                    'options' => $options
-                ]);
-                Log::info('ActivitiesResource:viewDataPeople - Antes de getPeoples: descriptions', [
-                    'ids' => $context == 'view' ? $peoplesIds : [],
-                    'tipo_entrada' => $get('tipo_entrada'),
-                ]);
+                   
                         $descriptions = self::getPeoples([
                             'tipo_entrada' => $get('tipo_entrada'),
                             'num_search' => $get('num_search'),
@@ -417,21 +389,10 @@ class ActivitiesResource extends Resource
                             'ids' => $context == 'view' ? $peoplesIds : [],
                             'context' => $context
                         ]);
-                        Log::info('ActivitiesResource:viewDataPeople - Después de getPeoples: descriptions', [
-                    'descriptions_count' => is_array($descriptions) ? count($descriptions) : 0,
-                    'descriptions' => $descriptions
-                ]);
-                Log::info('ActivitiesResource:viewDataPeople - Antes de mapeo personas', [
-                    'options' => $options,
-                    'descriptions' => $descriptions
-                ]);
+                 
                         // Mapear personas con información adicional
                         $personas = collect($options)->map(function($nombre, $id) use ($descriptions, $get, $context) {
-                            Log::info('ActivitiesResource:viewDataPeople - Mapeando persona', [
-                    'id' => $id,
-                    'nombre' => $nombre,
-                    'descripcion' => $descriptions[$id] ?? null
-                ]);
+                     
 
                             $persona = [
                                 'id' => $id,
@@ -440,9 +401,7 @@ class ActivitiesResource extends Resource
                                 'badges' => [],
                                 'vencimientos' => []
                             ];
-                Log::info('ActivitiesResource:viewDataPeople - Después de mapeo personas', [
-                    'personas' => $persona
-                ]);
+               
             // Solo agregar información de vencimientos para empleados en entrada
             if($get('tipo_entrada') == 2 && $get('type') == 1 && $context == 'create') {
                 $employee = Employee::find($id);
@@ -873,6 +832,7 @@ class ActivitiesResource extends Resource
                                             return ['formularios' => []];
                                         }
 
+                                        
                                         $mapeo = function(FormControl $form) use ($get){
 
                                             $accesType = collect($form['access_type'])->map(function($type){
@@ -903,7 +863,7 @@ class ActivitiesResource extends Resource
 
                                                 $hoy = \Carbon\Carbon::now();
                                                 $rangoHoy = $range->first(function($item) use ($hoy) {
-                                                    return $item['_start'] && $item['_end'] && $hoy->between($item['_start'], $item['_end']);
+                                                    return $hoy->format('d/m/Y') == $item['_start']->format('d/m/Y');
                                                 });
 
                                                 if ($rangoHoy) {
@@ -950,6 +910,11 @@ class ActivitiesResource extends Resource
                                         };
 
                                         if($get('form_control_id') && $context != 'create'){
+                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->values()->toArray();
+                                            return ['formularios' => $formularios];
+                                        }
+
+                                          if($get('form_control_id') && $context == 'create'){
                                             $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->values()->toArray();
                                             return ['formularios' => $formularios];
                                         }
