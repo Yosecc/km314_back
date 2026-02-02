@@ -320,7 +320,7 @@ class CalendarWidget extends FullCalendarWidget
                     $end .= ' ' . $range->end_time_range;
                 }
                 return [
-                    'title' => $person->first_name . ' ' . $person->last_name . ' ' . $start,
+                    'title' => $person->first_name . ' ' . $person->last_name . ' ' . $start . ' - ' . $end,
                     'id' => 'People'.$person->id.'_'.$range->id,
                     'start' => $start,
                     'end' => $end,
