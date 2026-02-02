@@ -304,30 +304,35 @@ class CalendarWidget extends FullCalendarWidget
         ->flatMap(function (FormControlPeople $person) {
             $formControl = $person->formControl;
             if (!$formControl) return [];
-            // Obtener todos los rangos de fechas autorizados
-            $dateRanges = $formControl->dateRanges()
-                ->get();
-            return $dateRanges->map(function($range) use ($person, $formControl) {
-                // Si los campos *_time existen y no son nulos, combínalos con la fecha
-                $start = $range->start_date_range;
-                $end = $range->end_date_range;
-                
-
-                if (!empty($range->start_time_range)) {
-                    $start .= ' ' . $range->start_time_range;
+            $dateRanges = $formControl->dateRanges()->get();
+            $events = collect();
+            foreach ($dateRanges as $range) {
+                $startDate = Carbon::parse($range->start_date_range);
+                $endDate = Carbon::parse($range->end_date_range);
+                $current = $startDate->copy();
+                while ($current->lte($endDate)) {
+                    $start = $current->format('Y-m-d');
+                    $end = $current->format('Y-m-d');
+                    // Si es el primer día y hay hora de inicio, agrégala
+                    if ($current->eq($startDate) && !empty($range->start_time_range)) {
+                        $start .= ' ' . $range->start_time_range;
+                    }
+                    // Si es el último día y hay hora de fin, agrégala
+                    if ($current->eq($endDate) && !empty($range->end_time_range)) {
+                        $end .= ' ' . $range->end_time_range;
+                    }
+                    $events->push([
+                        'title' => $person->first_name . ' ' . $person->last_name . ' ' . $current->format('d/m/Y'),
+                        'id' => 'People'.$person->id.'_'.$range->id.'_'.$current->format('Ymd'),
+                        'start' => $start,
+                        'end' => $end,
+                        'url' => route('filament.admin.resources.form-controls.view', $formControl),
+                        'shouldOpenUrlInNewTab' => true
+                    ]);
+                    $current->addDay();
                 }
-                if (!empty($range->end_time_range)) {
-                    $end .= ' ' . $range->end_time_range;
-                }
-                return [
-                    'title' => $person->first_name . ' ' . $person->last_name . ' ' . $start . ' - ' . $end,
-                    'id' => 'People'.$person->id.'_'.$range->id,
-                    'start' => $start,
-                    'end' => $end,
-                    'url' => route('filament.admin.resources.form-controls.view', $formControl),
-                    'shouldOpenUrlInNewTab' => true
-                ];
-            });
+            }
+            return $events;
         })
         ->all();
 
