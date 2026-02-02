@@ -298,23 +298,28 @@ class CalendarWidget extends FullCalendarWidget
             ->whereHas('formControl', function ($query) use ($now) {
                 $query->where('status', 'Authorized')
                     ->whereHas('dateRanges', function($q) use ($now) {
-                        $q->where('start_date_range', '>=', $now)
-                          ->where('end_date_range', '>=', $now);
+                        $q->where('end_date_range', '>=', $now);
                     });
             })
         ->get()
-        ->map(
-            fn (FormControlPeople $event) => [
-                'title' =>  $event->first_name ." ".$event->last_name,
-                'id' => 'People'.$event->id,
-                'start' => $event->formControl->getFechasFormat()['_start'],
-                //'end' => $event->formControl->getFechasFormat()['_end'],
-                //'backgroundColor' => "#c8e6c9",
-                //'borderColor' => "#1b5e20",
-                'url' => route('filament.admin.resources.form-controls.view', $event->formControl ),
-                'shouldOpenUrlInNewTab' => true
-            ]
-        )
+        ->flatMap(function (FormControlPeople $person) {
+            $formControl = $person->formControl;
+            if (!$formControl) return [];
+            // Obtener todos los rangos de fechas autorizados
+            $dateRanges = $formControl->dateRanges()
+                ->where('end_date_range', '>=', Carbon::now()->format('Y-m-d'))
+                ->get();
+            return $dateRanges->map(function($range) use ($person, $formControl) {
+                return [
+                    'title' => $person->first_name . ' ' . $person->last_name,
+                    'id' => 'People'.$person->id.'_'.$range->id,
+                    'start' => $range->start_date_range,
+                    'end' => $range->end_date_range,
+                    'url' => route('filament.admin.resources.form-controls.view', $formControl),
+                    'shouldOpenUrlInNewTab' => true
+                ];
+            });
+        })
         ->all();
 
         return array_merge($serviceRequest,$formControlPeople);
