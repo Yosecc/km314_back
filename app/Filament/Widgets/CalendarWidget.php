@@ -311,7 +311,7 @@ class CalendarWidget extends FullCalendarWidget
                 ->get();
             return $dateRanges->map(function($range) use ($person, $formControl) {
                 return [
-                    'title' => $person->first_name . ' ' . $person->last_name,
+                    'title' => $person->first_name . ' ' . $person->last_name . ' ' . $range->start_date_range,
                     'id' => 'People'.$person->id.'_'.$range->id,
                     'start' => $range->start_date_range,
                     'end' => $range->end_date_range,
