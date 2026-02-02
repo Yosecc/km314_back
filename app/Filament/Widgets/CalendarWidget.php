@@ -313,21 +313,37 @@ class CalendarWidget extends FullCalendarWidget
                 while ($current->lte($endDate)) {
                     $start = $current->format('Y-m-d');
                     $end = $current->format('Y-m-d');
+                    $horaInicio = null;
+                    $horaFin = null;
                     // Si es el primer día y hay hora de inicio, agrégala
                     if ($current->eq($startDate) && !empty($range->start_time_range)) {
                         $start .= ' ' . $range->start_time_range;
+                        $horaInicio = $range->start_time_range;
                     }
                     // Si es el último día y hay hora de fin, agrégala
                     if ($current->eq($endDate) && !empty($range->end_time_range)) {
                         $end .= ' ' . $range->end_time_range;
+                        $horaFin = $range->end_time_range;
+                    }
+                    // Determinar color según el turno
+                    // Si la hora de inicio está entre 07:00 y 18:00 => verde, si está entre 18:00 y 07:00 => azul
+                    $colorFondo = '#c8e6c9'; // verde claro por defecto
+                    $colorBorde = '#388e3c'; // verde oscuro por defecto
+                    $horaComparar = $horaInicio ?? $horaFin;
+                    if ($horaComparar) {
+                        $hora = intval(substr($horaComparar, 0, 2));
+                        if ($hora >= 18 || $hora < 7) {
+                            $colorFondo = '#bbdefb'; // azul claro
+                            $colorBorde = '#1976d2'; // azul oscuro
+                        }
                     }
                     $events->push([
                         'title' => $person->first_name . ' ' . $person->last_name ,
                         'id' => 'People'.$person->id.'_'.$range->id.'_'.$current->format('Ymd'),
                         'start' => $start,
                         'end' => $end,
-                        'backgroundColor' => '#c8e6c9', // verde claro
-                        'borderColor' => '#388e3c', // verde oscuro
+                        'backgroundColor' => $colorFondo,
+                        'borderColor' => $colorBorde,
                         'url' => route('filament.admin.resources.form-controls.view', $formControl),
                         'shouldOpenUrlInNewTab' => true
                     ]);
