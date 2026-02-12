@@ -305,41 +305,67 @@ class CalendarWidget extends FullCalendarWidget
             $formControl = $person->formControl;
             if (!$formControl) return [];
             $dateRanges = $formControl->dateRanges()->get();
+            $incomeType = $formControl->income_type ?? null;
+            // Normalizar income_type a array
+            if (is_string($incomeType)) {
+                $incomeType = [$incomeType];
+            }
             $events = collect();
             foreach ($dateRanges as $range) {
                 $startDate = Carbon::parse($range->start_date_range);
                 $endDate = Carbon::parse($range->end_date_range);
-                $current = $startDate->copy();
-                while ($current->lte($endDate)) {
-                    $start = $current->format('Y-m-d');
-                    $end = $current->format('Y-m-d');
-                    $horaInicio = null;
-                    $horaFin = null;
-                    // Si es el primer día y hay hora de inicio, agrégala
-                    if ($current->eq($startDate) && !empty($range->start_time_range)) {
-                        $start .= ' ' . $range->start_time_range;
-                        $horaInicio = $range->start_time_range;
-                    }
-                    // Si es el último día y hay hora de fin, agrégala
-                    if ($current->eq($endDate) && !empty($range->end_time_range)) {
-                        $end .= ' ' . $range->end_time_range;
-                        $horaFin = $range->end_time_range;
-                    }
-                    // Determinar color según el turno
-                    // Si la hora de inicio está entre 07:00 y 18:00 => verde, si está entre 18:00 y 07:00 => azul
-                    $colorFondo = '#244e27'; // verde claro por defecto
-                    $colorBorde = '#388e3c'; // verde oscuro por defecto
-                    $horaComparar = $horaInicio ?? $horaFin;
-                    if ($horaComparar) {
-                        $hora = intval(substr($horaComparar, 0, 2));
-                        if ($hora >= 18 || $hora < 7) {
-                            $colorFondo = '#185592'; // azul claro
-                            $colorBorde = '#1976d2'; // azul oscuro
+                // Definir colores por income_type
+                $colorFondo = '#244e27'; // verde por defecto
+                $colorBorde = '#388e3c';
+                if (in_array('Trabajador', $incomeType)) {
+                    $colorFondo = '#fbc02d'; // amarillo
+                    $colorBorde = '#f9a825';
+                } elseif (in_array('Inquilino', $incomeType)) {
+                    $colorFondo = '#0288d1'; // azul
+                    $colorBorde = '#0277bd';
+                } elseif (in_array('Visita', $incomeType)) {
+                    $colorFondo = '#8e24aa'; // violeta
+                    $colorBorde = '#6a1b9a';
+                }
+                if (in_array('Trabajador', $incomeType)) {
+                    // Mostrar todos los días
+                    $current = $startDate->copy();
+                    while ($current->lte($endDate)) {
+                        $start = $current->format('Y-m-d');
+                        $end = $current->format('Y-m-d');
+                        // Si es el primer día y hay hora de inicio, agrégala
+                        if ($current->eq($startDate) && !empty($range->start_time_range)) {
+                            $start .= ' ' . $range->start_time_range;
                         }
+                        // Si es el último día y hay hora de fin, agrégala
+                        if ($current->eq($endDate) && !empty($range->end_time_range)) {
+                            $end .= ' ' . $range->end_time_range;
+                        }
+                        $events->push([
+                            'title' => $person->first_name . ' ' . $person->last_name ,
+                            'id' => 'People'.$person->id.'_'.$range->id.'_'.$current->format('Ymd'),
+                            'start' => $start,
+                            'end' => $end,
+                            'backgroundColor' => $colorFondo,
+                            'borderColor' => $colorBorde,
+                            'url' => route('filament.admin.resources.form-controls.view', $formControl),
+                            'shouldOpenUrlInNewTab' => true
+                        ]);
+                        $current->addDay();
+                    }
+                } elseif (in_array('Inquilino', $incomeType) || in_array('Visita', $incomeType)) {
+                    // Mostrar solo el primer día
+                    $start = $startDate->format('Y-m-d');
+                    $end = $startDate->format('Y-m-d');
+                    if (!empty($range->start_time_range)) {
+                        $start .= ' ' . $range->start_time_range;
+                    }
+                    if (!empty($range->end_time_range)) {
+                        $end .= ' ' . $range->end_time_range;
                     }
                     $events->push([
                         'title' => $person->first_name . ' ' . $person->last_name ,
-                        'id' => 'People'.$person->id.'_'.$range->id.'_'.$current->format('Ymd'),
+                        'id' => 'People'.$person->id.'_'.$range->id.'_'.$startDate->format('Ymd'),
                         'start' => $start,
                         'end' => $end,
                         'backgroundColor' => $colorFondo,
@@ -347,7 +373,6 @@ class CalendarWidget extends FullCalendarWidget
                         'url' => route('filament.admin.resources.form-controls.view', $formControl),
                         'shouldOpenUrlInNewTab' => true
                     ]);
-                    $current->addDay();
                 }
             }
             return $events;
