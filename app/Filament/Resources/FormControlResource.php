@@ -1053,7 +1053,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
         return $table
             ->modifyQueryUsing(function (Builder $query) {
                 if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-
                     $query->where('owner_id', Auth::user()->owner_id);
                 }
                 return $query->orderBy('created_at', 'desc');
@@ -1069,11 +1068,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->formatStateUsing(function($state, FormControl $record){
                         return $record->statusComputed();
                     })
-                    // ->formatStateUsing(fn (string $state): string => match ($state) {
-                    //     'Pending' => 'Pendiente',
-                    //     'Authorized' => 'Autorizado',
-                    //     'Denied' => 'Denegado',
-                    // })
                     ->color(function($state, FormControl $record){
                         $state = $record->statusComputed();
                         $claves = [
@@ -1085,8 +1079,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ];
                         return $claves[$state];
                     }),
-                    // ->color(fn (string $state): string => match ($state) ),
-                    Tables\Columns\TextColumn::make('lote_ids')->badge()->label(__('general.Lote')),
+                Tables\Columns\TextColumn::make('lote_ids')->badge()->label(__('general.Lote'))->searchable(),
                 Tables\Columns\TextColumn::make('access_type')
                     ->badge()
                     ->label(__("general.TypeActivitie"))
