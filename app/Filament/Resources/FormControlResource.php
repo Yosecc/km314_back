@@ -1066,7 +1066,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->badge()
                     ->label(__("general.Status"))
                     ->formatStateUsing(function($state, FormControl $record){
-                        return $record->statusComputed();
+                        return match($record->statusComputed()) {
+                                            'Pending' => 'Pendiente',
+                                            'Denied' => 'Denegado',
+                                            'Vencido' => 'Vencido',
+                                            'Expirado' => 'Expirado',
+                                            'Authorized' => 'Autorizado',
+                                            default => 'Desconocido'
+                                        };
                     })
                     ->color(function($state, FormControl $record){
                         $state = $record->statusComputed();
