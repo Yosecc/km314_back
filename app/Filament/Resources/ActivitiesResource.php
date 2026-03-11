@@ -753,18 +753,7 @@ class ActivitiesResource extends Resource
                                 ->button()
                                 ->action(fn ($state, Set $set, Get $get) => self::buscarQr($state, $set, $get))
                                 ->disabled(fn (Get $get) => !$get('type') || $get('type') == 0)
-                                
-                            // \Filament\Forms\Components\Actions\Action::make('scan_qr')
-                            //     ->icon('heroicon-o-qr-code')
-                            //     ->label('Escanear')
-                            //     ->button()
-                            //     ->action(fn () => null)
-                            //     ->disabled(fn (Get $get) => !$get('type') || $get('type') == 0)
-                            //     ->extraAttributes([
-                            //         'onclick' => 'startQrScanner()',
-                            //         'type' => 'button'
-                            //     ]),
-                            
+                                ->extraAttributes(['type' => 'button'])
                         )
                         ->live(onBlur: true)
                         ->afterStateUpdated(function($state, Set $set, Get $get) {
