@@ -256,7 +256,6 @@ class OwnerResource extends Resource implements HasShieldPermissions
     public static function table(Table $table): Table
     {
         return $table
-        ->query(fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class))
         ->columns([
             Tables\Columns\TextColumn::make('dni')
                 ->label(__("general.DNI"))
@@ -361,6 +360,14 @@ class OwnerResource extends Resource implements HasShieldPermissions
             'index' => Pages\ManageOwners::route('/'),
             'view-profile-owner' => Pages\ProfileOwnerView::route('/{record}/profile-owner'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 
     public static function getRecordSubNavigation(Page $page): array
