@@ -745,7 +745,7 @@ class ActivitiesResource extends Resource
                         ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
                         ->suffixAction(
                             \Filament\Forms\Components\Actions\Action::make('scan_qr')
-                                ->icon('heroicon-o-search')
+                                ->icon('heroicon-o-magnifying-glass')
                                 ->label('Buscar')
                                 ->button()
                                 ->action(fn ($state, Set $set, Get $get) => self::buscarQr($state, $set, $get))
