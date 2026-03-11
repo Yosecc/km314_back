@@ -745,6 +745,7 @@ class ActivitiesResource extends Resource
                         ->label('Código de Acceso Rápido')
                         ->placeholder('Escanea QR o ingresa código (Ej: E-A1B2C3D4)')
                         ->helperText('Primero seleccione el tipo de actividad (Entrada/Salida)')
+                        ->extraAttributes(['onkeydown' => "if(event.key === 'Enter') { event.preventDefault(); return false; }"])
                         ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
                         ->suffixAction(
                             \Filament\Forms\Components\Actions\Action::make('scan_qr')
