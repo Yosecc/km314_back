@@ -560,7 +560,120 @@ class ActivitiesResource extends Resource
     }
 
    
+    private static function buscarQr($state, $set, $get)
+    {
+        if(!$state) return;
+        // Buscar la entidad por código
+        $employee = Employee::where('quick_access_code', $state)->first();
+        $owner = Owner::where('quick_access_code', $state)->first();
+        $formControl = FormControl::where('quick_access_code', $state)->first();
+        $ownerFamily = \App\Models\OwnerFamily::where('quick_access_code', $state)->first();
 
+        $entity = $employee ?? $owner ?? $formControl ?? $ownerFamily;
+
+        if ($entity) {
+            if ($entity instanceof Employee) {
+                $set('tipo_entrada', 2);
+                $set('num_search', $entity->dni);
+                if ($get('type') == 1) {
+                    $canSelect = true;
+                    $errores = [];
+                    if($entity->isVencidoSeguro()) {
+                        $canSelect = false;
+                        $errores[] = '⚠️ Seguro vencido desde: ' . $entity->insurance_expiration_date->format('d/m/Y');
+                    }
+                    if($entity->vencidosFile()) {
+                        $canSelect = false;
+                        $vencidos = $entity->vencidosFile();
+                        $errores[] = '⚠️ Documentos vencidos: ' . implode(', ', $vencidos);
+                    }
+                    if($entity->vencidosAutosFile()) {
+                        $canSelect = false;
+                        $vencidos = $entity->vencidosAutosFile();
+                        $errores[] = '⚠️ Archivos de vehículos vencidos: ' . implode(', ', $vencidos);
+                    }
+                    $hasOrigenes = $entity->employeeOrigens && $entity->employeeOrigens->count() > 0;
+                    $hasOwners = $entity->owners && $entity->owners->count() > 0;
+                    if($hasOwners && !$hasOrigenes) {
+                        $hasFormularioAuthorized = false;
+                        foreach($entity->owners as $owner) {
+                            $formControls = \App\Models\FormControl::where('owner_id', $owner->id)
+                                ->whereHas('peoples', function($query) use ($entity) {
+                                    $query->where('dni', $entity->dni);
+                                })
+                                ->get();
+                            foreach($formControls as $form) {
+                                if($form->isActive() && $form->autorizado == 1) {
+                                    $hasFormularioAuthorized = true;
+                                    break 2;
+                                }
+                            }
+                        }
+                        if(!$hasFormularioAuthorized) {
+                            $canSelect = false;
+                            $errores[] = '⚠️ No tiene formularios autorizados y activos';
+                        }
+                    }
+                    if (!$canSelect) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Empleado encontrado - NO puede ingresar')
+                            ->body($entity->first_name . ' ' . $entity->last_name . "\n\n" . implode("\n", $errores))
+                            ->warning()
+                            ->duration(10000)
+                            ->send();
+                        $set('quick_code', '');
+                        return;
+                    }
+                }
+                $set('peoples', [$entity->id]);
+                \Filament\Notifications\Notification::make()
+                    ->title('Empleado encontrado')
+                    ->body($entity->first_name . ' ' . $entity->last_name)
+                    ->success()
+                    ->send();
+            } elseif ($entity instanceof Owner) {
+                $set('tipo_entrada', 1);
+                $set('num_search', $entity->dni);
+                $set('peoples', [$entity->id]);
+                $lotes = collect($entity->lotes);
+                $lote = $lotes->map(function($lote){
+                    return $lote->getNombre();
+                })->first();
+                if($lote) {
+                    $set('lote_ids', $lote);
+                }
+                \Filament\Notifications\Notification::make()
+                    ->title('Propietario encontrado')
+                    ->body($entity->first_name . ' ' . $entity->last_name)
+                    ->success()
+                    ->send();
+            } elseif ($entity instanceof FormControl) {
+                $set('tipo_entrada', 3);
+                $set('form_control_id', $entity->id);
+                \Filament\Notifications\Notification::make()
+                    ->title('Formulario encontrado')
+                    ->body('Formulario #' . $entity->id)
+                    ->success()
+                    ->send();
+            } elseif ($entity instanceof \App\Models\OwnerFamily) {
+                $set('tipo_entrada', 1);
+                $set('families', [$entity->id]);
+                $set('num_search', $entity->dni);
+                \Filament\Notifications\Notification::make()
+                    ->title('Familiar encontrado')
+                    ->body($entity->first_name . ' ' . $entity->last_name)
+                    ->success()
+                    ->send();
+            }
+            $set('quick_code', '');
+        } else {
+            \Filament\Notifications\Notification::make()
+                ->title('Código no encontrado')
+                ->body('No se encontró ningún registro con este código')
+                ->danger()
+                ->send();
+        }
+    }
 
     public static function form(Form $form): Form
     {
@@ -632,10 +745,10 @@ class ActivitiesResource extends Resource
                         ->extraInputAttributes(['class' => 'inputDNI', 'style' => 'height: 50px;text-align: center;font-size: 20px;font-weight: 900;'])
                         ->suffixAction(
                             \Filament\Forms\Components\Actions\Action::make('scan_qr')
-                                ->icon('heroicon-o-qr-code')
-                                ->label('Escanear')
+                                ->icon('heroicon-o-search')
+                                ->label('Buscar')
                                 ->button()
-                                ->action(fn () => null)
+                                ->action(fn ($state, Set $set, Get $get) => self::buscarQr($state, $set, $get))
                                 ->disabled(fn (Get $get) => !$get('type') || $get('type') == 0)
                                 ->extraAttributes([
                                     'onclick' => 'startQrScanner()',
@@ -646,115 +759,7 @@ class ActivitiesResource extends Resource
                         ->afterStateUpdated(function($state, Set $set, Get $get) {
                             if (!$state) return;
                             // Buscar la entidad por código
-                            $employee = Employee::where('quick_access_code', $state)->first();
-                            $owner = Owner::where('quick_access_code', $state)->first();
-                            $formControl = FormControl::where('quick_access_code', $state)->first();
-                            $ownerFamily = \App\Models\OwnerFamily::where('quick_access_code', $state)->first();
-
-                            $entity = $employee ?? $owner ?? $formControl ?? $ownerFamily;
-
-                            if ($entity) {
-                                if ($entity instanceof Employee) {
-                                    $set('tipo_entrada', 2);
-                                    $set('num_search', $entity->dni);
-                                    if ($get('type') == 1) {
-                                        $canSelect = true;
-                                        $errores = [];
-                                        if($entity->isVencidoSeguro()) {
-                                            $canSelect = false;
-                                            $errores[] = '⚠️ Seguro vencido desde: ' . $entity->insurance_expiration_date->format('d/m/Y');
-                                        }
-                                        if($entity->vencidosFile()) {
-                                            $canSelect = false;
-                                            $vencidos = $entity->vencidosFile();
-                                            $errores[] = '⚠️ Documentos vencidos: ' . implode(', ', $vencidos);
-                                        }
-                                        if($entity->vencidosAutosFile()) {
-                                            $canSelect = false;
-                                            $vencidos = $entity->vencidosAutosFile();
-                                            $errores[] = '⚠️ Archivos de vehículos vencidos: ' . implode(', ', $vencidos);
-                                        }
-                                        $hasOrigenes = $entity->employeeOrigens && $entity->employeeOrigens->count() > 0;
-                                        $hasOwners = $entity->owners && $entity->owners->count() > 0;
-                                        if($hasOwners && !$hasOrigenes) {
-                                            $hasFormularioAuthorized = false;
-                                            foreach($entity->owners as $owner) {
-                                                $formControls = \App\Models\FormControl::where('owner_id', $owner->id)
-                                                    ->whereHas('peoples', function($query) use ($entity) {
-                                                        $query->where('dni', $entity->dni);
-                                                    })
-                                                    ->get();
-                                                foreach($formControls as $form) {
-                                                    if($form->isActive() && $form->autorizado == 1) {
-                                                        $hasFormularioAuthorized = true;
-                                                        break 2;
-                                                    }
-                                                }
-                                            }
-                                            if(!$hasFormularioAuthorized) {
-                                                $canSelect = false;
-                                                $errores[] = '⚠️ No tiene formularios autorizados y activos';
-                                            }
-                                        }
-                                        if (!$canSelect) {
-                                            \Filament\Notifications\Notification::make()
-                                                ->title('Empleado encontrado - NO puede ingresar')
-                                                ->body($entity->first_name . ' ' . $entity->last_name . "\n\n" . implode("\n", $errores))
-                                                ->warning()
-                                                ->duration(10000)
-                                                ->send();
-                                            $set('quick_code', '');
-                                            return;
-                                        }
-                                    }
-                                    $set('peoples', [$entity->id]);
-                                    \Filament\Notifications\Notification::make()
-                                        ->title('Empleado encontrado')
-                                        ->body($entity->first_name . ' ' . $entity->last_name)
-                                        ->success()
-                                        ->send();
-                                } elseif ($entity instanceof Owner) {
-                                    $set('tipo_entrada', 1);
-                                    $set('num_search', $entity->dni);
-                                    $set('peoples', [$entity->id]);
-                                    $lotes = collect($entity->lotes);
-                                    $lote = $lotes->map(function($lote){
-                                        return $lote->getNombre();
-                                    })->first();
-                                    if($lote) {
-                                        $set('lote_ids', $lote);
-                                    }
-                                    \Filament\Notifications\Notification::make()
-                                        ->title('Propietario encontrado')
-                                        ->body($entity->first_name . ' ' . $entity->last_name)
-                                        ->success()
-                                        ->send();
-                                } elseif ($entity instanceof FormControl) {
-                                    $set('tipo_entrada', 3);
-                                    $set('form_control_id', $entity->id);
-                                    \Filament\Notifications\Notification::make()
-                                        ->title('Formulario encontrado')
-                                        ->body('Formulario #' . $entity->id)
-                                        ->success()
-                                        ->send();
-                                } elseif ($entity instanceof \App\Models\OwnerFamily) {
-                                    $set('tipo_entrada', 1);
-                                    $set('families', [$entity->id]);
-                                    $set('num_search', $entity->dni);
-                                    \Filament\Notifications\Notification::make()
-                                        ->title('Familiar encontrado')
-                                        ->body($entity->first_name . ' ' . $entity->last_name)
-                                        ->success()
-                                        ->send();
-                                }
-                                $set('quick_code', '');
-                            } else {
-                                \Filament\Notifications\Notification::make()
-                                    ->title('Código no encontrado')
-                                    ->body('No se encontró ningún registro con este código')
-                                    ->danger()
-                                    ->send();
-                            }
+                            self::buscarQr($state, $set, $get);
                         })
                         ->disabled(function($context, Get $get){
                             return $context == 'view'  ? true : ($get('type') == '' ? true : false) ;
