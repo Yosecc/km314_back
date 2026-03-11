@@ -317,17 +317,17 @@ class CalendarWidget extends FullCalendarWidget
                 // Definir colores por income_type
                 $colorFondo = '#244e27'; // verde por defecto
                 $colorBorde = '#388e3c';
-                if (in_array('Trabajador', $incomeType)) {
+                if ((is_array($incomeType) && in_array('Trabajador', $incomeType)) || $incomeType == 'Trabajador') {
                     $colorFondo = '#fbc02d'; // amarillo
                     $colorBorde = '#f9a825';
-                } elseif (in_array('Inquilino', $incomeType)) {
+                } elseif ((is_array($incomeType) && in_array('Inquilino', $incomeType)) || $incomeType == 'Inquilino') {
                     $colorFondo = '#0288d1'; // azul
                     $colorBorde = '#0277bd';
-                } elseif (in_array('Visita', $incomeType)) {
+                } elseif ((is_array($incomeType) && in_array('Visita', $incomeType)) || $incomeType == 'Visita') {
                     $colorFondo = '#8e24aa'; // violeta
                     $colorBorde = '#6a1b9a';
                 }
-                if (in_array('Trabajador', $incomeType)) {
+                if ((is_array($incomeType) && in_array('Trabajador', $incomeType)) || $incomeType == 'Trabajador') {
                     // Mostrar todos los días
                     $current = $startDate->copy();
                     while ($current->lte($endDate)) {
@@ -353,7 +353,7 @@ class CalendarWidget extends FullCalendarWidget
                         ]);
                         $current->addDay();
                     }
-                } elseif (in_array('Inquilino', $incomeType) || in_array('Visita', $incomeType)) {
+                } elseif ((is_array($incomeType) && (in_array('Inquilino', $incomeType) || in_array('Visita', $incomeType))) || $incomeType == 'Inquilino' || $incomeType == 'Visita') {
                     // Mostrar solo el primer día
                     $start = $startDate->format('Y-m-d');
                     $end = $startDate->format('Y-m-d');
