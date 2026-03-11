@@ -35,6 +35,7 @@ return new class extends Migration
             // $table->foreignId('owner_status_id')->nullable()->constrained();
 
             $table->timestamps();
+                $table->softDeletes();
         });
     }
 
