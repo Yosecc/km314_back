@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Mail;
 
 class Owner extends Model
 {
-    use HasFactory, HasQuickAccessCode;
+    use HasFactory, HasQuickAccessCode, \Illuminate\Database\Eloquent\SoftDeletes;
     protected $fillable = ['cuit','number','piso','dto','first_name', 'last_name', 'email', 'phone', 'address', 'city', 'state', 'zip_code', 'country', 'birthdate', 'gender', 'profile_picture','dni','user_id','owner_status_id', 'quick_access_code'];
 
     protected $with = ['autos','lotes','status','trabajadores','families'];

@@ -256,6 +256,7 @@ class OwnerResource extends Resource implements HasShieldPermissions
     public static function table(Table $table): Table
     {
         return $table
+        ->query(fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class))
         ->columns([
             Tables\Columns\TextColumn::make('dni')
                 ->label(__("general.DNI"))
@@ -292,7 +293,7 @@ class OwnerResource extends Resource implements HasShieldPermissions
                 ->toggleable(isToggledHiddenByDefault: true),
         ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\Action::make('show_qr')
@@ -308,9 +309,9 @@ class OwnerResource extends Resource implements HasShieldPermissions
                     ]))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Cerrar'),
-                    
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
                 Action::make('createUser')
                     ->label('Crear Usuario')
                     ->requiresConfirmation()
@@ -333,7 +334,7 @@ class OwnerResource extends Resource implements HasShieldPermissions
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-
+                    Tables\Actions\RestoreBulkAction::make(),
                     BulkAction::make('createUsers')
                     ->label('Crear Usuarios')
                     ->requiresConfirmation()
