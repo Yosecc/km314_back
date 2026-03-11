@@ -673,6 +673,8 @@ class ActivitiesResource extends Resource
                 ->danger()
                 ->send();
         }
+
+        
     }
 
     public static function form(Form $form): Form
@@ -754,6 +756,17 @@ class ActivitiesResource extends Resource
                                     'onclick' => 'startQrScanner()',
                                     'type' => 'button'
                                 ])
+                            // \Filament\Forms\Components\Actions\Action::make('scan_qr')
+                            //     ->icon('heroicon-o-qr-code')
+                            //     ->label('Escanear')
+                            //     ->button()
+                            //     ->action(fn () => null)
+                            //     ->disabled(fn (Get $get) => !$get('type') || $get('type') == 0)
+                            //     ->extraAttributes([
+                            //         'onclick' => 'startQrScanner()',
+                            //         'type' => 'button'
+                            //     ]),
+                            
                         )
                         ->live(onBlur: true)
                         ->afterStateUpdated(function($state, Set $set, Get $get) {
