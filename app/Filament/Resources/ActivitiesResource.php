@@ -570,6 +570,7 @@ class ActivitiesResource extends Resource
         $ownerFamily = \App\Models\OwnerFamily::where('quick_access_code', $state)->first();
 
         $entity = $employee ?? $owner ?? $formControl ?? $ownerFamily;
+         \Log::info("Búsqueda QR - Código: {$state} - Tipo: " . ($get('type') == 1 ? 'Entrada' : 'Salida') . " - Entidad encontrada: " . ($entity ? get_class($entity) : 'Ninguna'));
 
         if ($entity) {
             if ($entity instanceof Employee) {
