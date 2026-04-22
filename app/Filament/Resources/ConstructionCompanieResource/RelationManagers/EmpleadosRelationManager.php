@@ -160,13 +160,13 @@ class EmpleadosRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\TextColumn::make('employee.first_name')
                     ->label(__("general.FirstName"))
-                    ->color(fn (EmployeeOrigen $record) => EmployeeResource::isVencimientos($record->employee)['color'])
-                    ->tooltip(fn (EmployeeOrigen $record) => EmployeeResource::isVencimientos($record->employee)['texto'])
+                    ->color(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['color'] : null)
+                    ->tooltip(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['texto'] : null)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('employee.last_name')
                     ->label(__("general.LastName"))
-                    ->color(fn (EmployeeOrigen $record) => EmployeeResource::isVencimientos($record->employee)['color'])
-                    ->tooltip(fn (EmployeeOrigen $record) => EmployeeResource::isVencimientos($record->employee)['texto'])
+                    ->color(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['color'] : null)
+                    ->tooltip(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['texto'] : null)
                     ->searchable(),
             ])
             ->filters([
