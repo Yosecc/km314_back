@@ -177,7 +177,7 @@ class EmpleadosRelationManager extends RelationManager
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->url(fn (EmployeeOrigen $record) => EmployeeResource::getUrl('edit', ['record' => $record->employee])),
+                    ->url(fn (EmployeeOrigen $record) => $record->employee_id ? EmployeeResource::getUrl('edit', ['record' => $record->employee_id]) : null),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
