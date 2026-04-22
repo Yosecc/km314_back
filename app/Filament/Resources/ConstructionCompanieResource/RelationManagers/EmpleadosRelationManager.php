@@ -2,21 +2,15 @@
 
 namespace App\Filament\Resources\ConstructionCompanieResource\RelationManagers;
 
-use App\Models\ConstructionCompanie;
+use App\Filament\Resources\EmployeeResource;
+use App\Models\Employee;
+use App\Models\EmployeeOrigen;
 use Filament\Forms;
-use Filament\Forms\Components\Actions;
-use Filament\Forms\Components\Actions\Action;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
-use Filament\Forms\Get;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class EmpleadosRelationManager extends RelationManager
 {
@@ -26,146 +20,76 @@ class EmpleadosRelationManager extends RelationManager
     {
         return $form
             ->schema([
+                Forms\Components\Select::make('employee_id')
+                    ->label('Trabajador')
+                    ->options(fn () => Employee::orderBy('first_name')
+                        ->get()
+                        ->mapWithKeys(fn ($e) => [$e->id => "{$e->first_name} {$e->last_name} (DNI: {$e->dni})"])
+                    )
+                    ->searchable()
+                    ->required(),
 
-                Forms\Components\Select::make('work_id')
-                    ->label(__("general.Work"))
-                    ->required()
-                    ->relationship(name: 'work', titleAttribute: 'name'),
-
-                Forms\Components\TextInput::make('dni')
-                    ->label(__("general.DNI"))
-                    ->required()
-                    ->numeric(),
-
-                Forms\Components\TextInput::make('first_name')
-                    ->label(__("general.FirstName"))
-                    ->required()
-                    ->maxLength(255),
-
-                Forms\Components\TextInput::make('last_name')
-                    ->label(__("general.LastName"))
-                    ->required()
-                    ->maxLength(255),
-
-                Forms\Components\TextInput::make('phone')
-                    ->label(__("general.Phone"))
-                    ->tel()
-                    ->numeric(),
-
-                DatePicker::make('fecha_vencimiento_seguro')
-                    ->label('Fecha de vencimiento del seguro')
-                    ->displayFormat('d/m/Y')
-                    ->live(),
-
-                Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-
-                Forms\Components\Hidden::make('model_origen')->default('ConstructionCompanie'),
-
-                Forms\Components\Hidden::make('model_origen_id')
-                    ->label(__(''))
-                    ->default(function (RelationManager $livewire) {
-                        return $livewire->getOwnerRecord()->id;
-                    }),
-
-                 Forms\Components\Repeater::make('autos')
-                    ->relationship()
-                    ->mutateRelationshipDataBeforeFillUsing(function ($record, $data) {
-                        // dd($record->autos, $data);
-                        $data['model'] = $record->autos->where('id', $data['id'])->first()->model;
-                        return $data;
-                    })
-                    ->schema([
-                        Forms\Components\TextInput::make('marca')
-                            ->label(__("general.Marca"))
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('modelo')
-                            ->label(__("general.Modelo"))
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('patente')
-                            ->label(__("general.Patente"))
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('color')
-                            ->label(__("general.Color"))
-                            ->maxLength(255),
-                        Forms\Components\Hidden::make('user_id')->default(Auth::user()->id),
-                            // ->maxLength(255),
-                        Forms\Components\Hidden::make('model')
-                            ->default('Employee')
-                            // ->maxLength(255),
-                    ])
-                    ->defaultItems(0)
-                    ->columns(2)
-                    ->columnSpanFull(),
-
-                Forms\Components\Repeater::make('horarios')
-                    ->relationship()
-                    ->schema([
-                        // employee_id
-                        Forms\Components\Select::make('day_of_week')
-                            ->label(__("Día"))
-                            //->unique(ignoreRecord: true)
-                            ->options([
-                                'Domingo' => 'Domingo', 'Lunes' => 'Lunes', 'Martes' => 'Martes', 'Miercoles' => 'Miercoles', 'Jueves' => 'Jueves', 'Viernes' => 'Viernes', 'Sabado' => 'Sabado'
-                            ]),
-                        Forms\Components\TimePicker::make('start_time')->label(__("Hora de entrada")),
-                        Forms\Components\TimePicker::make('end_time')->label(__("Hora de salida")),
-                    ])
-                    ->defaultItems(0)
-                    ->columns(3)
-                    ->columnSpanFull(),
-
-                Forms\Components\Repeater::make('files')
-                    ->relationship()
-                    ->label('Documentos')
-                    ->schema([
-
-                        Forms\Components\TextInput::make('name')->label('Descripción'),
-                        DatePicker::make('fecha_vencimiento')->label('Fecha de vencimiento'),
-                        Forms\Components\FileUpload::make('file')
-                            ->label('Archivo')
-                            ->storeFileNamesIn('attachment_file_names')
-                            ->getUploadedFileNameForStorageUsing(function ($file, $record) {
-                                return $file ? $file->getClientOriginalName() : $record->file;
-                            })
-                            ->disabled(function($context, Get $get){
-                                return $context == 'edit' ? true:false;
-                            }),
-
-                        Actions::make([
-                            Action::make('open_file')
-                                ->label('Abrir archivo')
-                                ->icon('heroicon-m-eye')
-                                ->url(function ($record, $context) {
-                                    return Storage::url($record->file);
-                                 })
-                                ->openUrlInNewTab(),
-                        ])
-                        ->visible(function($record){
-                            return $record ? true : false;
-                        }),
-                    ])
-                    ->defaultItems(0)
-                    ->columns(1)
-                    ->columnSpanFull()
+                Forms\Components\Hidden::make('model')
+                    ->default('ConstructionCompanie'),
             ]);
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('first_name')
+            ->modifyQueryUsing(fn ($query) => $query->with(['employee' => fn ($q) => $q->withTrashed()]))
+            ->recordTitleAttribute('employee.first_name')
             ->columns([
-                Tables\Columns\TextColumn::make('first_name'),
+                Tables\Columns\TextColumn::make('dni')
+                    ->label(__("general.DNI"))
+                    ->getStateUsing(fn (EmployeeOrigen $record) => $record->employee?->dni)
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('first_name')
+                    ->label(__("general.FirstName"))
+                    ->getStateUsing(fn (EmployeeOrigen $record) => $record->employee?->first_name)
+                    ->color(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['color'] : null)
+                    ->tooltip(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['texto'] : null)
+                    ->searchable()
+                    ->suffix(fn (EmployeeOrigen $record) => $record->employee?->trashed() ? ' ⚠ Eliminado' : null),
+                Tables\Columns\TextColumn::make('last_name')
+                    ->label(__("general.LastName"))
+                    ->getStateUsing(fn (EmployeeOrigen $record) => $record->employee?->last_name)
+                    ->color(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['color'] : null)
+                    ->tooltip(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['texto'] : null)
+                    ->searchable(),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                // Tables\Actions\CreateAction::make()
+                //     ->label('Vincular trabajador existente'),
+                Tables\Actions\Action::make('crear_empleado')
+                    ->label('Crear nuevo trabajador')
+                    ->icon('heroicon-o-user-plus')
+                    ->color('success')
+                    ->url(fn (): string => EmployeeResource::getUrl('create') . '?companie_id=' . $this->getOwnerRecord()->id),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\Action::make('edit')
+                    ->label('Editar')
+                    ->icon('heroicon-o-pencil')
+                    ->color('primary')
+                    ->url(fn (EmployeeOrigen $record) => $record->employee_id
+                        ? EmployeeResource::getUrl('edit', ['record' => $record->employee_id])
+                        : null),
+                Tables\Actions\Action::make('restaurar')
+                    ->label('Restaurar trabajador')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('success')
+                    ->visible(fn (EmployeeOrigen $record) => $record->employee?->trashed())
+                    ->requiresConfirmation()
+                    ->action(function (EmployeeOrigen $record) {
+                        $record->employee->restore();
+                        Notification::make()
+                            ->title('Trabajador restaurado correctamente.')
+                            ->success()
+                            ->send();
+                    }),
+                Tables\Actions\DeleteAction::make()->label('Borrar'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

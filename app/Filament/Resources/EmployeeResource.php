@@ -273,6 +273,14 @@ class EmployeeResource extends Resource
             Repeater::make('files')
                     ->relationship()
                     ->label('Documentos')
+                    ->mutateRelationshipDataBeforeFillUsing(function (array $data) {
+                        return $data;
+                    })
+                    ->afterStateHydrated(function ($component, $state) {
+                        if (empty($state)) {
+                            $component->state(self::getArchivos('employee'));
+                        }
+                    })
                     ->schema([
                         // TextEntry::make('name'),
                         Forms\Components\Hidden::make('name')->dehydrated(),
@@ -306,9 +314,7 @@ class EmployeeResource extends Resource
                             ->getUploadedFileNameForStorageUsing(function ($file, $record) {
                                 return $file ? $file->getClientOriginalName() : $record->file;
                             })
-                            ->disabled(function($context, Get $get){
-                                return $context == 'edit' ? true:false;
-                            }),
+                            ->dehydrated(fn ($state) => filled($state)),
                     ])
                     ->defaultItems(1)
                     ->minItems(1)
@@ -349,6 +355,7 @@ class EmployeeResource extends Resource
                 ->getUploadedFileNameForStorageUsing(function ($file, $record) {
                     return $file ? $file->getClientOriginalName() : $record->file;
                 })
+                ->dehydrated(fn ($state) => filled($state))
         ];
     }
 
@@ -668,6 +675,7 @@ class EmployeeResource extends Resource
     {
         return [
             'index' => Pages\ManageEmployees::route('/'),
+            'create' => Pages\CreateEmployee::route('/create'),
             'view' => Pages\ViewEmployeeResource::route('/{record}'),
             'edit' => Pages\EditEmployee::route('/{record}/edit'),
         ];
