@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\ConstructionCompanieResource\RelationManagers;
 
+use App\Filament\Resources\EmployeeResource;
 use App\Models\ConstructionCompanie;
+use App\Models\Employee;
 use Filament\Forms;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action;
@@ -155,7 +157,17 @@ class EmpleadosRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('first_name')
             ->columns([
-                Tables\Columns\TextColumn::make('first_name'),
+                // Tables\Columns\TextColumn::make('first_name'),
+                Tables\Columns\TextColumn::make('first_name')
+                    ->label(__("general.FirstName"))
+                    ->color(fn (Employee $record) => self::isVencimientos($record)['color'])
+                    ->tooltip(fn (Employee $record) => self::isVencimientos($record)['texto'])
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('last_name')
+                    ->label(__("general.LastName"))
+                    ->color(fn (Employee $record) => self::isVencimientos($record)['color'])
+                    ->tooltip(fn (Employee $record) => self::isVencimientos($record)['texto'])
+                    ->searchable(),
             ])
             ->filters([
                 //
@@ -164,7 +176,8 @@ class EmpleadosRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->url(fn ($record) => EmployeeResource::getUrl('edit', ['record' => $record])),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
