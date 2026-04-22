@@ -18,9 +18,8 @@ class ConstructionCompanie extends Model
 
     public function empleados()
     {
-        return $this->hasMany(Employee::class,'model_origen_id')
-                    ->where('model_origen','ConstructionCompanie')
-                    ;
+        return $this->hasMany(EmployeeOrigen::class, 'model_id')
+                    ->where('model', 'ConstructionCompanie');
     }
 
     public function horarios()
