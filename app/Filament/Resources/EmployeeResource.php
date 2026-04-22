@@ -675,6 +675,7 @@ class EmployeeResource extends Resource
     {
         return [
             'index' => Pages\ManageEmployees::route('/'),
+            'create' => Pages\CreateEmployee::route('/create'),
             'view' => Pages\ViewEmployeeResource::route('/{record}'),
             'edit' => Pages\EditEmployee::route('/{record}/edit'),
         ];
