@@ -273,6 +273,9 @@ class EmployeeResource extends Resource
             Repeater::make('files')
                     ->relationship()
                     ->label('Documentos')
+                    ->mutateRelationshipDataBeforeFillUsing(function (array $data) {
+                        return $data;
+                    })
                     ->schema([
                         // TextEntry::make('name'),
                         Forms\Components\Hidden::make('name')->dehydrated(),
