@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\EmployeeOrigen;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -48,7 +49,9 @@ class EmpleadosRelationManager extends RelationManager
                     ->getStateUsing(fn (EmployeeOrigen $record) => $record->employee?->first_name)
                     ->color(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['color'] : null)
                     ->tooltip(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['texto'] : null)
-                    ->searchable(),
+                    ->searchable()
+                    ->suffix(fn (EmployeeOrigen $record) => $record->employee?->trashed() ? ' ⚠ Eliminado' : null)
+                    ->suffixColor('danger'),
                 Tables\Columns\TextColumn::make('last_name')
                     ->label(__("general.LastName"))
                     ->getStateUsing(fn (EmployeeOrigen $record) => $record->employee?->last_name)
@@ -69,8 +72,20 @@ class EmpleadosRelationManager extends RelationManager
                     ->url(fn (EmployeeOrigen $record) => $record->employee_id
                         ? EmployeeResource::getUrl('edit', ['record' => $record->employee_id])
                         : null),
-                Tables\Actions\DeleteAction::make()
-                    ->label('Desvincular'),
+                Tables\Actions\Action::make('restaurar')
+                    ->label('Restaurar trabajador')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('success')
+                    ->visible(fn (EmployeeOrigen $record) => $record->employee?->trashed())
+                    ->requiresConfirmation()
+                    ->action(function (EmployeeOrigen $record) {
+                        $record->employee->restore();
+                        Notification::make()
+                            ->title('Trabajador restaurado correctamente.')
+                            ->success()
+                            ->send();
+                    }),
+                Tables\Actions\DeleteAction::make()->label('Borrar'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
