@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ConstructionCompanieResource\RelationManagers;
 use App\Filament\Resources\EmployeeResource;
 use App\Models\ConstructionCompanie;
 use App\Models\Employee;
+use App\Models\EmployeeOrigen;
 use Filament\Forms;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action;
@@ -155,18 +156,17 @@ class EmpleadosRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('first_name')
+            ->recordTitleAttribute('employee.first_name')
             ->columns([
-                // Tables\Columns\TextColumn::make('first_name'),
-                Tables\Columns\TextColumn::make('first_name')
+                Tables\Columns\TextColumn::make('employee.first_name')
                     ->label(__("general.FirstName"))
-                    ->color(fn (Employee $record) => EmployeeResource::isVencimientos($record)['color'])
-                    ->tooltip(fn (Employee $record) => EmployeeResource::isVencimientos($record)['texto'])
+                    ->color(fn (EmployeeOrigen $record) => EmployeeResource::isVencimientos($record->employee)['color'])
+                    ->tooltip(fn (EmployeeOrigen $record) => EmployeeResource::isVencimientos($record->employee)['texto'])
                     ->searchable(),
-                Tables\Columns\TextColumn::make('last_name')
+                Tables\Columns\TextColumn::make('employee.last_name')
                     ->label(__("general.LastName"))
-                    ->color(fn (Employee $record) => EmployeeResource::isVencimientos($record)['color'])
-                    ->tooltip(fn (Employee $record) => EmployeeResource::isVencimientos($record)['texto'])
+                    ->color(fn (EmployeeOrigen $record) => EmployeeResource::isVencimientos($record->employee)['color'])
+                    ->tooltip(fn (EmployeeOrigen $record) => EmployeeResource::isVencimientos($record->employee)['texto'])
                     ->searchable(),
             ])
             ->filters([
@@ -177,7 +177,7 @@ class EmpleadosRelationManager extends RelationManager
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->url(fn ($record) => EmployeeResource::getUrl('edit', ['record' => $record])),
+                    ->url(fn (EmployeeOrigen $record) => EmployeeResource::getUrl('edit', ['record' => $record->employee])),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
