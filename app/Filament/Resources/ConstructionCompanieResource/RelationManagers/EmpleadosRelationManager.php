@@ -36,7 +36,7 @@ class EmpleadosRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with('employee'))
+            ->modifyQueryUsing(fn ($query) => $query->with(['employee' => fn ($q) => $q->withTrashed()]))
             ->recordTitleAttribute('employee.first_name')
             ->columns([
                 Tables\Columns\TextColumn::make('dni')
