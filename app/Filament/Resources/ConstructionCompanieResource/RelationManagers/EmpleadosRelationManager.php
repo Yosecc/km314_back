@@ -60,8 +60,8 @@ class EmpleadosRelationManager extends RelationManager
             ])
             ->filters([])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
-                    ->label('Vincular trabajador existente'),
+                // Tables\Actions\CreateAction::make()
+                //     ->label('Vincular trabajador existente'),
                 Tables\Actions\Action::make('crear_empleado')
                     ->label('Crear nuevo trabajador')
                     ->icon('heroicon-o-user-plus')
