@@ -39,16 +39,19 @@ class EmpleadosRelationManager extends RelationManager
             ->modifyQueryUsing(fn ($query) => $query->with('employee'))
             ->recordTitleAttribute('employee.first_name')
             ->columns([
-                Tables\Columns\TextColumn::make('employee.dni')
+                Tables\Columns\TextColumn::make('dni')
                     ->label(__("general.DNI"))
+                    ->getStateUsing(fn (EmployeeOrigen $record) => $record->employee?->dni)
                     ->sortable(),
-                Tables\Columns\TextColumn::make('employee.first_name')
+                Tables\Columns\TextColumn::make('first_name')
                     ->label(__("general.FirstName"))
+                    ->getStateUsing(fn (EmployeeOrigen $record) => $record->employee?->first_name)
                     ->color(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['color'] : null)
                     ->tooltip(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['texto'] : null)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('employee.last_name')
+                Tables\Columns\TextColumn::make('last_name')
                     ->label(__("general.LastName"))
+                    ->getStateUsing(fn (EmployeeOrigen $record) => $record->employee?->last_name)
                     ->color(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['color'] : null)
                     ->tooltip(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['texto'] : null)
                     ->searchable(),
