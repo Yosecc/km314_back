@@ -12,6 +12,20 @@ class CreateEmployee extends CreateRecord
 {
     protected static string $resource = EmployeeResource::class;
 
+    public function mount(): void
+    {
+        parent::mount();
+
+        if ($companieId = request()->query('companie_id')) {
+            $this->data['employeeOrigens'] = [
+                [
+                    'model' => 'ConstructionCompanie',
+                    'model_id' => (int) $companieId,
+                ],
+            ];
+        }
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Siempre establecer fecha_vencimiento_seguro

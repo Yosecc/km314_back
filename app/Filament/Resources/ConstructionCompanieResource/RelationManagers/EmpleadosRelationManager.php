@@ -61,7 +61,12 @@ class EmpleadosRelationManager extends RelationManager
             ->filters([])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->label('Vincular trabajador'),
+                    ->label('Vincular trabajador existente'),
+                Tables\Actions\Action::make('crear_empleado')
+                    ->label('Crear nuevo trabajador')
+                    ->icon('heroicon-o-user-plus')
+                    ->color('success')
+                    ->url(fn (): string => EmployeeResource::getUrl('create') . '?companie_id=' . $this->getOwnerRecord()->id),
             ])
             ->actions([
                 Tables\Actions\Action::make('edit')
