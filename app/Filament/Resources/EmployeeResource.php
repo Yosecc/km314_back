@@ -276,6 +276,11 @@ class EmployeeResource extends Resource
                     ->mutateRelationshipDataBeforeFillUsing(function (array $data) {
                         return $data;
                     })
+                    ->afterStateHydrated(function ($component, $state) {
+                        if (empty($state)) {
+                            $component->state(self::getArchivos('employee'));
+                        }
+                    })
                     ->schema([
                         // TextEntry::make('name'),
                         Forms\Components\Hidden::make('name')->dehydrated(),
