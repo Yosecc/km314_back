@@ -50,8 +50,7 @@ class EmpleadosRelationManager extends RelationManager
                     ->color(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['color'] : null)
                     ->tooltip(fn (EmployeeOrigen $record) => $record->employee ? EmployeeResource::isVencimientos($record->employee)['texto'] : null)
                     ->searchable()
-                    ->suffix(fn (EmployeeOrigen $record) => $record->employee?->trashed() ? ' ⚠ Eliminado' : null)
-                    ->suffixColor('danger'),
+                    ->suffix(fn (EmployeeOrigen $record) => $record->employee?->trashed() ? ' ⚠ Eliminado' : null),
                 Tables\Columns\TextColumn::make('last_name')
                     ->label(__("general.LastName"))
                     ->getStateUsing(fn (EmployeeOrigen $record) => $record->employee?->last_name)
