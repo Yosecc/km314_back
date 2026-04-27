@@ -277,8 +277,19 @@ class EmployeeResource extends Resource
                         return $data;
                     })
                     ->afterStateHydrated(function ($component, $state) {
+                        $required = self::getArchivos('employee');
                         if (empty($state)) {
-                            $component->state(self::getArchivos('employee'));
+                            $component->state($required);
+                        } else {
+                            // Obtener los nombres de los archivos ya guardados
+                            $existingNames = collect($state)->pluck('name')->filter()->values()->toArray();
+                            // Agregar los documentos requeridos que faltan
+                            $missing = collect($required)->filter(function ($item) use ($existingNames) {
+                                return !in_array($item['name'], $existingNames);
+                            })->values()->toArray();
+                            if (!empty($missing)) {
+                                $component->state(array_merge($state, $missing));
+                            }
                         }
                     })
                     ->schema([
