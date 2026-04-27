@@ -17,12 +17,12 @@ class EditConstructionCompanie extends EditRecord
             $horarios = $this->record->horarios;
             $empleados = $this->record->empleados;
             // Generar combinaciones de empleados y horarios
+            // $empleado->employee_id es el ID real del Employee (EmployeeOrigen tiene employee_id, model_id, model)
             $schedulesToInsert = $empleados->flatMap(function ($empleado) use ($horarios) {
                 return $horarios->map(function ($horario) use ($empleado) {
-
                     return [
                         [
-                            'employee_id' => $empleado->id ,
+                            'employee_id' => $empleado->employee_id,
                             'day_of_week' => $horario->day_of_week,
                         ],
                         [
