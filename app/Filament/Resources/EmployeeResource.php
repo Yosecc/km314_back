@@ -243,6 +243,42 @@ class EmployeeResource extends Resource
             Forms\Components\TextInput::make('observations')
                 ->label('Observaciones del trabajo a realizar')
                 ->columnSpanFull(),
+
+            Repeater::make('horarios')
+                ->label('Horarios de trabajo')
+                ->relationship()
+                ->schema([
+                    Forms\Components\Select::make('day_of_week')
+                        ->label('Día')
+                        ->options([
+                            'Domingo' => 'Domingo',
+                            'Lunes' => 'Lunes',
+                            'Martes' => 'Martes',
+                            'Miercoles' => 'Miercoles',
+                            'Jueves' => 'Jueves',
+                            'Viernes' => 'Viernes',
+                            'Sabado' => 'Sabado',
+                        ])
+                        ->required(),
+                    Forms\Components\TimePicker::make('start_time')
+                        ->label('Hora de entrada')
+                        ->seconds(false)
+                        ->required(),
+                    Forms\Components\TimePicker::make('end_time')
+                        ->label('Hora de salida')
+                        ->seconds(false)
+                        ->required(),
+                ])
+                ->addActionLabel('Agregar horario')
+                ->defaultItems(0)
+                ->columns(3)
+                ->columnSpanFull()
+                ->itemLabel(fn (array $state): ?string =>
+                    isset($state['day_of_week'])
+                        ? $state['day_of_week'] . (isset($state['start_time']) && isset($state['end_time']) ? ' (' . $state['start_time'] . ' - ' . $state['end_time'] . ')' : '')
+                        : null
+                )
+                ->collapsible(),
         ];
     }
 
