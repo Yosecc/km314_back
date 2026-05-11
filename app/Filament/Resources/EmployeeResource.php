@@ -553,7 +553,7 @@ class EmployeeResource extends Resource
         $texto = '';
         $status = false;
 
-        if($record->isVencidoSeguro()){
+        if($record->isReverificacion()){
             $color = "warning";
             $texto = "Trabajador pendiente de reverificación de datos.";
             $status = true;
@@ -690,6 +690,7 @@ class EmployeeResource extends Resource
                     ->icon('heroicon-o-shield-check')
                     ->color('success')
                     ->action(function (Employee $record): void {
+                       
                         $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(6);
                         $record->save();
 
@@ -700,7 +701,7 @@ class EmployeeResource extends Resource
                             ->send();
                     })
                     ->visible(function ($record) {
-                        return Auth::user()->hasRole('super_admin') && $record->isVencidoSeguro();
+                        return Auth::user()->hasRole('super_admin') && $record->isReverificacion();
                     }),
 
                 self::getRenovarDocumentosTableAction(),

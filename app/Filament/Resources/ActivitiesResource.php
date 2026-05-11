@@ -524,10 +524,10 @@ class ActivitiesResource extends Resource
                     // (ya validado por defecto con $canSelect = true)
 
                     // Vencimientos (estos ya deshabilitan la selección)
-                    if($employee->isVencidoSeguro()) {
+                    if($employee->isReverificacion()) {
                         $canSelect = false;
                         $persona['vencimientos'][] = [
-                            'texto' => 'Seguro vencido',
+                            'texto' => 'Reverificación de datos requerida',
                             'color_bg' => 'bg-red-100 dark:bg-red-900/30',
                             'color_text' => 'text-red-800 dark:text-red-300',
                             'icon' => true
@@ -585,9 +585,9 @@ class ActivitiesResource extends Resource
                 if ($get('type') == 1) {
                     $canSelect = true;
                     $errores = [];
-                    if($entity->isVencidoSeguro()) {
+                    if($entity->isReverificacion()) {
                         $canSelect = false;
-                        $errores[] = '⚠️ Seguro vencido desde: ' . $entity->insurance_expiration_date->format('d/m/Y');
+                        $errores[] = '⚠️ Reverificación de datos requerida';
                     }
                     if($entity->vencidosFile()) {
                         $canSelect = false;

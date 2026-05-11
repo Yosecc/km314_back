@@ -558,7 +558,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 $failedId = $trabajador->id;
                             }
 
-                            if($trabajador->isVencidoSeguro()){
+                            if($trabajador->isReverificacion()){
                                 Notification::make()
                                     ->title('El trabajador '.$trabajador->nombres().' requiere una reeverificación.')
                                     ->body('Por favor, verifique la documentación del trabajador.')
