@@ -914,7 +914,7 @@ class ActivitiesResource extends Resource
                                                 'texto' => $income.$accesType.$lotes,
                                                 'descripcion' => __('general.'.$form->statusComputed()).' - '.$fechas['start'].' / '. $limite . $observacion,
                                                 'status' => $form->statusComputed(),
-                                                'isActive' => $form->isActive(),
+                                                'isActive' => $form->isActive() && $form->isDayRange(),
                                                 'hint' => !$get('form_control_id') ? false : true,
                                                 'vencimientos' => $vencimientos,
                                                 
