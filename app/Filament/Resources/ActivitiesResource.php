@@ -922,12 +922,12 @@ class ActivitiesResource extends Resource
                                         };
 
                                         if($get('form_control_id') && $context != 'create'){
-                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->values()->toArray();
+                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->sortByDesc('isActive')->values()->toArray();
                                             return ['formularios' => $formularios];
                                         }
 
                                           if($get('form_control_id') && $context == 'create'){
-                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->values()->toArray();
+                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->sortByDesc('isActive')->values()->toArray();
                                             return ['formularios' => $formularios];
                                         }
 
@@ -945,6 +945,7 @@ class ActivitiesResource extends Resource
                                             ->limit(10)
                                             ->get()
                                             ->map( $mapeo )
+                                            ->sortByDesc('isActive')
                                             ->values()
                                             ->toArray();
 
