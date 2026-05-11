@@ -1087,7 +1087,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         return $claves[$state];
                     }),
                 Tables\Columns\TextColumn::make('lote_ids')->badge()->label(__('general.Lote'))->searchable(query: function (Builder $query, string $search): Builder {
-                    return $query->orWhere('lote_ids', 'like', '%' . $search . '%');
+                    return $query->orWhereRaw("JSON_SEARCH(lote_ids, 'one', ?) IS NOT NULL", ['%' . $search . '%']);
                 }),
                 Tables\Columns\TextColumn::make('access_type')
                     ->badge()
@@ -1260,7 +1260,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
                             $data['lote'] ?? null,
-                            fn (Builder $query, $value): Builder => $query->where('lote_ids', 'like', '%' . $value . '%')
+                            fn (Builder $query, $value): Builder => $query->whereRaw("JSON_SEARCH(lote_ids, 'one', ?) IS NOT NULL", ['%' . $value . '%'])
                         );
                     }),
 
