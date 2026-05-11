@@ -1086,7 +1086,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ];
                         return $claves[$state];
                     }),
-                Tables\Columns\TextColumn::make('lote_ids')->badge()->label(__('general.Lote'))->searchable(),
+                Tables\Columns\TextColumn::make('lote_ids')->badge()->label(__('general.Lote'))->searchable(query: function (Builder $query, string $search): Builder {
+                    return $query->orWhere('lote_ids', 'like', '%' . $search . '%');
+                }),
                 Tables\Columns\TextColumn::make('access_type')
                     ->badge()
                     ->label(__("general.TypeActivitie"))
@@ -1249,6 +1251,18 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         'Denied' => 'Denegado',
                         'Pending' => 'Pendiente',
                     ]),
+
+                Filter::make('lote_ids')
+                    ->label(__('general.Lote'))
+                    ->form([
+                        Forms\Components\TextInput::make('lote')->label(__('general.Lote')),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['lote'] ?? null,
+                            fn (Builder $query, $value): Builder => $query->where('lote_ids', 'like', '%' . $value . '%')
+                        );
+                    }),
 
             ])
             ->filtersFormColumns(3)
