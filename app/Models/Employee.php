@@ -56,7 +56,7 @@ class Employee extends Model
         return $this->hasOne(ActivitiesPeople::class,'model_id')->where('model','Employee')->latest();
     }
 
-    public function isVencidoSeguro()
+    public function isReverificacion()
     {
         if(!$this->fecha_vencimiento_seguro){
             return false;
@@ -103,7 +103,7 @@ class Employee extends Model
         $texto = '';
         $status = false;
         
-        if($this->isVencidoSeguro()){
+        if($this->isReverificacion()){
             $color = "warning";
             $texto = "Trabajador pendiente de reverificación de datos.";
             $status = true;

@@ -558,7 +558,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 $failedId = $trabajador->id;
                             }
 
-                            if($trabajador->isVencidoSeguro()){
+                            if($trabajador->isReverificacion()){
                                 Notification::make()
                                     ->title('El trabajador '.$trabajador->nombres().' requiere una reeverificación.')
                                     ->body('Por favor, verifique la documentación del trabajador.')
@@ -1086,7 +1086,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ];
                         return $claves[$state];
                     }),
-                Tables\Columns\TextColumn::make('lote_ids')->badge()->label(__('general.Lote'))->searchable(),
+                Tables\Columns\TextColumn::make('lote_ids')->badge()->label(__('general.Lote'))->searchable(query: function (Builder $query, string $search): Builder {
+                    return $query->orWhereRaw("JSON_SEARCH(lote_ids, 'one', ?) IS NOT NULL", ['%' . $search . '%']);
+                }),
                 Tables\Columns\TextColumn::make('access_type')
                     ->badge()
                     ->label(__("general.TypeActivitie"))
@@ -1249,6 +1251,18 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         'Denied' => 'Denegado',
                         'Pending' => 'Pendiente',
                     ]),
+
+                Filter::make('lote_ids')
+                    ->label(__('general.Lote'))
+                    ->form([
+                        Forms\Components\TextInput::make('lote')->label(__('general.Lote')),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['lote'] ?? null,
+                            fn (Builder $query, $value): Builder => $query->whereRaw("JSON_SEARCH(lote_ids, 'one', ?) IS NOT NULL", ['%' . $value . '%'])
+                        );
+                    }),
 
             ])
             ->filtersFormColumns(3)

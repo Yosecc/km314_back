@@ -34,17 +34,22 @@ class FormControlDateRange extends Model
     public function isInRange(): bool
     {
         $start_date_range = $this->start_date_range;
-        $end_date_range = $this->end_date_range ?? Carbon::now()->addMonth()->format('Y-m-d');
 
         $start_date_range .= ' ' . ($this->start_time_range ? $this->start_time_range : '00:00');
-        $end_date_range .= ' ' . ($this->end_time_range ? $this->end_time_range : '00:00');
-
         $start_date_range = substr($start_date_range, 0, 16);
         $start = Carbon::createFromFormat('Y-m-d H:i', $start_date_range);
-        $end_date_range = substr($end_date_range, 0, 16);
-        $end = Carbon::createFromFormat('Y-m-d H:i', $end_date_range);
 
         $currentDate = Carbon::now();
+
+        // Si no tiene fecha de fin (date_unilimited), solo verificar que ya comenzó
+        if ($this->date_unilimited) {
+            return $currentDate->greaterThanOrEqualTo($start);
+        }
+
+        $end_date_range = $this->end_date_range ?? Carbon::now()->addMonth()->format('Y-m-d');
+        $end_date_range .= ' ' . ($this->end_time_range ? $this->end_time_range : '00:00');
+        $end_date_range = substr($end_date_range, 0, 16);
+        $end = Carbon::createFromFormat('Y-m-d H:i', $end_date_range);
 
         return $currentDate->between($start, $end);
     }

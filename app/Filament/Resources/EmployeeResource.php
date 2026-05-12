@@ -243,6 +243,42 @@ class EmployeeResource extends Resource
             Forms\Components\TextInput::make('observations')
                 ->label('Observaciones del trabajo a realizar')
                 ->columnSpanFull(),
+
+            Repeater::make('horarios')
+                ->label('Horarios de trabajo')
+                ->relationship()
+                ->schema([
+                    Forms\Components\Select::make('day_of_week')
+                        ->label('Día')
+                        ->options([
+                            'Domingo' => 'Domingo',
+                            'Lunes' => 'Lunes',
+                            'Martes' => 'Martes',
+                            'Miercoles' => 'Miercoles',
+                            'Jueves' => 'Jueves',
+                            'Viernes' => 'Viernes',
+                            'Sabado' => 'Sabado',
+                        ])
+                        ->required(),
+                    Forms\Components\TimePicker::make('start_time')
+                        ->label('Hora de entrada')
+                        ->seconds(false)
+                        ->required(),
+                    Forms\Components\TimePicker::make('end_time')
+                        ->label('Hora de salida')
+                        ->seconds(false)
+                        ->required(),
+                ])
+                ->addActionLabel('Agregar horario')
+                ->defaultItems(0)
+                ->columns(3)
+                ->columnSpanFull()
+                ->itemLabel(fn (array $state): ?string =>
+                    isset($state['day_of_week'])
+                        ? $state['day_of_week'] . (isset($state['start_time']) && isset($state['end_time']) ? ' (' . $state['start_time'] . ' - ' . $state['end_time'] . ')' : '')
+                        : null
+                )
+                ->collapsible(),
         ];
     }
 
@@ -277,15 +313,26 @@ class EmployeeResource extends Resource
                         return $data;
                     })
                     ->afterStateHydrated(function ($component, $state) {
+                        $required = self::getArchivos('employee');
                         if (empty($state)) {
-                            $component->state(self::getArchivos('employee'));
+                            $component->state($required);
+                        } else {
+                            // Obtener los nombres de los archivos ya guardados
+                            $existingNames = collect($state)->pluck('name')->filter()->values()->toArray();
+                            // Agregar los documentos requeridos que faltan
+                            $missing = collect($required)->filter(function ($item) use ($existingNames) {
+                                return !in_array($item['name'], $existingNames);
+                            })->values()->toArray();
+                            if (!empty($missing)) {
+                                $component->state(array_merge($state, $missing));
+                            }
                         }
                     })
                     ->schema([
                         // TextEntry::make('name'),
                         Forms\Components\Hidden::make('name')->dehydrated(),
                         DatePicker::make('fecha_vencimiento')
-                            ->label('Fecha de vencimiento del documento')
+                            ->label('Fecha de vencimiento del documento (dd-mm-aaaa)')
                             ->extraFieldWrapperAttributes(function(Get $get, $state){
                                         if($state  && Carbon::parse($state)->isPast()){
                                             return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
@@ -333,7 +380,7 @@ class EmployeeResource extends Resource
         return [
             Forms\Components\Hidden::make('name')->dehydrated(),
             DatePicker::make('fecha_vencimiento')
-                ->label('Fecha de vencimiento del documento')
+                ->label('Fecha de vencimiento del documento (dd-mm-aaaa)')
                 ->extraFieldWrapperAttributes(function(Get $get, $state){
                     if(Carbon::parse($state)->isPast()){
                         return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
@@ -506,7 +553,7 @@ class EmployeeResource extends Resource
         $texto = '';
         $status = false;
 
-        if($record->isVencidoSeguro()){
+        if($record->isReverificacion()){
             $color = "warning";
             $texto = "Trabajador pendiente de reverificación de datos.";
             $status = true;
@@ -643,6 +690,7 @@ class EmployeeResource extends Resource
                     ->icon('heroicon-o-shield-check')
                     ->color('success')
                     ->action(function (Employee $record): void {
+                       
                         $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(6);
                         $record->save();
 
@@ -653,7 +701,7 @@ class EmployeeResource extends Resource
                             ->send();
                     })
                     ->visible(function ($record) {
-                        return Auth::user()->hasRole('super_admin') && $record->isVencidoSeguro();
+                        return Auth::user()->hasRole('super_admin') && $record->isReverificacion();
                     }),
 
                 self::getRenovarDocumentosTableAction(),

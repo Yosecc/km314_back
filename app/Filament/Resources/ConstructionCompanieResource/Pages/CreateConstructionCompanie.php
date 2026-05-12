@@ -14,25 +14,29 @@ class CreateConstructionCompanie extends CreateRecord
 
     protected function afterCreate(): void
     {
-         // Obtener los horarios y empleados
-        // $horarios = $this->record->horarios;
-        // $empleados = $this->record->empleados;
-        // dd($horarios, $empleados, $this->record);
-        // Generar combinaciones de empleados y horarios
-        // $schedulesToInsert = $empleados->flatMap(function ($empleado) use ($horarios) {
-        //     return $horarios->map(function ($horario) use ($empleado) {
-        //         return [
-        //             'employee_id' => $empleado->id,
-        //             'day_of_week' => $horario->day_of_week,
-        //             'start_time' => $horario->start_time,
-        //             'end_time' => $horario->end_time,
-        //             'created_at' => now(),
-        //             'updated_at' => now(),
-        //         ];
-        //     });
-        // });
+        if(!empty($this->data['is_horario'])){
+            $horarios = $this->record->horarios;
+            $empleados = $this->record->empleados;
+            // $empleado->employee_id es el ID real del Employee
+            $schedulesToInsert = $empleados->flatMap(function ($empleado) use ($horarios) {
+                return $horarios->map(function ($horario) use ($empleado) {
+                    return [
+                        [
+                            'employee_id' => $empleado->employee_id,
+                            'day_of_week' => $horario->day_of_week,
+                        ],
+                        [
+                            'start_time' => $horario->start_time,
+                            'end_time' => $horario->end_time,
+                            'updated_at' => now(),
+                        ]
+                    ];
+                });
+            });
 
-        // // Inserción masiva
-        // EmployeeSchedule::insert($schedulesToInsert->toArray());
+            $schedulesToInsert->values()->each(function($horario){
+                EmployeeSchedule::updateOrInsert($horario[0],$horario[1]);
+            });
+        }
     }
 }

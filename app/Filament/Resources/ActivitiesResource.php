@@ -7,7 +7,6 @@ use App\Actions\Star;
 use App\Filament\Resources\ActivitiesResource\Pages;
 use App\Filament\Resources\ActivitiesResource\RelationManagers;
 use App\Models\Activities;
-use App\Models\ActivitiesPeople;
 use App\Models\Auto;
 use App\Models\Employee;
 use App\Models\EmployeeAutos;
@@ -390,8 +389,27 @@ class ActivitiesResource extends Resource
                             'context' => $context
                         ]);
                  
+                        // Pre-cargar empleados con sus relaciones para evitar N+1 en el loop
+                        $employeesMap = collect();
+                        $companiesMap = collect();
+                        if ($get('tipo_entrada') == 2 && $get('type') == 1 && $context == 'create' && count($options)) {
+                            $employeesMap = Employee::whereIn('id', array_keys($options))
+                                ->with(['horarios', 'employeeOrigens', 'owners'])
+                                ->get()
+                                ->keyBy('id');
+                            $companiaIds = $employeesMap
+                                ->flatMap(fn($e) => $e->employeeOrigens)
+                                ->where('model', 'ConstructionCompanie')
+                                ->pluck('model_id')
+                                ->unique()->filter()->values()->toArray();
+                            if (count($companiaIds)) {
+                                $companiesMap = \App\Models\ConstructionCompanie::whereIn('id', $companiaIds)
+                                    ->get()->keyBy('id');
+                            }
+                        }
+
                         // Mapear personas con información adicional
-                        $personas = collect($options)->map(function($nombre, $id) use ($descriptions, $get, $context) {
+                        $personas = collect($options)->map(function($nombre, $id) use ($descriptions, $get, $context, $employeesMap, $companiesMap) {
                      
 
                             $persona = [
@@ -404,7 +422,7 @@ class ActivitiesResource extends Resource
                
             // Solo agregar información de vencimientos para empleados en entrada
             if($get('tipo_entrada') == 2 && $get('type') == 1 && $context == 'create') {
-                $employee = Employee::find($id);
+                $employee = $employeesMap->get($id); // ya pre-cargado, sin query adicional
                 if($employee) {
                     $canSelect = true;
                     
@@ -423,7 +441,7 @@ class ActivitiesResource extends Resource
                         $hasOrigenes = true;
                         foreach($employee->employeeOrigens as $origen) {
                             if($origen->model === 'ConstructionCompanie' && $origen->model_id) {
-                                $compania = \App\Models\ConstructionCompanie::find($origen->model_id);
+                                $compania = $companiesMap->get($origen->model_id); // ya pre-cargado
                                 if($compania) {
                                     $persona['badges'][] = [
                                         'texto' => "Compañía: {$compania->name}",
@@ -506,10 +524,10 @@ class ActivitiesResource extends Resource
                     // (ya validado por defecto con $canSelect = true)
 
                     // Vencimientos (estos ya deshabilitan la selección)
-                    if($employee->isVencidoSeguro()) {
+                    if($employee->isReverificacion()) {
                         $canSelect = false;
                         $persona['vencimientos'][] = [
-                            'texto' => 'Seguro vencido',
+                            'texto' => 'Reverificación de datos requerida',
                             'color_bg' => 'bg-red-100 dark:bg-red-900/30',
                             'color_text' => 'text-red-800 dark:text-red-300',
                             'icon' => true
@@ -541,18 +559,6 @@ class ActivitiesResource extends Resource
                 }
             }
 
-            // Badge para propietarios morosos
-            if($get('tipo_entrada') == 1) {
-                $owner = Owner::find($id);
-                if($owner && $owner->owner_status_id == 2) {
-                    // $persona['badges'][] = [
-                    //     'texto' => 'Moroso',
-                    //     'color' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                    //     'icon' => true
-                    // ];
-                }
-            }
-
             return $persona;
         })->values()->toArray();
 
@@ -579,9 +585,9 @@ class ActivitiesResource extends Resource
                 if ($get('type') == 1) {
                     $canSelect = true;
                     $errores = [];
-                    if($entity->isVencidoSeguro()) {
+                    if($entity->isReverificacion()) {
                         $canSelect = false;
-                        $errores[] = '⚠️ Seguro vencido desde: ' . $entity->insurance_expiration_date->format('d/m/Y');
+                        $errores[] = '⚠️ Reverificación de datos requerida';
                     }
                     if($entity->vencidosFile()) {
                         $canSelect = false;
@@ -908,7 +914,7 @@ class ActivitiesResource extends Resource
                                                 'texto' => $income.$accesType.$lotes,
                                                 'descripcion' => __('general.'.$form->statusComputed()).' - '.$fechas['start'].' / '. $limite . $observacion,
                                                 'status' => $form->statusComputed(),
-                                                'isActive' => $form->isActive(),
+                                                'isActive' => $form->isActive() && $form->isDayRange(),
                                                 'hint' => !$get('form_control_id') ? false : true,
                                                 'vencimientos' => $vencimientos,
                                                 
@@ -916,12 +922,12 @@ class ActivitiesResource extends Resource
                                         };
 
                                         if($get('form_control_id') && $context != 'create'){
-                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->values()->toArray();
+                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->sortByDesc('isActive')->values()->toArray();
                                             return ['formularios' => $formularios];
                                         }
 
                                           if($get('form_control_id') && $context == 'create'){
-                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->values()->toArray();
+                                            $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->sortByDesc('isActive')->values()->toArray();
                                             return ['formularios' => $formularios];
                                         }
 
@@ -939,6 +945,7 @@ class ActivitiesResource extends Resource
                                             ->limit(10)
                                             ->get()
                                             ->map( $mapeo )
+                                            ->sortByDesc('isActive')
                                             ->values()
                                             ->toArray();
 
@@ -1099,42 +1106,37 @@ class ActivitiesResource extends Resource
 
 
                                 if($context == 'view'){
-                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit') ?? [])->get();
+                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit') ?? [])
+                                        ->select('id','first_name','last_name','dni','owner_id')->get();
                                 }else{
 
                                     if(!is_array($owner) || !count($owner)){
-                                        $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now() )->get();
+                                        $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now())
+                                            ->select('id','first_name','last_name','dni','owner_id')->limit(200)->get();
                                     }else{   
-                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
+                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])
+                                            ->select('id','first_name','last_name','dni','owner_id')->limit(200)->get();
                                     }
                                 }
 
-                                $visitantes = $visitantes->map(function($visitante){
-                                    $visitante['texto'] = $visitante['first_name'] ." ".$visitante['last_name'] ;
-                                    return $visitante;
-                                });
-
-                                return $visitantes->pluck('texto','id');
+                                return $visitantes->mapWithKeys(fn($v) => [$v->id => "{$v->first_name} {$v->last_name}"]);
                             })
                             ->descriptions(function(Get $get, $context){
                                 $owner = $get('peoples') ?? [];
                                 if($context == 'view'){
-                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit') ?? [])->get();
+                                    $visitantes = OwnerSpontaneousVisit::whereIn('id', $get('spontaneous_visit') ?? [])
+                                        ->with('owner')->select('id','first_name','last_name','dni','owner_id')->get();
                                 }else{
                                     if(!is_array($owner) || !count($owner)){
-                                        $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now() )->get();
+                                        $visitantes = OwnerSpontaneousVisit::whereDate('created_at', now())
+                                            ->with('owner')->select('id','first_name','last_name','dni','owner_id')->limit(200)->get();
                                     }else{   
-                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])->get();
+                                        $visitantes = OwnerSpontaneousVisit::where('owner_id', $owner[0])
+                                            ->with('owner')->select('id','first_name','last_name','dni','owner_id')->limit(200)->get();
                                     }
                                 }
 
-                                $visitantes = $visitantes->map(function($visitante){
-                                    // $visitante->owner->nombres();
-                                    $visitante['texto'] = $visitante['dni']. " Relacionado con: " .$visitante->owner->nombres();
-                                    return $visitante;
-                                });
-
-                                return $visitantes->pluck('texto','id');
+                                return $visitantes->mapWithKeys(fn($v) => [$v->id => "{$v->dni} Relacionado con: " . $v->owner->nombres()]);
                             })
                             ->live(),
 
@@ -1155,10 +1157,7 @@ class ActivitiesResource extends Resource
                                     Forms\Components\Select::make('owner_id')
                                         ->label(__("general.Owner"))
                                         ->required()
-                                        ->options(Owner::orderBy('first_name')->orderBy('last_name')->get()->map(function($owner){
-                                            $owner['name'] = "{$owner->first_name} {$owner->last_name}";
-                                            return $owner;
-                                        })->pluck("name","id")->toArray())
+                                        ->options(Owner::select('id', 'first_name', 'last_name')->orderBy('first_name')->orderBy('last_name')->get()->mapWithKeys(fn($owner) => [$owner->id => "{$owner->first_name} {$owner->last_name}"])->toArray())
                                         ->searchable()
                                         ->live(),
                                     Forms\Components\Repeater::make('spontaneous_visit')
@@ -1456,19 +1455,20 @@ class ActivitiesResource extends Resource
                                                     return  OwnerSpontaneousVisit::Dni( $get('../../num_search'))
                                                         ->where('agregado',null)
                                                         ->whereDate('created_at',now())
-                                                        ->get()->map(function($visitante){
-                                                            $visitante['texto'] = $visitante['first_name'] ." ".$visitante['last_name'] ;
-                                                            return $visitante;
-                                                        })->pluck('texto','id')->toArray();
+                                                        ->select('id','first_name','last_name','dni','owner_id')
+                                                        ->limit(100)->get()
+                                                        ->mapWithKeys(fn($v) => [$v->id => "{$v->first_name} {$v->last_name}"])
+                                                        ->toArray();
                                                 })
                                                 ->descriptions(descriptions: function(Get $get, $context){
                                                     return  OwnerSpontaneousVisit::Dni( $get('../../num_search'))
                                                         ->where('agregado',null)
                                                         ->whereDate('created_at',now())
-                                                        ->get()->map(function($visitante){
-                                                            $visitante['texto'] = $visitante['dni']. " Relacionado con: " .$visitante->owner->nombres();
-                                                            return $visitante;
-                                                        })->pluck('texto','id')->toArray();
+                                                        ->with('owner')
+                                                        ->select('id','first_name','last_name','dni','owner_id')
+                                                        ->limit(100)->get()
+                                                        ->mapWithKeys(fn($v) => [$v->id => "{$v->dni} Relacionado con: " . $v->owner->nombres()])
+                                                        ->toArray();
                                                 })
                                                 // ->visible(function(Get $get){
                                                 //     return $get('../../spontaneous_visit') && count($get('../../spontaneous_visit')) ? true : false;
@@ -1697,27 +1697,29 @@ class ActivitiesResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data) {
                         if (!empty($data['query'])) {
-                            // Obtén todos los modelos dentro del namespace App\Models
-							 $d = ActivitiesPeople::limit(100)->get();
-                                $d = $d->groupBy('model')->keys();
-								$models = $d->map(function($model){
-									if($model == 'FormControl'){
-										$model = 'FormControlPeople';
-									}
-									return "App\Models\\".$model;
-								});
-                                //dd($d);
-                            // Construye la consulta para buscar en `peoples`
-                            $query->whereHas('peoples', function ($peopleQuery) use ($models, $data) {
-								 //dd($peopleQuery,$models, $data);
-                                foreach ($models as $modelClass) {
-                                    $peopleQuery->orWhere('model', class_basename($modelClass))
-                                                ->whereIn('model_id', $modelClass::where(function ($query) use ($data) {
-                                                    $query->where('dni', 'like', "%{$data['query']}%")
-                                                          ->orWhere('first_name', 'like', "%{$data['query']}%")
-                                                          ->orWhere('last_name', 'like', "%{$data['query']}%");
-                                                })->pluck('id'));
-                                }
+                            $knownModels = [
+                                'Owner'                 => (new \App\Models\Owner)->getTable(),
+                                'Employee'              => (new \App\Models\Employee)->getTable(),
+                                'OwnerFamily'           => (new \App\Models\OwnerFamily)->getTable(),
+                                'FormControlPeople'     => (new \App\Models\FormControlPeople)->getTable(),
+                                'OwnerSpontaneousVisit' => (new \App\Models\OwnerSpontaneousVisit)->getTable(),
+                            ];
+                            $query->whereHas('peoples', function ($peopleQuery) use ($knownModels, $data) {
+                                $peopleQuery->where(function ($q) use ($knownModels, $data) {
+                                    foreach ($knownModels as $modelName => $table) {
+                                        $q->orWhere(function ($sub) use ($modelName, $table, $data) {
+                                            $sub->where('model', $modelName)
+                                                ->whereIn('model_id', function ($idQuery) use ($table, $data) {
+                                                    $idQuery->select('id')->from($table)
+                                                        ->where(function ($cond) use ($data) {
+                                                            $cond->where('dni', 'like', "%{$data['query']}%")
+                                                                 ->orWhere('first_name', 'like', "%{$data['query']}%")
+                                                                 ->orWhere('last_name', 'like', "%{$data['query']}%");
+                                                        });
+                                                });
+                                        });
+                                    }
+                                });
                             });
                         }
                     })
