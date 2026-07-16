@@ -837,11 +837,12 @@ class ActivitiesResource extends Resource
                                     ->required()
                                     ->view('filament.forms.components.formControlSelector')
                                     /** @phpstan-ignore-next-line */
-                                    ->viewData(function(Get $get, $context) {
+                                    ->viewData([
+                                        'formularios' => function(Get $get, $context) {
 
                                         
                                         if(!$get('num_search') && !$get('form_control_id')){
-                                            return ['formularios' => []];
+                                            return [];
                                         }
 
                                         
@@ -923,12 +924,12 @@ class ActivitiesResource extends Resource
 
                                         if($get('form_control_id') && $context != 'create'){
                                             $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->sortByDesc('isActive')->values()->toArray();
-                                            return ['formularios' => $formularios];
+                                            return $formularios;
                                         }
 
                                           if($get('form_control_id') && $context == 'create'){
                                             $formularios = FormControl::where('id',$get('form_control_id'))->get()->map($mapeo)->sortByDesc('isActive')->values()->toArray();
-                                            return ['formularios' => $formularios];
+                                            return $formularios;
                                         }
 
                                         $num = $get('num_search');
@@ -949,8 +950,9 @@ class ActivitiesResource extends Resource
                                             ->values()
                                             ->toArray();
 
-                                        return ['formularios' => $formularios];
-                                    })
+                                        return $formularios;
+                                        },
+                                    ])
                                     ->live(),
 
                                 Forms\Components\Radio::make('lote_ids')
@@ -989,9 +991,11 @@ class ActivitiesResource extends Resource
                             ->label(__('general.Select people one or more options'))
                             ->view('filament.forms.components.peopleSelector')
                             /** @phpstan-ignore-next-line */
-                            ->viewData(function(Get $get, $context, $record) {
-                                return  self::viewDataPeople($get, $context, $record);
-                            })
+                            ->viewData([
+                                'personas' => function(Get $get, $context, $record) {
+                                    return self::viewDataPeople($get, $context, $record)['personas'] ?? [];
+                                },
+                            ])
                             ->visible(function(Get $get, $context, $record){
                                 $peoples = $get('peoples') ?? [];
                                 if($context == 'view' && is_array($peoples) && !count($peoples) && $record && $record->peoples){

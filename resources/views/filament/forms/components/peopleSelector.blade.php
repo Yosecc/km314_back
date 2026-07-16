@@ -1,3 +1,7 @@
+@php
+    $personas = $personas instanceof \Closure ? $field->evaluate($personas) : $personas;
+@endphp
+
 <div x-data="{
     state: $wire.$entangle('{{ $getStatePath() }}').live,
     selectedPeople: [],
