@@ -333,7 +333,7 @@ class EmployeeResource extends Resource
                         Forms\Components\Hidden::make('name')->dehydrated(),
                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento del documento (dd-mm-aaaa)')
-                            ->extraFieldWrapperAttributes(function(Get $get, $state){
+                            ->extraAttributes(function(Get $get, $state){
                                         if($state  && Carbon::parse($state)->isPast()){
                                             return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
                                         }
@@ -381,7 +381,7 @@ class EmployeeResource extends Resource
             Forms\Components\Hidden::make('name')->dehydrated(),
             DatePicker::make('fecha_vencimiento')
                 ->label('Fecha de vencimiento del documento (dd-mm-aaaa)')
-                ->extraFieldWrapperAttributes(function(Get $get, $state){
+                ->extraAttributes(function(Get $get, $state){
                     if(Carbon::parse($state)->isPast()){
                         return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
                     }

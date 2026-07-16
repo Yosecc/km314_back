@@ -405,7 +405,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label('Nombre del documento'),
                     DatePicker::make('fecha_vencimiento')
                         ->label('Fecha de vencimiento del documento')
-                        ->extraFieldWrapperAttributes(function(Get $get, $state){
+                        ->extraAttributes(function(Get $get, $state){
                             if($state  && Carbon::parse($state)->isPast()){
                                 return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
                             }
