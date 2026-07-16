@@ -2,7 +2,7 @@ CREATE OR REPLACE VIEW personas_en_el_barrio AS
 
 -- PROPIETARIOS
 SELECT
-    o.id AS id,
+    CONCAT('Owner-', o.id) AS id,
     o.first_name,
     o.last_name,
     o.dni,
@@ -35,7 +35,7 @@ UNION ALL
 
 -- FAMILIARES
 SELECT
-    of.id AS id,
+    CONCAT('OwnerFamily-', of.id) AS id,
     of.first_name,
     of.last_name,
     of.dni,
@@ -68,7 +68,7 @@ UNION ALL
 
 -- VISITANTES ESPONTÁNEOS
 SELECT
-    osv.id AS id,
+    CONCAT('OwnerSpontaneousVisit-', osv.id) AS id,
     osv.first_name,
     osv.last_name,
     osv.dni,
@@ -101,7 +101,7 @@ UNION ALL
 
 -- EMPLEADOS
 SELECT
-    e.id AS id,
+    CONCAT('Employee-', e.id) AS id,
     e.first_name,
     e.last_name,
     e.dni,
@@ -134,7 +134,7 @@ UNION ALL
 
 -- VISITANTES (general, playa, house)
 SELECT
-    fcp.id AS id,
+    CONCAT('FormControl-', fcp.id) AS id,
     fcp.first_name,
     fcp.last_name,
     fcp.dni,
@@ -168,7 +168,7 @@ UNION ALL
 
 -- INQUILINOS (lote)
 SELECT
-    fcp.id AS id,
+    CONCAT('FormControl-', fcp.id) AS id,
     fcp.first_name,
     fcp.last_name,
     fcp.dni,
@@ -199,7 +199,7 @@ UNION ALL
 
 -- TRABAJADORES (lote)
 SELECT
-    fcp.id AS id,
+    CONCAT('FormControl-', fcp.id) AS id,
     fcp.first_name,
     fcp.last_name,
     fcp.dni,
@@ -230,7 +230,7 @@ UNION ALL
 
 -- VISITAS (lote)
 SELECT
-    fcp.id AS id,
+    CONCAT('FormControl-', fcp.id) AS id,
     fcp.first_name,
     fcp.last_name,
     fcp.dni,

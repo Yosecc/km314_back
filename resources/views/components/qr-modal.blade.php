@@ -1,3 +1,9 @@
+@php
+    $quickAccessUrl = method_exists($record, 'getPlainQrCodeUrl')
+        ? $record->getPlainQrCodeUrl()
+        : url('/quick-access/' . $record->quick_access_code);
+@endphp
+
 <div x-data="{
     copyToClipboard(text) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -74,7 +80,7 @@
          --}}
         <button 
             type="button"
-            @click.prevent="copyToClipboard('{{ $record->getQrCodeUrl() }}')"
+            @click.prevent="copyToClipboard(@js($quickAccessUrl))"
             class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors cursor-pointer"
         >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +91,7 @@
 
         <button 
             type="button"
-            @click.prevent="shareToWhatsApp('{{ $record->getQrCodeUrl() }}', '{{ $record->quick_access_code }}', '{{ $entityType }}')"
+            @click.prevent="shareToWhatsApp(@js($quickAccessUrl), @js($record->quick_access_code), @js($entityType))"
             class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 transition-colors cursor-pointer"
         >
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
