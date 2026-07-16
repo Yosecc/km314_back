@@ -10,6 +10,8 @@ class PersonaEnElBarrio extends Model
     use HasFactory;
 
     protected $table = 'personas_en_el_barrio';
+    protected $keyType = 'string';
+    public $incrementing = false;
     public $timestamps = false;
     protected $guarded = [];
 }
