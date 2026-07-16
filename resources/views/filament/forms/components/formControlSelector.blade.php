@@ -2,6 +2,10 @@
     :component="$getFieldWrapperView()"
     :field="$field"
 >
+    @php
+        $formularios = $formularios instanceof \Closure ? $field->evaluate($formularios) : $formularios;
+    @endphp
+
     @if (!$isDisabled())
         @php
             // Separar formularios por estado
