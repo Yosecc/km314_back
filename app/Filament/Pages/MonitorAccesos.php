@@ -3,8 +3,10 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Resources\ActivitiesResource;
+use App\Models\Activities;
 use App\Models\ActivitiesPeople;
 use Carbon\Carbon;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -60,6 +62,71 @@ class MonitorAccesos extends Page
         unset($this->monitorData);
     }
 
+    public function forceExit(string $model, int $modelId): void
+    {
+        $latestMovement = ActivitiesPeople::query()
+            ->select('activities_people.*')
+            ->join('activities as latest_activity', 'latest_activity.id', '=', 'activities_people.activities_id')
+            ->whereNull('activities_people.deleted_at')
+            ->where('activities_people.model', $model)
+            ->where('activities_people.model_id', $modelId)
+            ->with('activitie')
+            ->orderByDesc('latest_activity.created_at')
+            ->orderByDesc('activities_people.id')
+            ->first();
+
+        if (! $latestMovement || $latestMovement->activitie?->type !== 'Entry') {
+            Notification::make()
+                ->title('La persona ya no figura adentro')
+                ->warning()
+                ->send();
+
+            unset($this->monitorData);
+
+            return;
+        }
+
+        $tipoEntrada = match ($model) {
+            'Owner', 'OwnerFamily', 'OwnerSpontaneousVisit' => 1,
+            'Employee' => 2,
+            'FormControl', 'FormControlPeople' => 3,
+            default => 0,
+        };
+
+        if ($tipoEntrada === 0) {
+            Notification::make()
+                ->title('No se pudo determinar el tipo de persona')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $userName = auth()->user()?->name ?? 'Sistema';
+        $activity = Activities::create([
+            'lote_ids' => $latestMovement->activitie->lote_ids,
+            'form_control_id' => $latestMovement->activitie->form_control_id,
+            'tipo_entrada' => $tipoEntrada,
+            'type' => 'Exit',
+            'observations' => 'Salida forzada desde Monitor de accesos por: '.$userName,
+        ]);
+
+        ActivitiesPeople::create([
+            'activities_id' => $activity->id,
+            'model' => $model,
+            'model_id' => $modelId,
+            'type' => null,
+        ]);
+
+        unset($this->monitorData);
+
+        Notification::make()
+            ->title('Salida registrada')
+            ->body('La persona fue retirada del listado de personas adentro.')
+            ->success()
+            ->send();
+    }
+
     #[Computed]
     public function monitorData(): array
     {
@@ -87,6 +154,14 @@ class MonitorAccesos extends Page
 
         $events = $this->buildTimeline($rows, $start);
         $inside = $this->currentPeopleInside();
+        $insideIdentities = $inside->pluck('identity')->flip();
+
+        $events = $events->map(function (array $event) use ($insideIdentities) {
+            $event['can_force_exit'] = $event['movement'] === 'Entry'
+                && $insideIdentities->has($event['identity']);
+
+            return $event;
+        });
 
         $events = $this->applySearch($events);
         $inside = $this->applySearch($inside);
@@ -104,13 +179,16 @@ class MonitorAccesos extends Page
             ->values();
 
         $alerts = $events
-            ->whereNotNull('alert')
+            ->filter(fn (array $event) => filled($event['alert']) && $event['can_force_exit'])
             ->map(fn (array $event) => [
                 'key' => 'event-'.$event['id'],
                 'title' => $event['alert'],
                 'detail' => $event['name'],
                 'time' => $event['time'],
                 'severity' => 'error',
+                'can_force_exit' => true,
+                'model' => $event['model'],
+                'model_id' => $event['model_id'],
             ]);
 
         $longStays = $inside
@@ -121,6 +199,9 @@ class MonitorAccesos extends Page
                 'detail' => $person['name'].' lleva '.$person['duration'].' adentro',
                 'time' => $person['time'],
                 'severity' => 'warning',
+                'can_force_exit' => true,
+                'model' => $person['model'],
+                'model_id' => $person['model_id'],
             ]);
 
         $allAlerts = $alerts
@@ -252,6 +333,8 @@ class MonitorAccesos extends Page
         return [
             'id' => $row->id,
             'identity' => $this->identityFor($row),
+            'model' => $rawModel,
+            'model_id' => (int) $row->model_id,
             'activity_id' => $activity->id,
             'movement' => $activity->type,
             'name' => $name,

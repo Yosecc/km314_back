@@ -145,6 +145,17 @@
                                             {{ $event['alert'] }}
                                         </div>
                                     @endif
+
+                                    @if($event['alert'] && $event['can_force_exit'])
+                                        <button
+                                            type="button"
+                                            class="force-exit-button"
+                                            wire:click="forceExit('{{ $event['model'] }}', {{ $event['model_id'] }})"
+                                            wire:confirm="¿Confirmas que deseas registrar una salida forzada para {{ $event['name'] }}?"
+                                        >
+                                            Forzar salida
+                                        </button>
+                                    @endif
                                 </div>
 
                                 <a class="event-link" href="{{ $event['url'] }}" title="Ver registro" aria-label="Ver registro de {{ $event['name'] }}">
@@ -209,6 +220,16 @@
                                 <div>
                                     <strong>{{ $alert['title'] }}</strong>
                                     <p>{{ $alert['detail'] }}</p>
+                                    @if($alert['can_force_exit'])
+                                        <button
+                                            type="button"
+                                            class="force-exit-button small"
+                                            wire:click="forceExit('{{ $alert['model'] }}', {{ $alert['model_id'] }})"
+                                            wire:confirm="¿Confirmas que deseas registrar una salida forzada para {{ $alert['detail'] }}?"
+                                        >
+                                            Forzar salida
+                                        </button>
+                                    @endif
                                 </div>
                                 <span>{{ $alert['time'] }}</span>
                             </article>
@@ -278,6 +299,7 @@
         .event-card { display: grid; grid-template-columns: 4rem 2.9rem minmax(0, 1fr) 1.8rem; gap: .85rem; align-items: center; min-height: 7.4rem; padding: 1rem; margin: .65rem 0 0 .6rem; border: 1px solid #e8edf3; border-radius: .95rem; background: #fff; transition: .18s ease; }
         .event-card:hover { border-color: #cdd8e5; transform: translateY(-1px); box-shadow: 0 7px 20px rgba(15,35,63,.07); }
         .has-alert .event-card { border-color: #f3b8b8; background: linear-gradient(90deg, #fffafa, #fff); }
+        .is-exit .event-card { margin-left: 2.5rem; }
         .event-time { text-align: center; }
         .event-time strong { display: block; font-size: 1.15rem; font-weight: 850; letter-spacing: -.02em; }
         .event-time span { display: block; margin-top: .15rem; color: #8290a3; font-size: .65rem; font-weight: 650; }
@@ -292,6 +314,9 @@
         .observation { margin: .5rem 0 0; color: #56677d; font-size: .72rem; font-style: italic; }
         .event-alert { display: inline-flex; align-items: center; gap: .35rem; margin-top: .55rem; padding: .35rem .55rem; border-radius: .5rem; color: #b91c1c; background: #feecec; font-size: .69rem; font-weight: 800; }
         .event-alert svg { width: .9rem; height: .9rem; }
+        .force-exit-button { display: inline-flex; align-items: center; margin-top: .55rem; padding: .42rem .7rem; border-radius: .5rem; color: #fff; background: #c2410c; font-size: .69rem; font-weight: 800; box-shadow: 0 2px 5px rgba(154, 52, 18, .2); transition: .15s ease; }
+        .force-exit-button:hover { background: #9a3412; }
+        .force-exit-button.small { margin-top: .45rem; padding: .32rem .52rem; font-size: .63rem; }
         .event-link { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: .5rem; color: #8492a6; }
         .event-link:hover { color: #2563eb; background: #eff6ff; }
         .event-link svg { width: 1.1rem; }
@@ -357,6 +382,7 @@
             .timeline-event:not(:last-child)::before { left: .97rem; }
             .timeline-marker span { width: 2rem; height: 2rem; border-width: .25rem; }
             .event-card { grid-template-columns: 3.3rem 2.5rem minmax(0, 1fr); gap: .55rem; margin-left: .35rem; padding: .8rem; }
+            .is-exit .event-card { margin-left: 1rem; }
             .event-card .avatar { width: 2.45rem; height: 2.45rem; }
             .event-link { display: none; }
             .person-meta span { display: block; width: 100%; }
