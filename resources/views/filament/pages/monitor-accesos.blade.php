@@ -103,7 +103,8 @@
                                 'timeline-event',
                                 'is-entry' => $event['movement'] === 'Entry',
                                 'is-exit' => $event['movement'] === 'Exit',
-                                'has-alert' => filled($event['alert']),
+                                'has-alert' => filled($event['alert']) && blank($event['resolved_time']),
+                                'is-resolved' => filled($event['resolved_time']),
                             ])
                         >
                             <div class="timeline-marker">
@@ -140,10 +141,17 @@
                                     @endif
 
                                     @if($event['alert'])
-                                        <div class="event-alert">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.3 3.7 2.4 17.3A2 2 0 0 0 4.1 20h15.8a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z"/></svg>
-                                            {{ $event['alert'] }}
-                                        </div>
+                                        @if($event['resolved_time'])
+                                            <div class="event-resolved">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="m5 12 4 4L19 6"/></svg>
+                                                {{ $event['resolved_message'] }}
+                                            </div>
+                                        @else
+                                            <div class="event-alert">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.3 3.7 2.4 17.3A2 2 0 0 0 4.1 20h15.8a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z"/></svg>
+                                                {{ $event['alert'] }}
+                                            </div>
+                                        @endif
                                     @endif
 
                                     @if($event['alert'] && $event['can_force_exit'])
@@ -299,6 +307,7 @@
         .event-card { display: grid; grid-template-columns: 4rem 2.9rem minmax(0, 1fr) 1.8rem; gap: .85rem; align-items: center; min-height: 7.4rem; padding: 1rem; margin: .65rem 0 0 .6rem; border: 1px solid #e8edf3; border-radius: .95rem; background: #fff; transition: .18s ease; }
         .event-card:hover { border-color: #cdd8e5; transform: translateY(-1px); box-shadow: 0 7px 20px rgba(15,35,63,.07); }
         .has-alert .event-card { border-color: #f3b8b8; background: linear-gradient(90deg, #fffafa, #fff); }
+        .is-resolved .event-card { border-color: #b8e8cf; background: linear-gradient(90deg, #f6fffa, #fff); }
         .is-exit .event-card { margin-left: 2.5rem; }
         .event-time { text-align: center; }
         .event-time strong { display: block; font-size: 1.15rem; font-weight: 850; letter-spacing: -.02em; }
@@ -314,6 +323,8 @@
         .observation { margin: .5rem 0 0; color: #56677d; font-size: .72rem; font-style: italic; }
         .event-alert { display: inline-flex; align-items: center; gap: .35rem; margin-top: .55rem; padding: .35rem .55rem; border-radius: .5rem; color: #b91c1c; background: #feecec; font-size: .69rem; font-weight: 800; }
         .event-alert svg { width: .9rem; height: .9rem; }
+        .event-resolved { display: inline-flex; align-items: center; gap: .35rem; margin-top: .55rem; padding: .35rem .55rem; border-radius: .5rem; color: #087b50; background: #e3f8ed; font-size: .69rem; font-weight: 800; }
+        .event-resolved svg { width: .95rem; height: .95rem; }
         .force-exit-button { display: inline-flex; align-items: center; margin-top: .55rem; padding: .42rem .7rem; border-radius: .5rem; color: #fff; background: #c2410c; font-size: .69rem; font-weight: 800; box-shadow: 0 2px 5px rgba(154, 52, 18, .2); transition: .15s ease; }
         .force-exit-button:hover { background: #9a3412; }
         .force-exit-button.small { margin-top: .45rem; padding: .32rem .52rem; font-size: .63rem; }

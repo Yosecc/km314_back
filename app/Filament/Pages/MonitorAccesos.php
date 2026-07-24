@@ -158,6 +158,7 @@ class MonitorAccesos extends Page
 
         $events = $events->map(function (array $event) use ($insideIdentities) {
             $event['can_force_exit'] = $event['movement'] === 'Entry'
+                && blank($event['resolved_time'])
                 && $insideIdentities->has($event['identity']);
 
             return $event;
@@ -179,7 +180,7 @@ class MonitorAccesos extends Page
             ->values();
 
         $alerts = $events
-            ->filter(fn (array $event) => filled($event['alert']) && $event['can_force_exit'])
+            ->filter(fn (array $event) => filled($event['alert']) && blank($event['resolved_time']) && $event['can_force_exit'])
             ->map(fn (array $event) => [
                 'key' => 'event-'.$event['id'],
                 'title' => $event['alert'],
@@ -258,6 +259,29 @@ class MonitorAccesos extends Page
             if ($event['occurred_at']->gte($start)) {
                 $events->push($event);
             }
+        }
+
+        $pendingDoubleEntries = [];
+
+        foreach ($events as $key => $event) {
+            if ($event['alert'] === 'Doble entrada sin salida intermedia') {
+                $pendingDoubleEntries[$event['identity']][] = $key;
+            }
+
+            if ($event['movement'] !== 'Exit' || empty($pendingDoubleEntries[$event['identity']])) {
+                continue;
+            }
+
+            foreach ($pendingDoubleEntries[$event['identity']] as $entryKey) {
+                $incident = $events->get($entryKey);
+                $incident['resolved_time'] = $event['time'];
+                $incident['resolved_message'] = $event['is_forced_exit']
+                    ? 'Incidencia resuelta con salida forzada a las '.$event['time']
+                    : 'Incidencia resuelta con salida a las '.$event['time'];
+                $events->put($entryKey, $incident);
+            }
+
+            unset($pendingDoubleEntries[$event['identity']]);
         }
 
         return $events
@@ -354,6 +378,12 @@ class MonitorAccesos extends Page
             'date' => $occurredAt->isToday() ? 'Hoy' : $occurredAt->format('d/m/Y'),
             'time' => $occurredAt->format('H:i'),
             'alert' => null,
+            'resolved_time' => null,
+            'resolved_message' => null,
+            'is_forced_exit' => Str::contains(
+                $this->normalizeSearch($activity->observations),
+                'salida forzada'
+            ),
             'url' => ActivitiesResource::getUrl('view', ['record' => $activity->id]),
             'search_text' => $this->normalizeSearch(implode(' ', [
                 $name,
