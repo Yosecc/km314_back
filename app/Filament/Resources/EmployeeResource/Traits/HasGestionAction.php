@@ -20,6 +20,15 @@ use Filament\Notifications\Actions\Action as NotificationAction;
 
 trait HasGestionAction
 {
+    private static function vehicleDocumentDefaults(): array
+    {
+        return [
+            ['name' => 'Seguro del Vehículo'],
+            ['name' => 'VTV'],
+            ['name' => 'Cédula del Vehículo'],
+        ];
+    }
+
     /**
      * Action para gestionar autos en TABLA
      */
@@ -104,6 +113,11 @@ trait HasGestionAction
                                         return $file ? $file->getClientOriginalName() : ($record ? $record->file : null);
                                     })
                             ])
+                            ->afterStateHydrated(function (Repeater $component, $state) {
+                                if (empty($state)) {
+                                    $component->state(self::vehicleDocumentDefaults());
+                                }
+                            })
                             ->defaultItems(3)
                             ->minItems(3)
                             ->maxItems(3)
@@ -111,17 +125,7 @@ trait HasGestionAction
                             ->deletable(false)
                             ->grid(2)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->default([
-                                [
-                                    'name' => 'Seguro del Vehículo',
-                                ],
-                                [
-                                    'name' => 'VTV',
-                                ],
-                                [
-                                    'name' => 'Cédula del Vehículo',
-                                ],
-                            ])
+                            ->default(self::vehicleDocumentDefaults())
                             ->columns(1)
                             ->columnSpanFull(),
                     ])
@@ -316,6 +320,11 @@ trait HasGestionAction
                                         return $file ? $file->getClientOriginalName() : ($record ? $record->file : null);
                                     })
                             ])
+                            ->afterStateHydrated(function (Repeater $component, $state) {
+                                if (empty($state)) {
+                                    $component->state(self::vehicleDocumentDefaults());
+                                }
+                            })
                             ->defaultItems(3)
                             ->minItems(3)
                             ->maxItems(3)
@@ -323,17 +332,7 @@ trait HasGestionAction
                             ->deletable(false)
                             ->grid(2)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->default([
-                                [
-                                    'name' => 'Seguro del Vehículo',
-                                ],
-                                [
-                                    'name' => 'VTV',
-                                ],
-                                [
-                                    'name' => 'Cédula del Vehículo',
-                                ],
-                            ])
+                            ->default(self::vehicleDocumentDefaults())
                             ->columns(1)
                             ->columnSpanFull(),
                     ])

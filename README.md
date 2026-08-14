@@ -1,66 +1,124 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# KM314 Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Backend Laravel ejecutado con Apache/PHP 8.1 y MariaDB 10.5 mediante Docker.
 
-## About Laravel
+## Requisitos
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Docker Desktop en ejecucion.
+- Respaldo SQL disponible en:
+  `C:\Users\USUARIO\Downloads\pro_km314 (7).sql`
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Los comandos siguientes estan preparados para PowerShell.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 1. Construir la imagen del backend
 
-## Learning Laravel
+```powershell
+Set-Location "C:\Users\USUARIO\Documents\devilbox\data\www\km314_back"
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+docker build -t km314-back:local .
+docker image inspect km314-back:local
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 2. Crear la red y el volumen
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```powershell
+docker network create km314-network
+docker volume create km314-db-data
+```
 
-## Laravel Sponsors
+Si la red ya existe, Docker mostrara un mensaje de error que puede ignorarse.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+## 3. Levantar MariaDB
 
-### Premium Partners
+El respaldo se monta como archivo de solo lectura. La importacion se ejecuta
+manualmente porque el dump contiene datos huerfanos que impiden validar una de
+sus claves foraneas durante la carga.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+```powershell
+docker run -d `
+  --name km314-db `
+  --network km314-network `
+  --restart unless-stopped `
+  -e MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1 `
+  -e MARIADB_DATABASE=km314 `
+  -v km314-db-data:/var/lib/mysql `
+  -v "C:\Users\USUARIO\Downloads\pro_km314 (7).sql:/imports/km314.sql:ro" `
+  mariadb:10.5
+```
 
-## Contributing
+Comprobar que MariaDB este disponible:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```powershell
+docker exec km314-db mariadb-admin ping -uroot
+```
 
-## Code of Conduct
+Cuando responda `mysqld is alive`, importar el respaldo:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```powershell
+docker exec km314-db sh -c "mariadb --init-command='SET FOREIGN_KEY_CHECKS=0' -uroot km314 < /imports/km314.sql"
+```
 
-## Security Vulnerabilities
+La importacion puede tardar y no muestra una barra de progreso. Verificar las
+tablas al finalizar:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```powershell
+docker exec km314-db mariadb -uroot -D km314 -e "SELECT COUNT(*) AS tablas FROM information_schema.tables WHERE table_schema='km314';"
+```
 
-## License
+## 4. Levantar Laravel
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```powershell
+docker run -d `
+  --name km314-back `
+  --network km314-network `
+  --restart unless-stopped `
+  -p 8082:80 `
+  -e DB_HOST=km314-db `
+  -e DB_PORT=3306 `
+  -e DB_DATABASE=km314 `
+  -e DB_USERNAME=root `
+  -e DB_PASSWORD= `
+  -e APP_URL=http://localhost:8082 `
+  km314-back:local
+```
+
+La aplicacion queda disponible en <http://localhost:8082>.
+
+## Comandos utiles
+
+Ver los contenedores:
+
+```powershell
+docker ps
+```
+
+Consultar los logs:
+
+```powershell
+docker logs -f km314-back
+docker logs -f km314-db
+```
+
+Detener los servicios sin borrar la base:
+
+```powershell
+docker stop km314-back km314-db
+```
+
+Volver a iniciarlos:
+
+```powershell
+docker start km314-db km314-back
+```
+
+## Reimportar la base desde cero
+
+> Este procedimiento elimina completamente la base almacenada en el volumen.
+
+```powershell
+docker rm -f km314-back km314-db
+docker volume rm km314-db-data
+```
+
+Despues, repetir desde la seccion **2. Crear la red y el volumen**. Si la red ya
+existe, solo es necesario volver a crear el volumen.

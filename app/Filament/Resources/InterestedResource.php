@@ -74,6 +74,12 @@ class InterestedResource extends Resource
                     ->label(__("general.interested_origins_id"))
                     ->relationship(name: 'interestedOrigins', titleAttribute: 'name')
                     ->required(),
+                Forms\Components\Select::make('interested_type_id')
+                    ->label('Tipo de interés')
+                    ->relationship(name: 'interestedType', titleAttribute: 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
 
                 Forms\Components\Select::make('lote_id')
                     ->options(function(){
@@ -119,6 +125,10 @@ class InterestedResource extends Resource
                 Tables\Columns\TextColumn::make('phone')
                     ->label(__("general.Phone"))
                     // ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('interestedType.name')
+                    ->label('Tipo de interés')
+                    ->badge()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lote')
                     ->label(__("general.Lote"))

@@ -25,6 +25,11 @@ class Owner extends Model
         return $this->hasMany(Employee::class,'owner_id');
     }
 
+    public function recurrentVisitors()
+    {
+        return $this->hasMany(RecurrentVisitor::class);
+    }
+
  // Nueva relación muchos-a-muchos
     public function empleados()
     {

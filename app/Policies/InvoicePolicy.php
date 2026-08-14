@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Owner;
+use App\Models\Invoice;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class OwnerPolicy
+class InvoicePolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class OwnerPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_owner');
+        return $user->can('view_any_invoice');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Owner $owner): bool
+    public function view(User $user, Invoice $invoice): bool
     {
-        return $user->can('view_owner');
+        return $user->can('view_invoice');
     }
 
     /**
@@ -31,23 +31,23 @@ class OwnerPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_owner');
+        return $user->can('create_invoice');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Owner $owner): bool
+    public function update(User $user, Invoice $invoice): bool
     {
-        return $user->can('update_owner');
+        return $user->can('update_invoice');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Owner $owner): bool
+    public function delete(User $user, Invoice $invoice): bool
     {
-        return $user->can('delete_owner');
+        return $user->can('delete_invoice');
     }
 
     /**
@@ -55,15 +55,15 @@ class OwnerPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_owner');
+        return $user->can('delete_any_invoice');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Owner $owner): bool
+    public function forceDelete(User $user, Invoice $invoice): bool
     {
-        return $user->can('{{ ForceDelete }}');
+        return $user->can('force_delete_invoice');
     }
 
     /**
@@ -71,15 +71,15 @@ class OwnerPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('{{ ForceDeleteAny }}');
+        return $user->can('force_delete_any_invoice');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Owner $owner): bool
+    public function restore(User $user, Invoice $invoice): bool
     {
-        return $user->can('{{ Restore }}');
+        return $user->can('restore_invoice');
     }
 
     /**
@@ -87,15 +87,15 @@ class OwnerPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('{{ RestoreAny }}');
+        return $user->can('restore_any_invoice');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Owner $owner): bool
+    public function replicate(User $user, Invoice $invoice): bool
     {
-        return $user->can('{{ Replicate }}');
+        return $user->can('replicate_invoice');
     }
 
     /**
@@ -103,6 +103,6 @@ class OwnerPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('{{ Reorder }}');
+        return $user->can('reorder_invoice');
     }
 }
