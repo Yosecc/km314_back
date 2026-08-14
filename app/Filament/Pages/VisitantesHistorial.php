@@ -4,39 +4,27 @@ namespace App\Filament\Pages;
 
 use App\Models\Activities;
 use App\Models\ActivitiesPeople;
-use App\Models\FormControlPeople;
-use App\Models\Lote;
-use App\Models\OwnerStatus;
-use App\Models\PersonaEnElBarrio;
+use App\Services\CurrentPeopleInsideQuery;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
-use Filament\Forms;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Grid;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Columns\Summarizers\Count;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Facades\Auth;
-
 
 class VisitantesHistorial extends Page implements HasForms, HasTable
 {
-
     use HasPageShield;
     use InteractsWithTable;
     use InteractsWithForms;
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static string $view = 'filament.pages.visitantes-historial';
     protected static ?string $navigationLabel = 'Personas en el barrio';
@@ -45,161 +33,155 @@ class VisitantesHistorial extends Page implements HasForms, HasTable
     protected static ?string $slug = 'history-visitors';
     protected static ?string $navigationGroup = 'Control de acceso';
 
-    public $ownerStatus;
-    public function __construct()
-    {
-        $this->ownerStatus = OwnerStatus::all();
-    }
-
-    public static function getPluralModelLabel(): string
-    {
-        return 'Personas en el barrio';
-    }
-
-    public function isMoroso($record)
-    {
-        if($record->owner_status_id){
-            $estado = $this->ownerStatus->where('id',$record->owner_status_id)->first();
-            if($estado->id == 2){
-                return true;
-            }
-        }
-        return false;
-    }
     public function table(Table $table): Table
     {
         return $table
-            ->query(PersonaEnElBarrio::query())
-            ->defaultGroup('lote')
+            ->query($this->peopleInsideQuery())
             ->columns([
-                Tables\Columns\TextColumn::make('model_id')->label('Form')
-                    ->formatStateUsing(function ($state, $record) {
-                            if (!$record) {
-                                return '-';
-                            }
-                            $FormControl = null;
-                            if($record->model == 'FormControl'){
-                                $formControlPerson = FormControlPeople::where('id',$record->model_id)->first();
-                                $FormControl = $formControlPerson->form_control_id ?? 0;
-                            }
-                            return match ($record->model) {
-                                'FormControl' => $FormControl,
-                                'Owner' => 'Propietario',
-                                'Employee' => 'Empleado',
-                                'OwnerFamily' => 'Familiar',
-                                'OwnerSpontaneousVisit' => 'Visita',
-                                default => $record->model ?? '-',
-                            };
-                        })
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('dni')->label('DNI')->searchable(),
-                Tables\Columns\TextColumn::make('first_name')->label('Nombre')->searchable(),
-                Tables\Columns\TextColumn::make('last_name')->label('Apellido')->searchable(),
-                Tables\Columns\TextColumn::make('tipo')->label('Tipo')->searchable(),
-                Tables\Columns\TextColumn::make('lote')
-                    ->label('Lote')
-                    ->searchable()
-                    ,
-                Tables\Columns\TextColumn::make('ultima_entrada')
-                    ->label('Última Entrada')
-                    ->searchable()
-                    ->summarize(Count::make()->label('Total personas')),
-
+                Tables\Columns\TextColumn::make('model_id')
+                    ->label('Formulario / tipo')
+                    ->formatStateUsing(fn ($state, ActivitiesPeople $record) => match ($record->getRawOriginal('model')) {
+                        'FormControl' => $record->formControlPeople?->form_control_id ?? '-',
+                        'Owner' => 'Propietario',
+                        'Employee' => 'Empleado',
+                        'OwnerFamily' => 'Familiar',
+                        'OwnerSpontaneousVisit' => 'Visita',
+                        default => $record->getRawOriginal('model') ?: '-',
+                    }),
+                Tables\Columns\TextColumn::make('dni')->label('DNI')
+                    ->getStateUsing(fn (ActivitiesPeople $record) => $this->personFor($record)?->dni ?? '-')
+                    ->searchable(query: fn (Builder $query, string $search) => $this->searchPeople($query, 'dni', $search)),
+                Tables\Columns\TextColumn::make('first_name')->label('Nombre')
+                    ->getStateUsing(fn (ActivitiesPeople $record) => $this->personFor($record)?->first_name ?? '-')
+                    ->searchable(query: fn (Builder $query, string $search) => $this->searchPeople($query, 'first_name', $search)),
+                Tables\Columns\TextColumn::make('last_name')->label('Apellido')
+                    ->getStateUsing(fn (ActivitiesPeople $record) => $this->personFor($record)?->last_name ?? '-')
+                    ->searchable(query: fn (Builder $query, string $search) => $this->searchPeople($query, 'last_name', $search)),
+                Tables\Columns\TextColumn::make('tipo')->label('Tipo')
+                    ->getStateUsing(fn (ActivitiesPeople $record) => $this->personTypeFor($record)),
+                Tables\Columns\TextColumn::make('lote')->label('Lote')
+                    ->getStateUsing(fn (ActivitiesPeople $record) => $this->lotFor($record))
+                    ->searchable(query: function (Builder $query, string $search) {
+                        $query->where(function (Builder $lotQuery) use ($search) {
+                            $lotQuery->where('current_activity.lote_ids', 'like', "%{$search}%")
+                                ->orWhere(function (Builder $formQuery) use ($search) {
+                                    $formQuery->where('activities_people.model', 'FormControl')
+                                        ->whereHas('formControlPeople.formControl', fn (Builder $controlQuery) => $controlQuery->where('lote_ids', 'like', "%{$search}%"));
+                                });
+                        });
+                    }),
+                Tables\Columns\TextColumn::make('ultima_entrada')->label('Última entrada')
+                    ->getStateUsing(fn (ActivitiesPeople $record) => $record->activitie?->created_at)
+                    ->dateTime()
+                    ->searchable(query: function (Builder $query, string $search) {
+                        try {
+                            $query->whereDate('current_activity.created_at', Carbon::parse($search)->toDateString());
+                        } catch (\Throwable) {
+                            $query->whereRaw('1 = 0');
+                        }
+                    }),
             ])
             ->actions([
                 Action::make('ver_actividad')
-                    ->label('Ver Actividad')
-                    ->url(function(PersonaEnElBarrio $record){
-                        if($record->model == 'FormControl'){
-                            $formControlPerson = FormControlPeople::where('id',$record->model_id)->first();
-
-                            $activity = Activities::where('form_control_id',$formControlPerson->form_control_id)->first();
-                            if($activity){
-                                return route('filament.admin.resources.activities.view', $activity->id);
-                            }
-                        }
-                        return '#';
-                    })
-                    // ->url(fn (PersonaEnElBarrio $record): string => route('filament.resources.visitantes.edit', $record->model_id))
+                    ->label('Ver actividad')
+                    ->url(fn (ActivitiesPeople $record) => route('filament.admin.resources.activities.view', $record->activities_id))
                     ->icon('heroicon-o-eye')
-                    ->openUrlInNewTab()
-                    ->visible(fn (PersonaEnElBarrio $record): bool => in_array($record->model, ['FormControl']))
-                    ,
+                    ->openUrlInNewTab(),
                 Action::make('forzar_salida')
-                    ->label('Forzar Salida')
-                    ->action(function ($record) {
-                        $userName = Auth::user()->name ?? 'Sistema';
-                        $tipoEntrada = match ($record->model) {
-                            'Owner', 'OwnerFamily', 'OwnerSpontaneousVisit' => 1,
-                            'Employee' => 2,
-                            'FormControl' => 3,
-                            default => 0,
-                        };
-
-                        $activity = Activities::create([
-                            'lote_ids' => $record->lote,
-                            'form_control_id' => null,
-                            'tipo_entrada' => $tipoEntrada,
-                            'type' => 'Exit',
-                            'observations' => 'Salida forzada por: ' . $userName,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-
-                        ActivitiesPeople::create([
-                            'activities_id' => $activity->id,
-                            'model' => $record->model,
-                            'model_id' => $record->model_id,
-                            'type' => null,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    })
+                    ->label('Forzar salida')
+                    ->action(fn (ActivitiesPeople $record) => $this->forceExit($record))
                     ->requiresConfirmation()
                     ->color('danger')
                     ->icon('heroicon-o-arrow-right-end-on-rectangle'),
             ])
             ->bulkActions([
-            BulkAction::make('forzar_salida_bulk')
-                ->label('Forzar Salida')
-                ->action(function ($records) {
-                    $userName = Auth::user()->name ?? 'Sistema';
-                    foreach ($records as $record) {
-                        $tipoEntrada = match ($record->model) {
-                            'Owner', 'OwnerFamily', 'OwnerSpontaneousVisit' => 1,
-                            'Employee' => 2,
-                            'FormControl' => 3,
-                            default => 0,
-                        };
-
-                        $activity = Activities::create([
-                            'lote_ids' => $record->lote,
-                            'form_control_id' => null,
-                            'tipo_entrada' => $tipoEntrada,
-                            'type' => 'Exit',
-                            'observations' => 'Salida forzada por: ' . $userName,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-
-                        ActivitiesPeople::create([
-                            'activities_id' => $activity->id,
-                            'model' => $record->model,
-                            'model_id' => $record->model_id,
-                            'type' => null,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    }
-                })
-                ->requiresConfirmation()
-                ->color('danger')
-                ->icon('heroicon-o-arrow-right-end-on-rectangle'),
+                BulkAction::make('forzar_salida_bulk')
+                    ->label('Forzar salida')
+                    ->action(fn ($records) => $records->each(fn (ActivitiesPeople $record) => $this->forceExit($record)))
+                    ->requiresConfirmation()
+                    ->color('danger')
+                    ->icon('heroicon-o-arrow-right-end-on-rectangle'),
             ]);
     }
 
+    private function peopleInsideQuery(): Builder
+    {
+        return CurrentPeopleInsideQuery::make()
+            ->with([
+                'activitie.formControl',
+                'owner',
+                'ownerFamily.familiarPrincipal',
+                'employee',
+                'formControlPeople.formControl',
+                'ownerSpontaneousVisit.owner',
+            ])
+            ->orderByDesc('current_activity.created_at')
+            ->orderByDesc('activities_people.id');
+    }
 
+    private function personFor(ActivitiesPeople $record)
+    {
+        return $record->getPeople();
+    }
 
+    private function searchPeople(Builder $query, string $field, string $search): void
+    {
+        $query->where(function (Builder $peopleQuery) use ($field, $search) {
+            $peopleQuery
+                ->orWhere(fn (Builder $q) => $q->where('activities_people.model', 'Owner')->whereHas('owner', fn (Builder $person) => $person->where($field, 'like', "%{$search}%")))
+                ->orWhere(fn (Builder $q) => $q->where('activities_people.model', 'Employee')->whereHas('employee', fn (Builder $person) => $person->where($field, 'like', "%{$search}%")))
+                ->orWhere(fn (Builder $q) => $q->where('activities_people.model', 'OwnerFamily')->whereHas('ownerFamily', fn (Builder $person) => $person->where($field, 'like', "%{$search}%")))
+                ->orWhere(fn (Builder $q) => $q->where('activities_people.model', 'OwnerSpontaneousVisit')->whereHas('ownerSpontaneousVisit', fn (Builder $person) => $person->where($field, 'like', "%{$search}%")))
+                ->orWhere(fn (Builder $q) => $q->where('activities_people.model', 'FormControl')->whereHas('formControlPeople', fn (Builder $person) => $person->where($field, 'like', "%{$search}%")));
+        });
+    }
+
+    private function personTypeFor(ActivitiesPeople $record): string
+    {
+        return match ($record->getRawOriginal('model')) {
+            'Owner' => 'Propietario',
+            'Employee' => 'Empleado',
+            'OwnerFamily' => 'Familiar',
+            'OwnerSpontaneousVisit' => 'Visita espontánea',
+            'FormControl' => collect($record->formControlPeople?->formControl?->income_type ?? [])->filter()->implode(', ') ?: 'Visitante',
+            default => 'Persona',
+        };
+    }
+
+    private function lotFor(ActivitiesPeople $record): string
+    {
+        $lot = $record->activitie?->lote_ids ?: $record->formControlPeople?->formControl?->lote_ids;
+
+        return is_array($lot) ? implode(', ', $lot) : trim((string) $lot, "[]\" ");
+    }
+
+    private function forceExit(ActivitiesPeople $record): void
+    {
+        $model = $record->getRawOriginal('model');
+        $tipoEntrada = match ($model) {
+            'Owner', 'OwnerFamily', 'OwnerSpontaneousVisit' => 1,
+            'Employee' => 2,
+            'FormControl' => 3,
+            default => 0,
+        };
+
+        if ($tipoEntrada === 0) {
+            return;
+        }
+
+        $activity = Activities::create([
+            'lote_ids' => $this->lotFor($record),
+            'form_control_id' => $record->activitie?->form_control_id,
+            'tipo_entrada' => $tipoEntrada,
+            'type' => 'Exit',
+            'observations' => 'Salida forzada por: ' . (Auth::user()->name ?? 'Sistema'),
+        ]);
+
+        ActivitiesPeople::create([
+            'activities_id' => $activity->id,
+            'model' => $model,
+            'model_id' => $record->model_id,
+            'type' => null,
+        ]);
+    }
 }
-
-

@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Resources\ActivitiesResource;
 use App\Models\Activities;
 use App\Models\ActivitiesPeople;
+use App\Services\CurrentPeopleInsideQuery;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -213,7 +214,7 @@ class MonitorAccesos extends Page
 
         return [
             'events' => $visibleEvents,
-            'inside' => $inside->take(80)->values(),
+            'inside' => $inside->values(),
             'alerts' => $allAlerts,
             'stats' => [
                 'inside' => $inside->count(),
@@ -295,32 +296,9 @@ class MonitorAccesos extends Page
 
     protected function currentPeopleInside(): Collection
     {
-        $latestTimes = DB::table('activities_people as latest_people')
-            ->join('activities as latest_activity', 'latest_activity.id', '=', 'latest_people.activities_id')
-            ->whereNull('latest_people.deleted_at')
-            ->groupBy('latest_people.model', 'latest_people.model_id')
-            ->select([
-                'latest_people.model',
-                'latest_people.model_id',
-                DB::raw('MAX(latest_activity.created_at) as latest_at'),
-            ]);
-
-        $latestRows = ActivitiesPeople::query()
-            ->select('activities_people.*')
-            ->join('activities as current_activity', 'current_activity.id', '=', 'activities_people.activities_id')
-            ->joinSub($latestTimes, 'latest', function ($join) {
-                $join
-                    ->on('latest.model', '=', 'activities_people.model')
-                    ->on('latest.model_id', '=', 'activities_people.model_id')
-                    ->on('latest.latest_at', '=', 'current_activity.created_at');
-            })
-            ->whereNull('activities_people.deleted_at')
+        $latestRows = CurrentPeopleInsideQuery::make()
             ->with($this->peopleRelations())
-            ->orderByDesc('current_activity.created_at')
-            ->orderByDesc('activities_people.id')
-            ->limit(800)
-            ->get()
-            ->unique(fn (ActivitiesPeople $row) => $this->identityFor($row));
+            ->get();
 
         return $latestRows
             ->filter(fn (ActivitiesPeople $row) => $row->activitie?->type === 'Entry')
