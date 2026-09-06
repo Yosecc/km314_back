@@ -12,6 +12,7 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use App\Models\Employee;
 use App\Models\RecurrentVisitor;
+use App\Models\Proveedor;
 use App\Models\Trabajos;
 use Carbon\CarbonPeriod;
 use Filament\Forms\Form;
@@ -115,6 +116,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
         return 'formularios';
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
+            return $query->where('owner_id', Auth::user()->owner_id);
+        }
+        return $query->where('status', '!=', 'OwnerPending');
+    }
+
     public static function getPermissionPrefixes(): array
     {
         return [
@@ -156,6 +166,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
         }
 
         return $times;
+    }
+
+    private static function isProveedorIncome(mixed $incomeType): bool
+    {
+        return collect($incomeType)->contains('Proveedor');
     }
 
     public static function tiposFormulario()
@@ -252,9 +267,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->gridDirection('row')
                         ->columnSpan(2)
                         ->afterStateUpdated(function (Set $set, $state, Get $get) {
-                            $set('peoples', [[]]);
+                            $set('peoples', $state === 'Proveedor' ? [] : [[]]);
                             $set('owners', []);
                             $set('recurrent_visitors', []);
+                            $set('proveedor_id', null);
+                            $set('autos', []);
 
                             // ACTUALIZA archivos personales de cada persona
                             $peoples = $get('peoples') ?? [];
@@ -276,6 +293,18 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     ->title('Este formulario será válido por 24 horas.')
                                     ->info()
                                     ->send();
+                                return;
+                            }
+
+                            if ($state === 'Proveedor') {
+                                $times = self::getWorkerTimeOptions();
+                                $set('dateRanges', [[
+                                    'start_date_range' => null,
+                                    'start_time_range' => $times[0],
+                                    'end_date_range' => null,
+                                    'end_time_range' => $times[array_key_last($times)],
+                                    'date_unilimited' => false,
+                                ]]);
                                 return;
                             }
 
@@ -346,6 +375,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->dehydrated()
                         ->live()
                         ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                            if (self::isProveedorIncome($get('../../income_type')) && $state) {
+                                $times = self::getWorkerTimeOptions();
+                                $set('start_time_range', $times[0]);
+                                $set('end_date_range', $state);
+                                $set('end_time_range', $times[array_key_last($times)]);
+                                $set('date_unilimited', false);
+                                return;
+                            }
+
                             // Si es Trabajador, la fecha de fin debe ser la misma que la de inicio
                             if (collect($get('../../income_type'))->contains('Trabajador') && $state) {
                                 // Validar que no sea domingo
@@ -367,7 +405,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.start_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('../../income_type') == 'Visita Temporal (24hs)';
+                            return $get('../../income_type') == 'Visita Temporal (24hs)'
+                                || self::isProveedorIncome($get('../../income_type'));
                         })
                         ->dehydrated()
                         ->seconds(false)
@@ -386,7 +425,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return !$get('date_unilimited') ? true : false;
                         })
                         ->disabled(function(Get $get){
-                            return $get('../../income_type') == 'Visita Temporal (24hs)' || collect($get('../../income_type'))->contains('Trabajador');
+                            return $get('../../income_type') == 'Visita Temporal (24hs)'
+                                || collect($get('../../income_type'))->contains('Trabajador')
+                                || self::isProveedorIncome($get('../../income_type'));
                         })
                         ->dehydrated()
                         ->live(),
@@ -394,7 +435,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.end_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('../../income_type') == 'Visita Temporal (24hs)';
+                            return $get('../../income_type') == 'Visita Temporal (24hs)'
+                                || self::isProveedorIncome($get('../../income_type'));
                         })
                         ->afterStateUpdated(function (Set $set, Get $get, $state) {
                             // Si es Trabajador, la hora de fin debe ser 18:00
@@ -419,7 +461,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     Forms\Components\Toggle::make('date_unilimited')
                         ->label(__('general.date_unilimited'))
                         ->live()
-                        ->visible(function(){
+                        ->visible(function(Get $get){
+                            if (self::isProveedorIncome($get('../../income_type'))) {
+                                return false;
+                            }
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return false;
                             }
@@ -431,9 +476,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->defaultItems(1)
                 ->collapsible()
                 ->addable(function(Get $get) {
+                    if (self::isProveedorIncome($get('income_type'))) {
+                        return true;
+                    }
                      return collect($get('income_type'))->contains('Trabajador') || (auth()->user()->hasRole(['super_admin','admin']) ? true : false);
                     //  && !auth()->user()->hasRole('owner')
                 })
+                ->deletable(true)
                 ->itemLabel(fn (array $state): ?string => isset($state['start_date_range']) && isset($state['end_date_range']) 
                     ? "Desde: {$state['start_date_range']} - Hasta: {$state['end_date_range']}" 
                     : 'Nuevo rango'),
@@ -501,6 +550,18 @@ class FormControlResource extends Resource implements HasShieldPermissions
     public static function personasFormulario()
     {
         return [
+            Forms\Components\Radio::make('proveedor_id')
+                ->label('Proveedor')
+                ->options(fn (): array => Proveedor::query()
+                    ->where('status', true)
+                    ->orderBy('nombre_empresa')
+                    ->pluck('nombre_empresa', 'id')
+                    ->all())
+                ->columns(2)
+                ->required(fn (Get $get): bool => self::isProveedorIncome($get('income_type')))
+                ->visible(fn (Get $get): bool => self::isProveedorIncome($get('income_type')))
+                ->live(),
+
             CheckboxList::make('owners')->label('Trabajadores')
                 ->options(function() {
                     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
@@ -892,7 +953,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->schema([
                     Forms\Components\TextInput::make('dni')
                         ->label(__("general.DNI"))
-                        ->required()
+                        ->required(fn (Get $get): bool => !self::isProveedorIncome($get('../../income_type')))
                         ->disabled(function(Get $get){
                             return collect($get('../../income_type'))->intersect(['Trabajador', 'Visita Recurrente'])->isNotEmpty() && auth()->user()->hasRole('owner');
                         })
@@ -900,7 +961,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->numeric(),
                     Forms\Components\TextInput::make('first_name')
                         ->label(__("general.FirstName"))
-                        ->required()
+                        ->required(fn (Get $get): bool => !self::isProveedorIncome($get('../../income_type')))
                         ->disabled(function(Get $get){
                             return collect($get('../../income_type'))->intersect(['Trabajador', 'Visita Recurrente'])->isNotEmpty() && auth()->user()->hasRole('owner');
                         })
@@ -909,7 +970,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ,
                     Forms\Components\TextInput::make('last_name')
                         ->label(__("general.LastName"))
-                        ->required()
+                        ->required(fn (Get $get): bool => !self::isProveedorIncome($get('../../income_type')))
                         ->disabled(function(Get $get){
                             return collect($get('../../income_type'))->intersect(['Trabajador', 'Visita Recurrente'])->isNotEmpty() && auth()->user()->hasRole('owner');
                         })
@@ -928,6 +989,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->addable(function(Get $get){
                     return collect($get('income_type'))->intersect(['Trabajador', 'Visita Recurrente'])->isEmpty() || !auth()->user()->hasRole('owner');
                 })
+                ->visible(fn (Get $get): bool => !self::isProveedorIncome($get('income_type')))
+                ->dehydrated(fn (Get $get): bool => !self::isProveedorIncome($get('income_type')))
                 ->itemLabel(fn (array $state): ?string => $state['first_name'] ?? null)
                 ->columns(4)
                 ->addActionLabel('Agregar persona')
@@ -960,6 +1023,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
         return [
             Forms\Components\Repeater::make('autos')
                 ->relationship()
+                ->visible(fn (Get $get): bool => !self::isProveedorIncome($get('income_type')))
+                ->dehydrated(fn (Get $get): bool => !self::isProveedorIncome($get('income_type')))
                 ->schema([
                     Forms\Components\TextInput::make('marca')
                         ->label(__("general.Marca"))
@@ -1206,6 +1271,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
             ->modifyQueryUsing(function (Builder $query) {
                 if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                     $query->where('owner_id', Auth::user()->owner_id);
+                } else {
+                    $query->where('status', '!=', 'OwnerPending');
                 }
                 return $query->orderBy('created_at', 'desc');
             })
@@ -1219,7 +1286,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->label(__("general.Status"))
                     ->formatStateUsing(function($state, FormControl $record){
                         return match($record->statusComputed()) {
-                                            'Pending' => 'Pendiente',
+                                            'OwnerPending' => 'Pendiente de tu aprobación',
+                                            'Pending' => $record->owner_approved_at ? 'Pendiente de administración' : 'Pendiente',
                                             'Denied' => 'Denegado',
                                             'Vencido' => 'Vencido',
                                             'Expirado' => 'Expirado',
@@ -1230,6 +1298,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->color(function($state, FormControl $record){
                         $state = $record->statusComputed();
                         $claves = [
+                            'OwnerPending' => 'info',
                             'Pending' => 'warning',
                             'Authorized' => 'success',
                             'Denied' => 'danger',
@@ -1241,6 +1310,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('lote_ids')->badge()->label(__('general.Lote'))->searchable(query: function (Builder $query, string $search): Builder {
                     return $query->orWhereRaw("JSON_SEARCH(lote_ids, 'one', ?) IS NOT NULL", ['%' . $search . '%']);
                 }),
+                Tables\Columns\TextColumn::make('proveedor.nombre_empresa')
+                    ->label('Proveedor')
+                    ->placeholder('-')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('access_type')
                     ->badge()
                     ->label(__("general.TypeActivitie"))
@@ -1399,6 +1472,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 SelectFilter::make('status')
                     ->label(__('general.Status'))
                     ->options([
+                        'OwnerPending' => 'Pendiente del propietario',
                         'Authorized' => 'Autorizado',
                         'Denied' => 'Denegado',
                         'Pending' => 'Pendiente',
@@ -1419,6 +1493,22 @@ class FormControlResource extends Resource implements HasShieldPermissions
             ])
             ->filtersFormColumns(3)
             ->actions([
+                Action::make('ownerApprove')
+                    ->label('Aprobar solicitud')
+                    ->icon('heroicon-m-hand-thumb-up')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalDescription('Al aprobarlo, el formulario será enviado a administración para su revisión final.')
+                    ->visible(fn (FormControl $record) => Auth::user()->hasRole('owner') && $record->status === 'OwnerPending' && (int) $record->owner_id === (int) Auth::user()->owner_id)
+                    ->action(function (FormControl $record): void {
+                        $record->approveByOwner(Auth::user());
+                        $admins = User::whereHas('roles', fn ($q) => $q->whereIn('name',['super_admin','admin','Administrador']))->get();
+                        Notification::make()->title('Formulario pendiente de aprobación administrativa')
+                            ->body('El propietario aprobó el formulario #'.$record->id.'.')
+                            ->actions([NotificationAction::make('ver')->label('Ver formulario')->url(static::getUrl('view',['record'=>$record]))])
+                            ->sendToDatabase($admins);
+                        Notification::make()->title('Formulario enviado a administración')->success()->send();
+                    }),
                 Action::make('show_qr')
                     ->label('Ver QR')
                     ->icon('heroicon-o-qr-code')

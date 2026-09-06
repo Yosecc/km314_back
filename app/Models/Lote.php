@@ -47,6 +47,11 @@ class Lote extends Model
         return $this->belongsTo(Owner::class);
     }
 
+    public function packageReceptions()
+    {
+        return $this->hasMany(PackageReception::class);
+    }
+
     public function getNombre()
     {
         return $this->sector->name . $this->lote_id;

@@ -9,7 +9,7 @@ class Activities extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['lote_ids','form_control_id','tipo_entrada','type','observations'];
+    protected $fillable = ['lote_ids','form_control_id','proveedor_id','tipo_entrada','type','observations'];
 
     protected $casts = [
         // 'tipo_entrada' => 'array',
@@ -29,6 +29,17 @@ class Activities extends Model
     public function formControl()
     {
         return $this->belongsTo(FormControl::class);
+    }
+
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedor::class);
+    }
+
+    public function formControls()
+    {
+        return $this->belongsToMany(FormControl::class, 'activity_form_control', 'activity_id', 'form_control_id')
+            ->withTimestamps();
     }
 
 

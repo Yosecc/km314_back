@@ -3,9 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\FormControl;
+use App\Models\Proveedor;
 use App\Models\User;
+use App\Services\ProveedorAccessService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class FormControlTest extends TestCase
@@ -66,6 +69,69 @@ class FormControlTest extends TestCase
 
         $this->assertSame('Denied', $denied->fresh()->status);
         $this->assertSame($user->id, $denied->fresh()->denied_user_id);
+    }
+
+    public function test_provider_and_form_qr_resolve_the_same_active_authorizations(): void
+    {
+        $proveedor = Proveedor::create([
+            'nombre_empresa' => 'Servicios del Sur',
+            'telefono_empresa' => '1122334455',
+        ]);
+
+        $first = $this->createFormControl([
+            'proveedor_id' => $proveedor->id,
+            'income_type' => ['Proveedor'],
+            'status' => 'Authorized',
+            'lote_ids' => ['A12'],
+        ]);
+        $second = $this->createFormControl([
+            'proveedor_id' => $proveedor->id,
+            'income_type' => ['Proveedor'],
+            'status' => 'Authorized',
+            'lote_ids' => ['B04', 'A12'],
+        ]);
+
+        foreach ([$first, $second] as $formControl) {
+            $formControl->dateRanges()->create([
+                'start_date_range' => '2026-09-10',
+                'start_time_range' => '07:00',
+                'end_date_range' => '2026-09-10',
+                'end_time_range' => '18:00',
+            ]);
+        }
+
+        $service = app(ProveedorAccessService::class);
+        $resolvedByProvider = $service->resolveProviderByCode($proveedor->quick_access_code);
+        $resolvedByForm = $service->resolveProviderByCode($first->quick_access_code);
+        $forms = $service->activeForms($resolvedByForm, Carbon::parse('2026-09-10 12:00'));
+
+        $this->assertTrue($resolvedByProvider->is($proveedor));
+        $this->assertTrue($resolvedByForm->is($proveedor));
+        $this->assertEqualsCanonicalizing([$first->id, $second->id], $forms->pluck('id')->all());
+        $this->assertSame(['A12', 'B04'], $service->authorizedLotes($forms));
+    }
+
+    public function test_provider_quick_access_page_recognizes_the_company(): void
+    {
+        $proveedor = Proveedor::create([
+            'nombre_empresa' => 'Servicios del Sur',
+            'telefono_empresa' => '1122334455',
+        ]);
+
+        $this->assertMatchesRegularExpression('/^P-[A-Z0-9]{8}$/', $proveedor->quick_access_code);
+
+        $this->get('/quick-access/'.$proveedor->quick_access_code)
+            ->assertOk()
+            ->assertSee('Proveedor')
+            ->assertSee('Servicios del Sur');
+    }
+
+    public function test_provider_resource_permissions_exist(): void
+    {
+        $this->assertSame(
+            12,
+            DB::table('permissions')->where('name', 'like', '%_proveedor')->count(),
+        );
     }
 
     private function createFormControl(array $attributes = []): FormControl

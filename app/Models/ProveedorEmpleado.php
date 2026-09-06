@@ -20,6 +20,15 @@ class ProveedorEmpleado extends Model
         'telefono',
     ];
 
+    public function setArchivoDniAttribute($value): void
+    {
+        if (is_array($value)) {
+            $value = collect($value)->filter()->first();
+        }
+
+        $this->attributes['archivo_dni'] = $value;
+    }
+
     public function proveedor()
     {
         return $this->belongsTo(Proveedor::class);

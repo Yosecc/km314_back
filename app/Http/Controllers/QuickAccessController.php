@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\FormControl;
 use App\Models\Owner;
+use App\Models\Proveedor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 
@@ -67,6 +68,11 @@ class QuickAccessController extends Controller
             return $formControl;
         }
 
+        $proveedor = Proveedor::where('quick_access_code', $code)->first();
+        if ($proveedor) {
+            return $proveedor;
+        }
+
         return null;
     }
 
@@ -81,6 +87,8 @@ class QuickAccessController extends Controller
             return 1; // tipo_entrada para propietarios
         } elseif ($entity instanceof FormControl) {
             return 3; // tipo_entrada para formularios de control
+        } elseif ($entity instanceof Proveedor) {
+            return 3; // los proveedores se procesan mediante sus formularios
         }
 
         return 0;
@@ -97,6 +105,8 @@ class QuickAccessController extends Controller
             return 'Propietario';
         } elseif ($entity instanceof FormControl) {
             return 'Formulario de Control';
+        } elseif ($entity instanceof Proveedor) {
+            return 'Proveedor';
         }
 
         return 'Desconocido';

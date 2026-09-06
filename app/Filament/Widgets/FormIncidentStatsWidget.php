@@ -2,18 +2,23 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Concerns\HasStrictWidgetShield as HasWidgetShield;
 use App\Models\FormIncidentResponse;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 
 class FormIncidentStatsWidget extends BaseWidget
 {
-    protected static ?string $pollingInterval = '30s';
-    protected static ?int $sort = -98;
-    protected  ?string $heading = 'Formularios de Incidentes (Estadísticas)';
+    use HasWidgetShield {
+        canView as protected shieldCanView;
+    }
 
+    protected static ?string $pollingInterval = '30s';
+
+    protected static ?int $sort = -98;
+
+    protected ?string $heading = 'Formularios de Incidentes (Estadísticas)';
 
     protected function getStats(): array
     {
@@ -53,7 +58,8 @@ class FormIncidentStatsWidget extends BaseWidget
     {
         // Solo mostrar a usuarios que sean super_admin
         $user = Auth::user();
-        return $user && $user->hasRole('super_admin');
+
+        return $user && static::shieldCanView() && $user->hasRole('super_admin');
     }
 
     protected function getHeaderActions(): array

@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use App\Traits\HasQuickAccessCode;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Proveedor extends Model
 {
-    use HasFactory;
+    use HasFactory, HasQuickAccessCode;
 
     protected $table = 'proveedores';
 
     protected $fillable = [
         'nombre_empresa',
+        'quick_access_code',
         'telefono_empresa',
         'cuit_empresa',
         'nombre_responsable',
@@ -46,5 +48,15 @@ class Proveedor extends Model
     public function empleados()
     {
         return $this->hasMany(ProveedorEmpleado::class);
+    }
+
+    public function formControls()
+    {
+        return $this->hasMany(FormControl::class);
+    }
+
+    public function activities()
+    {
+        return $this->hasMany(Activities::class);
     }
 }

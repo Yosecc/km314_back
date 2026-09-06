@@ -2,10 +2,10 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Concerns\HasStrictWidgetShield as HasWidgetShield;
 use App\Services\FormIncidentComplianceService;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 class FormIncidentComplianceWidget extends Widget
 {
@@ -13,19 +13,18 @@ class FormIncidentComplianceWidget extends Widget
 
     protected static string $view = 'filament.widgets.form-incident-compliance-widget';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
-     protected static ?int $sort = -97;
+    protected static ?int $sort = -97;
 
     protected static ?string $heading = 'Formularios de Incidentes';
-
 
     public function getViewData(): array
     {
         $complianceService = new FormIncidentComplianceService();
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return ['status' => null];
         }
 
@@ -43,7 +42,7 @@ class FormIncidentComplianceWidget extends Widget
     public function getCompleteFormUrl(int $formTypeId): string
     {
         return route('filament.admin.resources.form-incident-responses.create', [
-            'form_incident_type_id' => $formTypeId
+            'form_incident_type_id' => $formTypeId,
         ]);
     }
 
@@ -51,6 +50,7 @@ class FormIncidentComplianceWidget extends Widget
     {
         // Solo mostrar si el usuario tiene formularios obligatorios asignados
         $user = Auth::user();
+
         return $user && $user->formIncidentRequirements()->active()->exists() && auth()->user()->can('widget_FormIncidentComplianceWidget');
     }
 }

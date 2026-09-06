@@ -12,6 +12,8 @@ use App\Models\OwnerSpontaneousVisit;
 use App\Models\ActivitiesAuto;
 use App\Models\ActivitiesPeople;
 use App\Models\FormControlPeople;
+use App\Models\ProveedorEmpleado;
+use App\Services\ProveedorAccessService;
 use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -149,9 +151,11 @@ class ActivitiesPage extends CreateRecord
         /** @var \Illuminate\Support\Collection<int, int> $peopleIds */
         $peopleIds = collect($this->data['peoples'] ?? []);
         $familiesIds = collect($this->data['families'] ?? []);
+        $proveedorPersonas = collect($this->data['proveedor_personas'] ?? [])
+            ->filter(fn (array $persona): bool => filled($persona['dni'] ?? null));
 
         // Validar que al menos se haya seleccionado una persona o familiar
-        if ($peopleIds->isEmpty() && $familiesIds->isEmpty()) {
+        if ($peopleIds->isEmpty() && $familiesIds->isEmpty() && $proveedorPersonas->isEmpty()) {
             Notification::make()
                 ->title('Debe seleccionar al menos una persona o familiar')
                 ->danger()
@@ -166,7 +170,82 @@ class ActivitiesPage extends CreateRecord
         }
 
 
-        if($this->data['tipo_entrada'] == 1){
+        if (!empty($this->data['proveedor_id'])) {
+            $model = 'ProveedorEmpleado';
+            $proveedor = \App\Models\Proveedor::findOrFail($this->data['proveedor_id']);
+            $service = app(ProveedorAccessService::class);
+
+            if ($this->data['type'] === 'Entry') {
+                $formularios = $service->activeForms($proveedor);
+
+                if ($formularios->isEmpty()) {
+                    Notification::make()
+                        ->title('El proveedor no tiene formularios autorizados y vigentes.')
+                        ->danger()
+                        ->send();
+                    $this->halt();
+                }
+            }
+
+            $peopleIds = $proveedorPersonas->map(function (array $persona) use ($proveedor): int {
+                $empleado = ProveedorEmpleado::query()
+                    ->where('proveedor_id', $proveedor->id)
+                    ->where('dni', trim($persona['dni']))
+                    ->first();
+
+                if (!$empleado && $this->data['type'] === 'Exit') {
+                    Notification::make()
+                        ->title('No existe una persona con DNI '.$persona['dni'].' para este proveedor.')
+                        ->danger()
+                        ->send();
+                    $this->halt();
+                }
+
+                $empleado ??= new ProveedorEmpleado([
+                    'proveedor_id' => $proveedor->id,
+                    'dni' => trim($persona['dni']),
+                ]);
+                $empleado->fill([
+                    'nombre' => $persona['nombre'] ?? $empleado->nombre,
+                    'apellido' => $persona['apellido'] ?? $empleado->apellido,
+                    'telefono' => $persona['telefono'] ?? $empleado->telefono,
+                    'archivo_dni' => $persona['archivo_dni'] ?? $empleado->archivo_dni,
+                ])->save();
+
+                return $empleado->id;
+            })->unique()->values();
+
+            $this->data['peoples'] = $peopleIds->all();
+
+            if ($this->data['type'] === 'Exit') {
+                $formularios = collect();
+
+                foreach ($peopleIds as $empleadoId) {
+                    $entrada = $service->openEntry($proveedor, (int) $empleadoId);
+
+                    if (!$entrada) {
+                        Notification::make()
+                            ->title('Una de las personas no tiene una entrada abierta para este proveedor.')
+                            ->danger()
+                            ->send();
+                        $this->halt();
+                    }
+
+                    $formulariosEntrada = $entrada->formControls;
+                    if ($formulariosEntrada->isEmpty() && $entrada->form_control_id) {
+                        $formulariosEntrada = FormControl::whereKey($entrada->form_control_id)->get();
+                    }
+
+                    $formularios = $formularios->concat($formulariosEntrada);
+                }
+
+                $formularios = $formularios->unique('id')->values();
+            }
+
+            $this->data['provider_form_ids'] = $formularios->pluck('id')->all();
+            $this->data['lote_ids'] = implode(' - ', app(ProveedorAccessService::class)->authorizedLotes($formularios));
+            $this->data['form_control_id'] = null;
+        } elseif($this->data['tipo_entrada'] == 1){
             $model = 'Owner';
         }else if ($this->data['tipo_entrada'] == 2){
             $model = 'Employee';
@@ -324,12 +403,17 @@ class ActivitiesPage extends CreateRecord
             $personas = FormControlPeople::whereIn('id', $peopleIds->toArray())->get();
         } else if ($model == 'OwnerFamily') {
             $personas = \App\Models\OwnerFamily::whereIn('id', $peopleIds->toArray())->get();
+        } else if ($model == 'ProveedorEmpleado') {
+            $personas = ProveedorEmpleado::whereIn('id', $peopleIds->toArray())->get();
         } else {
             $personas = collect();
         }
 
-        return $personas->map(function($people) {
-            
+        return $personas->map(function($people) use ($model) {
+            if ($model === 'ProveedorEmpleado') {
+                return trim($people->nombre.' '.$people->apellido);
+            }
+
             return $people['first_name'].' '.$people['last_name'];
         });
     }
@@ -340,7 +424,9 @@ class ActivitiesPage extends CreateRecord
         // dd('SI',$this->record, $this->data);
 
         $model = '';
-        if($this->data['tipo_entrada'] == 1){
+        if (!empty($this->data['proveedor_id'])) {
+            $model = 'ProveedorEmpleado';
+        } elseif($this->data['tipo_entrada'] == 1){
             $model = 'Owner';
         }else if ($this->data['tipo_entrada'] == 2){
             $model = 'Employee';
@@ -384,6 +470,10 @@ class ActivitiesPage extends CreateRecord
         }
 
         ActivitiesPeople::insert($people->toArray());
+
+        if (!empty($this->data['proveedor_id'])) {
+            $record->formControls()->sync($this->data['provider_form_ids'] ?? []);
+        }
 
         if(isset($this->data['families']) && count($this->data['families'])){
             $familie = collect($this->data['families'])

@@ -80,6 +80,11 @@ public function getAllTrabajadores()
         return $this->hasMany(FormControl::class,'owner_id');
     }
 
+    public function packageReceptions()
+    {
+        return $this->hasMany(PackageReception::class);
+    }
+
     public function nombres(): string{
         return $this->first_name." ".$this->last_name;
     }

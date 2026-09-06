@@ -27,7 +27,7 @@ class ProfileOwner extends Page implements HasForms
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasRole('owner') && auth()->user()->owner_id;
+        return static::canView() && auth()->user()->hasRole('owner') && auth()->user()->owner_id;
     }
 
     public function mount()

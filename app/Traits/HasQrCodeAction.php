@@ -30,6 +30,7 @@ trait HasQrCodeAction
             \App\Models\Employee::class => 'Empleado',
             \App\Models\Owner::class => 'Propietario',
             \App\Models\FormControl::class => 'Formulario de Control',
+            \App\Models\Proveedor::class => 'Proveedor',
             default => 'Registro'
         };
     }

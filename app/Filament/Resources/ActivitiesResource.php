@@ -18,6 +18,9 @@ use App\Models\Owner;
 use App\Models\OwnerAutos;
 use App\Models\OwnerFamily;
 use App\Models\OwnerSpontaneousVisit;
+use App\Models\Proveedor;
+use App\Models\ProveedorEmpleado;
+use App\Services\ProveedorAccessService;
 use App\Models\FormControlTypeIncome;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -216,6 +219,22 @@ class ActivitiesResource extends Resource
     {
         $formControl = FormControl::find($id);
 
+        if ($formControl?->proveedor_id) {
+            $empleados = ProveedorEmpleado::query()
+                ->where('proveedor_id', $formControl->proveedor_id)
+                ->whereIn('id', $ids ?: [])
+                ->get()
+                ->map(function (ProveedorEmpleado $empleado) use ($type) {
+                    $empleado['texto'] = $type === 'option'
+                        ? trim("{$empleado->nombre} {$empleado->apellido}") . ' - Proveedor'
+                        : $empleado->dni;
+
+                    return $empleado;
+                });
+
+            return $empleados->pluck('texto', 'id')->toArray();
+        }
+
         $mapeo = function($people) use($type){
             if($type == 'option'){
                 $people['texto'] = $people['first_name']. ' '.$people['last_name'];
@@ -236,6 +255,15 @@ class ActivitiesResource extends Resource
     {
         $data = FormControl::find($id);
 
+        if ($data?->proveedor_id) {
+            return $data->proveedor->autos->map(function($auto) use ($type){
+                $auto['texto'] = $type == 'option'
+                    ? $auto['marca']. ' - '.$auto['modelo']
+                    : $auto['patente'].' - '.$auto['color'];
+                return $auto;
+            })->pluck('texto','id')->toArray();
+        }
+
         return $data->autos->map(function($auto) use ($type){
             if($type == 'option'){
                 $auto['texto'] = $auto['marca']. ' - '.$auto['modelo'];
@@ -244,6 +272,23 @@ class ActivitiesResource extends Resource
             }
             return $auto;
         })->pluck('texto','id')->toArray();
+    }
+
+    public static function searchProveedorAutos($id, $type)
+    {
+        $proveedor = Proveedor::find($id);
+
+        if (!$proveedor) {
+            return [];
+        }
+
+        return $proveedor->autos->map(function ($auto) use ($type) {
+            $auto['texto'] = $type === 'option'
+                ? $auto['marca'].' - '.$auto['modelo']
+                : $auto['patente'].' - '.$auto['color'];
+
+            return $auto;
+        })->pluck('texto', 'id')->toArray();
     }
 
 
@@ -348,6 +393,21 @@ class ActivitiesResource extends Resource
             return self::searchFormControl($data['form_control_id'],  $data['tipo'], $data['ids']);
         }
 
+        if ($data['tipo_entrada'] == 3 && !empty($data['proveedor_id'])) {
+            return ProveedorEmpleado::query()
+                ->where('proveedor_id', $data['proveedor_id'])
+                ->whereIn('id', $data['ids'] ?? [])
+                ->get()
+                ->mapWithKeys(function (ProveedorEmpleado $empleado) use ($data) {
+                    $texto = $data['tipo'] === 'option'
+                        ? trim("{$empleado->nombre} {$empleado->apellido}") . ' - Proveedor'
+                        : $empleado->dni;
+
+                    return [$empleado->id => $texto];
+                })
+                ->all();
+        }
+
         return [];
     }
 
@@ -362,7 +422,7 @@ class ActivitiesResource extends Resource
                         // OPTIMIZACIÓN: eager loading para evitar N+1 queries en el view
                         if($context == 'view' && isset($peoplesIds) && !count($peoplesIds) && $record->peoples){
                             // Cargar peoples con sus modelos relacionados de una vez
-                            $record->load(['peoples.owner', 'peoples.ownerFamily.familiarPrincipal', 'peoples.employee', 'peoples.formControlPeople', 'peoples.ownerSpontaneousVisit.owner']);
+                            $record->load(['peoples.owner', 'peoples.ownerFamily.familiarPrincipal', 'peoples.employee', 'peoples.formControlPeople', 'peoples.ownerSpontaneousVisit.owner', 'peoples.proveedorEmpleado']);
                             
                             $peoplesIds = $record->peoples->map(function($peopleActivitie){
                                 return $peopleActivitie->model_id;
@@ -375,6 +435,7 @@ class ActivitiesResource extends Resource
                             'tipo_entrada' => $get('tipo_entrada'),
                             'num_search' => $get('num_search'),
                             'form_control_id' => $get('form_control_id'),
+                            'proveedor_id' => $get('proveedor_id') ?: $record?->proveedor_id,
                             'tipo' => 'option',
                             'ids' => $context == 'view' ? $peoplesIds : [],
                             'context' => $context
@@ -384,6 +445,7 @@ class ActivitiesResource extends Resource
                             'tipo_entrada' => $get('tipo_entrada'),
                             'num_search' => $get('num_search'),
                             'form_control_id' => $get('form_control_id'),
+                            'proveedor_id' => $get('proveedor_id') ?: $record?->proveedor_id,
                             'tipo' => 'descriptions',
                             'ids' => $context == 'view' ? $peoplesIds : [],
                             'context' => $context
@@ -565,8 +627,36 @@ class ActivitiesResource extends Resource
         return ['personas' => $personas];
     }
 
-   
-    private static function buscarQr($state, $set, $get)
+    private static function prepararAccesoProveedor(Proveedor $proveedor, Set $set, Get $get, $livewire = null): bool
+    {
+        $service = app(ProveedorAccessService::class);
+        $formularios = $service->activeForms($proveedor);
+
+        if ((int) $get('type') === 1 && $formularios->isEmpty()) {
+            Notification::make()
+                ->title('El proveedor no tiene formularios autorizados y vigentes.')
+                ->danger()
+                ->send();
+            return false;
+        }
+
+        $set('tipo_entrada', 3);
+        $set('proveedor_id', $proveedor->id);
+        $set('provider_form_ids', $formularios->pluck('id')->all());
+        $set('form_control_id', $formularios->first()?->id);
+        $set('lote_ids', implode(', ', $service->authorizedLotes($formularios)));
+        $set('peoples', []);
+        $set('proveedor_personas', [
+            (string) Str::uuid() => [
+                'archivo_dni' => [],
+            ],
+        ]);
+        $set('autos', []);
+
+        return true;
+    }
+
+    private static function buscarQr($state, $set, $get, $livewire = null)
     {
         if(!$state) return;
         // Buscar la entidad por código
@@ -574,8 +664,9 @@ class ActivitiesResource extends Resource
         $owner = Owner::where('quick_access_code', $state)->first();
         $formControl = FormControl::where('quick_access_code', $state)->first();
         $ownerFamily = \App\Models\OwnerFamily::where('quick_access_code', $state)->first();
+        $proveedor = Proveedor::where('quick_access_code', $state)->first();
 
-        $entity = $employee ?? $owner ?? $formControl ?? $ownerFamily;
+        $entity = $employee ?? $owner ?? $formControl ?? $ownerFamily ?? $proveedor;
          \Log::info("Búsqueda QR - Código: {$state} - Tipo: " . ($get('type') == 1 ? 'Entrada' : 'Salida') . " - Entidad encontrada: " . ($entity ? get_class($entity) : 'Ninguna'));
 
         if ($entity) {
@@ -655,11 +746,34 @@ class ActivitiesResource extends Resource
                     ->success()
                     ->send();
             } elseif ($entity instanceof FormControl) {
+                if ($entity->proveedor_id) {
+                    if (!self::prepararAccesoProveedor($entity->proveedor, $set, $get, $livewire)) {
+                        $set('quick_code', '');
+                        return;
+                    }
+                    Notification::make()
+                        ->title('Proveedor encontrado')
+                        ->body($entity->proveedor->nombre_empresa)
+                        ->success()
+                        ->send();
+                    $set('quick_code', '');
+                    return;
+                }
                 $set('tipo_entrada', 3);
                 $set('form_control_id', $entity->id);
                 \Filament\Notifications\Notification::make()
                     ->title('Formulario encontrado')
                     ->body('Formulario #' . $entity->id)
+                    ->success()
+                    ->send();
+            } elseif ($entity instanceof Proveedor) {
+                if (!self::prepararAccesoProveedor($entity, $set, $get, $livewire)) {
+                    $set('quick_code', '');
+                    return;
+                }
+                Notification::make()
+                    ->title('Proveedor encontrado')
+                    ->body($entity->nombre_empresa)
                     ->success()
                     ->send();
             } elseif ($entity instanceof \App\Models\OwnerFamily) {
@@ -758,15 +872,15 @@ class ActivitiesResource extends Resource
                                 ->icon('heroicon-o-magnifying-glass')
                                 ->label('Buscar')
                                 ->button()
-                                ->action(fn ($state, Set $set, Get $get) => self::buscarQr($state, $set, $get))
+                                ->action(fn ($state, Set $set, Get $get, $livewire) => self::buscarQr($state, $set, $get, $livewire))
                                 ->disabled(fn (Get $get) => !$get('type') || $get('type') == 0)
                                 ->extraAttributes(['type' => 'button'])
                         )
                         ->live(onBlur: true)
-                        ->afterStateUpdated(function($state, Set $set, Get $get) {
+                        ->afterStateUpdated(function($state, Set $set, Get $get, $livewire) {
                             if (!$state) return;
                             // Buscar la entidad por código
-                            self::buscarQr($state, $set, $get);
+                            self::buscarQr($state, $set, $get, $livewire);
                         })
                         ->disabled(function($context, Get $get){
                             return $context == 'view'  ? true : ($get('type') == '' ? true : false) ;
@@ -834,7 +948,7 @@ class ActivitiesResource extends Resource
 
                                 Forms\Components\ViewField::make('form_control_id')
                                     ->label(__('general.Select a control form'))
-                                    ->required()
+                                    ->required(fn (Get $get): bool => blank($get('proveedor_id')))
                                     ->view('filament.forms.components.formControlSelector')
                                     /** @phpstan-ignore-next-line */
                                     ->viewData([
@@ -847,6 +961,28 @@ class ActivitiesResource extends Resource
 
                                         
                                         $mapeo = function(FormControl $form) use ($get){
+
+                                            if ($form->proveedor_id) {
+                                                $service = app(ProveedorAccessService::class);
+                                                $activeForms = $service->activeForms($form->proveedor);
+                                                $lotesProveedor = $service->authorizedLotes($activeForms);
+                                                $esSalida = (int) $get('type') === 2;
+                                                $disponible = $activeForms->isNotEmpty() || $esSalida;
+
+                                                return [
+                                                    'id' => $form->id,
+                                                    'texto' => $form->proveedor->nombre_empresa
+                                                        . ($activeForms->isNotEmpty()
+                                                            ? ' - ' . $activeForms->count() . ' autorización(es)'
+                                                            : ' - salida de proveedor')
+                                                        . (count($lotesProveedor) ? ' : ' . implode(' - ', $lotesProveedor) : ''),
+                                                    'descripcion' => 'Acceso agrupado de proveedor',
+                                                    'status' => $disponible ? 'Authorized' : $form->statusComputed(),
+                                                    'isActive' => $disponible,
+                                                    'hint' => (bool) $get('form_control_id'),
+                                                    'vencimientos' => [],
+                                                ];
+                                            }
 
                                             $accesType = collect($form['access_type'])->map(function($type){
                                                 $data = ['general' => 'Entrada general', 'playa' => 'Clud playa', 'hause' => 'Club house', 'lote' => 'Lote' ];
@@ -933,33 +1069,141 @@ class ActivitiesResource extends Resource
                                         }
 
                                         $num = $get('num_search');
-                                        $formularios = FormControl::whereHas('peoples', function ($query) use ($num) {
-                                                $query->where('dni','like','%'.$num.'%');
-                                            })
-                                            ->orWhere(function($query) use ($num) {
-                                                $query->whereHas('autos', function ($query) use ($num){
-                                                    $query->where('patente','like','%'.$num.'%');
+                                        $formularios = FormControl::query()
+                                            ->whereNull('proveedor_id')
+                                            ->where(function (Builder $query) use ($num) {
+                                                $query->whereHas('peoples', function ($peopleQuery) use ($num) {
+                                                    $peopleQuery->where('dni','like','%'.$num.'%');
+                                                })->orWhereHas('autos', function ($autoQuery) use ($num) {
+                                                    $autoQuery->where('patente','like','%'.$num.'%');
                                                 });
                                             })
                                             ->orderBy('id','desc')
-                                            ->where('start_date_range','>=',now())
                                             ->limit(10)
                                             ->get()
                                             ->map( $mapeo )
                                             ->sortByDesc('isActive')
-                                            ->values()
-                                            ->toArray();
+                                            ->values();
 
-                                        return $formularios;
+                                        $proveedores = Proveedor::query()
+                                            ->where('status', true)
+                                            ->where(function (Builder $query) use ($num) {
+                                                $query->where('nombre_empresa', 'like', "%{$num}%")
+                                                    ->orWhere('cuit_empresa', 'like', "%{$num}%")
+                                                    ->orWhere('quick_access_code', $num)
+                                                    ->orWhereHas('autos', fn (Builder $autoQuery) => $autoQuery->where('patente', 'like', "%{$num}%"))
+                                                    ->orWhereHas('formControls', function (Builder $formQuery) use ($num) {
+                                                        $formQuery->where('quick_access_code', $num);
+                                                        if (is_numeric($num)) {
+                                                            $formQuery->orWhere('id', (int) $num);
+                                                        }
+                                                    });
+                                            })
+                                            ->limit(10)
+                                            ->get()
+                                            ->map(function (Proveedor $proveedor) use ($mapeo) {
+                                                $first = app(ProveedorAccessService::class)->activeForms($proveedor)->first()
+                                                    ?? $proveedor->formControls()->latest('id')->first();
+                                                return $first ? $mapeo($first) : null;
+                                            })
+                                            ->filter();
+
+                                        return $formularios->concat($proveedores)->values()->toArray();
                                         },
                                     ])
+                                    ->afterStateUpdated(function ($state, Set $set, Get $get, $livewire): void {
+                                        $formControl = FormControl::with('proveedor')->find($state);
+                                        if ($formControl?->proveedor) {
+                                            self::prepararAccesoProveedor($formControl->proveedor, $set, $get, $livewire);
+                                            return;
+                                        }
+
+                                        $set('proveedor_id', null);
+                                        $set('provider_form_ids', []);
+                                        $set('proveedor_personas', []);
+                                    })
                                     ->live(),
 
+                                Forms\Components\Hidden::make('proveedor_id'),
+                                Forms\Components\Hidden::make('provider_form_ids'),
+
+                                Forms\Components\Repeater::make('proveedor_personas')
+                                    ->label('Personas del proveedor')
+                                    ->schema([
+                                        Forms\Components\Radio::make('empleado_id')
+                                            ->label('Empleado existente')
+                                            ->options(function (Get $get): array {
+                                                $proveedorId = $get('../../proveedor_id');
+
+                                                if (!$proveedorId) {
+                                                    return [];
+                                                }
+
+                                                return ProveedorEmpleado::query()
+                                                    ->where('proveedor_id', $proveedorId)
+                                                    ->orderBy('nombre')
+                                                    ->orderBy('apellido')
+                                                    ->get()
+                                                    ->mapWithKeys(fn (ProveedorEmpleado $empleado): array => [
+                                                        $empleado->id => trim("{$empleado->nombre} {$empleado->apellido}")." - DNI {$empleado->dni}",
+                                                    ])
+                                                    ->all();
+                                            })
+                                            ->columns(2)
+                                            ->live()
+                                            ->dehydrated(false)
+                                            ->afterStateUpdated(function ($state, Set $set): void {
+                                                $empleado = ProveedorEmpleado::find($state);
+
+                                                if (!$empleado) {
+                                                    return;
+                                                }
+
+                                                $set('dni', $empleado->dni);
+                                                $set('nombre', $empleado->nombre);
+                                                $set('apellido', $empleado->apellido);
+                                                $set('telefono', $empleado->telefono);
+                                                $set(
+                                                    'archivo_dni',
+                                                    filled($empleado->archivo_dni)
+                                                        ? [(string) Str::uuid() => $empleado->archivo_dni]
+                                                        : [],
+                                                );
+                                            })
+                                            ->columnSpanFull(),
+                                        Forms\Components\TextInput::make('dni')
+                                            ->label('DNI')
+                                            ->required(),
+                                        Forms\Components\TextInput::make('nombre')
+                                            ->label('Nombre')
+                                            ->required(fn (Get $get): bool => (int) $get('../../type') === 1),
+                                        Forms\Components\TextInput::make('apellido')
+                                            ->label('Apellido')
+                                            ->required(fn (Get $get): bool => (int) $get('../../type') === 1),
+                                        Forms\Components\TextInput::make('telefono')
+                                            ->label('Teléfono')
+                                            ->tel(),
+                                        Forms\Components\FileUpload::make('archivo_dni')
+                                            ->label('Archivo del DNI')
+                                            ->openable()
+                                            ->downloadable(),
+                                    ])
+                                    ->columns(6)
+                                    ->minItems(1)
+                                    ->defaultItems(1)
+                                    ->addActionLabel('Agregar persona')
+                                    ->itemLabel(fn (array $state): string => trim(($state['nombre'] ?? '').' '.($state['apellido'] ?? '')) ?: 'Persona')
+                                    ->visible(fn (Get $get): bool => filled($get('proveedor_id')))
+                                    ->columnSpanFull(),
+
                                 Forms\Components\Radio::make('lote_ids')
-                                    ->required()
+                                    ->required(fn (Get $get): bool => blank($get('proveedor_id')))
                                     ->label(__('general.SelectedLote'))
                                     ->options(function(Get $get){
                                         $formControl = FormControl::find($get('form_control_id'));
+                                        if (!$formControl) {
+                                            return [];
+                                        }
                                         return Lote::get()->map(function($lote){
                                             $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
                                             return $lote;
@@ -970,7 +1214,8 @@ class ActivitiesResource extends Resource
                                             return false;
                                         }
                                         $formControl = FormControl::find($get('form_control_id'));
-                                        return array_search("lote", $formControl->access_type) !== false ? true : false;
+                                        return !$formControl->proveedor_id
+                                            && array_search("lote", $formControl->access_type) !== false;
                                     })
                             ])
                     ])
@@ -1243,7 +1488,9 @@ class ActivitiesResource extends Resource
                                     $data = (is_array($peoples) && count($peoples)) ? self::searchEmployeeAutos($peoples, 'option') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
-                                    $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'option') : [];
+                                    $data = $get('proveedor_id')
+                                        ? self::searchProveedorAutos($get('proveedor_id'), 'option')
+                                        : ($get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'option') : []);
                                 }
 
                                 // Autos de familiares (OwnerFamily)
@@ -1286,7 +1533,9 @@ class ActivitiesResource extends Resource
                                     $data = (is_array($peoples) && count($peoples)) ? self::searchEmployeeAutos($peoples, 'descriptions') : [];
                                 }
                                 if($get('tipo_entrada') == 3){
-                                    $data = $get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'descriptions') : [];
+                                    $data = $get('proveedor_id')
+                                        ? self::searchProveedorAutos($get('proveedor_id'), 'descriptions')
+                                        : ($get('form_control_id') ? self::searchFormAutos($get('form_control_id'), 'descriptions') : []);
                                 }
 
                                 // Autos de familiares (OwnerFamily)
@@ -1329,7 +1578,7 @@ class ActivitiesResource extends Resource
                                     }else if ($get('tipo_entrada') == 2){
                                         $model = 'Employee';
                                     }else if($get('tipo_entrada') == 3){
-                                        $model = 'FormControl';
+                                        $model = $get('proveedor_id') ? 'Proveedor' : 'FormControl';
                                     }
 
                                     return [
@@ -1338,13 +1587,15 @@ class ActivitiesResource extends Resource
                                         'num_search' => $get('num_search'),
                                         'families' => $get('families'),
                                         'peoples' => $get('peoples'),
-                                        'form_control_id' => $get('form_control_id')
+                                        'form_control_id' => $get('form_control_id'),
+                                        'proveedor_id' => $get('proveedor_id'),
                                     ];
                                 })
                                 ->form([
                                     Forms\Components\Hidden::make('model'),
                                     Forms\Components\Hidden::make('tipo_entrada'),
                                     Forms\Components\Hidden::make('num_search'),
+                                    Forms\Components\Hidden::make('proveedor_id'),
                                     Forms\Components\Repeater::make('autos')
                                         ->schema([
                                             Forms\Components\TextInput::make('marca')->required(),
@@ -1357,7 +1608,7 @@ class ActivitiesResource extends Resource
                                             Forms\Components\TextInput::make('color'),
                                             Forms\Components\Hidden::make('model_id')
                                             ->default(function(Get $get){
-                                                return $get('../../form_control_id');
+                                                return $get('../../proveedor_id') ?: $get('../../form_control_id');
                                             }),
 
                                             // Forms\Components\Radio::make('model_id')
@@ -1602,7 +1853,7 @@ class ActivitiesResource extends Resource
                     }),
                 Tables\Columns\TextColumn::make('tipo_entrada')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state, Activities $record): string => $record->proveedor_id ? 'Proveedores' : match ($state) {
                          '1' => 'Propietarios',
                          '2' => 'Empleados',
                          '3' => 'Otros'
@@ -1612,6 +1863,10 @@ class ActivitiesResource extends Resource
                         '2' => 'success',
                         '3' => 'warning'
                     }),
+                Tables\Columns\TextColumn::make('proveedor.nombre_empresa')
+                    ->label('Proveedor')
+                    ->placeholder('-')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('lote_ids')
                     ->label(__('general.Lotes'))
                     ->numeric()

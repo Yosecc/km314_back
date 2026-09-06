@@ -13,12 +13,13 @@ class FormControl extends Model
     use HasFactory, SoftDeletes, HasQuickAccessCode;
 
 
-    protected $fillable = ['owner_id','access_type','income_type','tipo_trabajo','is_moroso', 'lote_ids','start_date_range', 'start_time_range', 'end_date_range', 'end_time_range', 'status', 'category', 'authorized_user_id','denied_user_id','user_id','date_unilimited','observations','construction_companie_id', 'quick_access_code'];
+    protected $fillable = ['owner_id','proveedor_id','access_type','income_type','tipo_trabajo','is_moroso', 'lote_ids','start_date_range', 'start_time_range', 'end_date_range', 'end_time_range', 'status', 'category', 'authorized_user_id','denied_user_id','user_id','date_unilimited','observations','construction_companie_id', 'quick_access_code', 'owner_approved_at', 'owner_approved_by_user_id'];
 
     protected $casts = [
         'lote_ids' => 'array',
         'access_type' => 'array',
-        'income_type' => 'array'
+        'income_type' => 'array',
+        'owner_approved_at' => 'datetime',
     ];
 
     public function aprobar()
@@ -38,6 +39,18 @@ class FormControl extends Model
             $this->denied_user_id = Auth::user()->id;
             $this->save();
         }
+    }
+
+    public function approveByOwner(User $user): void
+    {
+        abort_unless($user->hasRole('owner') && (int) $user->owner_id === (int) $this->owner_id, 403);
+        if ($this->status !== 'OwnerPending') return;
+        $this->update(['status'=>'Pending','owner_approved_at'=>now(),'owner_approved_by_user_id'=>$user->id]);
+    }
+
+    public function ownerApprovedBy()
+    {
+        return $this->belongsTo(User::class, 'owner_approved_by_user_id');
     }
 
     public function statusComputed(): string
@@ -62,7 +75,10 @@ class FormControl extends Model
 
         // Verificar si la fecha de inicio ya pasó
         if ($fechaStart && $fechaStart->lessThan($today)) {
-            if ($status === 'Pending') {
+            // Los formularios públicos ya pasaron por la aprobación del propietario.
+            // Mientras su fecha final siga vigente deben continuar disponibles para
+            // la revisión administrativa, aunque la hora inicial haya comenzado.
+            if ($status === 'Pending' && !$this->owner_approved_at) {
                 return 'Vencido';
             }
         }
@@ -185,6 +201,17 @@ class FormControl extends Model
     public function owner()
     {
         return $this->belongsTo(Owner::class);
+    }
+
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedor::class);
+    }
+
+    public function activities()
+    {
+        return $this->belongsToMany(Activities::class, 'activity_form_control', 'form_control_id', 'activity_id')
+            ->withTimestamps();
     }
 
     public function dateRanges()

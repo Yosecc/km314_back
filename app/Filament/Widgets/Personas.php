@@ -2,22 +2,18 @@
 
 namespace App\Filament\Widgets;
 
-use Carbon\Carbon;
-use App\Models\Activities;
+use App\Filament\Concerns\HasStrictWidgetShield as HasWidgetShield;
 use App\Models\ActivitiesPeople;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Builder;
-use Filament\Widgets\StatsOverviewWidget\Stat;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class Personas extends BaseWidget
 {
     use HasWidgetShield;
+
     protected static ?int $sort = -10;
 
     protected ?string $heading = 'Personas en el barrio (contadores)';
-
 
     // protected static ?string $pollingInterval = '30s';
     protected function getStats(): array
@@ -40,11 +36,12 @@ class Personas extends BaseWidget
         $peopleInside = ActivitiesPeople::select('model_id')
             ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
             ->groupBy('model_id')
-            ->where('model','Owner')
+            ->where('model', 'Owner')
             ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
             ->distinct('model_id')
             ->count('model_id');
-            // dd($peopleInside);
+
+        // dd($peopleInside);
         return $peopleInside;
     }
 
@@ -53,11 +50,12 @@ class Personas extends BaseWidget
         $peopleInside = ActivitiesPeople::select('model_id')
             ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
             ->groupBy('model_id')
-            ->where('model','OwnerFamily')
+            ->where('model', 'OwnerFamily')
             ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
             ->distinct('model_id')
             ->count('model_id');
-            // dd($peopleInside);
+
+        // dd($peopleInside);
         return $peopleInside;
     }
 
@@ -66,11 +64,12 @@ class Personas extends BaseWidget
         $peopleInside = ActivitiesPeople::select('model_id')
             ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
             ->groupBy('model_id')
-            ->where('model','OwnerSpontaneousVisit')
+            ->where('model', 'OwnerSpontaneousVisit')
             ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
             ->distinct('model_id')
             ->count('model_id');
-            // dd($peopleInside);
+
+        // dd($peopleInside);
         return $peopleInside;
     }
 
@@ -79,11 +78,12 @@ class Personas extends BaseWidget
         $peopleInside = ActivitiesPeople::select('model_id')
             ->join('activities', 'activities_people.activities_id', '=', 'activities.id')
             ->groupBy('model_id')
-            ->where('model','Employee')
+            ->where('model', 'Employee')
             ->havingRaw('SUM(CASE WHEN activities.type = "Entry" THEN 1 ELSE 0 END) > SUM(CASE WHEN activities.type = "Exit" THEN 1 ELSE 0 END)')
             ->distinct('model_id')
             ->count('model_id');
-            // dd($peopleInside);
+
+        // dd($peopleInside);
         return $peopleInside;
     }
 
@@ -96,9 +96,9 @@ class Personas extends BaseWidget
             ->join('form_control_people', 'activities_people.model_id', '=', 'form_control_people.id')
             ->join('form_controls', 'form_control_people.form_control_id', '=', 'form_controls.id')
             ->where('activities_people.model', 'FormControl')
-            ->where(function($query) use ($validAccessTypes) {
+            ->where(function ($query) use ($validAccessTypes) {
                 foreach ($validAccessTypes as $type) {
-                    $query->orWhere('form_controls.access_type', 'LIKE', '%' . $type . '%');
+                    $query->orWhere('form_controls.access_type', 'LIKE', '%'.$type.'%');
                 }
             })
             ->groupBy('activities_people.model_id')
@@ -119,14 +119,14 @@ class Personas extends BaseWidget
             ->join('form_control_people', 'activities_people.model_id', '=', 'form_control_people.id')
             ->join('form_controls', 'form_control_people.form_control_id', '=', 'form_controls.id')
             ->where('activities_people.model', 'FormControl')
-            ->where(function($query) use ($accessTypes) {
+            ->where(function ($query) use ($accessTypes) {
                 foreach ($accessTypes as $type) {
-                    $query->orWhere('form_controls.access_type', 'LIKE', '%' . $type . '%');
+                    $query->orWhere('form_controls.access_type', 'LIKE', '%'.$type.'%');
                 }
             })
-            ->where(function($query) use ($incomeTypes) {
+            ->where(function ($query) use ($incomeTypes) {
                 foreach ($incomeTypes as $type) {
-                    $query->orWhere('form_controls.income_type', 'LIKE', '%' . $type . '%');
+                    $query->orWhere('form_controls.income_type', 'LIKE', '%'.$type.'%');
                 }
             })
             ->groupBy('activities_people.model_id')
@@ -147,14 +147,14 @@ class Personas extends BaseWidget
             ->join('form_control_people', 'activities_people.model_id', '=', 'form_control_people.id')
             ->join('form_controls', 'form_control_people.form_control_id', '=', 'form_controls.id')
             ->where('activities_people.model', 'FormControl')
-            ->where(function($query) use ($accessTypes) {
+            ->where(function ($query) use ($accessTypes) {
                 foreach ($accessTypes as $type) {
-                    $query->orWhere('form_controls.access_type', 'LIKE', '%' . $type . '%');
+                    $query->orWhere('form_controls.access_type', 'LIKE', '%'.$type.'%');
                 }
             })
-            ->where(function($query) use ($incomeTypes) {
+            ->where(function ($query) use ($incomeTypes) {
                 foreach ($incomeTypes as $type) {
-                    $query->orWhere('form_controls.income_type', 'LIKE', '%' . $type . '%');
+                    $query->orWhere('form_controls.income_type', 'LIKE', '%'.$type.'%');
                 }
             })
             ->groupBy('activities_people.model_id')
@@ -175,14 +175,14 @@ class Personas extends BaseWidget
             ->join('form_control_people', 'activities_people.model_id', '=', 'form_control_people.id')
             ->join('form_controls', 'form_control_people.form_control_id', '=', 'form_controls.id')
             ->where('activities_people.model', 'FormControl')
-            ->where(function($query) use ($accessTypes) {
+            ->where(function ($query) use ($accessTypes) {
                 foreach ($accessTypes as $type) {
-                    $query->orWhere('form_controls.access_type', 'LIKE', '%' . $type . '%');
+                    $query->orWhere('form_controls.access_type', 'LIKE', '%'.$type.'%');
                 }
             })
-            ->where(function($query) use ($incomeTypes) {
+            ->where(function ($query) use ($incomeTypes) {
                 foreach ($incomeTypes as $type) {
-                    $query->orWhere('form_controls.income_type', 'LIKE', '%' . $type . '%');
+                    $query->orWhere('form_controls.income_type', 'LIKE', '%'.$type.'%');
                 }
             })
             ->groupBy('activities_people.model_id')

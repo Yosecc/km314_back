@@ -8,8 +8,8 @@ use Filament\Widgets;
 use Filament\PanelProvider;
 use App\Filament\Widgets\Entry;
 use App\Filament\Widgets\Personas;
+use App\Filament\Widgets\PackageReceptionStats;
 use Filament\Support\Colors\Color;
-use App\Filament\Widgets\EnElBarrio;
 use Filament\Navigation\NavigationItem;
 use Filament\Navigation\NavigationGroup;
 use Filament\Http\Middleware\Authenticate;
@@ -68,12 +68,12 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 UserTermsConditionsCheck::class,
-                EnElBarrio::class,
                 FormIncidentComplianceWidget::class,
                 FormIncidentStatsWidget::class,
                 //UltimasActividades::class,
                 // IncidentesStats::class,
                 FormControlStats::class,
+                PackageReceptionStats::class,
                 Sliders::class,
                 OwnerQr::class
             ])

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\FormControlResource\Pages;
 
 use App\Models\User;
+use App\Filament\Resources\FormControlResource\Pages\Concerns\HasPublicFormLinkAction;
 use Filament\Actions;
 use Filament\Forms;
 use Illuminate\Contracts\View\View;
@@ -11,11 +12,19 @@ use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\FormControlResource;
 use App\Models\FormControl;
 
-use Filament\Notifications\Actions\Action as NotificationAction;
 
 class CreateFormControl extends CreateRecord
 {
+    use HasPublicFormLinkAction;
+
     protected static string $resource = FormControlResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            $this->sharePublicFormAction(),
+        ];
+    }
 
     protected function getFormActions(): array
     {

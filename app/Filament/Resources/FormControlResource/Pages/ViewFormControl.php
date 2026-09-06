@@ -9,6 +9,7 @@ use Filament\Resources\Pages\ViewRecord;
 use App\Filament\Resources\FormControlResource;
 use Filament\Notifications\Notification;
 use Filament\Notifications\Actions\Action as NotificationAction;
+use App\Models\User;
 
 class ViewFormControl extends ViewRecord
 {
@@ -19,6 +20,17 @@ class ViewFormControl extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('ownerApprove')
+                ->label('Aprobar solicitud')
+                ->icon('heroicon-m-hand-thumb-up')->color('success')->requiresConfirmation()
+                ->modalDescription('Al aprobarlo, el formulario será enviado a administración para su revisión final.')
+                ->visible(fn (FormControl $record) => auth()->user()->hasRole('owner') && $record->status === 'OwnerPending' && (int) $record->owner_id === (int) auth()->user()->owner_id)
+                ->action(function (FormControl $record): void {
+                    $record->approveByOwner(auth()->user());
+                    $admins = User::whereHas('roles', fn ($q) => $q->whereIn('name',['super_admin','admin','Administrador']))->get();
+                    Notification::make()->title('Formulario pendiente de aprobación administrativa')->body('El propietario aprobó el formulario #'.$record->id.'.')->sendToDatabase($admins);
+                    Notification::make()->title('Formulario enviado a administración')->success()->send();
+                }),
             $this->getQrCodeAction(),
             Actions\EditAction::make()
             ->hidden(function($record){

@@ -2,20 +2,19 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Activities;
+use App\Filament\Concerns\HasStrictWidgetShield as HasWidgetShield;
 use App\Models\ActivitiesPeople;
-use App\Models\Owner;
 use App\Models\OwnerSpontaneousVisit;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 
 class VisitaEspontaneaEnElBarrio extends BaseWidget
 {
     use HasWidgetShield;
+
     protected static ?int $sort = -9;
+
     protected static ?string $heading = 'Visitantes espontáneos';
 
     public function table(Table $table): Table
@@ -30,11 +29,11 @@ class VisitaEspontaneaEnElBarrio extends BaseWidget
         return $table
             ->heading(self::$heading)
             ->query(
-                OwnerSpontaneousVisit::query()->whereIn('id',$FamilysInside->pluck('model_id')->toArray())
+                OwnerSpontaneousVisit::query()->whereIn('id', $FamilysInside->pluck('model_id')->toArray())
             )
             ->columns([
-                Tables\Columns\TextColumn::make('first_name')->label(__("general.FirstName"))->searchable(),
-                Tables\Columns\TextColumn::make('last_name')->label(__("general.LastName"))->searchable(),
+                Tables\Columns\TextColumn::make('first_name')->label(__('general.FirstName'))->searchable(),
+                Tables\Columns\TextColumn::make('last_name')->label(__('general.LastName'))->searchable(),
                 Tables\Columns\TextColumn::make('activitiePeople.activitie.created_at')->label(__('general.ultimaEntrada'))->searchable()->dateTime(),
             ]);
     }

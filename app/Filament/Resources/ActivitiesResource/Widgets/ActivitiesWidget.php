@@ -25,7 +25,7 @@ class ActivitiesWidget extends Widget
     //             // ->descriptionIcon('heroicon-m-arrow-trending-up')
     //             // ->color('success')
     //             ,
-           
+
     //     ];
     // }
 }

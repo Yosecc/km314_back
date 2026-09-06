@@ -1,8 +1,6 @@
 # Plan de integración de proveedores con FormControl y Activities
 
-> Estado: análisis aprobado, pendiente de implementación.
->
-> No implementar todavía: existen otros problemas y decisiones que deben resolverse antes.
+> Estado: implementado el 03/09/2026 y verificado con pruebas automatizadas.
 
 ## Objetivo
 
@@ -125,9 +123,9 @@ Como búsqueda manual complementaria, los formularios de proveedor deberían pod
 
 La búsqueda actual por DNI de `form_control_people` no sirve cuando el formulario del proveedor no contiene personas.
 
-### 7. Solicitar la persona al seleccionar el acceso
+### 7. Cargar las personas al seleccionar el acceso
 
-Cuando Activities seleccione —manualmente o mediante cualquiera de los dos QR— un acceso de proveedor, debe abrir un modal para identificar a la persona que está ingresando o saliendo.
+Cuando Activities seleccione —manualmente o mediante cualquiera de los dos QR— un acceso de proveedor, debe mostrar directamente un repetidor para cargar las personas que están ingresando o saliendo. No se utiliza un buscador ni un modal separado.
 
 Datos previstos:
 
@@ -137,7 +135,7 @@ Datos previstos:
 - Teléfono.
 - Archivo del DNI opcional.
 
-Al confirmar:
+Al guardar la actividad:
 
 1. Buscar el DNI únicamente entre los empleados del proveedor vinculado al formulario.
 2. Si existe, utilizar ese registro sin duplicarlo.
@@ -166,8 +164,6 @@ Para no afectar el flujo existente:
 - No se crean varias actividades para una misma entrada o salida.
 
 Agregar también `proveedor_id` nullable a `activities`. Esto facilita encontrar la entrada abierta, registrar la salida y generar reportes sin tener que deducir siempre el proveedor recorriendo los formularios.
-
-Reutilizar `activities_people` con:
 
 Reutilizar `activities_people` con:
 
@@ -218,13 +214,19 @@ La separación de responsabilidades queda así:
 | `activities_people` | Guarda la persona concreta que ingresó o salió. |
 | `activities_autos` | Guarda el vehículo utilizado en el movimiento. |
 
-## Pendientes antes de implementar
+## Decisiones aplicadas
 
-- Resolver los demás problemas funcionales que afectan este flujo.
-- Confirmar los datos exactos que serán obligatorios en el modal de Activities.
-- Confirmar si el archivo del DNI será obligatorio al registrar una entrada.
-- Definir qué debe ocurrir si dos proveedores tienen personas con el mismo DNI; la propuesta actual limita la búsqueda al proveedor del formulario.
-- Definir el comportamiento cuando se escanea el mismo QR para varias personas del mismo proveedor.
-- Confirmar si la selección del vehículo será opcional u obligatoria.
-- Definir qué mostrar cuando el proveedor existe pero no tiene ningún formulario autorizado y vigente.
-- Confirmar si una salida debe conservar exactamente las autorizaciones de la entrada aunque alguna haya vencido durante la permanencia.
+- En cada fila del repetidor son obligatorios DNI, nombre y apellido; teléfono y archivo del DNI son opcionales.
+- El DNI se busca dentro del proveedor seleccionado, por lo que el mismo DNI puede existir en proveedores diferentes.
+- Cada movimiento identifica una persona del proveedor.
+- La selección de vehículo permanece opcional.
+- Una entrada se rechaza cuando no hay formularios autorizados y vigentes.
+- Una salida recupera la entrada abierta de ese proveedor y persona durante el día y conserva exactamente sus formularios, aunque después hayan vencido.
+- La actividad de proveedor guarda `proveedor_id`, la persona en `activities_people` y todas las autorizaciones en `activity_form_control`.
+
+## Verificación realizada
+
+- Migración aplicada primero sobre `km314_testing` y luego sobre `km314`.
+- Suite: 12 pruebas aprobadas, 35 aserciones.
+- Se verificaron ambos QR, la agrupación de formularios/lotes, la relación múltiple de actividades y la recuperación de la entrada al registrar una salida.
+- Antes de migrar `km314` se creó y validó el respaldo `km314_backup_20260903_provider_plan`.

@@ -6,6 +6,7 @@ use App\Filament\Resources\ActivitiesResource;
 use App\Models\Activities;
 use App\Models\ActivitiesPeople;
 use App\Services\CurrentPeopleInsideQuery;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -17,6 +18,8 @@ use Livewire\Attributes\Computed;
 
 class MonitorAccesos extends Page
 {
+    use HasPageShield;
+
     protected static ?string $navigationIcon = 'heroicon-o-signal';
 
     protected static string $view = 'filament.pages.monitor-accesos';
@@ -36,11 +39,6 @@ class MonitorAccesos extends Page
     public string $movementType = 'all';
 
     public string $search = '';
-
-    public static function canAccess(): bool
-    {
-        return ActivitiesResource::canViewAny();
-    }
 
     public function setPeriod(string $period): void
     {
@@ -71,7 +69,7 @@ class MonitorAccesos extends Page
             ->whereNull('activities_people.deleted_at')
             ->where('activities_people.model', $model)
             ->where('activities_people.model_id', $modelId)
-            ->with('activitie')
+            ->with(['activitie.formControls'])
             ->orderByDesc('latest_activity.created_at')
             ->orderByDesc('activities_people.id')
             ->first();
@@ -90,7 +88,7 @@ class MonitorAccesos extends Page
         $tipoEntrada = match ($model) {
             'Owner', 'OwnerFamily', 'OwnerSpontaneousVisit' => 1,
             'Employee' => 2,
-            'FormControl', 'FormControlPeople' => 3,
+            'FormControl', 'FormControlPeople', 'ProveedorEmpleado' => 3,
             default => 0,
         };
 
@@ -107,6 +105,7 @@ class MonitorAccesos extends Page
         $activity = Activities::create([
             'lote_ids' => $latestMovement->activitie->lote_ids,
             'form_control_id' => $latestMovement->activitie->form_control_id,
+            'proveedor_id' => $latestMovement->activitie->proveedor_id,
             'tipo_entrada' => $tipoEntrada,
             'type' => 'Exit',
             'observations' => 'Salida forzada desde Monitor de accesos por: '.$userName,
@@ -118,6 +117,10 @@ class MonitorAccesos extends Page
             'model_id' => $modelId,
             'type' => null,
         ]);
+
+        if ($model === 'ProveedorEmpleado') {
+            $activity->formControls()->sync($latestMovement->activitie->formControls->pluck('id'));
+        }
 
         unset($this->monitorData);
 
@@ -319,12 +322,16 @@ class MonitorAccesos extends Page
     {
         $activity = $row->activitie;
         $person = $row->getPeople();
-        $firstName = trim((string) ($person?->first_name ?? ''));
-        $lastName = trim((string) ($person?->last_name ?? ''));
+        $rawModel = (string) $row->getRawOriginal('model');
+        $firstName = trim((string) ($rawModel === 'ProveedorEmpleado'
+            ? $person?->nombre
+            : $person?->first_name));
+        $lastName = trim((string) ($rawModel === 'ProveedorEmpleado'
+            ? $person?->apellido
+            : $person?->last_name));
         $name = trim($firstName.' '.$lastName);
         $name = $name !== '' ? $name : 'Persona sin datos';
         $occurredAt = Carbon::parse($activity->created_at);
-        $rawModel = (string) $row->getRawOriginal('model');
         $initials = Str::of($name)
             ->explode(' ')
             ->filter()
@@ -348,6 +355,9 @@ class MonitorAccesos extends Page
                 'Employee' => 'Empleado',
                 'OwnerSpontaneousVisit' => 'Visita espontánea',
                 'FormControl', 'FormControlPeople' => $this->formControlCategory($person),
+                'ProveedorEmpleado' => filled($person?->proveedor?->nombre_empresa)
+                    ? 'Proveedor · '.$person->proveedor->nombre_empresa
+                    : 'Proveedor',
                 default => 'Persona',
             },
             'lot' => $this->formatLot($activity, $person),
@@ -367,6 +377,7 @@ class MonitorAccesos extends Page
                 $name,
                 $person?->dni,
                 $this->formatLot($activity, $person),
+                $person?->proveedor?->nombre_empresa,
                 $rawModel,
             ])),
         ];
@@ -450,11 +461,14 @@ class MonitorAccesos extends Page
     {
         return [
             'activitie.formControl',
+            'activitie.formControls',
+            'activitie.proveedor',
             'owner',
             'ownerFamily.familiarPrincipal',
             'employee',
             'formControlPeople.formControl',
             'ownerSpontaneousVisit.owner',
+            'proveedorEmpleado.proveedor',
         ];
     }
 }

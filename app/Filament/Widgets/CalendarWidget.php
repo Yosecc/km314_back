@@ -2,9 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Concerns\HasStrictWidgetShield as HasWidgetShield;
 use App\Filament\Resources\EventResource;
 use App\Models\CommonSpaces;
-
 use App\Models\FormControlPeople;
 use App\Models\HomeInspection;
 use App\Models\Lote;
@@ -17,8 +17,6 @@ use App\Models\ServiceRequestType;
 use App\Models\StartUp;
 use App\Models\StartUpOption;
 use App\Models\WorksAndInstallation;
-
-
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
@@ -37,16 +35,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Saade\FilamentFullCalendar\Actions;
 use Saade\FilamentFullCalendar\Widgets\FullCalendarWidget;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 class CalendarWidget extends FullCalendarWidget
 {
-
     use HasWidgetShield;
-    public Model | string | null $model = ServiceRequest::class;
-    
-    protected static ?string $heading = 'Calendario de Reservas de Servicios';
 
+    public Model|string|null $model = ServiceRequest::class;
+
+    protected static ?string $heading = 'Calendario de Reservas de Servicios';
 
     public function config(): array
     {
@@ -67,7 +63,7 @@ class CalendarWidget extends FullCalendarWidget
                 function (Form $form, array $arguments) {
                     $form->fill([
                         'starts_at' => $arguments['start'] ?? null,
-                        'ends_at' => $arguments['end'] ?? null
+                        'ends_at' => $arguments['end'] ?? null,
                     ]);
                 }
             ),
@@ -82,7 +78,7 @@ class CalendarWidget extends FullCalendarWidget
         ];
     }
 
-    protected function viewAction() : Action
+    protected function viewAction(): Action
     {
         return Actions\ViewAction::make();
     }
@@ -95,101 +91,99 @@ class CalendarWidget extends FullCalendarWidget
                     ->label('Servicio')
                     ->schema([
                         Grid::make()
-                        ->schema([
-                            Hidden::make('user_id')->default(Auth::user()->id),
+                            ->schema([
+                                Hidden::make('user_id')->default(Auth::user()->id),
 
-                            Select::make('service_request_type_id')
-                                // ->label(__("general.LoteStatus"))
-                                ->required()
-                                ->relationship(name: 'serviceRequestType', titleAttribute: 'name'),
+                                Select::make('service_request_type_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->relationship(name: 'serviceRequestType', titleAttribute: 'name'),
 
+                                Select::make('service_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->relationship(name: 'service', titleAttribute: 'name')
+                                    ->live()
+                                    ->afterStateUpdated(function (?string $state, Set $set) {
+                                        $service = Service::find($state);
+                                        $set('name', $service->name);
+                                        $set('model', $service->model);
+                                    }),
 
-                            Select::make('service_id')
-                                // ->label(__("general.LoteStatus"))
-                                ->required()
-                                ->relationship(name: 'service', titleAttribute: 'name')
-                                ->live()
-                                ->afterStateUpdated(function (?string $state, Set $set) {
-                                    $service = Service::find($state);
-                                    $set('name',$service->name);
-                                    $set('model',$service->model);
-                                }),
+                                TextInput::make('name')
+                                    ->required()
+                                    ->live()
+                                    ->maxLength(255)->columnSpan(2),
 
-                            TextInput::make('name')
-                                ->required()
-                                ->live()
-                                ->maxLength(255)->columnSpan(2),
+                                Hidden::make('model'),
 
-                            Hidden::make('model'),
+                                Select::make('model_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->options(RentalAttention::get()->pluck('name', 'id')->toArray())
+                                    ->disabled(fn (Get $get) => $get('model') != 'RentalAttention')
+                                    ->visible(fn (Get $get) => $get('model') == 'RentalAttention'),
 
-                            Select::make('model_id')
-                                // ->label(__("general.LoteStatus"))
-                                ->required()
-                                ->options(RentalAttention::get()->pluck('name','id')->toArray())
-                                ->disabled( fn (Get $get) => $get('model') != 'RentalAttention' )
-                                ->visible( fn (Get $get) => $get('model') == 'RentalAttention' ),
+                                Select::make('model_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->options(HomeInspection::get()->pluck('name', 'id')->toArray())
+                                    ->disabled(fn (Get $get) => $get('model') != 'HomeInspection')
+                                    ->visible(fn (Get $get) => $get('model') == 'HomeInspection'),
 
-                            Select::make('model_id')
-                                // ->label(__("general.LoteStatus"))
-                                ->required()
-                                ->options(HomeInspection::get()->pluck('name','id')->toArray())
-                                ->disabled( fn (Get $get) => $get('model') != 'HomeInspection' )
-                                ->visible( fn (Get $get) => $get('model') == 'HomeInspection' ),
+                                Select::make('model_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->options(WorksAndInstallation::get()->pluck('name', 'id')->toArray())
+                                    ->disabled(fn (Get $get) => $get('model') != 'WorksAndInstallation')
+                                    ->visible(fn (Get $get) => $get('model') == 'WorksAndInstallation'),
 
-                            Select::make('model_id')
-                                // ->label(__("general.LoteStatus"))
-                                ->required()
-                                ->options(WorksAndInstallation::get()->pluck('name','id')->toArray())
-                                ->disabled( fn (Get $get) => $get('model') != 'WorksAndInstallation' )
-                                ->visible( fn (Get $get) => $get('model') == 'WorksAndInstallation' ),
+                                Select::make('model_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->options(CommonSpaces::get()->pluck('name', 'id')->toArray())
+                                    ->disabled(fn (Get $get) => $get('model') != 'CommonSpaces')
+                                    ->visible(fn (Get $get) => $get('model') == 'CommonSpaces'),
 
-                            Select::make('model_id')
-                                // ->label(__("general.LoteStatus"))
-                                ->required()
-                                ->options(CommonSpaces::get()->pluck('name','id')->toArray())
-                                ->disabled( fn (Get $get) => $get('model') != 'CommonSpaces' )
-                                ->visible( fn (Get $get) => $get('model') == 'CommonSpaces' ),
+                                Select::make('model_id')
+                                    // ->label(__("general.LoteStatus"))
+                                    ->required()
+                                    ->options(StartUp::get()->pluck('name', 'id')->toArray())
+                                    ->disabled(fn (Get $get) => $get('model') != 'StartUp')
+                                    ->visible(fn (Get $get) => $get('model') == 'StartUp'),
 
-                            Select::make('model_id')
-                                // ->label(__("general.LoteStatus"))
-                                ->required()
-                                ->options(StartUp::get()->pluck('name','id')->toArray())
-                                ->disabled( fn (Get $get) => $get('model') != 'StartUp' )
-                                ->visible( fn (Get $get) => $get('model') == 'StartUp' ),
+                                Select::make('options')
+                                    ->multiple()
+                                    ->searchable()
+                                    ->options(StartUpOption::get()->pluck('name', 'id')->toArray())
+                                    ->disabled(fn (Get $get) => $get('model') != 'StartUp')
+                                    ->visible(fn (Get $get) => $get('model') == 'StartUp'),
 
-                            Select::make('options')
-                                ->multiple()
-                                ->searchable()
-                                ->options(StartUpOption::get()->pluck('name','id')->toArray())
-                                ->disabled( fn (Get $get) => $get('model') != 'StartUp' )
-                                ->visible( fn (Get $get) => $get('model') == 'StartUp' ),
-
-
-                        ])->columns(2),
-                            Textarea::make('observation'),
-                            Fieldset::make('responsible')
-                                ->label('Responsable')
-                                ->relationship('responsible')
-                                ->schema([
-                                    TextInput::make('dni')
-                                        ->label(__("general.DNI"))
-                                        ->required()
-                                        ->numeric(),
-                                    TextInput::make('first_name')
-                                        ->label(__("general.FirstName"))
-                                        ->required()
-                                        ->maxLength(255),
-                                    TextInput::make('last_name')
-                                        ->label(__("general.LastName"))
-                                        ->required()
-                                        ->maxLength(255),
-                                    TextInput::make('phone')
-                                        ->label(__("general.Phone"))
-                                        ->tel()
-                                        ->numeric(),
+                            ])->columns(2),
+                        Textarea::make('observation'),
+                        Fieldset::make('responsible')
+                            ->label('Responsable')
+                            ->relationship('responsible')
+                            ->schema([
+                                TextInput::make('dni')
+                                    ->label(__('general.DNI'))
+                                    ->required()
+                                    ->numeric(),
+                                TextInput::make('first_name')
+                                    ->label(__('general.FirstName'))
+                                    ->required()
+                                    ->maxLength(255),
+                                TextInput::make('last_name')
+                                    ->label(__('general.LastName'))
+                                    ->required()
+                                    ->maxLength(255),
+                                TextInput::make('phone')
+                                    ->label(__('general.Phone'))
+                                    ->tel()
+                                    ->numeric(),
                             ])
-                            ->disabled( fn (Get $get) => $get('model') != 'CommonSpaces' )
-                            ->visible( fn (Get $get) => $get('model') == 'CommonSpaces' ),
+                            ->disabled(fn (Get $get) => $get('model') != 'CommonSpaces')
+                            ->visible(fn (Get $get) => $get('model') == 'CommonSpaces'),
                     ]),
                 Wizard\Step::make('Date')
                     ->label('Fecha')
@@ -205,7 +199,7 @@ class CalendarWidget extends FullCalendarWidget
                                 //dd($get('service_request_type_id'), );
                                 $SRtype = ServiceRequestType::find($get('service_request_type_id'));
 
-                                if(!$SRtype->isCalendar){
+                                if (! $SRtype->isCalendar) {
                                     return;
                                 }
                                 // Fecha y hora de inicio seleccionada
@@ -225,7 +219,7 @@ class CalendarWidget extends FullCalendarWidget
                                     $get('model')
                                 );
 
-                                if (!$isAvailable) {
+                                if (! $isAvailable) {
                                     Notification::make()
                                         ->title('Fecha de reservación no está disponible')
                                         ->danger()
@@ -236,8 +230,7 @@ class CalendarWidget extends FullCalendarWidget
                                         ->success()
                                         ->send();
                                 }
-                            })
-                        ,
+                            }),
 
                         DateTimePicker::make('ends_at')->label('Fecha de fin')->required()->live(),
                     ]),
@@ -245,20 +238,21 @@ class CalendarWidget extends FullCalendarWidget
                     ->label('Información')
                     ->schema([
 
-                        Select::make('owner_id')->label(__("general.Owner"))
+                        Select::make('owner_id')->label(__('general.Owner'))
                             ->relationship(name: 'owner')
                             ->getOptionLabelFromRecordUsing(fn (Owner $record) => "{$record->first_name} {$record->last_name}"),
 
                         Select::make('lote_id')
-                            ->label(__("general.Lotes"))
-                            ->options(Lote::get()->map(function($lote){
-                                $lote['lote_name'] = $lote->sector->name . $lote->lote_id;
+                            ->label(__('general.Lotes'))
+                            ->options(Lote::get()->map(function ($lote) {
+                                $lote['lote_name'] = $lote->sector->name.$lote->lote_id;
+
                                 return $lote;
                             })
-                            ->pluck('lote_name', 'id')->toArray()),
+                                ->pluck('lote_name', 'id')->toArray()),
 
                         Select::make('propertie_id')
-                            ->label(__("general.Propertie"))
+                            ->label(__('general.Propertie'))
                             ->options(Property::get()->pluck('identificador', 'id')->toArray()),
 
                         Select::make('service_request_status_id')
@@ -275,110 +269,113 @@ class CalendarWidget extends FullCalendarWidget
     {
         // return ['id'=> 'a','title' => 'My event','start'=> '2024-07-18'];
         $serviceRequest = ServiceRequest::query()
-        ->where('starts_at', '>=', $fetchInfo['start'])
-        ->where('ends_at', '<=', $fetchInfo['end'])
-        ->get()
-        ->map(
-            fn (ServiceRequest $event) => [
-                'title' => $event->name,
-                'id' => $event->id,
-                'start' => $event->starts_at,
-                'end' => $event->ends_at,
-                'backgroundColor' => $event->service->color,
-                'borderColor' => $event->service->color,
-                // 'url' => EventResource::getUrl(name: 'view', parameters: ['record' => $event]),
-                // 'shouldOpenUrlInNewTab' => true
-            ]
-        )
-        ->all();
+            ->where('starts_at', '>=', $fetchInfo['start'])
+            ->where('ends_at', '<=', $fetchInfo['end'])
+            ->get()
+            ->map(
+                fn (ServiceRequest $event) => [
+                    'title' => $event->name,
+                    'id' => $event->id,
+                    'start' => $event->starts_at,
+                    'end' => $event->ends_at,
+                    'backgroundColor' => $event->service->color,
+                    'borderColor' => $event->service->color,
+                    // 'url' => EventResource::getUrl(name: 'view', parameters: ['record' => $event]),
+                    // 'shouldOpenUrlInNewTab' => true
+                ]
+            )
+            ->all();
 
         $formControlPeople = FormControlPeople::query()
             ->whereHas('formControl', function ($query) use ($fetchInfo) {
                 $query->where('status', 'Authorized')
-                    ->whereHas('dateRanges', function($q) use ($fetchInfo) {
+                    ->whereHas('dateRanges', function ($q) use ($fetchInfo) {
                         $q->where('start_date_range', '<=', $fetchInfo['end'])
-                          ->where('end_date_range', '>=', $fetchInfo['start']);
+                            ->where('end_date_range', '>=', $fetchInfo['start']);
                     });
             })
-        ->get()
-        ->flatMap(function (FormControlPeople $person) {
-            $formControl = $person->formControl;
-            if (!$formControl) return [];
-            $dateRanges = $formControl->dateRanges()->get();
-            $incomeType = $formControl->income_type ?? null;
-            // Normalizar income_type a array
-            if (is_string($incomeType)) {
-                $incomeType = [$incomeType];
-            }
-            $events = collect();
-            foreach ($dateRanges as $range) {
-                $startDate = Carbon::parse($range->start_date_range);
-                $endDate = Carbon::parse($range->end_date_range);
-                // Definir colores por income_type
-                $colorFondo = '#244e27'; // verde por defecto
-                $colorBorde = '#388e3c';
-                if ((is_array($incomeType) && in_array('Trabajador', $incomeType)) || $incomeType == 'Trabajador') {
-                    $colorFondo = '#fbc02d'; // amarillo
-                    $colorBorde = '#f9a825';
-                } elseif ((is_array($incomeType) && in_array('Inquilino', $incomeType)) || $incomeType == 'Inquilino') {
-                    $colorFondo = '#0288d1'; // azul
-                    $colorBorde = '#0277bd';
-                } elseif ((is_array($incomeType) && in_array('Visita', $incomeType)) || $incomeType == 'Visita') {
-                    $colorFondo = '#8e24aa'; // violeta
-                    $colorBorde = '#6a1b9a';
+            ->get()
+            ->flatMap(function (FormControlPeople $person) {
+                $formControl = $person->formControl;
+                if (! $formControl) {
+                    return [];
                 }
-                if ((is_array($incomeType) && in_array('Trabajador', $incomeType)) || $incomeType == 'Trabajador') {
-                    // Mostrar todos los días
-                    $current = $startDate->copy();
-                    while ($current->lte($endDate)) {
-                        $start = $current->format('Y-m-d');
-                        $end = $current->format('Y-m-d');
-                        // Si es el primer día y hay hora de inicio, agrégala
-                        if ($current->eq($startDate) && !empty($range->start_time_range)) {
-                            $start .= ' ' . $range->start_time_range;
+                $dateRanges = $formControl->dateRanges()->get();
+                $incomeType = $formControl->income_type ?? null;
+                // Normalizar income_type a array
+                if (is_string($incomeType)) {
+                    $incomeType = [$incomeType];
+                }
+                $events = collect();
+                foreach ($dateRanges as $range) {
+                    $startDate = Carbon::parse($range->start_date_range);
+                    $endDate = Carbon::parse($range->end_date_range);
+                    // Definir colores por income_type
+                    $colorFondo = '#244e27'; // verde por defecto
+                    $colorBorde = '#388e3c';
+                    if ((is_array($incomeType) && in_array('Trabajador', $incomeType)) || $incomeType == 'Trabajador') {
+                        $colorFondo = '#fbc02d'; // amarillo
+                        $colorBorde = '#f9a825';
+                    } elseif ((is_array($incomeType) && in_array('Inquilino', $incomeType)) || $incomeType == 'Inquilino') {
+                        $colorFondo = '#0288d1'; // azul
+                        $colorBorde = '#0277bd';
+                    } elseif ((is_array($incomeType) && in_array('Visita', $incomeType)) || $incomeType == 'Visita') {
+                        $colorFondo = '#8e24aa'; // violeta
+                        $colorBorde = '#6a1b9a';
+                    }
+                    if ((is_array($incomeType) && in_array('Trabajador', $incomeType)) || $incomeType == 'Trabajador') {
+                        // Mostrar todos los días
+                        $current = $startDate->copy();
+                        while ($current->lte($endDate)) {
+                            $start = $current->format('Y-m-d');
+                            $end = $current->format('Y-m-d');
+                            // Si es el primer día y hay hora de inicio, agrégala
+                            if ($current->eq($startDate) && ! empty($range->start_time_range)) {
+                                $start .= ' '.$range->start_time_range;
+                            }
+                            // Si es el último día y hay hora de fin, agrégala
+                            if ($current->eq($endDate) && ! empty($range->end_time_range)) {
+                                $end .= ' '.$range->end_time_range;
+                            }
+                            $events->push([
+                                'title' => $person->first_name.' '.$person->last_name,
+                                'id' => 'People'.$person->id.'_'.$range->id.'_'.$current->format('Ymd'),
+                                'start' => $start,
+                                'end' => $end,
+                                'backgroundColor' => $colorFondo,
+                                'borderColor' => $colorBorde,
+                                'url' => route('filament.admin.resources.form-controls.view', $formControl),
+                                'shouldOpenUrlInNewTab' => true,
+                            ]);
+                            $current->addDay();
                         }
-                        // Si es el último día y hay hora de fin, agrégala
-                        if ($current->eq($endDate) && !empty($range->end_time_range)) {
-                            $end .= ' ' . $range->end_time_range;
+                    } elseif ((is_array($incomeType) && (in_array('Inquilino', $incomeType) || in_array('Visita', $incomeType))) || $incomeType == 'Inquilino' || $incomeType == 'Visita') {
+                        // Mostrar solo el primer día
+                        $start = $startDate->format('Y-m-d');
+                        $end = $startDate->format('Y-m-d');
+                        if (! empty($range->start_time_range)) {
+                            $start .= ' '.$range->start_time_range;
+                        }
+                        if (! empty($range->end_time_range)) {
+                            $end .= ' '.$range->end_time_range;
                         }
                         $events->push([
-                            'title' => $person->first_name . ' ' . $person->last_name ,
-                            'id' => 'People'.$person->id.'_'.$range->id.'_'.$current->format('Ymd'),
+                            'title' => $person->first_name.' '.$person->last_name,
+                            'id' => 'People'.$person->id.'_'.$range->id.'_'.$startDate->format('Ymd'),
                             'start' => $start,
                             'end' => $end,
                             'backgroundColor' => $colorFondo,
                             'borderColor' => $colorBorde,
                             'url' => route('filament.admin.resources.form-controls.view', $formControl),
-                            'shouldOpenUrlInNewTab' => true
+                            'shouldOpenUrlInNewTab' => true,
                         ]);
-                        $current->addDay();
                     }
-                } elseif ((is_array($incomeType) && (in_array('Inquilino', $incomeType) || in_array('Visita', $incomeType))) || $incomeType == 'Inquilino' || $incomeType == 'Visita') {
-                    // Mostrar solo el primer día
-                    $start = $startDate->format('Y-m-d');
-                    $end = $startDate->format('Y-m-d');
-                    if (!empty($range->start_time_range)) {
-                        $start .= ' ' . $range->start_time_range;
-                    }
-                    if (!empty($range->end_time_range)) {
-                        $end .= ' ' . $range->end_time_range;
-                    }
-                    $events->push([
-                        'title' => $person->first_name . ' ' . $person->last_name ,
-                        'id' => 'People'.$person->id.'_'.$range->id.'_'.$startDate->format('Ymd'),
-                        'start' => $start,
-                        'end' => $end,
-                        'backgroundColor' => $colorFondo,
-                        'borderColor' => $colorBorde,
-                        'url' => route('filament.admin.resources.form-controls.view', $formControl),
-                        'shouldOpenUrlInNewTab' => true
-                    ]);
                 }
-            }
-            return $events;
-        })
-        ->all();
 
-        return array_merge($serviceRequest,$formControlPeople);
+                return $events;
+            })
+            ->all();
+
+        return array_merge($serviceRequest, $formControlPeople);
     }
 }

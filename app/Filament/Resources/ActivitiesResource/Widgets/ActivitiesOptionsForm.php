@@ -18,13 +18,14 @@ class ActivitiesOptionsForm extends BaseWidget
                     'class' => 'cursor-pointer',
                     'wire:click' => "\$dispatch('setStatusFilter', { filter: 'processed' })",
                 ])
-                // ->descriptionIcon('heroicon-m-arrow-trending-up')
-                // ->color('success')
-                ,
+            // ->descriptionIcon('heroicon-m-arrow-trending-up')
+            // ->color('success')
+            ,
         ];
     }
 
-    public function setStatusFilter($data){
+    public function setStatusFilter($data)
+    {
         dd($data);
     }
 }

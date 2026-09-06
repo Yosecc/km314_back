@@ -176,6 +176,19 @@ class ProveedorResource extends Resource
                 Tables\Filters\TernaryFilter::make('status')->label('Estado activo'),
             ])
             ->actions([
+                Tables\Actions\Action::make('show_qr')
+                    ->label('Ver QR')
+                    ->icon('heroicon-o-qr-code')
+                    ->color('info')
+                    ->modalHeading('Código QR del proveedor')
+                    ->modalDescription(fn (Proveedor $record): string => $record->nombre_empresa)
+                    ->modalContent(fn (Proveedor $record) => view('components.qr-modal', [
+                        'record' => $record,
+                        'qrCode' => $record->generateQrCode(),
+                        'entityType' => 'Proveedor',
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Cerrar'),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

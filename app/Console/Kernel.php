@@ -12,6 +12,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         RecoverMessagesEmails::class,
         \App\Console\Commands\ImportAccountingCsv::class,
+        \App\Console\Commands\ProcessPackageReceptionAlerts::class,
     ];
 
     /**
@@ -21,6 +22,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('app:recover-messages-emails')->everyThirtyMinutes();
+        $schedule->command('package-receptions:process-alerts')->everyFiveMinutes()->withoutOverlapping();
     }
 
     /**
