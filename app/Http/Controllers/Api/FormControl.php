@@ -33,7 +33,7 @@ class FormControl extends Controller
                 $form['files'] = $form->files->map(function($file){
 					//dd($file);
 					$file['name'] =   $file['file'];
-					$file['path'] = config('app.url').Storage::url($file['file']);
+					$file['path'] = request()->getSchemeAndHttpHost().Storage::url($file['file']);
 
 					return $file;
 
@@ -45,7 +45,7 @@ class FormControl extends Controller
                 $form['files'] = $form->files->map(function($file){
 					//dd($file);
 					$file['name'] =   $file['file'];
-					$file['path'] = config('app.url').Storage::url($file['file']);
+					$file['path'] = request()->getSchemeAndHttpHost().Storage::url($file['file']);
 
 					return $file;
 

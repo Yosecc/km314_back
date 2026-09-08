@@ -29,7 +29,7 @@ class Main extends Controller
     public function sliders()
     {
         return Slider::where('status',1)->get()->map(function($slide){
-            $slide['img'] =  config('app.url').Storage::url($slide['img']);
+            $slide['img'] = request()->getSchemeAndHttpHost().Storage::url($slide['img']);
             return $slide;
         })->pluck('img');
     }
@@ -338,7 +338,7 @@ class Main extends Controller
     {
         $popup = PopUp::where('active',1)->orderBy('created_at','desc')->first();
 		if($popup){
-            $popup->image = $popup->image ? config('app.url').Storage::url( $popup->image) : $popup->image;
+            $popup->image = $popup->image ? request()->getSchemeAndHttpHost().Storage::url($popup->image) : $popup->image;
             $popup->makeHidden(['created_at','updated_at','id','active']);
 		}
 		return response()->json($popup );
