@@ -7,7 +7,6 @@ use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
 use App\Filament\Widgets\Entry;
-use App\Filament\Widgets\Personas;
 use App\Filament\Widgets\PackageReceptionStats;
 use App\Filament\Widgets\AccessControlStats;
 use Filament\Support\Colors\Color;

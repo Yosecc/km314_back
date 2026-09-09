@@ -22,6 +22,11 @@ class AccessPeopleInsideService
                 'short_label' => 'Propietarios',
                 'icon' => 'heroicon-o-home-modern',
             ],
+            'families' => [
+                'label' => 'Familiares en el barrio',
+                'short_label' => 'Familiares',
+                'icon' => 'heroicon-o-user-group',
+            ],
             'employees' => [
                 'label' => 'Empleados en el barrio',
                 'short_label' => 'Empleados',
@@ -48,6 +53,17 @@ class AccessPeopleInsideService
                 'short_label' => 'Visitas',
                 'icon' => 'heroicon-o-users',
             ],
+            'providers' => [
+                'label' => 'Personal de proveedores',
+                'short_label' => 'Proveedores',
+                'icon' => 'heroicon-o-truck',
+            ],
+            'unclassified' => [
+                'label' => 'Otros accesos o registros incompletos',
+                'short_label' => 'Sin clasificar',
+                'detail' => 'Registros que necesitan identificación',
+                'icon' => 'heroicon-o-question-mark-circle',
+            ],
         ];
     }
 
@@ -63,9 +79,11 @@ class AccessPeopleInsideService
         return match ((string) $row->getRawOriginal('model')) {
             'OwnerSpontaneousVisit' => ['spontaneous'],
             'Owner' => ['owners'],
+            'OwnerFamily' => ['families'],
             'Employee' => ['employees'],
             'FormControl', 'FormControlPeople' => self::formControlCategoryKeys($row),
-            default => [],
+            'ProveedorEmpleado' => ['providers'],
+            default => ['unclassified'],
         };
     }
 
@@ -85,33 +103,31 @@ class AccessPeopleInsideService
         $form = $row->formControlPeople?->formControl;
 
         if (! $form) {
-            return [];
+            return ['unclassified'];
         }
 
         $accessTypes = collect($form->access_type)
             ->map(fn ($value) => mb_strtolower((string) $value));
         $incomeTypes = collect($form->income_type)
             ->map(fn ($value) => mb_strtolower((string) $value));
-        $categories = [];
-
-        if ($accessTypes->intersect(['general', 'playa', 'house', 'hause'])->isNotEmpty()) {
-            $categories[] = 'common_visitors';
+        if ($accessTypes->contains('lote') && $incomeTypes->contains('trabajador')) {
+            return ['workers'];
         }
 
         if ($accessTypes->contains('lote') && $incomeTypes->contains('inquilino')) {
-            $categories[] = 'tenants';
-        }
-
-        if ($accessTypes->contains('lote') && $incomeTypes->contains('trabajador')) {
-            $categories[] = 'workers';
+            return ['tenants'];
         }
 
         if ($accessTypes->contains('lote') && $incomeTypes->contains(
             fn (string $value) => str_contains($value, 'visita')
         )) {
-            $categories[] = 'visits';
+            return ['visits'];
         }
 
-        return $categories;
+        if ($accessTypes->intersect(['general', 'playa', 'house', 'hause'])->isNotEmpty()) {
+            return ['common_visitors'];
+        }
+
+        return ['unclassified'];
     }
 }

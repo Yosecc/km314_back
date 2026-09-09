@@ -190,90 +190,13 @@
                             <h3>Personas adentro</h3>
                         </div>
                         <div class="inside-header-actions">
-                            <x-filament::modal id="people-inside-modal" width="7xl">
-                                <x-slot name="trigger">
-                                    <button type="button" class="open-inside-button">
-                                        Ver listado
-                                    </button>
-                                </x-slot>
-
-                                <x-slot name="heading">Personas adentro</x-slot>
-                                <x-slot name="description">
-                                    Estado actual según el último movimiento registrado.
-                                </x-slot>
-
-                                <div class="inside-modal-content">
-                                    <div class="inside-category-grid">
-                                        <button
-                                            type="button"
-                                            wire:click="setInsideCategory('all')"
-                                            @class(['inside-category-card', 'active' => $insideCategory === 'all'])
-                                        >
-                                            <x-heroicon-o-user-group />
-                                            <strong>{{ $monitor['inside_total'] }}</strong>
-                                            <span>Todos adentro</span>
-                                        </button>
-
-                                        @foreach($monitor['inside_categories'] as $category)
-                                            <button
-                                                type="button"
-                                                wire:key="inside-category-{{ $category['key'] }}"
-                                                wire:click="setInsideCategory('{{ $category['key'] }}')"
-                                                @class(['inside-category-card', 'active' => $insideCategory === $category['key']])
-                                            >
-                                                <x-dynamic-component :component="$category['icon']" />
-                                                <strong>{{ $category['count'] }}</strong>
-                                                <span>{{ $category['short_label'] }}</span>
-                                            </button>
-                                        @endforeach
-                                    </div>
-                                    <p class="inside-category-note">Una persona puede pertenecer a más de un grupo cuando su formulario incluye varios tipos de acceso.</p>
-
-                                    <div class="inside-modal-toolbar">
-                                        <div class="inside-modal-search">
-                                            <x-heroicon-o-magnifying-glass />
-                                            <input
-                                                type="search"
-                                                wire:model.live.debounce.300ms="insideSearch"
-                                                placeholder="Buscar por nombre, DNI o lote"
-                                            >
-                                        </div>
-                                        <span>{{ $monitor['inside_modal']->count() }} personas encontradas</span>
-                                    </div>
-
-                                    <div class="inside-modal-list">
-                                        @forelse($monitor['inside_modal'] as $person)
-                                            <article wire:key="inside-modal-{{ $person['identity'] }}" class="inside-modal-person">
-                                                <div class="avatar">{{ $person['initials'] }}</div>
-                                                <div class="inside-modal-info">
-                                                    <h4>{{ $person['name'] }}</h4>
-                                                    <div>
-                                                        <span>{{ $person['category'] }}</span>
-                                                        <span>DNI {{ $person['dni'] }}</span>
-                                                        <span>Lote {{ $person['lot'] }}</span>
-                                                    </div>
-                                                    <small>Entró a las {{ $person['time'] }} · {{ $person['duration'] }} adentro</small>
-                                                </div>
-                                                <div class="inside-modal-actions">
-                                                    <a href="{{ $person['url'] }}">Ver registro</a>
-                                                    <button
-                                                        type="button"
-                                                        wire:click="forceExit('{{ $person['model'] }}', {{ $person['model_id'] }})"
-                                                        wire:confirm="¿Confirmas que deseas registrar una salida forzada para {{ $person['name'] }}?"
-                                                    >
-                                                        Forzar salida
-                                                    </button>
-                                                </div>
-                                            </article>
-                                        @empty
-                                            <div class="empty-state compact">
-                                                <h4>No encontramos personas</h4>
-                                                <p>Pruebe otra categoría o cambie la búsqueda.</p>
-                                            </div>
-                                        @endforelse
-                                    </div>
-                                </div>
-                            </x-filament::modal>
+                            <button
+                                type="button"
+                                class="open-inside-button"
+                                x-on:click="$dispatch('open-modal', { id: 'people-inside-modal' })"
+                            >
+                                Ver listado
+                            </button>
                             <span class="inside-count">{{ $monitor['inside']->count() }}</span>
                         </div>
                     </header>
@@ -339,6 +262,85 @@
             </aside>
         </div>
     </div>
+
+    <x-filament::modal id="people-inside-modal" width="7xl">
+        <x-slot name="heading">Personas adentro</x-slot>
+        <x-slot name="description">
+            Estado actual según el último movimiento registrado. Cada persona pertenece a un único grupo.
+        </x-slot>
+
+        <div class="inside-modal-content">
+            <div class="inside-category-grid">
+                <button
+                    type="button"
+                    wire:click="setInsideCategory('all')"
+                    @class(['inside-category-card', 'active' => $insideCategory === 'all'])
+                >
+                    <x-heroicon-o-user-group />
+                    <strong>{{ $monitor['inside_total'] }}</strong>
+                    <span>Todos adentro</span>
+                </button>
+
+                @foreach($monitor['inside_categories'] as $category)
+                    <button
+                        type="button"
+                        wire:key="inside-category-{{ $category['key'] }}"
+                        wire:click="setInsideCategory('{{ $category['key'] }}')"
+                        @class(['inside-category-card', 'active' => $insideCategory === $category['key']])
+                    >
+                        <x-dynamic-component :component="$category['icon']" />
+                        <strong>{{ $category['count'] }}</strong>
+                        <span>{{ $category['short_label'] }}</span>
+                    </button>
+                @endforeach
+            </div>
+            <p class="inside-category-note">La suma de los grupos coincide con el total de personas adentro. “Sin clasificar” permite localizar registros incompletos.</p>
+
+            <div class="inside-modal-toolbar">
+                <div class="inside-modal-search">
+                    <x-heroicon-o-magnifying-glass />
+                    <input
+                        type="search"
+                        wire:model.live.debounce.300ms="insideSearch"
+                        placeholder="Buscar por nombre, DNI o lote"
+                    >
+                </div>
+                <span>{{ $monitor['inside_modal']->count() }} personas encontradas</span>
+            </div>
+
+            <div class="inside-modal-list">
+                @forelse($monitor['inside_modal'] as $person)
+                    <article wire:key="inside-modal-{{ $person['identity'] }}" class="inside-modal-person">
+                        <div class="avatar">{{ $person['initials'] }}</div>
+                        <div class="inside-modal-info">
+                            <h4>{{ $person['name'] }}</h4>
+                            <div>
+                                <span>{{ $person['category'] }}</span>
+                                <span>DNI {{ $person['dni'] }}</span>
+                                <span>Lote {{ $person['lot'] }}</span>
+                            </div>
+                            <small>Entró a las {{ $person['time'] }} · {{ $person['duration'] }} adentro</small>
+                        </div>
+                        <div class="inside-modal-actions">
+                            <a href="{{ $person['url'] }}">Ver registro</a>
+                            <button
+                                type="button"
+                                wire:click="forceExit('{{ $person['model'] }}', {{ $person['model_id'] }})"
+                                wire:confirm="¿Confirmas que deseas registrar una salida forzada para {{ $person['name'] }}?"
+                            >
+                                Forzar salida
+                            </button>
+                        </div>
+                    </article>
+                @empty
+                    <div class="empty-state compact">
+                        <h4>No encontramos personas</h4>
+                        <p>Pruebe otra categoría o cambie la búsqueda.</p>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </x-filament::modal>
 
     <style>
         [x-cloak] { display: none !important; }
