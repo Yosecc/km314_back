@@ -4,6 +4,7 @@
     <div
         class="access-monitor"
         x-data="{ paused: false }"
+        x-init="if (new URLSearchParams(window.location.search).has('inside')) { $nextTick(() => $dispatch('open-modal', { id: 'people-inside-modal' })) }"
     >
         <div x-show="! paused" wire:poll.15s="$refresh" aria-hidden="true"></div>
 
@@ -188,7 +189,93 @@
                             <span class="eyebrow">ESTADO ACTUAL</span>
                             <h3>Personas adentro</h3>
                         </div>
-                        <span class="inside-count">{{ $monitor['inside']->count() }}</span>
+                        <div class="inside-header-actions">
+                            <x-filament::modal id="people-inside-modal" width="7xl">
+                                <x-slot name="trigger">
+                                    <button type="button" class="open-inside-button">
+                                        Ver listado
+                                    </button>
+                                </x-slot>
+
+                                <x-slot name="heading">Personas adentro</x-slot>
+                                <x-slot name="description">
+                                    Estado actual según el último movimiento registrado.
+                                </x-slot>
+
+                                <div class="inside-modal-content">
+                                    <div class="inside-category-grid">
+                                        <button
+                                            type="button"
+                                            wire:click="setInsideCategory('all')"
+                                            @class(['inside-category-card', 'active' => $insideCategory === 'all'])
+                                        >
+                                            <x-heroicon-o-user-group />
+                                            <strong>{{ $monitor['inside_total'] }}</strong>
+                                            <span>Todos adentro</span>
+                                        </button>
+
+                                        @foreach($monitor['inside_categories'] as $category)
+                                            <button
+                                                type="button"
+                                                wire:key="inside-category-{{ $category['key'] }}"
+                                                wire:click="setInsideCategory('{{ $category['key'] }}')"
+                                                @class(['inside-category-card', 'active' => $insideCategory === $category['key']])
+                                            >
+                                                <x-dynamic-component :component="$category['icon']" />
+                                                <strong>{{ $category['count'] }}</strong>
+                                                <span>{{ $category['short_label'] }}</span>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                    <p class="inside-category-note">Una persona puede pertenecer a más de un grupo cuando su formulario incluye varios tipos de acceso.</p>
+
+                                    <div class="inside-modal-toolbar">
+                                        <div class="inside-modal-search">
+                                            <x-heroicon-o-magnifying-glass />
+                                            <input
+                                                type="search"
+                                                wire:model.live.debounce.300ms="insideSearch"
+                                                placeholder="Buscar por nombre, DNI o lote"
+                                            >
+                                        </div>
+                                        <span>{{ $monitor['inside_modal']->count() }} personas encontradas</span>
+                                    </div>
+
+                                    <div class="inside-modal-list">
+                                        @forelse($monitor['inside_modal'] as $person)
+                                            <article wire:key="inside-modal-{{ $person['identity'] }}" class="inside-modal-person">
+                                                <div class="avatar">{{ $person['initials'] }}</div>
+                                                <div class="inside-modal-info">
+                                                    <h4>{{ $person['name'] }}</h4>
+                                                    <div>
+                                                        <span>{{ $person['category'] }}</span>
+                                                        <span>DNI {{ $person['dni'] }}</span>
+                                                        <span>Lote {{ $person['lot'] }}</span>
+                                                    </div>
+                                                    <small>Entró a las {{ $person['time'] }} · {{ $person['duration'] }} adentro</small>
+                                                </div>
+                                                <div class="inside-modal-actions">
+                                                    <a href="{{ $person['url'] }}">Ver registro</a>
+                                                    <button
+                                                        type="button"
+                                                        wire:click="forceExit('{{ $person['model'] }}', {{ $person['model_id'] }})"
+                                                        wire:confirm="¿Confirmas que deseas registrar una salida forzada para {{ $person['name'] }}?"
+                                                    >
+                                                        Forzar salida
+                                                    </button>
+                                                </div>
+                                            </article>
+                                        @empty
+                                            <div class="empty-state compact">
+                                                <h4>No encontramos personas</h4>
+                                                <p>Pruebe otra categoría o cambie la búsqueda.</p>
+                                            </div>
+                                        @endforelse
+                                    </div>
+                                </div>
+                            </x-filament::modal>
+                            <span class="inside-count">{{ $monitor['inside']->count() }}</span>
+                        </div>
                     </header>
 
                     <div class="inside-list">
@@ -295,6 +382,32 @@
         .eyebrow { color: #73839a; font-size: .62rem; font-weight: 850; letter-spacing: .14em; }
         .result-count { padding: .35rem .65rem; border-radius: 999px; color: #53647a; background: #f1f5f9; font-size: .7rem; font-weight: 750; }
         .inside-count { display: grid; place-items: center; min-width: 2rem; height: 2rem; border-radius: .65rem; color: #0d6b49; background: #e4f7ee; font-size: .8rem; font-weight: 850; }
+        .inside-header-actions { display: flex; align-items: center; gap: .5rem; }
+        .open-inside-button { min-height: 2rem; padding: .4rem .7rem; border: 1px solid #c8d8e9; border-radius: .6rem; color: #195886; background: #eef6ff; font-size: .68rem; font-weight: 800; transition: .15s ease; }
+        .open-inside-button:hover { color: #fff; border-color: #2563eb; background: #2563eb; }
+        .inside-modal-content { --im-line: #dce6f0; --im-card: #fff; --im-ink: #142b47; --im-muted: #6a7c91; color: var(--im-ink); }
+        .inside-category-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; }
+        .inside-category-card { position: relative; display: grid; min-height: 5.5rem; align-content: center; justify-items: start; padding: .85rem; border: 1px solid var(--im-line); border-radius: .85rem; background: var(--im-card); text-align: left; transition: .15s ease; }
+        .inside-category-card:hover, .inside-category-card.active { border-color: #4b91dc; background: #eef6ff; box-shadow: 0 5px 16px rgba(37,99,235,.1); }
+        .inside-category-card svg { position: absolute; top: .7rem; right: .7rem; width: 1.15rem; color: #4382c4; }
+        .inside-category-card strong { color: #1768ad; font-size: 1.45rem; font-weight: 900; line-height: 1; }
+        .inside-category-card span { margin-top: .4rem; color: var(--im-ink); font-size: .67rem; font-weight: 800; line-height: 1.2; }
+        .inside-category-note { margin: .55rem .15rem 0; color: var(--im-muted); font-size: .65rem; }
+        .inside-modal-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1rem 0 .7rem; }
+        .inside-modal-toolbar > span { color: var(--im-muted); font-size: .7rem; font-weight: 750; white-space: nowrap; }
+        .inside-modal-search { display: flex; align-items: center; gap: .55rem; flex: 1; max-width: 28rem; min-height: 2.65rem; padding: 0 .8rem; border: 1px solid var(--im-line); border-radius: .7rem; background: #f8fafc; }
+        .inside-modal-search svg { width: 1.05rem; color: #7f91a6; }
+        .inside-modal-search input { width: 100%; padding: 0; border: 0; outline: 0; box-shadow: none !important; background: transparent; color: var(--im-ink); font-size: .8rem; }
+        .inside-modal-list { max-height: 28rem; overflow-y: auto; border: 1px solid var(--im-line); border-radius: .9rem; scrollbar-width: thin; }
+        .inside-modal-person { display: grid; grid-template-columns: 2.8rem minmax(0, 1fr) auto; align-items: center; gap: .8rem; padding: .85rem 1rem; border-bottom: 1px solid var(--im-line); background: var(--im-card); }
+        .inside-modal-person:last-child { border-bottom: 0; }
+        .inside-modal-info h4 { margin: 0; color: var(--im-ink); font-size: .86rem; font-weight: 850; }
+        .inside-modal-info > div { display: flex; flex-wrap: wrap; gap: .25rem .75rem; margin-top: .25rem; color: var(--im-muted); font-size: .68rem; }
+        .inside-modal-info small { display: block; margin-top: .25rem; color: #8392a5; font-size: .63rem; font-weight: 650; }
+        .inside-modal-actions { display: flex; align-items: center; gap: .45rem; }
+        .inside-modal-actions a, .inside-modal-actions button { padding: .42rem .62rem; border-radius: .5rem; font-size: .65rem; font-weight: 800; }
+        .inside-modal-actions a { color: #1d65a6; background: #eaf4ff; }
+        .inside-modal-actions button { color: #a63c12; background: #fff0e8; }
         .timeline { max-height: 70rem; overflow-y: auto; padding: .4rem 1.1rem 1.2rem; scrollbar-width: thin; }
         .timeline-event { position: relative; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); }
         .timeline-event:not(:last-child)::before { content: ""; position: absolute; left: 1.22rem; top: 3.2rem; bottom: -.55rem; width: 2px; background: #e1e7ef; }
@@ -369,6 +482,10 @@
         .dark .timeline-marker span { border-color: #172033; }
         .dark .timeline-event:not(:last-child)::before { background: #344155; }
         .dark .inside-person, .dark .alert-item, .dark .panel-header { border-color: #334155; }
+        .dark .open-inside-button { color: #b9dcff; border-color: #3e5873; background: #1c344d; }
+        .dark .inside-modal-content { --im-line: #36485d; --im-card: #172336; --im-ink: #edf5ff; --im-muted: #a7b7c9; }
+        .dark .inside-category-card:hover, .dark .inside-category-card.active { border-color: #568bd0; background: #1b3553; }
+        .dark .inside-modal-search { border-color: #3a4d63; background: #111c2c; }
         @media (max-width: 1180px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .monitor-filters { flex-wrap: wrap; }
@@ -388,6 +505,11 @@
             .filter-group { width: 100%; overflow-x: auto; }
             .filter-group button { flex: 1 0 auto; }
             .monitor-sidebar { grid-template-columns: 1fr; }
+            .inside-category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .inside-modal-toolbar { align-items: stretch; flex-direction: column; }
+            .inside-modal-search { max-width: none; }
+            .inside-modal-person { grid-template-columns: 2.6rem minmax(0, 1fr); }
+            .inside-modal-actions { grid-column: 2; flex-wrap: wrap; }
             .timeline { padding-inline: .55rem; }
             .timeline-event { grid-template-columns: 2rem minmax(0, 1fr); }
             .timeline-event:not(:last-child)::before { left: .97rem; }

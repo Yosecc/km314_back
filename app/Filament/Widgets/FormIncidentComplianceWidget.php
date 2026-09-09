@@ -17,7 +17,10 @@ class FormIncidentComplianceWidget extends Widget
 
     protected static ?int $sort = -97;
 
-    protected static ?string $heading = 'Formularios de Incidentes';
+    public function getHeading(): string
+    {
+        return 'Widget de Incidentes';
+    }
 
     public function getViewData(): array
     {

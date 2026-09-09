@@ -2,8 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Widgets\FormIncidentComplianceWidget;
 use App\Filament\Widgets\FormIncidentStatsWidget;
-use App\Filament\Widgets\VisitaEspontaneaEnElBarrio;
+use App\Filament\Widgets\AccessControlStats;
 use App\Models\User;
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -34,17 +35,17 @@ class WidgetShieldVisibilityTest extends TestCase
             $this->assertFalse($class::canView(), "El widget {$class} ignoró su permiso Shield.");
         }
 
-        $permission = Permission::firstOrCreate(['name' => 'widget_VisitaEspontaneaEnElBarrio', 'guard_name' => 'web']);
+        $permission = Permission::firstOrCreate(['name' => 'widget_AccessControlStats', 'guard_name' => 'web']);
         $user->givePermissionTo($permission);
 
-        $this->assertTrue(VisitaEspontaneaEnElBarrio::canView());
+        $this->assertTrue(AccessControlStats::canView());
     }
 
     public function test_super_admin_only_sees_widgets_explicitly_selected_in_shield(): void
     {
         $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
         $permission = Permission::firstOrCreate([
-            'name' => 'widget_VisitaEspontaneaEnElBarrio',
+            'name' => 'widget_AccessControlStats',
             'guard_name' => 'web',
         ]);
 
@@ -55,12 +56,12 @@ class WidgetShieldVisibilityTest extends TestCase
         $user->assignRole($role);
         $this->actingAs($user);
 
-        $this->assertFalse(VisitaEspontaneaEnElBarrio::canView());
+        $this->assertFalse(AccessControlStats::canView());
         $this->assertFalse(FormIncidentStatsWidget::canView());
 
         $role->givePermissionTo($permission);
 
-        $this->assertTrue(VisitaEspontaneaEnElBarrio::canView());
+        $this->assertTrue(AccessControlStats::canView());
 
         $incidentPermission = Permission::firstOrCreate([
             'name' => 'widget_FormIncidentStatsWidget',
@@ -90,5 +91,36 @@ class WidgetShieldVisibilityTest extends TestCase
             ->assertSee('Sin leer hoy')
             ->assertSee('Sin leer esta semana')
             ->assertSee('Total sin leer');
+    }
+
+    public function test_access_control_widget_uses_the_monitor_summary_design(): void
+    {
+        $this->assertSame('Control de Acceso', FilamentShield::getLocalizedWidgetLabel(AccessControlStats::class));
+
+        $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $permission = Permission::firstOrCreate([
+            'name' => 'widget_AccessControlStats',
+            'guard_name' => 'web',
+        ]);
+        $role->givePermissionTo($permission);
+
+        $user = User::factory()->create();
+        $user->assignRole($role);
+        $this->actingAs($user);
+
+        Livewire::test(AccessControlStats::class)
+            ->assertSuccessful()
+            ->assertSee('Control de Acceso')
+            ->assertSee('Personas adentro')
+            ->assertSee('Propietarios')
+            ->assertSee('Trabajadores');
+    }
+
+    public function test_incident_compliance_widget_has_a_clear_shield_label(): void
+    {
+        $this->assertSame(
+            'Widget de Incidentes',
+            FilamentShield::getLocalizedWidgetLabel(FormIncidentComplianceWidget::class),
+        );
     }
 }

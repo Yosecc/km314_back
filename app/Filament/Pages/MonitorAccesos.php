@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Resources\ActivitiesResource;
 use App\Models\Activities;
 use App\Models\ActivitiesPeople;
+use App\Services\AccessPeopleInsideService;
 use App\Services\CurrentPeopleInsideQuery;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
@@ -15,6 +16,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 
 class MonitorAccesos extends Page
 {
@@ -40,6 +42,11 @@ class MonitorAccesos extends Page
 
     public string $search = '';
 
+    #[Url(as: 'inside', except: AccessPeopleInsideService::ALL)]
+    public string $insideCategory = AccessPeopleInsideService::ALL;
+
+    public string $insideSearch = '';
+
     public function setPeriod(string $period): void
     {
         if (in_array($period, ['today', '24h', '7d'], true)) {
@@ -57,6 +64,19 @@ class MonitorAccesos extends Page
     }
 
     public function updatedSearch(): void
+    {
+        unset($this->monitorData);
+    }
+
+    public function setInsideCategory(string $category): void
+    {
+        if ($category === AccessPeopleInsideService::ALL || array_key_exists($category, AccessPeopleInsideService::categories())) {
+            $this->insideCategory = $category;
+            unset($this->monitorData);
+        }
+    }
+
+    public function updatedInsideSearch(): void
     {
         unset($this->monitorData);
     }
@@ -159,6 +179,19 @@ class MonitorAccesos extends Page
         $events = $this->buildTimeline($rows, $start);
         $inside = $this->currentPeopleInside();
         $insideIdentities = $inside->pluck('identity')->flip();
+        $insideCounts = collect(AccessPeopleInsideService::categories())
+            ->mapWithKeys(fn (array $definition, string $key) => [
+                $key => $inside->filter(
+                    fn (array $person) => in_array($key, $person['category_keys'], true)
+                )->count(),
+            ]);
+        $insideCategories = collect(AccessPeopleInsideService::categories())
+            ->map(fn (array $definition, string $key) => $definition + [
+                'key' => $key,
+                'count' => $insideCounts->get($key, 0),
+            ])
+            ->values();
+        $insideModal = $this->applyInsideModalFilters($inside);
 
         $events = $events->map(function (array $event) use ($insideIdentities) {
             $event['can_force_exit'] = $event['movement'] === 'Entry'
@@ -218,6 +251,9 @@ class MonitorAccesos extends Page
         return [
             'events' => $visibleEvents,
             'inside' => $inside->values(),
+            'inside_modal' => $insideModal,
+            'inside_total' => $insideIdentities->count(),
+            'inside_categories' => $insideCategories,
             'alerts' => $allAlerts,
             'stats' => [
                 'inside' => $inside->count(),
@@ -310,6 +346,7 @@ class MonitorAccesos extends Page
                 $minutes = (int) $event['occurred_at']->diffInMinutes(now());
 
                 return $event + [
+                    'category_keys' => AccessPeopleInsideService::categoryKeys($row),
                     'minutes_inside' => $minutes,
                     'duration' => $this->formatDuration($minutes),
                 ];
@@ -427,6 +464,26 @@ class MonitorAccesos extends Page
 
         return $items
             ->filter(fn (array $item) => str_contains($item['search_text'], $search))
+            ->values();
+    }
+
+    protected function applyInsideModalFilters(Collection $items): Collection
+    {
+        $search = $this->normalizeSearch($this->insideSearch);
+
+        return $items
+            ->when(
+                $this->insideCategory !== AccessPeopleInsideService::ALL,
+                fn (Collection $people) => $people->filter(
+                    fn (array $person) => in_array($this->insideCategory, $person['category_keys'], true)
+                )
+            )
+            ->when(
+                $search !== '',
+                fn (Collection $people) => $people->filter(
+                    fn (array $person) => str_contains($person['search_text'], $search)
+                )
+            )
             ->values();
     }
 
