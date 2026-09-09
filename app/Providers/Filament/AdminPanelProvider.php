@@ -9,6 +9,8 @@ use Filament\PanelProvider;
 use App\Filament\Widgets\Entry;
 use App\Filament\Widgets\PackageReceptionStats;
 use App\Filament\Widgets\AccessControlStats;
+use App\Filament\Widgets\RecurrentVisitorApprovalStats;
+use App\Filament\Widgets\QuickAccessWidget;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
 use Filament\Navigation\NavigationGroup;
@@ -63,6 +65,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                QuickAccessWidget::class,
                 UserTermsConditionsCheck::class,
                 AccessControlStats::class,
                 FormIncidentComplianceWidget::class,
@@ -71,6 +74,7 @@ class AdminPanelProvider extends PanelProvider
                 // IncidentesStats::class,
                 FormControlStats::class,
                 PackageReceptionStats::class,
+                RecurrentVisitorApprovalStats::class,
                 Sliders::class,
                 OwnerQr::class
             ])

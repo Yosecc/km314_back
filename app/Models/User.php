@@ -50,6 +50,7 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'package_reception_tutorial_seen_at' => 'datetime',
     ];
 
     protected $with = ['owner'];
@@ -62,6 +63,11 @@ class User extends Authenticatable implements FilamentUser
     public function formIncidentRequirements()
     {
         return $this->hasMany(\App\Models\FormIncidentUserRequirement::class);
+    }
+
+    public function quickAccessLinks()
+    {
+        return $this->hasMany(QuickAccessLink::class)->orderBy('sort_order')->orderBy('id');
     }
 
     // public function roles()

@@ -30,6 +30,23 @@ class PackageReceptionMonitor extends Page
     #[Url]
     public string $status = 'active';
     public string $search = '';
+    public bool $showTutorial = false;
+
+    public function mount(): void
+    {
+        $this->showTutorial = auth()->user()->package_reception_tutorial_seen_at === null;
+    }
+
+    public function markTutorialSeen(): void
+    {
+        $user = auth()->user();
+
+        if ($user->package_reception_tutorial_seen_at === null) {
+            $user->forceFill(['package_reception_tutorial_seen_at' => now()])->save();
+        }
+
+        $this->showTutorial = false;
+    }
 
     public function setStatus(string $status): void
     {

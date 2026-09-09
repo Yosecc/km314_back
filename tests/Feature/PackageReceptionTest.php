@@ -221,6 +221,25 @@ class PackageReceptionTest extends TestCase
         Livewire::test(ListPackageReceptions::class)->assertActionVisible('monitor');
     }
 
+    public function test_package_monitor_tutorial_is_shown_once_per_user_and_can_be_reopened(): void
+    {
+        [, , $user] = $this->context();
+        Permission::firstOrCreate(['name'=>'page_PackageReceptionMonitor','guard_name'=>'web']);
+        $user->givePermissionTo('page_PackageReceptionMonitor');
+        $this->actingAs($user);
+
+        Livewire::test(PackageReceptionMonitor::class)
+            ->assertSet('showTutorial', true)
+            ->assertSee('Recibimos tus paquetes con la información correcta')
+            ->assertSee('Creá una recepción antes de que llegue el correo')
+            ->assertSee('Consultá el monitor y enterate cuando llegue')
+            ->call('markTutorialSeen')
+            ->assertSet('showTutorial', false);
+
+        $this->assertNotNull($user->fresh()->package_reception_tutorial_seen_at);
+        Livewire::test(PackageReceptionMonitor::class)->assertSet('showTutorial', false);
+    }
+
     public function test_dashboard_widget_shows_the_four_package_summaries_for_owner(): void
     {
         Carbon::setTestNow('2026-09-05 12:00:00');

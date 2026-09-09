@@ -5,6 +5,9 @@ namespace Tests\Feature;
 use App\Filament\Widgets\FormIncidentComplianceWidget;
 use App\Filament\Widgets\FormIncidentStatsWidget;
 use App\Filament\Widgets\AccessControlStats;
+use App\Filament\Widgets\RecurrentVisitorApprovalStats;
+use App\Models\Owner;
+use App\Models\RecurrentVisitor;
 use App\Models\User;
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -122,5 +125,51 @@ class WidgetShieldVisibilityTest extends TestCase
             'Widget de Incidentes',
             FilamentShield::getLocalizedWidgetLabel(FormIncidentComplianceWidget::class),
         );
+    }
+
+    public function test_recurrent_visitors_widget_alerts_admin_about_pending_approvals(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $permission = Permission::firstOrCreate([
+            'name' => 'widget_RecurrentVisitorApprovalStats',
+            'guard_name' => 'web',
+        ]);
+        $role->givePermissionTo($permission);
+
+        $user = User::factory()->create();
+        $user->assignRole($role);
+        $owner = Owner::create([
+            'first_name' => 'Ana',
+            'last_name' => 'Propietaria',
+            'email' => uniqid('owner').'@test.local',
+            'user_id' => '0',
+        ]);
+        RecurrentVisitor::create([
+            'owner_id' => $owner->id,
+            'dni' => '30111222',
+            'first_name' => 'Visitante',
+            'last_name' => 'Pendiente',
+            'status' => 'pendiente',
+            'user_id' => $user->id,
+        ]);
+        RecurrentVisitor::create([
+            'owner_id' => $owner->id,
+            'dni' => '30222333',
+            'first_name' => 'Visitante',
+            'last_name' => 'Aprobado',
+            'status' => 'aprobado',
+            'user_id' => $user->id,
+        ]);
+        $this->actingAs($user);
+
+        $this->assertTrue(RecurrentVisitorApprovalStats::canView());
+        Livewire::test(RecurrentVisitorApprovalStats::class)
+            ->assertSuccessful()
+            ->assertSee('Visitantes Recurrentes')
+            ->assertSee('Hay visitantes pendientes por aprobar')
+            ->assertSee('Pendientes de aprobación')
+            ->assertSee('Aprobados')
+            ->assertSee('Rechazados')
+            ->assertSee('Total registrados');
     }
 }

@@ -132,6 +132,14 @@ class RecurrentVisitorResource extends Resource
                 ->color(fn (RecurrentVisitor $record) => $record->vencidosAutosFile() ? 'danger' : 'success')
                 ->wrap(),
             Tables\Columns\TextColumn::make('created_at')->dateTime()->label('Registrado'),
+        ])->filters([
+            Tables\Filters\SelectFilter::make('status')
+                ->label('Estado')
+                ->options([
+                    'pendiente' => 'Pendiente',
+                    'aprobado' => 'Aprobado',
+                    'rechazado' => 'Rechazado',
+                ]),
         ])->actions([
             Tables\Actions\EditAction::make()
                 ->after(function (RecurrentVisitor $record) {
