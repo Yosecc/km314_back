@@ -55,7 +55,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = FormControl::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+        protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
 
     protected static ?string $navigationLabel = 'Formulario de control';
     protected static ?string $label = 'formulario';

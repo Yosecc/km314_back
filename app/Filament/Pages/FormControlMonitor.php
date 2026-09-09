@@ -23,7 +23,8 @@ class FormControlMonitor extends Page
     use HasPageShield;
     use HasPublicFormLinkAction;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-signal';
+
 
     protected static string $view = 'filament.pages.form-control-monitor';
 
