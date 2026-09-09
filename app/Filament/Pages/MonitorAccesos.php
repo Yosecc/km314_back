@@ -254,6 +254,8 @@ class MonitorAccesos extends Page
             'inside_modal' => $insideModal,
             'inside_total' => $insideIdentities->count(),
             'inside_categories' => $insideCategories,
+            'can_create_form' => FormControlResource::canCreate(),
+            'create_form_url' => FormControlResource::getUrl('create'),
             'alerts' => $allAlerts,
             'stats' => [
                 'inside' => $inside->count(),

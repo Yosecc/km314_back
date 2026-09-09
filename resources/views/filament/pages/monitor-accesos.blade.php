@@ -18,20 +18,28 @@
                 <p>Información actualizada a las {{ $monitor['updated_at'] }}.</p>
             </div>
 
-            <button
-                type="button"
-                class="pause-button"
-                x-on:click="paused = ! paused"
-                x-bind:class="{ 'is-paused': paused }"
-            >
-                <svg x-show="! paused" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                </svg>
-                <svg x-cloak x-show="paused" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m10 8 6 4-6 4V8Zm11 4a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                </svg>
-                <span x-text="paused ? 'Reanudar' : 'Pausar'"></span>
-            </button>
+            <div class="monitor-hero-actions">
+                @if($monitor['can_create_form'])
+                    <a class="create-form-button" href="{{ $monitor['create_form_url'] }}">
+                        <x-heroicon-o-plus />
+                        Nuevo formulario
+                    </a>
+                @endif
+                <button
+                    type="button"
+                    class="pause-button"
+                    x-on:click="paused = ! paused"
+                    x-bind:class="{ 'is-paused': paused }"
+                >
+                    <svg x-show="! paused" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    <svg x-cloak x-show="paused" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m10 8 6 4-6 4V8Zm11 4a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    <span x-text="paused ? 'Reanudar' : 'Pausar'"></span>
+                </button>
+            </div>
         </section>
 
         <section class="stats-grid" aria-label="Resumen">
@@ -356,6 +364,10 @@
         .pause-button { display: inline-flex; align-items: center; gap: .55rem; min-height: 2.7rem; padding: .65rem 1rem; border: 1px solid rgba(255,255,255,.25); border-radius: .75rem; background: rgba(255,255,255,.11); color: #fff; font-weight: 700; backdrop-filter: blur(8px); transition: .2s ease; }
         .pause-button:hover, .pause-button.is-paused { background: rgba(255,255,255,.22); }
         .pause-button svg { width: 1.2rem; height: 1.2rem; }
+        .monitor-hero-actions { display: flex; align-items: center; justify-content: flex-end; gap: .65rem; flex-wrap: wrap; }
+        .create-form-button { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.7rem; padding: .65rem 1rem; border-radius: .75rem; color: #174873; background: #fff; font-size: .8rem; font-weight: 800; box-shadow: 0 6px 18px rgba(5,28,53,.25); transition: .2s ease; }
+        .create-form-button:hover { color: #0f3558; background: #eef7ff; transform: translateY(-1px); }
+        .create-form-button svg { width: 1.15rem; height: 1.15rem; }
         .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .9rem; margin: 1rem 0; }
         .stat-card { display: flex; align-items: center; gap: .85rem; min-height: 5.8rem; padding: 1rem; border: 1px solid var(--am-line); border-radius: 1rem; background: var(--am-card); box-shadow: 0 5px 18px rgba(15,35,63,.055); }
         .stat-icon { display: grid; place-items: center; flex: 0 0 2.75rem; height: 2.75rem; border-radius: .8rem; }
@@ -497,8 +509,10 @@
         }
         @media (max-width: 700px) {
             .monitor-hero { align-items: flex-start; padding: 1.25rem; }
+            .monitor-hero-actions { justify-content: flex-end; }
             .pause-button { padding: .6rem; }
             .pause-button span { display: none; }
+            .create-form-button { padding: .6rem .75rem; font-size: .72rem; }
             .stats-grid { gap: .6rem; }
             .stat-card { min-height: 5rem; padding: .75rem; }
             .stat-card strong { font-size: 1.35rem; }
