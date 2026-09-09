@@ -51,7 +51,7 @@ trait HasPublicFormLinkAction
                 'lot' => $arguments['lot'],
             ]))
             ->modalSubmitAction(false)
-            ->modalCancelActionLabel('Listo, ya guardé el enlace')
+            ->modalCancelActionLabel('Cerrar, ya lo guardé')
             ->closeModalByClickingAway(false);
     }
 }
