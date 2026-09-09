@@ -255,7 +255,11 @@ class ActivitiesResource extends Resource
     {
         $data = FormControl::find($id);
 
-        if ($data?->proveedor_id) {
+        if (! $data) {
+            return [];
+        }
+
+        if ($data->proveedor_id) {
             return $data->proveedor->autos->map(function($auto) use ($type){
                 $auto['texto'] = $type == 'option'
                     ? $auto['marca']. ' - '.$auto['modelo']
@@ -272,6 +276,15 @@ class ActivitiesResource extends Resource
             }
             return $auto;
         })->pluck('texto','id')->toArray();
+    }
+
+    public static function canShowLoteSelection($formControlId): bool
+    {
+        $formControl = FormControl::find($formControlId);
+
+        return $formControl !== null
+            && blank($formControl->proveedor_id)
+            && collect($formControl->access_type)->contains('lote');
     }
 
     public static function searchProveedorAutos($id, $type)
@@ -1213,9 +1226,8 @@ class ActivitiesResource extends Resource
                                         if(!$get('form_control_id')){
                                             return false;
                                         }
-                                        $formControl = FormControl::find($get('form_control_id'));
-                                        return !$formControl->proveedor_id
-                                            && array_search("lote", $formControl->access_type) !== false;
+
+                                        return self::canShowLoteSelection($get('form_control_id'));
                                     })
                             ])
                     ])

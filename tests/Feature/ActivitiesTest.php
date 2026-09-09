@@ -81,6 +81,15 @@ class ActivitiesTest extends TestCase
         $this->assertTrue($inside->first()->is($latest));
     }
 
+    public function test_lote_visibility_tolerates_a_missing_form_control(): void
+    {
+        $this->assertFalse(ActivitiesResource::canShowLoteSelection(PHP_INT_MAX));
+
+        $formControl = $this->createFormControl();
+
+        $this->assertTrue(ActivitiesResource::canShowLoteSelection($formControl->id));
+    }
+
     public function test_a_provider_activity_can_reference_one_person_and_multiple_forms(): void
     {
         $proveedor = Proveedor::create([

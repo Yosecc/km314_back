@@ -10,7 +10,9 @@ use App\Services\ProveedorAccessService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Livewire\Livewire;
 use ReflectionMethod;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -52,6 +54,23 @@ class FormControlTest extends TestCase
             $notificationsBefore + 1,
             DB::table('notifications')->where('notifiable_id', $admin->id)->count(),
         );
+    }
+
+    public function test_create_page_renders_without_an_existing_record(): void
+    {
+        $permission = Permission::firstOrCreate([
+            'name' => 'create_form::control',
+            'guard_name' => 'web',
+        ]);
+        $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $user = User::factory()->create(['is_terms_condition' => true]);
+        $user->assignRole($role);
+        $user->givePermissionTo($permission);
+        $this->actingAs($user);
+
+        Livewire::test(CreateFormControl::class)
+            ->assertSuccessful()
+            ->assertSee('Crear formulario');
     }
 
     public function test_it_is_active_only_when_authorized_and_inside_a_date_range(): void
