@@ -57,6 +57,22 @@ class FormControlMonitorTest extends TestCase
         $this->assertTrue(ProfileOwner::canAccess());
     }
 
+    public function test_access_monitor_renders_the_new_form_action(): void
+    {
+        [, , $user] = $this->context('owner');
+        $user->forceFill(['is_terms_condition' => true])->save();
+        $this->actingAs($user);
+
+        foreach (['page_MonitorAccesos', 'create_form::control'] as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+            $user->givePermissionTo($permission);
+        }
+
+        Livewire::test(MonitorAccesos::class)
+            ->assertSuccessful()
+            ->assertSee('Nuevo formulario');
+    }
+
     public function test_dashboard_widget_shows_the_four_form_control_summaries_for_owner(): void
     {
         [$owner,$lote,$user] = $this->context('owner');
