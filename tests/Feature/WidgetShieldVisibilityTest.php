@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Widgets\FormIncidentStatsWidget;
 use App\Filament\Widgets\VisitaEspontaneaEnElBarrio;
 use App\Models\User;
 use BezhanSalleh\FilamentShield\Facades\FilamentShield;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -54,9 +56,39 @@ class WidgetShieldVisibilityTest extends TestCase
         $this->actingAs($user);
 
         $this->assertFalse(VisitaEspontaneaEnElBarrio::canView());
+        $this->assertFalse(FormIncidentStatsWidget::canView());
 
         $role->givePermissionTo($permission);
 
         $this->assertTrue(VisitaEspontaneaEnElBarrio::canView());
+
+        $incidentPermission = Permission::firstOrCreate([
+            'name' => 'widget_FormIncidentStatsWidget',
+            'guard_name' => 'web',
+        ]);
+        $role->givePermissionTo($incidentPermission);
+
+        $this->assertTrue(FormIncidentStatsWidget::canView());
+    }
+
+    public function test_incident_stats_widget_uses_the_monitor_visual_summary(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $permission = Permission::firstOrCreate([
+            'name' => 'widget_FormIncidentStatsWidget',
+            'guard_name' => 'web',
+        ]);
+        $role->givePermissionTo($permission);
+
+        $user = User::factory()->create();
+        $user->assignRole($role);
+        $this->actingAs($user);
+
+        Livewire::test(FormIncidentStatsWidget::class)
+            ->assertSuccessful()
+            ->assertSee('Formularios de incidentes')
+            ->assertSee('Sin leer hoy')
+            ->assertSee('Sin leer esta semana')
+            ->assertSee('Total sin leer');
     }
 }

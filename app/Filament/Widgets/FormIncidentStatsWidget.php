@@ -3,54 +3,67 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Concerns\HasStrictWidgetShield as HasWidgetShield;
+use App\Filament\Resources\FormIncidentResponseResource;
 use App\Models\FormIncidentResponse;
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
+use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
 
-class FormIncidentStatsWidget extends BaseWidget
+class FormIncidentStatsWidget extends Widget
 {
     use HasWidgetShield {
         canView as protected shieldCanView;
     }
 
-    protected static ?string $pollingInterval = '30s';
+    protected static string $view = 'filament.widgets.form-incident-stats-widget';
 
     protected static ?int $sort = -98;
 
-    protected ?string $heading = 'Formularios de Incidentes (Estadísticas)';
+    protected int|string|array $columnSpan = 'full';
 
-    protected function getStats(): array
+    public function getHeading(): string
     {
-        // Contar formularios sin leer de hoy
+        return 'Formularios de incidentes sin leer';
+    }
+
+    public function getViewData(): array
+    {
         $unreadTodayCount = FormIncidentResponse::unread()
             ->where('date', now()->toDateString())
             ->count();
 
-        // Contar formularios sin leer de esta semana
         $unreadWeekCount = FormIncidentResponse::unread()
             ->whereBetween('date', [now()->startOfWeek(), now()->endOfWeek()])
             ->count();
 
-        // Contar total de formularios sin leer
         $totalUnreadCount = FormIncidentResponse::unread()->count();
+        $canOpenList = FormIncidentResponseResource::canViewAny();
 
         return [
-            Stat::make('Sin leer hoy', $unreadTodayCount)
-                ->description($unreadTodayCount > 0 ? 'Formularios pendientes de revisar' : 'Todos los formularios de hoy revisados')
-                ->descriptionIcon($unreadTodayCount > 0 ? 'heroicon-m-exclamation-circle' : 'heroicon-m-check-circle')
-                ->color($unreadTodayCount > 0 ? 'warning' : 'success')
-                ->chart([12, 8, 15, 10, 6, 9, $unreadTodayCount]),
-
-            Stat::make('Sin leer esta semana', $unreadWeekCount)
-                ->description('Formularios pendientes')
-                ->descriptionIcon('heroicon-m-calendar-days')
-                ->color($unreadWeekCount > 0 ? 'warning' : 'success'),
-
-            Stat::make('Total sin leer', $totalUnreadCount)
-                ->description('Todos los formularios pendientes')
-                ->descriptionIcon('heroicon-m-document-text')
-                ->color($totalUnreadCount > 0 ? 'danger' : 'success'),
+            'canOpenList' => $canOpenList,
+            'listUrl' => FormIncidentResponseResource::getUrl('index'),
+            'cards' => [
+                [
+                    'label' => 'Sin leer hoy',
+                    'value' => $unreadTodayCount,
+                    'detail' => $unreadTodayCount > 0 ? 'Pendientes de revisar hoy' : 'Todo lo de hoy está revisado',
+                    'tone' => 'today',
+                    'icon' => $unreadTodayCount > 0 ? 'heroicon-o-exclamation-circle' : 'heroicon-o-check-circle',
+                ],
+                [
+                    'label' => 'Sin leer esta semana',
+                    'value' => $unreadWeekCount,
+                    'detail' => 'Formularios pendientes esta semana',
+                    'tone' => 'week',
+                    'icon' => 'heroicon-o-calendar-days',
+                ],
+                [
+                    'label' => 'Total sin leer',
+                    'value' => $totalUnreadCount,
+                    'detail' => 'Todos los formularios pendientes',
+                    'tone' => 'total',
+                    'icon' => 'heroicon-o-document-text',
+                ],
+            ],
         ];
     }
 
@@ -60,10 +73,5 @@ class FormIncidentStatsWidget extends BaseWidget
         $user = Auth::user();
 
         return $user && static::shieldCanView() && $user->hasRole('super_admin');
-    }
-
-    protected function getHeaderActions(): array
-    {
-        return [];
     }
 }
