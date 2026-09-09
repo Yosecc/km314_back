@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\FormControlResource\Pages\CreateFormControl;
 use App\Models\FormControl;
 use App\Models\Proveedor;
 use App\Models\User;
@@ -9,6 +10,8 @@ use App\Services\ProveedorAccessService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
+use ReflectionMethod;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class FormControlTest extends TestCase
@@ -30,6 +33,25 @@ class FormControlTest extends TestCase
         $this->assertSame(['lote'], $formControl->access_type);
         $this->assertSame(['A12', 'B04'], $formControl->lote_ids);
         $this->assertSame(['Visita'], $formControl->income_type);
+    }
+
+    public function test_create_page_sends_the_database_notification_after_saving(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $admin = User::factory()->create();
+        $admin->assignRole($role);
+        $formControl = $this->createFormControl();
+        $notificationsBefore = DB::table('notifications')->where('notifiable_id', $admin->id)->count();
+
+        $page = new CreateFormControl();
+        $page->record = $formControl;
+        $afterCreate = new ReflectionMethod(CreateFormControl::class, 'afterCreate');
+        $afterCreate->invoke($page);
+
+        $this->assertSame(
+            $notificationsBefore + 1,
+            DB::table('notifications')->where('notifiable_id', $admin->id)->count(),
+        );
     }
 
     public function test_it_is_active_only_when_authorized_and_inside_a_date_range(): void

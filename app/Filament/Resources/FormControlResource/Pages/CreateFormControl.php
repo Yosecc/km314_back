@@ -8,6 +8,7 @@ use Filament\Actions;
 use Filament\Forms;
 use Illuminate\Contracts\View\View;
 use Filament\Notifications\Notification;
+use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\FormControlResource;
 use App\Models\FormControl;
@@ -78,7 +79,7 @@ class CreateFormControl extends CreateRecord
             })->get();
 
             // dd($formControl->income_type);
-            if($formControl->income_type === 'Visita Temporal (24hs)'){
+            if (collect($formControl->income_type)->contains('Visita Temporal (24hs)')) {
 
                 $formControl->status = 'Authorized';
                 $formControl->save();
@@ -111,8 +112,13 @@ class CreateFormControl extends CreateRecord
                 ->sendToDatabase($recipient);
 
         } catch (\Throwable $th) {
-            // Manejo de errores
-            dd($th->getMessage());
+            report($th);
+
+            Notification::make()
+                ->title('El formulario fue creado')
+                ->body('No se pudieron enviar todas las notificaciones. El formulario quedó guardado correctamente.')
+                ->warning()
+                ->send();
         }
     }
 }
