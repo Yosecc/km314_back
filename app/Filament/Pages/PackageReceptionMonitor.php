@@ -8,6 +8,7 @@ use App\Services\PackageReceptionService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Str;
@@ -77,6 +78,80 @@ class PackageReceptionMonitor extends Page
             });
     }
 
+    public function deliverAction(): Action
+    {
+        return Action::make('deliver')
+            ->label('Entregar')
+            ->icon('heroicon-o-hand-raised')
+            ->color('primary')
+            ->size('sm')
+            ->modalHeading(fn (PackageReception $record) => 'Entregar '.$record->reference_code)
+            ->modalDescription(fn (PackageReception $record) => $record->courier_name.' · '.$record->owner->nombres().' · '.$record->lote->getNombre())
+            ->modalSubmitActionLabel('Confirmar entrega')
+            ->record(fn (array $arguments) => PackageReception::query()
+                ->visibleTo(auth()->user())
+                ->with(['owner', 'lote'])
+                ->findOrFail($arguments['reception']))
+            ->visible(fn (PackageReception $record) => $record->status === PackageReception::RECEIVED
+                && auth()->user()->can('deliver', $record))
+            ->form([
+                Forms\Components\Radio::make('delivered_to_type')
+                    ->label('¿Quién retira?')
+                    ->options(['owner' => 'Propietario', 'third_party' => 'Otra persona'])
+                    ->default('owner')->inline()->live()->required(),
+                Forms\Components\TextInput::make('delivered_to_name')
+                    ->label('Nombre completo')
+                    ->visible(fn (Get $get) => $get('delivered_to_type') === 'third_party')
+                    ->required(fn (Get $get) => $get('delivered_to_type') === 'third_party'),
+                Forms\Components\TextInput::make('delivered_to_dni')
+                    ->label('DNI')
+                    ->visible(fn (Get $get) => $get('delivered_to_type') === 'third_party')
+                    ->required(fn (Get $get) => $get('delivered_to_type') === 'third_party'),
+                Forms\Components\FileUpload::make('delivery_identity_files')
+                    ->label('Imagen del DNI')->multiple()->image()->disk('local')
+                    ->directory('package-receptions/delivery-identity')->visibility('private')
+                    ->visible(fn (Get $get) => $get('delivered_to_type') === 'third_party')
+                    ->required(fn (Get $get) => $get('delivered_to_type') === 'third_party')
+                    ->maxSize(10240),
+                Forms\Components\Textarea::make('delivery_notes')->label('Observación'),
+            ])
+            ->action(function (PackageReception $record, array $data): void {
+                abort_unless(auth()->user()->can('deliver', $record), 403);
+                app(PackageReceptionService::class)->deliver($record, auth()->user(), $data);
+                unset($this->monitorData);
+                Notification::make()->title('Entrega registrada')->success()->send();
+            });
+    }
+
+    public function cancelAction(): Action
+    {
+        return Action::make('cancel')
+            ->label('Cancelar')
+            ->icon('heroicon-o-x-circle')
+            ->color('danger')
+            ->size('sm')
+            ->requiresConfirmation()
+            ->modalHeading(fn (PackageReception $record) => 'Cancelar '.$record->reference_code)
+            ->modalDescription('La cancelación quedará registrada en el historial y se notificará al propietario.')
+            ->modalSubmitActionLabel('Confirmar cancelación')
+            ->record(fn (array $arguments) => PackageReception::query()
+                ->visibleTo(auth()->user())
+                ->with(['owner', 'lote'])
+                ->findOrFail($arguments['reception']))
+            ->visible(fn (PackageReception $record) => $record->status === PackageReception::EXPECTED
+                && auth()->user()->can('cancel', $record))
+            ->form([
+                Forms\Components\Textarea::make('cancellation_reason')
+                    ->label('Motivo de cancelación')->required()->rows(3),
+            ])
+            ->action(function (PackageReception $record, array $data): void {
+                abort_unless(auth()->user()->can('cancel', $record), 403);
+                app(PackageReceptionService::class)->cancel($record, auth()->user(), $data);
+                unset($this->monitorData);
+                Notification::make()->title('Recepción cancelada')->success()->send();
+            });
+    }
+
     #[Computed]
     public function monitorData(): array
     {
@@ -95,7 +170,9 @@ class PackageReceptionMonitor extends Page
             'status_label'=>PackageReception::statuses()[$r->status], 'from'=>$r->expected_from->format('d/m H:i'),
             'until'=>$r->expected_until->format('d/m H:i'), 'tracking'=>$r->tracking_number,
             'alert'=>$r->isExpectedOverdue() ? 'No llegó en el horario previsto' : match ($r->pickupAlertLevel()) {'critical'=>'Retiro demorado crítico','warning'=>'Pendiente de retiro',default=>null},
-            'can_receive'=>auth()->user()->can('receive', $r),
+            'can_receive'=>$r->status === PackageReception::EXPECTED && auth()->user()->can('receive', $r),
+            'can_deliver'=>$r->status === PackageReception::RECEIVED && auth()->user()->can('deliver', $r),
+            'can_cancel'=>$r->status === PackageReception::EXPECTED && auth()->user()->can('cancel', $r),
             'url'=>PackageReceptionResource::getUrl('view', ['record'=>$r]),
         ])->values();
 

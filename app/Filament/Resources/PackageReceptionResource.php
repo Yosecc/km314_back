@@ -8,6 +8,7 @@ use App\Models\Owner;
 use App\Models\PackageReception;
 use App\Models\PackageReceptionFile;
 use App\Services\PackageReceptionService;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -20,7 +21,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
-class PackageReceptionResource extends Resource
+class PackageReceptionResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = PackageReception::class;
     protected static ?string $navigationIcon = 'heroicon-o-archive-box-arrow-down';
@@ -29,6 +30,28 @@ class PackageReceptionResource extends Resource
     protected static ?string $pluralModelLabel = 'recepciones de paquetes';
     protected static ?string $navigationGroup = 'Recepción';
     protected static ?int $navigationSort = 1;
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+            'receive',
+            'deliver',
+            'cancel',
+            'view_sensitive',
+        ];
+    }
 
     public static function getEloquentQuery(): Builder
     {
@@ -129,11 +152,12 @@ class PackageReceptionResource extends Resource
     public static function receiveTableAction(): Tables\Actions\Action
     {
         return Tables\Actions\Action::make('receive')->label('Recibir')->icon('heroicon-o-inbox-arrow-down')->color('success')
-            ->visible(fn (PackageReception $r) => Auth::user()->can('receive', $r))->form([
+            ->visible(fn (PackageReception $r) => $r->status === PackageReception::EXPECTED && Auth::user()->can('receive', $r))->form([
                 Forms\Components\TextInput::make('received_packages_count')->label('Cantidad de bultos')->numeric()->minValue(1),
                 Forms\Components\FileUpload::make('reception_files')->label('Foto al recibir')->multiple()->image()->disk('local')->directory('package-receptions/reception')->visibility('private')->maxSize(10240),
                 Forms\Components\Textarea::make('reception_notes')->label('Observación'),
             ])->action(function (PackageReception $record, array $data) {
+                abort_unless(Auth::user()->can('receive', $record), 403);
                 app(PackageReceptionService::class)->receive($record, Auth::user(), $data);
                 Notification::make()->title('Paquete marcado como recibido')->success()->send();
             });
@@ -142,13 +166,14 @@ class PackageReceptionResource extends Resource
     public static function deliverTableAction(): Tables\Actions\Action
     {
         return Tables\Actions\Action::make('deliver')->label('Entregar')->icon('heroicon-o-hand-raised')->color('primary')
-            ->visible(fn (PackageReception $r) => Auth::user()->can('deliver', $r))->form([
+            ->visible(fn (PackageReception $r) => $r->status === PackageReception::RECEIVED && Auth::user()->can('deliver', $r))->form([
                 Forms\Components\Radio::make('delivered_to_type')->label('¿Quién retira?')->options(['owner'=>'Propietario','third_party'=>'Otra persona'])->default('owner')->inline()->live()->required(),
                 Forms\Components\TextInput::make('delivered_to_name')->label('Nombre completo')->visible(fn (Get $get) => $get('delivered_to_type') === 'third_party')->required(fn (Get $get) => $get('delivered_to_type') === 'third_party'),
                 Forms\Components\TextInput::make('delivered_to_dni')->label('DNI')->visible(fn (Get $get) => $get('delivered_to_type') === 'third_party')->required(fn (Get $get) => $get('delivered_to_type') === 'third_party'),
                 Forms\Components\FileUpload::make('delivery_identity_files')->label('Imagen del DNI')->multiple()->image()->disk('local')->directory('package-receptions/delivery-identity')->visibility('private')->visible(fn (Get $get) => $get('delivered_to_type') === 'third_party')->required(fn (Get $get) => $get('delivered_to_type') === 'third_party')->maxSize(10240),
                 Forms\Components\Textarea::make('delivery_notes')->label('Observación'),
             ])->action(function (PackageReception $record, array $data) {
+                abort_unless(Auth::user()->can('deliver', $record), 403);
                 app(PackageReceptionService::class)->deliver($record, Auth::user(), $data);
                 Notification::make()->title('Entrega registrada')->success()->send();
             });
@@ -157,9 +182,10 @@ class PackageReceptionResource extends Resource
     public static function cancelTableAction(): Tables\Actions\Action
     {
         return Tables\Actions\Action::make('cancel')->label('Cancelar')->icon('heroicon-o-x-circle')->color('danger')
-            ->visible(fn (PackageReception $r) => Auth::user()->can('cancel', $r))->requiresConfirmation()->form([
+            ->visible(fn (PackageReception $r) => $r->status === PackageReception::EXPECTED && Auth::user()->can('cancel', $r))->requiresConfirmation()->form([
                 Forms\Components\Textarea::make('cancellation_reason')->label('Motivo de cancelación')->required(),
             ])->action(function (PackageReception $record, array $data) {
+                abort_unless(Auth::user()->can('cancel', $record), 403);
                 app(PackageReceptionService::class)->cancel($record, Auth::user(), $data);
                 Notification::make()->title('Recepción cancelada')->success()->send();
             });

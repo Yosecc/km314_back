@@ -105,4 +105,27 @@ class PackageReceptionPolicy
     {
         return $user->can('reorder_package::reception');
     }
+
+    public function receive(User $user, PackageReception $packageReception): bool
+    {
+        return $packageReception->status === PackageReception::EXPECTED
+            && $user->can('receive_package::reception');
+    }
+
+    public function deliver(User $user, PackageReception $packageReception): bool
+    {
+        return $packageReception->status === PackageReception::RECEIVED
+            && $user->can('deliver_package::reception');
+    }
+
+    public function cancel(User $user, PackageReception $packageReception): bool
+    {
+        return $packageReception->status === PackageReception::EXPECTED
+            && $user->can('cancel_package::reception');
+    }
+
+    public function viewSensitive(User $user, PackageReception $packageReception): bool
+    {
+        return $user->can('view_sensitive_package::reception');
+    }
 }

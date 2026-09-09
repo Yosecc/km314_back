@@ -8,6 +8,7 @@ use App\Models\PackageReception;
 use App\Models\User;
 use App\Services\PackageReceptionService;
 use App\Filament\Pages\PackageReceptionMonitor;
+use App\Filament\Resources\PackageReceptionResource;
 use App\Filament\Widgets\PackageReceptionStats;
 use App\Filament\Resources\PackageReceptionResource\Pages\ListPackageReceptions;
 use App\Filament\Resources\PackageReceptionResource\Pages\ViewPackageReception;
@@ -112,7 +113,8 @@ class PackageReceptionTest extends TestCase
         Permission::firstOrCreate(['name'=>'page_PackageReceptionMonitor','guard_name'=>'web']);
         $user->givePermissionTo(Permission::whereIn('name', [
             'view_any_package::reception', 'view_package::reception',
-            'page_PackageReceptionMonitor', 'receive_package::reception',
+            'page_PackageReceptionMonitor', 'receive_package::reception', 'deliver_package::reception',
+            'cancel_package::reception',
             'view_sensitive_package::reception', 'create_package::reception',
         ])->get());
         $this->actingAs($user);
@@ -127,6 +129,54 @@ class PackageReceptionTest extends TestCase
             ->assertHasNoActionErrors();
         $this->assertSame(PackageReception::RECEIVED, $record->fresh()->status);
         $this->assertSame('Recibido desde el monitor', $record->fresh()->reception_notes);
+
+        Livewire::test(PackageReceptionMonitor::class)
+            ->mountAction('deliver', ['reception'=>$record->id])
+            ->setActionData(['delivered_to_type'=>'owner', 'delivery_notes'=>'Entregado desde el monitor'])
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+        $this->assertSame(PackageReception::DELIVERED, $record->fresh()->status);
+
+        $cancelledRecord = $this->reception($owner, $lote, $user, ['courier_name'=>'OCA']);
+        Livewire::test(PackageReceptionMonitor::class)
+            ->mountAction('cancel', ['reception'=>$cancelledRecord->id])
+            ->setActionData(['cancellation_reason'=>'El propietario anuló la compra'])
+            ->callMountedAction()
+            ->assertHasNoActionErrors();
+        $this->assertSame(PackageReception::CANCELLED, $cancelledRecord->fresh()->status);
+        $this->assertSame('El propietario anuló la compra', $cancelledRecord->fresh()->cancellation_reason);
+    }
+
+    public function test_package_resource_exposes_transition_permissions_to_shield(): void
+    {
+        $prefixes = PackageReceptionResource::getPermissionPrefixes();
+
+        $this->assertContains('receive', $prefixes);
+        $this->assertContains('deliver', $prefixes);
+        $this->assertContains('cancel', $prefixes);
+        $this->assertContains('view_sensitive', $prefixes);
+    }
+
+    public function test_transition_permissions_respect_both_permission_and_current_status(): void
+    {
+        [$owner, $lote, $user] = $this->context();
+        $record = $this->reception($owner, $lote, $user);
+        $user->givePermissionTo(Permission::whereIn('name', [
+            'receive_package::reception',
+            'deliver_package::reception',
+            'cancel_package::reception',
+        ])->get());
+
+        $this->assertTrue($user->can('receive', $record));
+        $this->assertTrue($user->can('cancel', $record));
+        $this->assertFalse($user->can('deliver', $record));
+
+        $record->update(['status'=>PackageReception::RECEIVED, 'received_at'=>now()]);
+        $record->refresh();
+
+        $this->assertFalse($user->can('receive', $record));
+        $this->assertFalse($user->can('cancel', $record));
+        $this->assertTrue($user->can('deliver', $record));
     }
 
     public function test_owner_cannot_access_package_monitor_without_its_shield_page_permission(): void
