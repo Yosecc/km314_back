@@ -16,7 +16,7 @@ class ViewPackageReception extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make()->visible(fn () => auth()->user()->can('update', $this->record)),
+            Actions\EditAction::make()->visible(fn () => PackageReceptionResource::canEdit($this->record)),
             Actions\Action::make('receive')->label('Recibir paquete')->icon('heroicon-o-inbox-arrow-down')->color('success')
                 ->visible(fn () => $this->record->status === PackageReception::EXPECTED && auth()->user()->can('receive', $this->record))->form([
                     Forms\Components\TextInput::make('received_packages_count')->label('Cantidad de bultos')->numeric()->minValue(1),

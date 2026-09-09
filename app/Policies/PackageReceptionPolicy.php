@@ -39,7 +39,8 @@ class PackageReceptionPolicy
      */
     public function update(User $user, PackageReception $packageReception): bool
     {
-        return $user->can('update_package::reception');
+        return $packageReception->status === PackageReception::EXPECTED
+            && $user->can('update_package::reception');
     }
 
     /**

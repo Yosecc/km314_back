@@ -19,6 +19,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class PackageReceptionResource extends Resource implements HasShieldPermissions
@@ -56,6 +57,13 @@ class PackageReceptionResource extends Resource implements HasShieldPermissions
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->visibleTo(Auth::user());
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return $record instanceof PackageReception
+            && $record->status === PackageReception::EXPECTED
+            && parent::canEdit($record);
     }
 
     public static function form(Form $form): Form
@@ -144,7 +152,7 @@ class PackageReceptionResource extends Resource implements HasShieldPermissions
             Tables\Filters\SelectFilter::make('status')->label('Estado')->options(PackageReception::statuses()),
         ])->actions([
             Tables\Actions\ViewAction::make(),
-            Tables\Actions\EditAction::make()->visible(fn (PackageReception $r) => Auth::user()->can('update', $r)),
+            Tables\Actions\EditAction::make()->visible(fn (PackageReception $r) => static::canEdit($r)),
             self::receiveTableAction(), self::deliverTableAction(), self::cancelTableAction(),
         ])->defaultSort('created_at', 'desc')->poll('30s');
     }

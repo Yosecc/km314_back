@@ -13,6 +13,7 @@ use App\Filament\Widgets\PackageReceptionStats;
 use App\Filament\Resources\PackageReceptionResource\Pages\ListPackageReceptions;
 use App\Filament\Resources\PackageReceptionResource\Pages\ViewPackageReception;
 use App\Filament\Resources\PackageReceptionResource\Pages\CreatePackageReception;
+use App\Filament\Resources\PackageReceptionResource\Pages\EditPackageReception;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Artisan;
@@ -177,6 +178,31 @@ class PackageReceptionTest extends TestCase
         $this->assertFalse($user->can('receive', $record));
         $this->assertFalse($user->can('cancel', $record));
         $this->assertTrue($user->can('deliver', $record));
+    }
+
+    public function test_a_package_reception_can_only_be_edited_while_it_is_expected(): void
+    {
+        [$owner, $lote, $user] = $this->context();
+        $record = $this->reception($owner, $lote, $user);
+        $user->givePermissionTo(Permission::whereIn('name', [
+            'view_any_package::reception',
+            'view_package::reception',
+            'update_package::reception',
+        ])->get());
+        $this->actingAs($user);
+
+        $this->assertTrue($user->can('update', $record));
+        $this->assertTrue(PackageReceptionResource::canEdit($record));
+        Livewire::test(EditPackageReception::class, ['record'=>$record->getRouteKey()])
+            ->assertSuccessful();
+
+        $record->update(['status'=>PackageReception::RECEIVED, 'received_at'=>now()]);
+        $record->refresh();
+
+        $this->assertFalse($user->can('update', $record));
+        $this->assertFalse(PackageReceptionResource::canEdit($record));
+        Livewire::test(EditPackageReception::class, ['record'=>$record->getRouteKey()])
+            ->assertForbidden();
     }
 
     public function test_owner_cannot_access_package_monitor_without_its_shield_page_permission(): void

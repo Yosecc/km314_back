@@ -11,6 +11,12 @@ class EditPackageReception extends EditRecord
 {
     protected static string $resource = PackageReceptionResource::class;
     protected array $uploads = [];
+
+    protected function beforeSave(): void
+    {
+        abort_unless(PackageReceptionResource::canEdit($this->record->fresh()), 403);
+    }
+
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $from = Carbon::parse($data['expected_from']);
