@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Servicios;
 use App\Http\Controllers\Api\FormControl;
 use App\Http\Controllers\Api\Solicitudes;
 use App\Http\Controllers\Api\Authentication;
+use App\Http\Controllers\Api\RecurrentVisitorController;
 
 
 /*
@@ -66,6 +67,12 @@ Route::middleware('auth:sanctum')->get('/empleados/configuracion', [Main::class,
 Route::middleware('auth:sanctum')->post('/empleados/movil', [Main::class,'empleadosMovilStore']);
 Route::middleware('auth:sanctum')->post('/empleados/movil/{id}', [Main::class,'empleadosMovilUpdate']);
 
+Route::middleware('auth:sanctum')->prefix('visitantes-recurrentes')->group(function () {
+    Route::get('/', [RecurrentVisitorController::class, 'index']);
+    Route::post('/', [RecurrentVisitorController::class, 'store']);
+    Route::post('/{recurrentVisitor}', [RecurrentVisitorController::class, 'update']);
+});
+
 
 
 Route::middleware('auth:sanctum')->get('/get_pop_up', [Main::class,'getPopUp']);
@@ -113,4 +120,3 @@ Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
     Route::get('owner',[Main::class,'getOwner']);
 
 });
-
