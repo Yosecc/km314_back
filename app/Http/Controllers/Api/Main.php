@@ -7,6 +7,7 @@ use App\Http\Controllers\SocialMessages;
 use App\Mail\Contact;
 use App\Mail\sendMailLanding;
 use App\Models\Employee;
+use App\Models\FilesRequired;
 use App\Models\FormControlTypeIncome;
 use App\Models\Landing;
 use App\Models\LandingData;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 
 class Main extends Controller
@@ -50,7 +52,7 @@ class Main extends Controller
     {
         $empleados = Employee::where('owner_id', $request->user()->owner->id)
                                 ->orderBy('created_at','desc')
-                                ->with(['autos','files','horarios'])
+                                ->with(['autos.files','files','horarios'])
                                 ->get();
 
         $empleados = $empleados->map(function($empleado){
@@ -277,6 +279,313 @@ class Main extends Controller
         }
     
         return response()->json(['status' => true, 'message' => 'Empleado actualizado correctamente'], 200);
+    }
+
+    /**
+     * Configuración utilizada por el formulario móvil. Se comparte con el
+     * recurso de Filament para que los documentos requeridos sean los mismos.
+     */
+    public function empleadosConfiguracion()
+    {
+        return response()->json([
+            'documentos_personales' => $this->mobileDocumentConfiguration('employee'),
+            'documentos_vehiculo' => $this->mobileDocumentConfiguration('car'),
+            'dias' => ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'],
+        ]);
+    }
+
+    public function empleadosMovilStore(Request $request)
+    {
+        $data = $this->mobileEmployeeRequestData($request);
+        $owner = $request->user()->owner;
+
+        $employee = DB::transaction(function () use ($request, $data, $owner) {
+            $employee = Employee::create([
+                'work_id' => 36,
+                'dni' => $data['dni'],
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'phone' => $data['phone'],
+                'observations' => $data['observations'],
+                'user_id' => $request->user()->id,
+                'owner_id' => $owner->id,
+                'model_origen' => 'Owner',
+                'model_origen_id' => $owner->id,
+                'status' => 'pendiente',
+            ]);
+
+            $employee->owners()->syncWithoutDetaching([$owner->id]);
+            $this->syncMobileEmployeeRelations($employee, $request, $data, false);
+
+            return $employee;
+        });
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Trabajador creado y enviado a aprobación.',
+            'empleado' => $employee->load(['autos.files', 'files', 'horarios']),
+        ], 201);
+    }
+
+    public function empleadosMovilUpdate(Request $request, $id)
+    {
+        $employee = Employee::where('id', $id)
+            ->where('owner_id', $request->user()->owner->id)
+            ->with(['autos.files', 'files'])
+            ->firstOrFail();
+
+        $data = $this->mobileEmployeeRequestData($request, $employee);
+
+        DB::transaction(function () use ($employee, $request, $data) {
+            $employee->update([
+                'dni' => $data['dni'],
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'phone' => $data['phone'],
+                'observations' => $data['observations'],
+            ]);
+
+            $this->syncMobileEmployeeRelations($employee, $request, $data, true);
+        });
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Trabajador actualizado correctamente.',
+            'empleado' => $employee->fresh()->load(['autos.files', 'files', 'horarios']),
+        ]);
+    }
+
+    private function mobileEmployeeRequestData(Request $request, ?Employee $employee = null): array
+    {
+        $validator = Validator::make($request->all(), [
+            'dni' => ['required', 'digits_between:7,8'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:50'],
+            'observations' => ['nullable', 'string', 'max:2000'],
+            'schedules' => ['nullable', 'string'],
+            'vehicles' => ['nullable', 'string'],
+            'employee_documents_meta' => ['nullable', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
+
+        $schedules = $this->decodeMobileArray($request->input('schedules'), 'schedules');
+        $vehicles = $this->decodeMobileArray($request->input('vehicles'), 'vehicles');
+        $employeeDocuments = $this->decodeMobileArray(
+            $request->input('employee_documents_meta'),
+            'employee_documents_meta'
+        );
+
+        $scheduleValidator = Validator::make(['schedules' => $schedules], [
+            'schedules' => ['array'],
+            'schedules.*.day_of_week' => ['required', 'in:Domingo,Lunes,Martes,Miercoles,Jueves,Viernes,Sabado'],
+            'schedules.*.start_time' => ['required', 'date_format:H:i'],
+            'schedules.*.end_time' => ['required', 'date_format:H:i'],
+        ]);
+
+        $vehicleValidator = Validator::make(['vehicles' => $vehicles], [
+            'vehicles' => ['array'],
+            'vehicles.*.marca' => ['required', 'string', 'max:255'],
+            'vehicles.*.modelo' => ['required', 'string', 'max:255'],
+            'vehicles.*.patente' => ['required', 'string', 'max:255'],
+            'vehicles.*.color' => ['nullable', 'string', 'max:255'],
+            'vehicles.*.documents' => ['array'],
+        ]);
+
+        $validator->after(function ($validator) use ($request, $employee, $employeeDocuments, $vehicles, $scheduleValidator, $vehicleValidator) {
+            foreach ([$scheduleValidator, $vehicleValidator] as $nestedValidator) {
+                foreach ($nestedValidator->errors()->messages() as $key => $messages) {
+                    foreach ($messages as $message) {
+                        $validator->errors()->add($key, $message);
+                    }
+                }
+            }
+
+            $this->validateMobileDocuments(
+                $validator,
+                $request,
+                $employeeDocuments,
+                $this->mobileDocumentConfiguration('employee'),
+                $employee?->files,
+                'employee_documents',
+                'documentos personales'
+            );
+
+            foreach ($vehicles as $vehicleIndex => $vehicle) {
+                $existingFiles = collect();
+                if ($employee && !empty($vehicle['id'])) {
+                    $existingAuto = $employee->autos->firstWhere('id', $vehicle['id']);
+                    $existingFiles = $existingAuto?->files ?? collect();
+                }
+
+                $this->validateMobileDocuments(
+                    $validator,
+                    $request,
+                    $vehicle['documents'] ?? [],
+                    $this->mobileDocumentConfiguration('car'),
+                    $existingFiles,
+                    'vehicle_documents',
+                    'documentos del vehículo ' . ($vehicleIndex + 1)
+                );
+            }
+        });
+
+        if ($validator->fails()) {
+            throw new \Illuminate\Validation\ValidationException($validator);
+        }
+
+        return [
+            'dni' => $request->input('dni'),
+            'first_name' => $request->input('first_name'),
+            'last_name' => $request->input('last_name'),
+            'phone' => $request->input('phone'),
+            'observations' => $request->input('observations'),
+            'schedules' => $schedules,
+            'vehicles' => $vehicles,
+            'employee_documents' => $employeeDocuments,
+        ];
+    }
+
+    private function syncMobileEmployeeRelations(Employee $employee, Request $request, array $data, bool $isUpdate): void
+    {
+        $employee->horarios()->delete();
+        foreach ($data['schedules'] as $schedule) {
+            $employee->horarios()->create([
+                'day_of_week' => $schedule['day_of_week'],
+                'start_time' => $schedule['start_time'],
+                'end_time' => $schedule['end_time'],
+            ]);
+        }
+
+        $this->syncMobileDocuments(
+            $employee->files(),
+            $request,
+            $data['employee_documents'],
+            'employee_documents',
+            'employee-files'
+        );
+
+        $existingAutos = $employee->autos()->with('files')->get()->keyBy('id');
+        $incomingIds = collect($data['vehicles'])->pluck('id')->filter()->map(fn ($id) => (int) $id)->all();
+
+        if ($isUpdate) {
+            foreach ($existingAutos->except($incomingIds) as $auto) {
+                $auto->files()->delete();
+                $auto->delete();
+            }
+        }
+
+        foreach ($data['vehicles'] as $vehicle) {
+            $auto = !empty($vehicle['id']) ? $existingAutos->get((int) $vehicle['id']) : null;
+            if ($auto) {
+                $auto->update([
+                    'marca' => $vehicle['marca'],
+                    'modelo' => $vehicle['modelo'],
+                    'patente' => $vehicle['patente'],
+                    'color' => $vehicle['color'] ?? null,
+                ]);
+            } else {
+                $auto = $employee->autos()->create([
+                    'marca' => $vehicle['marca'],
+                    'modelo' => $vehicle['modelo'],
+                    'patente' => $vehicle['patente'],
+                    'color' => $vehicle['color'] ?? null,
+                    'user_id' => $request->user()->id,
+                    'model' => 'Employee',
+                    'model_id' => $employee->id,
+                ]);
+            }
+
+            $this->syncMobileDocuments(
+                $auto->files(),
+                $request,
+                $vehicle['documents'] ?? [],
+                'vehicle_documents',
+                'auto-files'
+            );
+        }
+    }
+
+    private function syncMobileDocuments($relation, Request $request, array $documents, string $uploadKey, string $directory): void
+    {
+        foreach ($documents as $document) {
+            $name = $document['name'] ?? 'Documento';
+            $record = !empty($document['id'])
+                ? $relation->where('id', $document['id'])->first()
+                : $relation->where('name', $name)->first();
+            $file = isset($document['file_index'])
+                ? $request->file($uploadKey . '.' . $document['file_index'])
+                : null;
+
+            if ($file) {
+                $path = $file->store($directory, 'public');
+                $attributes = [
+                    'name' => $name,
+                    'file' => $path,
+                    'fecha_vencimiento' => $document['expires_at'] ?? null,
+                ];
+                $record ? $record->update($attributes) : $relation->create($attributes);
+            } elseif ($record && array_key_exists('expires_at', $document)) {
+                $record->update(['fecha_vencimiento' => $document['expires_at'] ?: null]);
+            }
+        }
+    }
+
+    private function validateMobileDocuments($validator, Request $request, array $documents, array $configuration, $existingFiles, string $uploadKey, string $label): void
+    {
+        foreach ($configuration as $requiredDocument) {
+            $document = collect($documents)->firstWhere('name', $requiredDocument['name']);
+            $hasExisting = collect($existingFiles)->contains('name', $requiredDocument['name']);
+            $hasNewFile = $document && isset($document['file_index'])
+                && $request->hasFile($uploadKey . '.' . $document['file_index']);
+
+            if ($requiredDocument['is_required'] && !$hasExisting && !$hasNewFile) {
+                $validator->errors()->add($uploadKey, 'Adjuntá el documento requerido: ' . $requiredDocument['name'] . ' (' . $label . ').');
+            }
+
+            if ($requiredDocument['requires_expiry'] && empty($document['expires_at'] ?? null)) {
+                $validator->errors()->add($uploadKey, 'Indicá el vencimiento de ' . $requiredDocument['name'] . ' (' . $label . ').');
+            }
+        }
+    }
+
+    private function mobileDocumentConfiguration(string $type): array
+    {
+        $required = FilesRequired::where('type', $type)->first()?->required ?? [];
+        $documents = collect($required)->map(fn ($document) => [
+            'name' => $document['document'] ?? $document['name'] ?? 'Documento',
+            'is_required' => in_array($document['is_required'] ?? false, [true, 1, '1'], true),
+            'requires_expiry' => in_array($document['date_is_required'] ?? false, [true, 1, '1'], true),
+        ])->values()->all();
+
+        if ($type === 'car' && empty($documents)) {
+            return [
+                ['name' => 'Seguro del Vehículo', 'is_required' => false, 'requires_expiry' => false],
+                ['name' => 'VTV', 'is_required' => false, 'requires_expiry' => false],
+                ['name' => 'Cédula del Vehículo', 'is_required' => false, 'requires_expiry' => false],
+            ];
+        }
+
+        return $documents;
+    }
+
+    private function decodeMobileArray(?string $value, string $field): array
+    {
+        if (blank($value)) {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                $field => ['La información enviada no tiene un formato válido.'],
+            ]);
+        }
+
+        return $decoded;
     }
 
 

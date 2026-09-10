@@ -62,6 +62,9 @@ Route::middleware('auth:sanctum')->post('/delete_empleados', [Main::class,'delet
 Route::middleware('auth:sanctum')->get('/empleados', [Main::class,'empleados']);
 Route::middleware('auth:sanctum')->post('/empleados/store', [Main::class,'empleadosStore']);
 Route::middleware('auth:sanctum')->post('/empleados/update/{id}', [Main::class,'empleadosUpdate']);
+Route::middleware('auth:sanctum')->get('/empleados/configuracion', [Main::class,'empleadosConfiguracion']);
+Route::middleware('auth:sanctum')->post('/empleados/movil', [Main::class,'empleadosMovilStore']);
+Route::middleware('auth:sanctum')->post('/empleados/movil/{id}', [Main::class,'empleadosMovilUpdate']);
 
 
 
@@ -110,5 +113,4 @@ Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
     Route::get('owner',[Main::class,'getOwner']);
 
 });
-
 
