@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Solicitudes;
 use App\Http\Controllers\Api\Authentication;
 use App\Http\Controllers\Api\RecurrentVisitorController;
 use App\Http\Controllers\Api\MobileFormControlController;
+use App\Http\Controllers\Api\MobilePackageReceptionController;
 
 
 /*
@@ -72,6 +73,14 @@ Route::middleware('auth:sanctum')->prefix('visitantes-recurrentes')->group(funct
     Route::get('/', [RecurrentVisitorController::class, 'index']);
     Route::post('/', [RecurrentVisitorController::class, 'store']);
     Route::post('/{recurrentVisitor}', [RecurrentVisitorController::class, 'update']);
+});
+
+Route::middleware('auth:sanctum')->prefix('recepciones-paquetes')->group(function () {
+    Route::get('/', [MobilePackageReceptionController::class, 'index']);
+    Route::get('/configuracion', [MobilePackageReceptionController::class, 'configuration']);
+    Route::post('/', [MobilePackageReceptionController::class, 'store']);
+    Route::post('/{packageReception}', [MobilePackageReceptionController::class, 'update']);
+    Route::post('/{packageReception}/cancelar', [MobilePackageReceptionController::class, 'cancel']);
 });
 
 
