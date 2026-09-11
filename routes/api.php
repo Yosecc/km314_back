@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\FormControl;
 use App\Http\Controllers\Api\Solicitudes;
 use App\Http\Controllers\Api\Authentication;
 use App\Http\Controllers\Api\RecurrentVisitorController;
+use App\Http\Controllers\Api\MobileFormControlController;
 
 
 /*
@@ -84,6 +85,8 @@ Route::middleware('auth:sanctum')->post('/spontaneous_visit_action', [Main::clas
 
 // middleware(['token_validate'])->
 Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
+    Route::get('mobile/configuration', [MobileFormControlController::class, 'configuration']);
+    Route::post('mobile', [MobileFormControlController::class, 'store']);
     Route::post('store',[FormControl::class,'store']);
     Route::post('index',[FormControl::class,'index']);
     Route::post('file',[FormControl::class,'file']);
