@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Authentication;
 use App\Http\Controllers\Api\RecurrentVisitorController;
 use App\Http\Controllers\Api\MobileFormControlController;
 use App\Http\Controllers\Api\MobilePackageReceptionController;
+use App\Http\Controllers\Api\MobileTermsConditionsController;
 
 
 /*
@@ -56,6 +57,11 @@ Route::get('/recover_messages_mail', function () {
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::middleware('auth:sanctum')->prefix('terms-conditions')->group(function () {
+    Route::get('/', [MobileTermsConditionsController::class, 'show']);
+    Route::post('/accept', [MobileTermsConditionsController::class, 'accept']);
 });
 
 Route::middleware('auth:sanctum')->get('/tipos_ingresos', [Main::class,'tipos_ingresos']);
