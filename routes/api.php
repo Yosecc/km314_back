@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\RecurrentVisitorController;
 use App\Http\Controllers\Api\MobileFormControlController;
 use App\Http\Controllers\Api\MobilePackageReceptionController;
 use App\Http\Controllers\Api\MobileTermsConditionsController;
+use App\Http\Controllers\Api\PushDeviceController;
 
 
 /*
@@ -62,6 +63,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->prefix('terms-conditions')->group(function () {
     Route::get('/', [MobileTermsConditionsController::class, 'show']);
     Route::post('/accept', [MobileTermsConditionsController::class, 'accept']);
+});
+
+Route::middleware('auth:sanctum')->prefix('push/devices')->group(function () {
+    Route::post('/', [PushDeviceController::class, 'store']);
+    Route::delete('/', [PushDeviceController::class, 'destroy']);
 });
 
 Route::middleware('auth:sanctum')->get('/tipos_ingresos', [Main::class,'tipos_ingresos']);

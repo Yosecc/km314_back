@@ -97,6 +97,10 @@ class AdminPanelProvider extends PanelProvider
                 'panels::body.end',
                 fn () => view('components.qr-scanner-modal')
             )
+            ->renderHook(
+                'panels::body.end',
+                fn () => view('components.firebase-web-push')
+            )
             ;
     }
 }

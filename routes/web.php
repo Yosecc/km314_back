@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\PushDeviceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,3 +36,6 @@ Route::get('/formulario-publico/{token}', [\App\Http\Controllers\PublicFormContr
     ->middleware('throttle:30,1')->name('form-control-public.show');
 Route::post('/formulario-publico/{token}', [\App\Http\Controllers\PublicFormControlController::class, 'store'])
     ->middleware('throttle:10,1')->name('form-control-public.store');
+
+Route::middleware('auth')->post('/push/devices/web', [PushDeviceController::class, 'store'])
+    ->name('push.devices.web');

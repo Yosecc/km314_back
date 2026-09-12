@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Filament\Models\Contracts\FilamentUser;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -68,6 +69,11 @@ class User extends Authenticatable implements FilamentUser
     public function quickAccessLinks()
     {
         return $this->hasMany(QuickAccessLink::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function fcmDevices(): HasMany
+    {
+        return $this->hasMany(FcmDevice::class);
     }
 
     // public function roles()

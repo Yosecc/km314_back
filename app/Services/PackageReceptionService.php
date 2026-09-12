@@ -134,8 +134,15 @@ class PackageReceptionService
     {
         $user = $record->owner?->user;
         if (! $user) return;
+
         Notification::make()->title($title)->body($body)->icon('heroicon-o-archive-box')
             ->actions([Action::make('ver')->label('Ver')->url(PackageReceptionResource::getUrl('index'))])
             ->sendToDatabase($user);
+
+        app(FirebaseCloudMessaging::class)->sendToUser($user, $title, $body, [
+            'type' => 'package_reception',
+            'package_reception_id' => $record->id,
+            'reference_code' => $record->reference_code,
+        ]);
     }
 }
