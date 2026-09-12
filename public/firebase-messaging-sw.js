@@ -1,6 +1,8 @@
 /* Service worker para las notificaciones web de KM314. */
-importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js');
+// Se sirven desde este dominio porque algunos navegadores/redes bloquean
+// importScripts hacia gstatic dentro de un service worker.
+importScripts('/firebase/firebase-app-compat.js');
+importScripts('/firebase/firebase-messaging-compat.js');
 
 firebase.initializeApp({
     apiKey: 'AIzaSyDRxn9r1trsksMLb0gDaBR2j5RgZXpI6KY',
