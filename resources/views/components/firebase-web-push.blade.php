@@ -11,6 +11,7 @@
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $vapidKeyJson = json_encode($firebase['vapid_key'] ?? null);
     $registerDeviceUrlJson = json_encode(route('push.devices.web'));
+    $csrfTokenJson = json_encode(csrf_token());
 @endphp
 
 @if ($isConfigured)
@@ -21,6 +22,7 @@
         const firebaseConfig = {!! $firebaseConfigJson !!};
         const vapidKey = {!! $vapidKeyJson !!};
         const registerDeviceUrl = {!! $registerDeviceUrlJson !!};
+        const csrfToken = {!! $csrfTokenJson !!};
 
         async function registerBrowserForPush() {
             if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
@@ -37,13 +39,13 @@
 
             if (!token) return;
 
-            await fetch(registerDeviceUrl, {
+            const response = await fetch(registerDeviceUrl, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                    'X-CSRF-TOKEN': csrfToken,
                 },
                 body: JSON.stringify({
                     token,
@@ -51,6 +53,10 @@
                     device_name: navigator.userAgent.slice(0, 255),
                 }),
             });
+
+            if (!response.ok) {
+                throw new Error(`No pudimos registrar el navegador (${response.status}).`);
+            }
 
             onMessage(messaging, (payload) => {
                 const notification = payload.notification;
@@ -65,6 +71,8 @@
 
         // Solo se solicita una vez por navegador. Si el usuario ya decidió,
         // se registra silenciosamente en los siguientes ingresos.
-        registerBrowserForPush().catch(() => {});
+        registerBrowserForPush().catch((error) => {
+            console.error('KM314: no se pudieron activar las notificaciones web.', error);
+        });
     </script>
 @endif
