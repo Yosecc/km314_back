@@ -1503,11 +1503,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->visible(fn (FormControl $record) => Auth::user()->hasRole('owner') && $record->status === 'OwnerPending' && (int) $record->owner_id === (int) Auth::user()->owner_id)
                     ->action(function (FormControl $record): void {
                         $record->approveByOwner(Auth::user());
-                        $admins = User::whereHas('roles', fn ($q) => $q->whereIn('name',['super_admin','admin','Administrador']))->get();
-                        Notification::make()->title('Formulario pendiente de aprobación administrativa')
-                            ->body('El propietario aprobó el formulario #'.$record->id.'.')
-                            ->actions([NotificationAction::make('ver')->label('Ver formulario')->url(static::getUrl('view',['record'=>$record]))])
-                            ->sendToDatabase($admins);
                         Notification::make()->title('Formulario enviado a administración')->success()->send();
                     }),
                 Action::make('show_qr')
@@ -1532,17 +1527,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->success()
                             ->send();
 
-                            if($record->owner && $record->owner->user){
-                                Notification::make()
-                                ->title('Formulario aprobado')
-                                ->body('Ahora las personas confioguradas en el formulario podrán acceder al barrio según los horarios establecidos')
-                                    ->actions([
-                                        NotificationAction::make('Ver Formulario')
-                                            ->button()
-                                            ->url(route('filament.admin.resources.form-controls.view', $record), shouldOpenInNewTab: true)
-                                    ])
-                                ->sendToDatabase($record->owner->user);
-                            }
                     })
                     ->button()
                     ->requiresConfirmation()
@@ -1562,11 +1546,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->success()
                             ->send();
 
-                            if($record->owner && $record->owner->user){
-                                Notification::make()
-                                ->title('Formulario rechazado')
-                                ->sendToDatabase($record->owner->user);
-                            }
                     })
                     ->button()
                     ->requiresConfirmation()

@@ -7,6 +7,7 @@ use App\Models\RecurrentVisitor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Services\ApplicationNotificationService;
 
 class RecurrentVisitorController extends Controller
 {
@@ -48,6 +49,15 @@ class RecurrentVisitorController extends Controller
             return $visitor;
         });
 
+        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+            ['update_recurrent::visitor'],
+            'Nuevo visitante recurrente pendiente de aprobación',
+            $request->user()->name.' registró a '.$visitor->nombres().'.',
+            ['type' => 'recurrent_visitor', 'recurrent_visitor_id' => $visitor->id, 'status' => 'pendiente'],
+            \App\Filament\Resources\RecurrentVisitorResource::getUrl('index'),
+            'heroicon-o-user-plus',
+        );
+
         return response()->json([
             'status' => true,
             'message' => 'Visitante recurrente registrado y enviado a aprobación.',
@@ -82,6 +92,15 @@ class RecurrentVisitorController extends Controller
             $recurrentVisitor->update($attributes);
             $this->syncVehicles($recurrentVisitor, $request, $data['vehicles']);
         });
+
+        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+            ['update_recurrent::visitor'],
+            'Visitante recurrente actualizado para revisión',
+            $request->user()->name.' actualizó a '.$recurrentVisitor->nombres().'.',
+            ['type' => 'recurrent_visitor', 'recurrent_visitor_id' => $recurrentVisitor->id, 'status' => 'pendiente'],
+            \App\Filament\Resources\RecurrentVisitorResource::getUrl('index'),
+            'heroicon-o-pencil-square',
+        );
 
         return response()->json([
             'status' => true,

@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\RecurrentVisitorResource\Pages;
 
 use App\Filament\Resources\RecurrentVisitorResource;
-use App\Models\User;
+use App\Services\ApplicationNotificationService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
@@ -27,10 +27,14 @@ class ManageRecurrentVisitors extends ManageRecords
                         ->success()
                         ->send();
 
-                    Notification::make()
-                        ->title('Nuevo visitante recurrente pendiente de aprobación')
-                        ->body(auth()->user()->name . ' registró a ' . $record->nombres())
-                        ->sendToDatabase(User::role('super_admin')->get());
+                    app(ApplicationNotificationService::class)->sendToPermissionHolders(
+                        ['update_recurrent::visitor'],
+                        'Nuevo visitante recurrente pendiente de aprobación',
+                        auth()->user()->name . ' registró a ' . $record->nombres() . '.',
+                        ['type' => 'recurrent_visitor', 'recurrent_visitor_id' => $record->id, 'status' => 'pendiente'],
+                        RecurrentVisitorResource::getUrl('index'),
+                        'heroicon-o-user-plus',
+                    );
                 }),
         ];
     }

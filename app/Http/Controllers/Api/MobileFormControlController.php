@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use App\Services\ApplicationNotificationService;
 
 class MobileFormControlController extends Controller
 {
@@ -108,6 +109,18 @@ class MobileFormControlController extends Controller
 
             return $form;
         });
+
+        $isAutomatic = $form->status === 'Authorized';
+        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+            ['aprobar_form::control', 'rechazar_form::control'],
+            $isAutomatic ? 'Nuevo formulario autorizado automáticamente' : 'Nuevo formulario pendiente de aprobación',
+            $isAutomatic
+                ? 'El formulario #'.$form->id.' corresponde a una visita temporal de 24 horas.'
+                : 'El formulario #'.$form->id.' espera la revisión de administración.',
+            ['type' => 'form_control', 'form_control_id' => $form->id, 'status' => $form->status],
+            \App\Filament\Resources\FormControlResource::getUrl('view', ['record' => $form]),
+            'heroicon-o-document-check',
+        );
 
         return response()->json([
             'status' => true,

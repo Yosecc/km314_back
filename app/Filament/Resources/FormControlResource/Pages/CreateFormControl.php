@@ -2,16 +2,14 @@
 
 namespace App\Filament\Resources\FormControlResource\Pages;
 
-use App\Models\User;
 use App\Filament\Resources\FormControlResource\Pages\Concerns\HasPublicFormLinkAction;
 use Filament\Actions;
 use Filament\Forms;
 use Illuminate\Contracts\View\View;
 use Filament\Notifications\Notification;
-use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\FormControlResource;
-use App\Models\FormControl;
+use App\Services\ApplicationNotificationService;
 
 
 class CreateFormControl extends CreateRecord
@@ -65,51 +63,28 @@ class CreateFormControl extends CreateRecord
     protected function afterCreate(): void
     {
         try {
-            // Aquí ya tienes acceso al registro creado con todas sus relaciones
             $formControl = $this->record;
-            
-            // Puedes acceder a las relaciones guardadas:
-            // $formControl->peoples
-            // $formControl->autos
-            // $formControl->mascotas
-            // $formControl->files
 
-            $recipient = User::whereHas("roles", function($q){ 
-                $q->whereIn("name", ["super_admin", "admin"]); 
-            })->get();
-
-            // dd($formControl->income_type);
             if (collect($formControl->income_type)->contains('Visita Temporal (24hs)')) {
-
-                $formControl->status = 'Authorized';
-                $formControl->save();
+                $formControl->update(['status' => 'Authorized']);
 
                 Notification::make()
-                    ->title('Se ha creado un nuevo formulario de control')
-                    ->body('Se ha aprobado automáticamente el formulario de control para la visita espontánea 24hs.')
-                    ->actions([
-                            NotificationAction::make('Ver Formulario')
-                                ->button()
-                                ->url(route('filament.admin.resources.form-controls.view', $formControl), shouldOpenInNewTab: true)
-                        ])
-                    ->sendToDatabase($recipient);
-
-                Notification::make()
-                            ->title('Se ha aprobado automáticamente el formulario de control para la visita espontánea 24hs.')
-                            ->success()
-                            ->send();
-               
+                    ->title('Formulario autorizado automáticamente')
+                    ->success()
+                    ->send();
             }
-            
-            
-            Notification::make()
-                ->title('Se ha creado un nuevo formulario de control')
-                 ->actions([
-                    NotificationAction::make('Ver Formulario')
-                        ->button()
-                        ->url(route('filament.admin.resources.form-controls.view', $formControl), shouldOpenInNewTab: true)
-                ])
-                ->sendToDatabase($recipient);
+
+            $isAutomatic = $formControl->status === 'Authorized';
+            app(ApplicationNotificationService::class)->sendToPermissionHolders(
+                ['aprobar_form::control', 'rechazar_form::control'],
+                $isAutomatic ? 'Nuevo formulario autorizado automáticamente' : 'Nuevo formulario pendiente de aprobación',
+                $isAutomatic
+                    ? 'El formulario #'.$formControl->id.' corresponde a una visita temporal de 24 horas.'
+                    : 'El formulario #'.$formControl->id.' espera la revisión de administración.',
+                ['type' => 'form_control', 'form_control_id' => $formControl->id, 'status' => $formControl->status],
+                FormControlResource::getUrl('view', ['record' => $formControl]),
+                'heroicon-o-document-check',
+            );
 
         } catch (\Throwable $th) {
             report($th);

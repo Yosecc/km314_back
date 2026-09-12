@@ -5,11 +5,9 @@ namespace App\Filament\Pages;
 use App\Filament\Resources\FormControlResource;
 use App\Filament\Resources\FormControlResource\Pages\Concerns\HasPublicFormLinkAction;
 use App\Models\FormControl;
-use App\Models\User;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Actions\Action;
-use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Database\Eloquent\Builder;
@@ -88,8 +86,6 @@ class FormControlMonitor extends Page
             ->requiresConfirmation()->modalDescription('Luego de su aprobación, administración podrá revisar este formulario.')
             ->action(function (FormControl $record): void {
                 $record->approveByOwner(auth()->user());
-                $admins = User::whereHas('roles', fn ($q) => $q->whereIn('name', ['super_admin', 'admin', 'Administrador']))->get();
-                Notification::make()->title('Formulario pendiente de aprobación administrativa')->body('El propietario aprobó el formulario #'.$record->id.'.')->sendToDatabase($admins);
                 unset($this->monitorData);
                 Notification::make()->title('Formulario enviado a administración')->success()->send();
             });
@@ -103,7 +99,6 @@ class FormControlMonitor extends Page
             ->requiresConfirmation()->action(function (FormControl $record): void {
                 abort_unless($this->isAdmin() && auth()->user()->can('aprobar_form::control'), 403);
                 $record->aprobar();
-                $this->notifyOwner($record, 'Formulario aprobado', 'Las personas configuradas ya pueden acceder según los horarios establecidos.');
                 unset($this->monitorData);
                 Notification::make()->title('Formulario aprobado')->success()->send();
             });
@@ -117,7 +112,6 @@ class FormControlMonitor extends Page
             ->requiresConfirmation()->action(function (FormControl $record): void {
                 abort_unless($this->isAdmin() && auth()->user()->can('rechazar_form::control'), 403);
                 $record->rechazar();
-                $this->notifyOwner($record, 'Formulario rechazado', 'Administración rechazó el formulario #'.$record->id.'.');
                 unset($this->monitorData);
                 Notification::make()->title('Formulario rechazado')->success()->send();
             });
@@ -236,10 +230,4 @@ class FormControlMonitor extends Page
         return auth()->user()->hasAnyRole(['super_admin', 'admin', 'Administrador']);
     }
 
-    private function notifyOwner(FormControl $record, string $title, string $body): void
-    {
-        if ($record->owner?->user) {
-            Notification::make()->title($title)->body($body)->actions([NotificationAction::make('ver')->label('Ver')->url(FormControlResource::getUrl('view', ['record' => $record]))])->sendToDatabase($record->owner->user);
-        }
-    }
 }

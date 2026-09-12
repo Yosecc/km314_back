@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Services\ApplicationNotificationService;
 
 
 class Main extends Controller
@@ -169,6 +170,15 @@ class Main extends Controller
             \Log::info('empleadosStore - No files to process');
         }
     
+        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+            ['update_employee'],
+            'Nuevo trabajador pendiente de revisión',
+            $employee->nombres().' fue registrado y espera la aprobación de administración.',
+            ['type' => 'employee', 'employee_id' => $employee->id, 'status' => 'pendiente'],
+            \App\Filament\Resources\EmployeeResource::getUrl('edit', ['record' => $employee]),
+            'heroicon-o-user-plus',
+        );
+
         return response()->json(['status' => true, 'message' => 'Registro guardado con archivos' ], 200);
     }
 
@@ -319,6 +329,15 @@ class Main extends Controller
 
             return $employee;
         });
+
+        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+            ['update_employee'],
+            'Nuevo trabajador pendiente de revisión',
+            $employee->nombres().' fue registrado y espera la aprobación de administración.',
+            ['type' => 'employee', 'employee_id' => $employee->id, 'status' => 'pendiente'],
+            \App\Filament\Resources\EmployeeResource::getUrl('edit', ['record' => $employee]),
+            'heroicon-o-user-plus',
+        );
 
         return response()->json([
             'status' => true,

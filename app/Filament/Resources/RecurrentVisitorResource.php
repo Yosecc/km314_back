@@ -16,6 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ApplicationNotificationService;
 
 class RecurrentVisitorResource extends Resource
 {
@@ -148,11 +149,31 @@ class RecurrentVisitorResource extends Resource
                     }
                 }),
             Tables\Actions\Action::make('aprobar')->label('Aprobar')->icon('heroicon-o-check-circle')->color('success')
-                ->requiresConfirmation()->visible(fn (RecurrentVisitor $record) => Auth::user()->hasAnyRole(['admin', 'super_admin']) && $record->status === 'pendiente')
-                ->action(fn (RecurrentVisitor $record) => $record->update(['status' => 'aprobado'])),
+                ->requiresConfirmation()->visible(fn (RecurrentVisitor $record) => Auth::user()->can('update', $record) && $record->status === 'pendiente')
+                ->action(function (RecurrentVisitor $record): void {
+                    $record->update(['status' => 'aprobado']);
+                    app(ApplicationNotificationService::class)->send(
+                        collect([$record->owner?->user])->filter(),
+                        'Visitante recurrente aprobado',
+                        $record->nombres().' ya está habilitado para los accesos configurados.',
+                        ['type' => 'recurrent_visitor', 'recurrent_visitor_id' => $record->id, 'status' => 'aprobado'],
+                        self::getUrl('index'),
+                        'heroicon-o-check-circle',
+                    );
+                }),
             Tables\Actions\Action::make('rechazar')->label('Rechazar')->icon('heroicon-o-x-circle')->color('danger')
-                ->requiresConfirmation()->visible(fn (RecurrentVisitor $record) => Auth::user()->hasAnyRole(['admin', 'super_admin']) && $record->status === 'pendiente')
-                ->action(fn (RecurrentVisitor $record) => $record->update(['status' => 'rechazado'])),
+                ->requiresConfirmation()->visible(fn (RecurrentVisitor $record) => Auth::user()->can('update', $record) && $record->status === 'pendiente')
+                ->action(function (RecurrentVisitor $record): void {
+                    $record->update(['status' => 'rechazado']);
+                    app(ApplicationNotificationService::class)->send(
+                        collect([$record->owner?->user])->filter(),
+                        'Visitante recurrente rechazado',
+                        'Administración rechazó a '.$record->nombres().'. Revisá su información para volver a enviarlo.',
+                        ['type' => 'recurrent_visitor', 'recurrent_visitor_id' => $record->id, 'status' => 'rechazado'],
+                        self::getUrl('index'),
+                        'heroicon-o-x-circle',
+                    );
+                }),
             Tables\Actions\DeleteAction::make(),
         ])->defaultSort('created_at', 'desc');
     }

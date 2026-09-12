@@ -6,8 +6,6 @@ use App\Filament\Resources\PackageReceptionResource;
 use App\Models\PackageReception;
 use App\Models\PackageReceptionFile;
 use App\Models\User;
-use Filament\Notifications\Actions\Action;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -93,6 +91,15 @@ class PackageReceptionService
     public function recordCreation(PackageReception $record, User $actor): void
     {
         $this->event($record, 'created', null, PackageReception::EXPECTED, $actor, $record->observations);
+
+        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+            ['view_any_package::reception'],
+            'Nueva solicitud de recepción de paquete',
+            $actor->name.' registró '.$record->courier_name.' para el lote '.$record->lote?->getNombre().'.',
+            ['type' => 'package_reception', 'package_reception_id' => $record->id, 'reference_code' => $record->reference_code, 'status' => PackageReception::EXPECTED],
+            PackageReceptionResource::getUrl('view', ['record' => $record]),
+            'heroicon-o-archive-box',
+        );
     }
 
     private function assertStatus(PackageReception $record, string $expected): void
@@ -135,14 +142,18 @@ class PackageReceptionService
         $user = $record->owner?->user;
         if (! $user) return;
 
-        Notification::make()->title($title)->body($body)->icon('heroicon-o-archive-box')
-            ->actions([Action::make('ver')->label('Ver')->url(PackageReceptionResource::getUrl('index'))])
-            ->sendToDatabase($user);
-
-        app(FirebaseCloudMessaging::class)->sendToUser($user, $title, $body, [
-            'type' => 'package_reception',
-            'package_reception_id' => $record->id,
-            'reference_code' => $record->reference_code,
-        ]);
+        app(ApplicationNotificationService::class)->send(
+            $user,
+            $title,
+            $body,
+            [
+                'type' => 'package_reception',
+                'package_reception_id' => $record->id,
+                'reference_code' => $record->reference_code,
+                'status' => $record->status,
+            ],
+            PackageReceptionResource::getUrl('view', ['record' => $record]),
+            'heroicon-o-archive-box',
+        );
     }
 }

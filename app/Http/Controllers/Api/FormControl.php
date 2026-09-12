@@ -9,12 +9,11 @@ use App\Models\FormControlPeople;
 use App\Models\Lote;
 use App\Models\FormControlFile;
 use App\Models\OwnerFamily;
-use App\Models\User;
-use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ApplicationNotificationService;
 class FormControl extends Controller
 {
     public function index(Request $request)
@@ -230,18 +229,15 @@ class FormControl extends Controller
 
         $formControl = FormControlDB::where('id', $idForm)->with(['peoples','autos'])->first();
 
-        $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
-
-        if(isset($requestData['id']) && $requestData['id']!= null){
-
-            Notification::make()
-                ->title('Formulario Actualizado #FORM_'.$idForm)
-                ->sendToDatabase($recipient);
-        }else{
-
-            Notification::make()
-                ->title('Nuevo Formulario #FORM_'.$idForm)
-                ->sendToDatabase($recipient);
+        if (! (isset($requestData['id']) && $requestData['id'] != null)) {
+            app(ApplicationNotificationService::class)->sendToPermissionHolders(
+                ['aprobar_form::control', 'rechazar_form::control'],
+                'Nuevo formulario pendiente de aprobación',
+                'El formulario #'.$idForm.' espera la revisión de administración.',
+                ['type' => 'form_control', 'form_control_id' => $idForm, 'status' => $formControl->status],
+                \App\Filament\Resources\FormControlResource::getUrl('view', ['record' => $formControl]),
+                'heroicon-o-document-check',
+            );
         }
 
         return response()->json($formControl);

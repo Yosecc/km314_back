@@ -7,12 +7,11 @@ use App\Models\FilesRequired;
 use App\Models\FormControl;
 use App\Models\FormControlPublicInvitation;
 use App\Models\User;
-use Filament\Notifications\Actions\Action;
-use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use App\Services\ApplicationNotificationService;
 
 class PublicFormControlController extends Controller
 {
@@ -113,10 +112,14 @@ class PublicFormControlController extends Controller
         });
 
         $ownerUser = $form->owner?->user;
-        if ($ownerUser) Notification::make()->title('Formulario completado por un invitado')
-            ->body('Revise y apruebe el formulario #'.$form->id.' para enviarlo a administración.')
-            ->actions([Action::make('review')->label('Revisar')->url(FormControlResource::getUrl('view',['record'=>$form]))])
-            ->sendToDatabase($ownerUser);
+        if ($ownerUser) app(ApplicationNotificationService::class)->send(
+            $ownerUser,
+            'Formulario completado por un invitado',
+            'Revisá y aprobá el formulario #'.$form->id.' para enviarlo a administración.',
+            ['type' => 'form_control', 'form_control_id' => $form->id, 'status' => 'OwnerPending', 'public_submission' => true],
+            FormControlResource::getUrl('view', ['record' => $form]),
+            'heroicon-o-document-text',
+        );
         return redirect()->route('form-control-public.show',$token)->with('submitted',true);
     }
 

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\EmployeeResource\Pages;
 
 use App\Filament\Resources\EmployeeResource;
-use App\Models\User;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -11,7 +10,7 @@ use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Auth;
 use App\Filament\Resources\EmployeeResource\Traits\HasNotesAction;
 use App\Filament\Resources\EmployeeResource\Traits\HasGestionAction;
-use Filament\Notifications\Actions\Action as NotificationAction;
+use App\Services\ApplicationNotificationService;
 
 
 class ViewEmployeeResource extends ViewRecord
@@ -43,18 +42,11 @@ class ViewEmployeeResource extends ViewRecord
                 ->action(function () {
                     $this->record->update(['status' => 'aprobado']);
 
-                     if($this->record->owner && $this->record->owner->user ){
-
-                        Notification::make()
-                        ->title('Trabajador aprobado.')
-                        ->body('Ahora podras crear un formulario de control de acceso para configurar los horarios  y otros ajustes para darle acceso al barrio.')
-                        ->actions([
-                            NotificationAction::make('crear Formulario')
-                                ->button()
-                                ->url(route('filament.admin.resources.form-controls.create'), shouldOpenInNewTab: true)
-                        ])
-                        ->sendToDatabase($this->record->owner->user);
-                    }
+                    $this->notifyOwners(
+                        'Tu trabajador fue aprobado',
+                        'Ya podés crear un formulario de control para configurar sus accesos y horarios.',
+                        'aprobado',
+                    );
                     
                     Notification::make()
                         ->title('Trabajador aprobado')
@@ -93,17 +85,11 @@ class ViewEmployeeResource extends ViewRecord
                         'status' => false, // No leída
                     ]);
 
-                     if($this->record->owner && $this->record->owner->user ){
-
-                        Notification::make()
-                        ->title('Trabajador rechazado.')
-                        ->actions([
-                                NotificationAction::make('Ver trabajador')
-                                    ->button()
-                                    ->url(route('filament.admin.resources.employees.view', $this->record), shouldOpenInNewTab: true)
-                            ])
-                        ->sendToDatabase($this->record->owner->user);
-                    }
+                    $this->notifyOwners(
+                        'Tu trabajador fue rechazado',
+                        'Revisá el motivo indicado y actualizá la información para volver a enviarlo.',
+                        'rechazado',
+                    );
                     
                     Notification::make()
                         ->title('Trabajador rechazado')
@@ -119,5 +105,23 @@ class ViewEmployeeResource extends ViewRecord
             // Acción para eliminar
             Actions\DeleteAction::make(),
         ];
+    }
+
+    private function notifyOwners(string $title, string $body, string $status): void
+    {
+        $owners = $this->record->owners()->with('user')->get();
+
+        if ($this->record->owner && ! $owners->contains('id', $this->record->owner->id)) {
+            $owners->push($this->record->owner->loadMissing('user'));
+        }
+
+        app(ApplicationNotificationService::class)->send(
+            $owners->pluck('user')->filter(),
+            $title,
+            $body,
+            ['type' => 'employee', 'employee_id' => $this->record->id, 'status' => $status],
+            EmployeeResource::getUrl('view', ['record' => $this->record]),
+            $status === 'aprobado' ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle',
+        );
     }
 }

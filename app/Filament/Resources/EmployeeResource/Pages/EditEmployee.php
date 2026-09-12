@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
+use App\Services\ApplicationNotificationService;
 
 class EditEmployee extends EditRecord
 {
@@ -50,6 +51,15 @@ class EditEmployee extends EditRecord
         // Si es un owner y el estado era rechazado, cambiarlo a pendiente
         if (Auth::user()->hasRole('owner') && $this->record->status === 'rechazado') {
             $this->record->update(['status' => 'pendiente']);
+
+            app(ApplicationNotificationService::class)->sendToPermissionHolders(
+                ['update_employee'],
+                'Trabajador actualizado para revisión',
+                $this->record->nombres().' fue actualizado y espera una nueva revisión.',
+                ['type' => 'employee', 'employee_id' => $this->record->id, 'status' => 'pendiente'],
+                EmployeeResource::getUrl('edit', ['record' => $this->record]),
+                'heroicon-o-pencil-square',
+            );
             
             Notification::make()
                 ->title('Estado actualizado')
@@ -77,18 +87,11 @@ class EditEmployee extends EditRecord
                 ->action(function () {
                     $this->record->update(['status' => 'aprobado']);
 
-                    if($this->record->owner && $this->record->owner->user ){
-
-                        Notification::make()
-                        ->title('Tu trabajador ha sido aprobado.')
-                        ->body('Ahora podras crear un formulario de control de acceso para configurar los horarios  y otros ajustes para darle acceso al barrio.')
-                        ->actions([
-                            NotificationAction::make('crear Formulario')
-                                ->button()
-                                ->url(route('filament.admin.resources.form-controls.create'), shouldOpenInNewTab: true)
-                        ])
-                        ->sendToDatabase($this->record->owner->user);
-                    }
+                    $this->notifyOwners(
+                        'Tu trabajador fue aprobado',
+                        'Ya podés crear un formulario de control para configurar sus accesos y horarios.',
+                        'aprobado',
+                    );
                     
                     Notification::make()
                         ->title('Trabajador aprobado')
@@ -127,17 +130,11 @@ class EditEmployee extends EditRecord
                         'status' => false, // No leída
                     ]);
 
-                    if($this->record->owner && $this->record->owner->user ){
-
-                        Notification::make()
-                            ->title('Trabajador rechazado.')
-                            ->actions([
-                                NotificationAction::make('Ver trabajador')
-                                    ->button()
-                                    ->url(route('filament.admin.resources.employees.view', $this->record), shouldOpenInNewTab: true)
-                            ])
-                            ->sendToDatabase($this->record->owner->user);
-                    }
+                    $this->notifyOwners(
+                        'Tu trabajador fue rechazado',
+                        'Revisá el motivo indicado y actualizá la información para volver a enviarlo.',
+                        'rechazado',
+                    );
 
                     
                     Notification::make()
@@ -154,6 +151,24 @@ class EditEmployee extends EditRecord
             // Acción para eliminar
             Actions\DeleteAction::make(),
         ];
+    }
+
+    private function notifyOwners(string $title, string $body, string $status): void
+    {
+        $owners = $this->record->owners()->with('user')->get();
+
+        if ($this->record->owner && ! $owners->contains('id', $this->record->owner->id)) {
+            $owners->push($this->record->owner->loadMissing('user'));
+        }
+
+        app(ApplicationNotificationService::class)->send(
+            $owners->pluck('user')->filter(),
+            $title,
+            $body,
+            ['type' => 'employee', 'employee_id' => $this->record->id, 'status' => $status],
+            EmployeeResource::getUrl('view', ['record' => $this->record]),
+            $status === 'aprobado' ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle',
+        );
     }
 
 

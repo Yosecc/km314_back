@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\ApplicationNotificationService;
 class FormControl extends Model
 {
     use HasFactory, SoftDeletes, HasQuickAccessCode;
@@ -28,6 +29,11 @@ class FormControl extends Model
             $this->status = 'Authorized';
             $this->authorized_user_id = Auth::user()->id;
             $this->save();
+            $this->notifyOwnerStatus(
+                'Formulario aprobado',
+                'Las personas configuradas ya pueden acceder según los horarios establecidos.',
+                'Authorized',
+            );
         }
 
     }
@@ -38,6 +44,11 @@ class FormControl extends Model
             $this->status = 'Denied';
             $this->denied_user_id = Auth::user()->id;
             $this->save();
+            $this->notifyOwnerStatus(
+                'Formulario rechazado',
+                'Administración rechazó el formulario. Revisá los datos y, si corresponde, creá uno nuevo.',
+                'Denied',
+            );
         }
     }
 
@@ -46,6 +57,15 @@ class FormControl extends Model
         abort_unless($user->hasRole('owner') && (int) $user->owner_id === (int) $this->owner_id, 403);
         if ($this->status !== 'OwnerPending') return;
         $this->update(['status'=>'Pending','owner_approved_at'=>now(),'owner_approved_by_user_id'=>$user->id]);
+
+        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+            ['aprobar_form::control', 'rechazar_form::control'],
+            'Formulario pendiente de aprobación administrativa',
+            'El propietario aprobó el formulario #'.$this->id.'.',
+            ['type' => 'form_control', 'form_control_id' => $this->id, 'status' => 'Pending'],
+            \App\Filament\Resources\FormControlResource::getUrl('view', ['record' => $this]),
+            'heroicon-o-document-check',
+        );
     }
 
     public function ownerApprovedBy()
@@ -217,6 +237,24 @@ class FormControl extends Model
     public function dateRanges()
     {
         return $this->hasMany(FormControlDateRange::class);
+    }
+
+    private function notifyOwnerStatus(string $title, string $body, string $status): void
+    {
+        $ownerUser = $this->owner?->user;
+
+        if (! $ownerUser) {
+            return;
+        }
+
+        app(ApplicationNotificationService::class)->send(
+            $ownerUser,
+            $title,
+            $body,
+            ['type' => 'form_control', 'form_control_id' => $this->id, 'status' => $status],
+            \App\Filament\Resources\FormControlResource::getUrl('view', ['record' => $this]),
+            $status === 'Authorized' ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle',
+        );
     }
     
 
