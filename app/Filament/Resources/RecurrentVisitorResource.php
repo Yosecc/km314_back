@@ -175,7 +175,7 @@ class RecurrentVisitorResource extends Resource implements HasShieldPermissions
                     abort_unless(Auth::user()->can('aprobar', $record), 403);
                     $record->update(['status' => 'aprobado']);
                     app(ApplicationNotificationService::class)->send(
-                        collect([$record->owner?->user])->filter(),
+                        self::ownerRecipients($record),
                         'Visitante recurrente aprobado',
                         $record->nombres().' ya está habilitado para los accesos configurados.',
                         ['type' => 'recurrent_visitor', 'recurrent_visitor_id' => $record->id, 'status' => 'aprobado'],
@@ -189,7 +189,7 @@ class RecurrentVisitorResource extends Resource implements HasShieldPermissions
                     abort_unless(Auth::user()->can('rechazar', $record), 403);
                     $record->update(['status' => 'rechazado']);
                     app(ApplicationNotificationService::class)->send(
-                        collect([$record->owner?->user])->filter(),
+                        self::ownerRecipients($record),
                         'Visitante recurrente rechazado',
                         'Administración rechazó a '.$record->nombres().'. Revisá su información para volver a enviarlo.',
                         ['type' => 'recurrent_visitor', 'recurrent_visitor_id' => $record->id, 'status' => 'rechazado'],
@@ -204,5 +204,21 @@ class RecurrentVisitorResource extends Resource implements HasShieldPermissions
     public static function getPages(): array
     {
         return ['index' => Pages\ManageRecurrentVisitors::route('/')];
+    }
+
+    private static function ownerRecipients(RecurrentVisitor $record): \Illuminate\Support\Collection
+    {
+        $ownerId = $record->owner_id;
+        $creatorUserId = $record->user_id;
+
+        if ($ownerId) {
+            $owners = User::query()->where('owner_id', $ownerId)->get();
+
+            if ($owners->isNotEmpty()) {
+                return $owners;
+            }
+        }
+
+        return $creatorUserId ? User::query()->whereKey($creatorUserId)->get() : collect();
     }
 }
