@@ -1,6 +1,16 @@
 @php
     $firebase = config('firebase.web');
     $isConfigured = filled($firebase['api_key'] ?? null) && filled($firebase['vapid_key'] ?? null);
+    $firebaseConfigJson = json_encode([
+        'apiKey' => $firebase['api_key'] ?? null,
+        'authDomain' => $firebase['auth_domain'] ?? null,
+        'projectId' => $firebase['project_id'] ?? null,
+        'storageBucket' => $firebase['storage_bucket'] ?? null,
+        'messagingSenderId' => $firebase['messaging_sender_id'] ?? null,
+        'appId' => $firebase['app_id'] ?? null,
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    $vapidKeyJson = json_encode($firebase['vapid_key'] ?? null);
+    $registerDeviceUrlJson = json_encode(route('push.devices.web'));
 @endphp
 
 @if ($isConfigured)
@@ -8,15 +18,9 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
         import { getMessaging, getToken } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging.js';
 
-        const firebaseConfig = @json([
-            'apiKey' => $firebase['api_key'],
-            'authDomain' => $firebase['auth_domain'],
-            'projectId' => $firebase['project_id'],
-            'storageBucket' => $firebase['storage_bucket'],
-            'messagingSenderId' => $firebase['messaging_sender_id'],
-            'appId' => $firebase['app_id'],
-        ]);
-        const vapidKey = @json($firebase['vapid_key']);
+        const firebaseConfig = {!! $firebaseConfigJson !!};
+        const vapidKey = {!! $vapidKeyJson !!};
+        const registerDeviceUrl = {!! $registerDeviceUrlJson !!};
 
         async function registerBrowserForPush() {
             if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
@@ -33,7 +37,7 @@
 
             if (!token) return;
 
-            await fetch(@json(route('push.devices.web')), {
+            await fetch(registerDeviceUrl, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
