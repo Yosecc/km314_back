@@ -18,9 +18,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Services\ApplicationNotificationService;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use App\Filament\Resources\RecurrentVisitorResource\Traits\HasVehicleVerificationActions;
 
 class RecurrentVisitorResource extends Resource implements HasShieldPermissions
 {
+    use HasVehicleVerificationActions;
     protected static ?string $model = RecurrentVisitor::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationLabel = 'Gestión de visitantes recurrentes';
@@ -197,6 +199,8 @@ class RecurrentVisitorResource extends Resource implements HasShieldPermissions
                         'heroicon-o-x-circle',
                     );
                 }),
+            self::requestVehicleVerificationAction(),
+            self::renewVehicleDocumentsAction(),
             Tables\Actions\DeleteAction::make(),
         ])->defaultSort('created_at', 'desc');
     }
