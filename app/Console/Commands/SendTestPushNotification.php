@@ -33,14 +33,20 @@ class SendTestPushNotification extends Command
             return self::FAILURE;
         }
 
-        $messaging->sendToUser(
+        $sent = $messaging->sendToUser(
             $user,
             'Notificaciones KM314 activas',
             'Este es un mensaje de prueba para confirmar que todo está listo.',
             ['type' => 'test'],
         );
 
-        $this->info("Notificación enviada a {$devices} dispositivo(s).");
+        if ($sent === 0) {
+            $this->error('Firebase no aceptó ningún envío. Revisá storage/logs/laravel.log para ver el motivo exacto.');
+
+            return self::FAILURE;
+        }
+
+        $this->info("Firebase aceptó {$sent} de {$devices} dispositivo(s).");
 
         return self::SUCCESS;
     }

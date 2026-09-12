@@ -16,7 +16,7 @@
 @if ($isConfigured)
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
-        import { getMessaging, getToken } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging.js';
+        import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging.js';
 
         const firebaseConfig = {!! $firebaseConfigJson !!};
         const vapidKey = {!! $vapidKeyJson !!};
@@ -50,6 +50,16 @@
                     platform: 'web',
                     device_name: navigator.userAgent.slice(0, 255),
                 }),
+            });
+
+            onMessage(messaging, (payload) => {
+                const notification = payload.notification;
+                if (!notification || Notification.permission !== 'granted') return;
+
+                new Notification(notification.title ?? 'KM314', {
+                    body: notification.body ?? '',
+                    icon: '/images/logo-blue.png',
+                });
             });
         }
 

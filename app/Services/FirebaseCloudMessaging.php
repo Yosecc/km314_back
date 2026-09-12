@@ -12,11 +12,14 @@ use RuntimeException;
 
 class FirebaseCloudMessaging
 {
-    public function sendToUser(User $user, string $title, string $body, array $data = []): void
+    /**
+     * @return int Cantidad de dispositivos que Firebase aceptó.
+     */
+    public function sendToUser(User $user, string $title, string $body, array $data = []): int
     {
-        $user->fcmDevices()->each(function (FcmDevice $device) use ($title, $body, $data): void {
-            $this->sendToDevice($device, $title, $body, $data);
-        });
+        return $user->fcmDevices()
+            ->get()
+            ->sum(fn (FcmDevice $device): int => $this->sendToDevice($device, $title, $body, $data) ? 1 : 0);
     }
 
     public function sendToDevice(FcmDevice $device, string $title, string $body, array $data = []): bool
