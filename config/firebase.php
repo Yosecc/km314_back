@@ -20,12 +20,12 @@ return [
 
     /* Configuración pública utilizada únicamente por el cliente web de FCM. */
     'web' => [
-        'api_key' => env('FIREBASE_WEB_API_KEY', 'AIzaSyDRxn9r1trsksMLb0gDaBR2j5RgZXpI6KY'),
-        'auth_domain' => env('FIREBASE_WEB_AUTH_DOMAIN', 'km314-f3774.firebaseapp.com'),
-        'project_id' => env('FIREBASE_WEB_PROJECT_ID', 'km314-f3774'),
-        'storage_bucket' => env('FIREBASE_WEB_STORAGE_BUCKET', 'km314-f3774.firebasestorage.app'),
-        'messaging_sender_id' => env('FIREBASE_WEB_MESSAGING_SENDER_ID', '738187282879'),
-        'app_id' => env('FIREBASE_WEB_APP_ID', '1:738187282879:web:d97b34e551faeede2ff90a'),
+        'api_key' => env('FIREBASE_WEB_API_KEY'),
+        'auth_domain' => env('FIREBASE_WEB_AUTH_DOMAIN'),
+        'project_id' => env('FIREBASE_WEB_PROJECT_ID'),
+        'storage_bucket' => env('FIREBASE_WEB_STORAGE_BUCKET'),
+        'messaging_sender_id' => env('FIREBASE_WEB_MESSAGING_SENDER_ID'),
+        'app_id' => env('FIREBASE_WEB_APP_ID'),
         'vapid_key' => env('FIREBASE_WEB_VAPID_KEY'),
     ],
 ];

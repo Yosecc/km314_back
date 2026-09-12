@@ -16,8 +16,8 @@
 
 @if ($isConfigured)
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
-        import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging.js';
+        import { initializeApp } from '/firebase/firebase-app.js';
+        import { getMessaging, getToken, onMessage } from '/firebase/firebase-messaging.js';
 
         const firebaseConfig = {!! $firebaseConfigJson !!};
         const vapidKey = {!! $vapidKeyJson !!};
@@ -30,7 +30,9 @@
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') return;
 
-            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+                type: 'module',
+            });
             const messaging = getMessaging(initializeApp(firebaseConfig));
             const token = await getToken(messaging, {
                 vapidKey,
