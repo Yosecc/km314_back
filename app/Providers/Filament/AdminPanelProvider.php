@@ -10,6 +10,7 @@ use App\Filament\Widgets\Entry;
 use App\Filament\Widgets\PackageReceptionStats;
 use App\Filament\Widgets\AccessControlStats;
 use App\Filament\Widgets\RecurrentVisitorApprovalStats;
+use App\Filament\Widgets\EmployeeApprovalStats;
 use App\Filament\Widgets\QuickAccessWidget;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
@@ -75,6 +76,7 @@ class AdminPanelProvider extends PanelProvider
                 FormControlStats::class,
                 PackageReceptionStats::class,
                 RecurrentVisitorApprovalStats::class,
+                EmployeeApprovalStats::class,
                 Sliders::class,
                 OwnerQr::class
             ])

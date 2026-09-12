@@ -49,7 +49,7 @@ class RecurrentVisitorController extends Controller
             return $visitor;
         });
 
-        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+        app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
             ['update_recurrent::visitor'],
             'Nuevo visitante recurrente pendiente de aprobación',
             $request->user()->name.' registró a '.$visitor->nombres().'.',
@@ -93,7 +93,7 @@ class RecurrentVisitorController extends Controller
             $this->syncVehicles($recurrentVisitor, $request, $data['vehicles']);
         });
 
-        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+        app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
             ['update_recurrent::visitor'],
             'Visitante recurrente actualizado para revisión',
             $request->user()->name.' actualizó a '.$recurrentVisitor->nombres().'.',

@@ -58,7 +58,7 @@ class FormControl extends Model
         if ($this->status !== 'OwnerPending') return;
         $this->update(['status'=>'Pending','owner_approved_at'=>now(),'owner_approved_by_user_id'=>$user->id]);
 
-        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+        app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
             ['aprobar_form::control', 'rechazar_form::control'],
             'Formulario pendiente de aprobación administrativa',
             'El propietario aprobó el formulario #'.$this->id.'.',

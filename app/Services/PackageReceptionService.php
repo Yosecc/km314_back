@@ -92,7 +92,7 @@ class PackageReceptionService
     {
         $this->event($record, 'created', null, PackageReception::EXPECTED, $actor, $record->observations);
 
-        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+        app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
             ['view_any_package::reception'],
             'Nueva solicitud de recepción de paquete',
             $actor->name.' registró '.$record->courier_name.' para el lote '.$record->lote?->getNombre().'.',

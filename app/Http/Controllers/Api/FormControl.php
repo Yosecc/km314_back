@@ -230,7 +230,7 @@ class FormControl extends Controller
         $formControl = FormControlDB::where('id', $idForm)->with(['peoples','autos'])->first();
 
         if (! (isset($requestData['id']) && $requestData['id'] != null)) {
-            app(ApplicationNotificationService::class)->sendToPermissionHolders(
+            app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
                 ['aprobar_form::control', 'rechazar_form::control'],
                 'Nuevo formulario pendiente de aprobación',
                 'El formulario #'.$idForm.' espera la revisión de administración.',

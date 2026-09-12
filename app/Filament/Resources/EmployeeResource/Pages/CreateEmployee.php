@@ -45,7 +45,7 @@ class CreateEmployee extends CreateRecord
         }
 
         if ($this->record->status === 'pendiente') {
-            app(ApplicationNotificationService::class)->sendToPermissionHolders(
+            app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
                 ['update_employee'],
                 'Nuevo trabajador pendiente de revisión',
                 ($this->record->nombres()).' fue registrado y espera la aprobación de administración.',

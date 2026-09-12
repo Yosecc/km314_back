@@ -111,7 +111,7 @@ class MobileFormControlController extends Controller
         });
 
         $isAutomatic = $form->status === 'Authorized';
-        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+        app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
             ['aprobar_form::control', 'rechazar_form::control'],
             $isAutomatic ? 'Nuevo formulario autorizado automáticamente' : 'Nuevo formulario pendiente de aprobación',
             $isAutomatic

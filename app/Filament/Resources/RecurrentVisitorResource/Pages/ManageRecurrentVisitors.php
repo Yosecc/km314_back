@@ -27,7 +27,7 @@ class ManageRecurrentVisitors extends ManageRecords
                         ->success()
                         ->send();
 
-                    app(ApplicationNotificationService::class)->sendToPermissionHolders(
+                    app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
                         ['update_recurrent::visitor'],
                         'Nuevo visitante recurrente pendiente de aprobación',
                         auth()->user()->name . ' registró a ' . $record->nombres() . '.',

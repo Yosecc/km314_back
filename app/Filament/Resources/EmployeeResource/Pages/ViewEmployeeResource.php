@@ -109,14 +109,15 @@ class ViewEmployeeResource extends ViewRecord
 
     private function notifyOwners(string $title, string $body, string $status): void
     {
-        $owners = $this->record->owners()->with('user')->get();
-
-        if ($this->record->owner && ! $owners->contains('id', $this->record->owner->id)) {
-            $owners->push($this->record->owner->loadMissing('user'));
-        }
+        $users = ($this->record->owner_id
+            ? \App\Models\User::query()->where('owner_id', $this->record->owner_id)->get()
+            : collect())
+            ->merge($this->record->owners()->with('user')->get()->pluck('user')->filter())
+            ->unique('id')
+            ->values();
 
         app(ApplicationNotificationService::class)->send(
-            $owners->pluck('user')->filter(),
+            $users,
             $title,
             $body,
             ['type' => 'employee', 'employee_id' => $this->record->id, 'status' => $status],

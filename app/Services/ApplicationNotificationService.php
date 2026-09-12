@@ -90,4 +90,20 @@ class ApplicationNotificationService
     {
         $this->send($this->usersWithAnyPermission($permissions), $title, $body, $data, $url, $icon);
     }
+
+    /**
+     * Sends an operational alert to Shield-authorized backoffice users. Owners
+     * can have resource permissions to manage their own data, but must not
+     * receive the administrative review alert that they originated.
+     *
+     * @param array<int, string> $permissions
+     * @param array<string, scalar|null> $data
+     */
+    public function sendToAdministrativePermissionHolders(array $permissions, string $title, string $body, array $data = [], ?string $url = null, string $icon = 'heroicon-o-bell'): void
+    {
+        $recipients = $this->usersWithAnyPermission($permissions)
+            ->reject(fn (User $user) => $user->hasRole('owner'));
+
+        $this->send($recipients, $title, $body, $data, $url, $icon);
+    }
 }

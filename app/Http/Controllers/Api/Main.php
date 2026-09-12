@@ -170,7 +170,7 @@ class Main extends Controller
             \Log::info('empleadosStore - No files to process');
         }
     
-        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+        app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
             ['update_employee'],
             'Nuevo trabajador pendiente de revisión',
             $employee->nombres().' fue registrado y espera la aprobación de administración.',
@@ -330,7 +330,7 @@ class Main extends Controller
             return $employee;
         });
 
-        app(ApplicationNotificationService::class)->sendToPermissionHolders(
+        app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
             ['update_employee'],
             'Nuevo trabajador pendiente de revisión',
             $employee->nombres().' fue registrado y espera la aprobación de administración.',
