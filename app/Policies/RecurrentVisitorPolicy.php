@@ -105,4 +105,16 @@ class RecurrentVisitorPolicy
     {
         return $user->can('reorder_recurrent::visitor');
     }
+
+    public function aprobar(User $user, RecurrentVisitor $recurrentVisitor): bool
+    {
+        return $recurrentVisitor->status === 'pendiente'
+            && $user->can('aprobar_recurrent::visitor');
+    }
+
+    public function rechazar(User $user, RecurrentVisitor $recurrentVisitor): bool
+    {
+        return $recurrentVisitor->status === 'pendiente'
+            && $user->can('rechazar_recurrent::visitor');
+    }
 }

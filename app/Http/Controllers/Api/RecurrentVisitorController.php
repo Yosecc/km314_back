@@ -50,7 +50,7 @@ class RecurrentVisitorController extends Controller
         });
 
         app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
-            ['update_recurrent::visitor'],
+            ['aprobar_recurrent::visitor', 'rechazar_recurrent::visitor'],
             'Nuevo visitante recurrente pendiente de aprobación',
             $request->user()->name.' registró a '.$visitor->nombres().'.',
             ['type' => 'recurrent_visitor', 'recurrent_visitor_id' => $visitor->id, 'status' => 'pendiente'],
@@ -94,7 +94,7 @@ class RecurrentVisitorController extends Controller
         });
 
         app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
-            ['update_recurrent::visitor'],
+            ['aprobar_recurrent::visitor', 'rechazar_recurrent::visitor'],
             'Visitante recurrente actualizado para revisión',
             $request->user()->name.' actualizó a '.$recurrentVisitor->nombres().'.',
             ['type' => 'recurrent_visitor', 'recurrent_visitor_id' => $recurrentVisitor->id, 'status' => 'pendiente'],

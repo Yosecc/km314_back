@@ -17,14 +17,35 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Services\ApplicationNotificationService;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 
-class RecurrentVisitorResource extends Resource
+class RecurrentVisitorResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = RecurrentVisitor::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationLabel = 'Gestión de visitantes recurrentes';
     protected static ?string $label = 'visitante recurrente';
     // protected static ?string $navigationGroup = 'Control de acceso';
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'aprobar',
+            'rechazar',
+        ];
+    }
 
     public static function canViewAny(): bool
     {
@@ -149,8 +170,9 @@ class RecurrentVisitorResource extends Resource
                     }
                 }),
             Tables\Actions\Action::make('aprobar')->label('Aprobar')->icon('heroicon-o-check-circle')->color('success')
-                ->requiresConfirmation()->visible(fn (RecurrentVisitor $record) => Auth::user()->can('update', $record) && $record->status === 'pendiente')
+                ->requiresConfirmation()->visible(fn (RecurrentVisitor $record) => Auth::user()->can('aprobar', $record) && $record->status === 'pendiente')
                 ->action(function (RecurrentVisitor $record): void {
+                    abort_unless(Auth::user()->can('aprobar', $record), 403);
                     $record->update(['status' => 'aprobado']);
                     app(ApplicationNotificationService::class)->send(
                         collect([$record->owner?->user])->filter(),
@@ -162,8 +184,9 @@ class RecurrentVisitorResource extends Resource
                     );
                 }),
             Tables\Actions\Action::make('rechazar')->label('Rechazar')->icon('heroicon-o-x-circle')->color('danger')
-                ->requiresConfirmation()->visible(fn (RecurrentVisitor $record) => Auth::user()->can('update', $record) && $record->status === 'pendiente')
+                ->requiresConfirmation()->visible(fn (RecurrentVisitor $record) => Auth::user()->can('rechazar', $record) && $record->status === 'pendiente')
                 ->action(function (RecurrentVisitor $record): void {
+                    abort_unless(Auth::user()->can('rechazar', $record), 403);
                     $record->update(['status' => 'rechazado']);
                     app(ApplicationNotificationService::class)->send(
                         collect([$record->owner?->user])->filter(),
