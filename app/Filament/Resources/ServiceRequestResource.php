@@ -237,7 +237,9 @@ class ServiceRequestResource extends Resource implements HasShieldPermissions
                         ->reorderable(false)
                         ->schema([
                             Hidden::make('id'),
-                            Hidden::make('user_id')->default(fn () => Auth::id()),
+                            Hidden::make('user_id')
+                                ->default(fn () => Auth::id())
+                                ->dehydrated(fn ($state): bool => filled($state)),
                             Forms\Components\Textarea::make('description')
                                 ->label('Nota')
                                 ->required()
@@ -378,6 +380,7 @@ class ServiceRequestResource extends Resource implements HasShieldPermissions
     {
         $files = (array) ($data['owner_files'] ?? []);
         $names = (array) ($data['owner_file_names'] ?? []);
+        $firstName = reset($names) ?: null;
 
         foreach ($files as $key => $path) {
             if (blank($path)) {
@@ -387,7 +390,7 @@ class ServiceRequestResource extends Resource implements HasShieldPermissions
             $record->serviceRequestFile()->create([
                 'user_id' => Auth::id(),
                 'file' => $path,
-                'attachment_file_names' => $names[$key] ?? $names[array_key_first($names)] ?? basename($path),
+                'attachment_file_names' => $names[$key] ?? $firstName ?? basename($path),
                 'description' => 'Adjunto de administración',
             ]);
         }
