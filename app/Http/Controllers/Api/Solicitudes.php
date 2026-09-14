@@ -138,7 +138,7 @@ class Solicitudes extends Controller
             "service_id" => 'required',
             "model" => 'nullable',
             "model_id" => 'nullable',
-            //"options" => 'nullable',
+            "options" => 'nullable|array',
             "name" => 'required',
             "starts_at" => 'required',
             "ends_at" => 'nullable',
@@ -193,7 +193,7 @@ class Solicitudes extends Controller
                 'owner_id' => $request['owner_id'],
                 'model' => $service?->model ?? $request['model'],
                 'model_id' => $request['model_id'],
-               // 'options' => json_encode($request['options']),
+                'options' => $request['options'] ?? [],
                 'observations' => $request['observations']
             ];
         };
