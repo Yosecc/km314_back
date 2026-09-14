@@ -10,6 +10,7 @@ use App\Models\ServiceRequestNote;
 use App\Models\ServiceRequestResponsiblePeople;
 use App\Models\ServiceRequestType;
 use App\Models\ServiceRequestStatus;
+use App\Models\Lote;
 use App\Models\User;
 use App\Services\ApplicationNotificationService;
 use Carbon\Carbon;
@@ -26,8 +27,12 @@ class Solicitudes extends Controller
     private function _getSolicitudes($solicitudes)
     {
         $solicitudes = $solicitudes->map(function($solicitud){
-            $solicitud['starts_at'] = Carbon::parse($solicitud['starts_at'])->format('Y-m-d H:m:s');
-            $solicitud['ends_at'] = Carbon::parse($solicitud['ends_at'])->format('Y-m-d H:m:s');
+            $solicitud['starts_at'] = $solicitud['starts_at']
+                ? Carbon::parse($solicitud['starts_at'])->format('Y-m-d H:i:s')
+                : null;
+            $solicitud['ends_at'] = $solicitud['ends_at']
+                ? Carbon::parse($solicitud['ends_at'])->format('Y-m-d H:i:s')
+                : null;
 
             if($solicitud->responsible){
                 $solicitud->responsible->makeHidden(['created_at','updated_at']);
@@ -76,9 +81,9 @@ class Solicitudes extends Controller
         $tiposSolicitudes = ServiceRequestType::all();
 
         $solicitudes = $solicitudes->map(function ($item) use ($now) {
-            $item->starts_at_date = Carbon::createFromFormat('Y/m/d H:i:s', $item->starts_at);
+            $item->starts_at_date = Carbon::parse($item->starts_at);
 
-            $item->ends_at_date = $item->ends_at ? Carbon::createFromFormat('Y/m/d H:i:s', $item->ends_at) : $item->starts_at_date;
+            $item->ends_at_date = $item->ends_at ? Carbon::parse($item->ends_at) : $item->starts_at_date;
 
             $item->is_active = $now->between($item->starts_at_date, $item->ends_at_date);
             $item->is_future = $item->starts_at_date->isFuture();
@@ -154,22 +159,39 @@ class Solicitudes extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        if (! Lote::query()
+            ->whereKey($data['lote_id'])
+            ->where('owner_id', $request->user()->owner->id)
+            ->exists()) {
+            return response()->json([
+                'lote_id' => ['El lote seleccionado no pertenece a tu perfil.'],
+            ], 422);
+        }
+
         $datos = function($request){
 
             $service = Service::find($request['service_id']);
+            $startsAt = Carbon::parse($request['starts_at']);
+            $endsAt = !empty($request['ends_at'])
+                ? Carbon::parse($request['ends_at'])
+                : null;
+
+            if (! $endsAt && $service?->serviceRequestType?->isCalendar) {
+                $endsAt = $startsAt->copy()->addHour();
+            }
 
             return [
                 //'alias' => $request['alias'],
                 'name' => $request['name'],
-                'starts_at' => Carbon::parse($request['starts_at'])->format('Y-m-d H:m:s'),
-                'ends_at' => $request['ends_at'] ? Carbon::parse($request['ends_at'])->format('Y-m-d H:m:s') : null,
+                'starts_at' => $startsAt->format('Y-m-d H:i:s'),
+                'ends_at' => $endsAt?->format('Y-m-d H:i:s'),
                 'service_request_responsible_people_id' => isset($request['service_request_responsible_people_id']) ? $request['service_request_responsible_people_id'] : null,
                 'service_request_status_id' => isset($request['service_request_status_id']) ? $request['service_request_status_id'] : 1,
                 'service_request_type_id' => $service && $service->service_request_type_id ? $service->service_request_type_id : (isset($request['service_request_type_id']) ? $request['service_request_type_id'] : 1),
                 'service_id' => $request['service_id'],
                 'lote_id' => $request['lote_id'],
                 'owner_id' => $request['owner_id'],
-                'model' => $request['model'],
+                'model' => $service?->model ?? $request['model'],
                 'model_id' => $request['model_id'],
                // 'options' => json_encode($request['options']),
                 'observations' => $request['observations']
