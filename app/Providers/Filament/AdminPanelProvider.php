@@ -8,6 +8,7 @@ use Filament\Widgets;
 use Filament\PanelProvider;
 use App\Filament\Widgets\Entry;
 use App\Filament\Widgets\PackageReceptionStats;
+use App\Filament\Widgets\ServiceRequestStats;
 use App\Filament\Widgets\AccessControlStats;
 use App\Filament\Widgets\RecurrentVisitorApprovalStats;
 use App\Filament\Widgets\EmployeeApprovalStats;
@@ -75,6 +76,7 @@ class AdminPanelProvider extends PanelProvider
                 // IncidentesStats::class,
                 FormControlStats::class,
                 PackageReceptionStats::class,
+                ServiceRequestStats::class,
                 RecurrentVisitorApprovalStats::class,
                 EmployeeApprovalStats::class,
                 Sliders::class,

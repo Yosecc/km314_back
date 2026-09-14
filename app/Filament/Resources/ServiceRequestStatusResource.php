@@ -23,6 +23,7 @@ class ServiceRequestStatusResource extends Resource
     protected static ?string $label = 'estado de la solicitud';
     protected static ?string $navigationGroup = 'Solicitudes - Configuración';
 
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function getPluralModelLabel(): string
     {
