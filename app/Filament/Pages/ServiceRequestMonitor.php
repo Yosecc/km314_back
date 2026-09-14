@@ -42,11 +42,15 @@ class ServiceRequestMonitor extends Page
     public function mount(): void
     {
         $this->month = $this->month ?: now('America/Argentina/Buenos_Aires')->format('Y-m');
+
+        if (! in_array($this->status, $this->allowedStatuses(), true)) {
+            $this->status = 'active';
+        }
     }
 
     public function setStatus(string $status): void
     {
-        if (in_array($status, ['active', 'all', 'attention', 'pending', 'in_progress', 'completed', 'rejected', 'cancelled'], true)) {
+        if (in_array($status, $this->allowedStatuses(), true)) {
             $this->status = $status;
             unset($this->monitorData);
         }
@@ -93,26 +97,43 @@ class ServiceRequestMonitor extends Page
     #[Computed]
     public function monitorData(): array
     {
+        $statuses = ServiceRequestStatus::query()
+            ->whereNotNull('code')
+            ->orderBy('name')
+            ->get(['code', 'name', 'color']);
+        $activeCodes = [ServiceRequestStatus::PENDING, ServiceRequestStatus::IN_PROGRESS];
+        $closedCodes = [
+            ServiceRequestStatus::COMPLETED,
+            ServiceRequestStatus::REJECTED,
+            ServiceRequestStatus::CANCELLED,
+        ];
         $requests = $this->baseQuery()->with(['owner', 'lote.sector', 'service', 'serviceRequestStatus', 'userAsignado'])->latest()->get()
             ->map(fn (ServiceRequest $request) => $this->mapRequest($request));
         $needle = Str::lower(Str::ascii(trim($this->search)));
         $visible = $requests
-            ->when($this->status === 'active', fn ($rows) => $rows->whereIn('status_code', ['pending', 'in_progress']))
-            ->when($this->status === 'attention', fn ($rows) => $rows->whereIn('status_code', ['rejected', 'cancelled']))
-            ->when(! in_array($this->status, ['active', 'all', 'attention'], true), fn ($rows) => $rows->where('status_code', $this->status))
+            ->when($this->status === 'active', fn ($rows) => $rows->whereIn('status_code', $activeCodes))
+            ->when($this->status === 'unassigned', fn ($rows) => $rows->filter(fn (array $row) => in_array($row['status_code'], $activeCodes, true) && ! $row['is_assigned']))
+            ->when($this->status === 'closed', fn ($rows) => $rows->whereIn('status_code', $closedCodes))
+            ->when(! in_array($this->status, ['active', 'all', 'unassigned', 'closed'], true), fn ($rows) => $rows->where('status_code', $this->status))
             ->when($needle !== '', fn ($rows) => $rows->filter(fn (array $row) => str_contains($row['search_text'], $needle)))
             ->values();
 
         return [
             'requests' => $visible,
             'stats' => [
-                'pending' => $requests->where('status_code', 'pending')->count(),
-                'in_progress' => $requests->where('status_code', 'in_progress')->count(),
-                'completed' => $requests->where('status_code', 'completed')->count(),
-                'attention' => $requests->whereIn('status_code', ['rejected', 'cancelled'])->count(),
-                'rejected' => $requests->where('status_code', 'rejected')->count(),
-                'cancelled' => $requests->where('status_code', 'cancelled')->count(),
+                'total' => $requests->count(),
+                'active' => $requests->whereIn('status_code', $activeCodes)->count(),
+                'unassigned' => $requests
+                    ->filter(fn (array $row) => in_array($row['status_code'], $activeCodes, true) && ! $row['is_assigned'])
+                    ->count(),
+                'closed' => $requests->whereIn('status_code', $closedCodes)->count(),
             ],
+            'status_filters' => $statuses->map(fn (ServiceRequestStatus $status) => [
+                'code' => $status->code,
+                'name' => $status->name,
+                'color' => $status->color,
+                'count' => $requests->where('status_code', $status->code)->count(),
+            ])->values(),
             'updated_at' => now()->format('H:i:s'),
             'list_url' => ServiceRequestResource::getUrl('index'),
             'create_url' => ServiceRequestResource::getUrl('create'),
@@ -139,6 +160,7 @@ class ServiceRequestMonitor extends Page
             'created' => $request->created_at?->format('d/m/Y H:i'),
             'scheduled' => $request->starts_at?->format('d/m/Y H:i') ?? 'Sin fecha programada',
             'assigned' => $request->userAsignado?->name,
+            'is_assigned' => (bool) $request->asignado_status_id,
             'can_edit' => ServiceRequestResource::canEdit($request),
             'can_change_status' => ! ServiceRequestResource::isOwnerContext() && Auth::user()->can('update', $request),
             'url' => ServiceRequestResource::getUrl('edit', ['record' => $request]),
@@ -162,5 +184,16 @@ class ServiceRequestMonitor extends Page
         }
 
         return [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()];
+    }
+
+    private function allowedStatuses(): array
+    {
+        return [
+            'all',
+            'active',
+            'unassigned',
+            'closed',
+            ...ServiceRequestStatus::query()->whereNotNull('code')->pluck('code')->all(),
+        ];
     }
 }
