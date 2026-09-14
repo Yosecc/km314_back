@@ -301,7 +301,7 @@ class ServiceRequestResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('owner.first_name')->label('Propietario')->formatStateUsing(fn (ServiceRequest $record) => $record->owner?->nombres() ?? 'Sin propietario')->toggleable(isToggledHiddenByDefault: static::isOwnerContext()),
                 Tables\Columns\TextColumn::make('serviceRequestStatus.name')->label('Estado')->badge()->color(fn (ServiceRequest $record) => static::statusColor($record->statusCode())),
                 Tables\Columns\TextColumn::make('starts_at')->label('Programada')->dateTime('d/m/Y H:i')->placeholder('Sin fecha')->sortable(),
-                Tables\Columns\TextColumn::make('userAsignado.name')->label('Asignado a')->placeholder('Sin asignar')->toggleable(),
+                // Tables\Columns\TextColumn::make('userAsignado.name')->label('Asignado a')->placeholder('Sin asignar')->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')->label('Creada')->dateTime('d/m/Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
@@ -325,11 +325,7 @@ class ServiceRequestResource extends Resource implements HasShieldPermissions
             ->icon('heroicon-o-arrow-path')
             ->color('primary')
             ->visible(fn (ServiceRequest $record) => ! static::isOwnerContext() && Auth::user()->can('update', $record))
-            ->form([
-                Select::make('service_request_status_id')->label('Nuevo estado')->options(fn () => ServiceRequestStatus::options())->required(),
-                Select::make('asignado_status_id')->label('Asignar a')->options(fn () => User::query()->orderBy('name')->pluck('name', 'id')->all())->searchable(),
-                Forms\Components\Textarea::make('resolution_notes')->label('Nota para el propietario')->rows(3),
-            ])
+            ->form(static::statusUpdateForm())
             ->fillForm(fn (ServiceRequest $record) => [
                 'service_request_status_id' => $record->service_request_status_id,
                 'asignado_status_id' => $record->asignado_status_id,
@@ -340,8 +336,61 @@ class ServiceRequestResource extends Resource implements HasShieldPermissions
                 $status = ServiceRequestStatus::findOrFail($data['service_request_status_id']);
                 $record->fill(['asignado_status_id' => $data['asignado_status_id'] ?? null]);
                 $record->transitionTo($status, Auth::user(), $data['resolution_notes'] ?? null);
+                static::storeStatusUpdateFiles($record, $data);
                 Notification::make()->title('Estado actualizado')->success()->send();
             });
+    }
+
+    public static function statusUpdateForm(): array
+    {
+        return [
+            Select::make('service_request_status_id')
+                ->label('Nuevo estado')
+                ->options(fn () => ServiceRequestStatus::options())
+                ->required(),
+            Select::make('asignado_status_id')
+                ->label('Asignar a')
+                ->options(fn () => User::query()->orderBy('name')->pluck('name', 'id')->all())
+                ->searchable(),
+            Forms\Components\Textarea::make('resolution_notes')
+                ->label('Mensaje para el propietario')
+                ->helperText('Se mostrará en el detalle de la solicitud dentro de la app.')
+                ->rows(3)
+                ->columnSpanFull(),
+            Forms\Components\FileUpload::make('owner_files')
+                ->label('Archivos para el propietario')
+                ->helperText('Podés adjuntar uno o varios documentos o imágenes. Serán visibles en la app.')
+                ->multiple()
+                ->disk('public')
+                ->directory('service-requests/status-updates')
+                ->visibility('public')
+                ->storeFileNamesIn('owner_file_names')
+                ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
+                ->maxFiles(10)
+                ->maxSize(10240)
+                ->openable()
+                ->downloadable()
+                ->columnSpanFull(),
+        ];
+    }
+
+    public static function storeStatusUpdateFiles(ServiceRequest $record, array $data): void
+    {
+        $files = (array) ($data['owner_files'] ?? []);
+        $names = (array) ($data['owner_file_names'] ?? []);
+
+        foreach ($files as $key => $path) {
+            if (blank($path)) {
+                continue;
+            }
+
+            $record->serviceRequestFile()->create([
+                'user_id' => Auth::id(),
+                'file' => $path,
+                'attachment_file_names' => $names[$key] ?? $names[array_key_first($names)] ?? basename($path),
+                'description' => 'Adjunto de administración',
+            ]);
+        }
     }
 
     public static function statusColor(?string $code): string

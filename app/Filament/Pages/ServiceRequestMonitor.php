@@ -75,11 +75,7 @@ class ServiceRequestMonitor extends Page
             ->size('sm')
             ->record(fn (array $arguments) => $this->baseQuery()->findOrFail($arguments['request']))
             ->visible(fn (ServiceRequest $record) => ! ServiceRequestResource::isOwnerContext() && Auth::user()->can('update', $record))
-            ->form([
-                Select::make('service_request_status_id')->label('Nuevo estado')->options(fn () => ServiceRequestStatus::options())->required(),
-                Select::make('asignado_status_id')->label('Asignar a')->options(fn () => User::query()->orderBy('name')->pluck('name', 'id')->all())->searchable(),
-                Forms\Components\Textarea::make('resolution_notes')->label('Nota para el propietario')->rows(3),
-            ])
+            ->form(ServiceRequestResource::statusUpdateForm())
             ->fillForm(fn (ServiceRequest $record) => [
                 'service_request_status_id' => $record->service_request_status_id,
                 'asignado_status_id' => $record->asignado_status_id,
@@ -89,6 +85,7 @@ class ServiceRequestMonitor extends Page
                 abort_unless(Auth::user()->can('update', $record), 403);
                 $record->fill(['asignado_status_id' => $data['asignado_status_id'] ?? null]);
                 $record->transitionTo(ServiceRequestStatus::findOrFail($data['service_request_status_id']), Auth::user(), $data['resolution_notes'] ?? null);
+                ServiceRequestResource::storeStatusUpdateFiles($record, $data);
                 unset($this->monitorData);
                 Notification::make()->title('Estado actualizado')->success()->send();
             });
