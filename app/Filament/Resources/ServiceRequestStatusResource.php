@@ -36,6 +36,17 @@ class ServiceRequestStatusResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\Select::make('code')
+                    ->label('Código operativo')
+                    ->helperText('El monitor usa este código para clasificar las solicitudes.')
+                    ->options([
+                        'pending' => 'Pendiente',
+                        'in_progress' => 'En proceso',
+                        'completed' => 'Finalizada',
+                        'rejected' => 'Rechazada',
+                        'cancelled' => 'Cancelada',
+                    ])
+                    ->unique(ignoreRecord: true),
                 Forms\Components\TextInput::make('color')
                     ->required()
                     ->type('color')
@@ -49,6 +60,7 @@ class ServiceRequestStatusResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('code')->label('Código')->badge(),
                 Tables\Columns\ColorColumn::make('color')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')

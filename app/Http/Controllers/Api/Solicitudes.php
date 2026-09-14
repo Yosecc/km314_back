@@ -9,7 +9,9 @@ use App\Models\ServiceRequestFile;
 use App\Models\ServiceRequestNote;
 use App\Models\ServiceRequestResponsiblePeople;
 use App\Models\ServiceRequestType;
+use App\Models\ServiceRequestStatus;
 use App\Models\User;
+use App\Services\ApplicationNotificationService;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use function Livewire\store;
@@ -182,18 +184,19 @@ class Solicitudes extends Controller
             $id = $data['id'];
             $d = $datos($data);
 
+            $solicitud = ServiceRequest::query()->visibleTo($request->user())->findOrFail($id);
+            $d['owner_id'] = $solicitud->owner_id;
+            $d['service_request_status_id'] = $solicitud->service_request_status_id;
             $d['user_id'] = $request->user()->id;
-            $d['updated_at'] = Carbon::now();
-
-            $solicitud = ServiceRequest::where('id', $id)->update($d);
+            $solicitud->update($d);
 
         }else{
             $d = $datos($data);
             $d['owner_id'] = $request->user()->owner->id;
             $d['user_id'] = $request->user()->id;
-            $d['created_at'] = Carbon::now();
-            $d['updated_at'] = Carbon::now();
-            $id = ServiceRequest::insertGetId($d);
+            $d['service_request_status_id'] = ServiceRequestStatus::defaultPending()->id;
+            $solicitud = ServiceRequest::create($d);
+            $id = $solicitud->id;
         }
 
         $solicitud = ServiceRequest::find($id);
@@ -253,28 +256,7 @@ class Solicitudes extends Controller
         ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
         ->get();
 
-       try {
-
-            $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
-
-            if(isset($request['id']) && $request['id']!= null){
-
-                Notification::make()
-                    ->title('Solicitud Actualizada #SOL_'.$solicitud->first()->id)
-                    ->sendToDatabase($recipient);
-            }else{
-
-                Notification::make()
-                    ->title('Nueva solicitud #SOL_'.$solicitud->first()->id)
-                    ->sendToDatabase($recipient);
-            }
-
-
-       } catch (\Throwable $th) {
-        //throw $th;
-       }
-
-        $solicitud = $this->_getSolicitudes($solicitud);
+       $solicitud = $this->_getSolicitudes($solicitud);
 
 
         return response()->json($solicitud->first());
@@ -296,14 +278,17 @@ class Solicitudes extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $solicitud = ServiceRequest::where('id',$request->id)->first();
+        $solicitud = ServiceRequest::query()->visibleTo($request->user())->find($request->id);
 
         if (!$solicitud) {
             return response()->json(['No existe la socitud'], 422);
         }
 
+        abort_unless(! $request->user()->hasRole('owner') || $solicitud->isEditableByOwner(), 403);
+
         if(isset($request->file_id) && $request->file_id){
-            $file = ServiceRequestFile::where('id',$request->file_id)->update([
+            $file = ServiceRequestFile::query()->whereKey($request->file_id)
+                ->where('service_request_id', $solicitud->id)->update([
                 'description' => $request->description,
                 'updated_at' => Carbon::now()
             ]);
@@ -330,7 +315,7 @@ class Solicitudes extends Controller
             }
         }
 
-        $solicitud = ServiceRequest::where('id',$request->id)
+        $solicitud = ServiceRequest::query()->visibleTo($request->user())->where('id',$request->id)
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
                             ->get();
 
@@ -350,11 +335,15 @@ class Solicitudes extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $file = ServiceRequestFile::where('id', $request->id)->first();
+        $file = ServiceRequestFile::query()->whereKey($request->id)
+            ->whereHas('serviceRequest', fn ($query) => $query->visibleTo($request->user()))
+            ->first();
 
         if(!$file){
             return response()->json(['No existe archivo'], 422);
         }
+
+        abort_unless(! $request->user()->hasRole('owner') || $file->serviceRequest?->isEditableByOwner(), 403);
 
         if(Storage::disk('public')->exists($file->file)){
             Storage::disk('public')->delete($file->file);
@@ -373,6 +362,8 @@ class Solicitudes extends Controller
             'nota' => 'required|max:250'
         ]);
 
+        $serviceRequest = ServiceRequest::query()->visibleTo($request->user())->findOrFail($request->service_request_id);
+
         $nota = new ServiceRequestNote();
         $nota->service_request_id = $request->service_request_id;
         $nota->user_id = $request->user()->id;
@@ -383,20 +374,14 @@ class Solicitudes extends Controller
                     ->with('user')
                     ->get();
 
-        $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
-
-        Notification::make()
-            ->title('Nueva nota en la solicitud: #'.$request->service_request_id)
-            ->body($request->nota)
-            ->warning()
-            ->duration(5000)
-            ->actions([
-                Action::make('view')
-                    ->label('Ver solicitud')
-                    ->button()
-                    // ->url(route('posts.show', $request->service_request_id), shouldOpenInNewTab: true),
-            ])
-            ->sendToDatabase($recipient);
+        app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
+            ['view_any_service::request', 'update_service::request'],
+            'Nueva nota en una solicitud',
+            sprintf('#%d · %s', $serviceRequest->id, $request->nota),
+            ['type' => 'service_request', 'service_request_id' => $serviceRequest->id, 'event' => 'note_created'],
+            \App\Filament\Resources\ServiceRequestResource::getUrl('edit', ['record' => $serviceRequest]),
+            'heroicon-o-wrench-screwdriver',
+        );
 
         return response()->json($notas);
     }

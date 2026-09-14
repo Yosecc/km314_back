@@ -23,7 +23,7 @@ class ServiceRequestPolicy
      */
     public function view(User $user, ServiceRequest $serviceRequest): bool
     {
-        return $user->can('view_service::request');
+        return $user->can('view_service::request') && $this->isVisibleTo($user, $serviceRequest);
     }
 
     /**
@@ -39,7 +39,7 @@ class ServiceRequestPolicy
      */
     public function update(User $user, ServiceRequest $serviceRequest): bool
     {
-        return $user->can('update_service::request');
+        return $user->can('update_service::request') && $this->isVisibleTo($user, $serviceRequest);
     }
 
     /**
@@ -47,7 +47,7 @@ class ServiceRequestPolicy
      */
     public function delete(User $user, ServiceRequest $serviceRequest): bool
     {
-        return $user->can('delete_service::request');
+        return $user->can('delete_service::request') && $this->isVisibleTo($user, $serviceRequest);
     }
 
     /**
@@ -63,7 +63,7 @@ class ServiceRequestPolicy
      */
     public function forceDelete(User $user, ServiceRequest $serviceRequest): bool
     {
-        return $user->can('force_delete_service::request');
+        return $user->can('force_delete_service::request') && $this->isVisibleTo($user, $serviceRequest);
     }
 
     /**
@@ -79,7 +79,7 @@ class ServiceRequestPolicy
      */
     public function restore(User $user, ServiceRequest $serviceRequest): bool
     {
-        return $user->can('restore_service::request');
+        return $user->can('restore_service::request') && $this->isVisibleTo($user, $serviceRequest);
     }
 
     /**
@@ -95,7 +95,7 @@ class ServiceRequestPolicy
      */
     public function replicate(User $user, ServiceRequest $serviceRequest): bool
     {
-        return $user->can('replicate_service::request');
+        return $user->can('replicate_service::request') && $this->isVisibleTo($user, $serviceRequest);
     }
 
     /**
@@ -104,5 +104,10 @@ class ServiceRequestPolicy
     public function reorder(User $user): bool
     {
         return $user->can('reorder_service::request');
+    }
+
+    private function isVisibleTo(User $user, ServiceRequest $serviceRequest): bool
+    {
+        return ! $user->hasRole('owner') || (int) $user->owner_id === (int) $serviceRequest->owner_id;
     }
 }

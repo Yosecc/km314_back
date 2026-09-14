@@ -17,4 +17,9 @@ class ServiceRequestFile extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function serviceRequest()
+    {
+        return $this->belongsTo(ServiceRequest::class);
+    }
 }
