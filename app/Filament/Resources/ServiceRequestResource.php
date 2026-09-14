@@ -72,6 +72,12 @@ class ServiceRequestResource extends Resource implements HasShieldPermissions
         return ! static::isOwnerContext() || $record->isEditableByOwner();
     }
 
+    public static function canManageNotes(): bool
+    {
+        return ! static::isOwnerContext()
+            && (Auth::user()?->can('update_service::request') ?? false);
+    }
+
     public static function canDelete(Model $record): bool
     {
         return parent::canDelete($record)
@@ -125,7 +131,7 @@ class ServiceRequestResource extends Resource implements HasShieldPermissions
                             static::hydrateServiceConfiguration($state, $set);
                             $set('model_id', null);
                             $set('options', []);
-                            if ($service && blank($get('name'))) {
+                            if ($service) {
                                 $set('name', $service->name);
                             }
                         }),
@@ -226,9 +232,18 @@ class ServiceRequestResource extends Resource implements HasShieldPermissions
                         ->relationship()
                         ->label('Notas')
                         ->addActionLabel('Agregar nota')
+                        ->addable(fn (): bool => static::canManageNotes())
+                        ->deletable(false)
+                        ->reorderable(false)
                         ->schema([
+                            Hidden::make('id'),
                             Hidden::make('user_id')->default(fn () => Auth::id()),
-                            Forms\Components\Textarea::make('description')->label('Nota')->required()->rows(3)->columnSpanFull(),
+                            Forms\Components\Textarea::make('description')
+                                ->label('Nota')
+                                ->required()
+                                ->rows(3)
+                                ->disabled(fn (Get $get): bool => ! static::canManageNotes() || filled($get('id')))
+                                ->columnSpanFull(),
                         ])
                         ->defaultItems(0)
                         ->itemLabel(fn (array $state): ?string => filled($state['description'] ?? null) ? str($state['description'])->limit(60)->toString() : 'Nueva nota'),
@@ -294,6 +309,8 @@ class ServiceRequestResource extends Resource implements HasShieldPermissions
                 Tables\Filters\SelectFilter::make('service_id')->label('Servicio')->relationship('service', 'name'),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->visible(fn (ServiceRequest $record): bool => static::canView($record)),
                 Tables\Actions\EditAction::make()->visible(fn (ServiceRequest $record) => static::canEdit($record)),
                 static::changeStatusAction(),
             ])
@@ -343,6 +360,7 @@ class ServiceRequestResource extends Resource implements HasShieldPermissions
         return [
             'index' => Pages\ListServiceRequests::route('/'),
             'create' => Pages\CreateServiceRequest::route('/create'),
+            'view' => Pages\ViewServiceRequest::route('/{record}'),
             'edit' => Pages\EditServiceRequest::route('/{record}/edit'),
         ];
     }
