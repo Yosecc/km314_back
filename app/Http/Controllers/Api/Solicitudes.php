@@ -11,6 +11,7 @@ use App\Models\ServiceRequestResponsiblePeople;
 use App\Models\ServiceRequestType;
 use App\Models\ServiceRequestStatus;
 use App\Models\Lote;
+use App\Models\Owner;
 use App\Models\User;
 use App\Services\ApplicationNotificationService;
 use Carbon\Carbon;
@@ -23,6 +24,27 @@ use Illuminate\Support\Facades\Validator;
 use Filament\Notifications\Actions\Action;
 class Solicitudes extends Controller
 {
+    /**
+     * Obtiene el propietario del usuario autenticado.
+     *
+     * Algunos usuarios históricos están vinculados desde owners.user_id pero
+     * todavía no tienen users.owner_id. Ambas referencias representan el mismo
+     * vínculo y se aceptan para no dejar sus solicitudes inaccesibles.
+     */
+    private function owner(Request $request): Owner
+    {
+        $user = $request->user();
+        $owner = $user?->owner
+            ?? Owner::query()->where('user_id', $user?->id)->first();
+
+        abort_unless(
+            $owner instanceof Owner,
+            403,
+            'Esta sección está disponible para propietarios.'
+        );
+
+        return $owner;
+    }
 
     private function _getSolicitudes($solicitudes)
     {
@@ -57,7 +79,9 @@ class Solicitudes extends Controller
 
     public function index(Request $request)
     {
-        $solicitudes = ServiceRequest::where('owner_id',$request->user()->owner->id)
+        $owner = $this->owner($request);
+
+        $solicitudes = ServiceRequest::where('owner_id', $owner->id)
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestFile','serviceRequestNote'])
                             ->orderBy('created_at','desc')
                             ->get();
@@ -69,7 +93,9 @@ class Solicitudes extends Controller
 
     public function getProximasSolicitudes(Request $request)
     {
-        $solicitudes = ServiceRequest::where('owner_id', $request->user()->owner->id)
+        $owner = $this->owner($request);
+
+        $solicitudes = ServiceRequest::where('owner_id', $owner->id)
         ->with(['serviceRequestStatus', 'serviceRequestType', 'service', 'lote', 'responsible', 'serviceRequestFile', 'serviceRequestNote'])
         ->orderBy('created_at', 'desc')
         ->orderBy('ends_at', 'desc')
@@ -126,6 +152,7 @@ class Solicitudes extends Controller
 
     public function store(Request $request)
     {
+        $owner = $this->owner($request);
 
         $data = $request->data;
         $data = json_decode($request->data, true);
@@ -161,7 +188,7 @@ class Solicitudes extends Controller
 
         if (! Lote::query()
             ->whereKey($data['lote_id'])
-            ->where('owner_id', $request->user()->owner->id)
+            ->where('owner_id', $owner->id)
             ->exists()) {
             return response()->json([
                 'lote_id' => ['El lote seleccionado no pertenece a tu perfil.'],
@@ -214,7 +241,7 @@ class Solicitudes extends Controller
 
         }else{
             $d = $datos($data);
-            $d['owner_id'] = $request->user()->owner->id;
+            $d['owner_id'] = $owner->id;
             $d['user_id'] = $request->user()->id;
             $d['service_request_status_id'] = ServiceRequestStatus::defaultPending()->id;
             $solicitud = ServiceRequest::create($d);
