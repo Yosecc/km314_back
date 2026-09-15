@@ -806,15 +806,20 @@ class Main extends Controller
 
     public function getOwner(Request $request)
     {
-        $owner = Owner::where('id', $request->user()->owner->id)->first();
+        $user = $request->user();
+        $owner = $user?->owner
+            ?? Owner::query()->where('user_id', $user?->id)->first();
+
+        abort_unless($owner instanceof Owner, 403, 'Esta secciÃ³n estÃ¡ disponible para propietarios.');
+
         // Convert all null values (including nested arrays/objects) to empty strings
-        $owner = json_decode(json_encode($owner), true);
-        array_walk_recursive($owner, function (&$value) {
+        $ownerData = $owner->toArray();
+        array_walk_recursive($ownerData, function (&$value) {
             if (is_null($value)) {
               $value = '';
             }
         });
 
-        return response()->json( $owner  , 200);
+        return response()->json($ownerData, 200);
     }
 }
