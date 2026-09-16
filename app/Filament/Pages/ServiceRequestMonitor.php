@@ -38,6 +38,7 @@ class ServiceRequestMonitor extends Page
     public string $month = '';
 
     public string $search = '';
+    public bool $showTutorial = false;
 
     public function mount(): void
     {
@@ -46,6 +47,19 @@ class ServiceRequestMonitor extends Page
         if (! in_array($this->status, $this->allowedStatuses(), true)) {
             $this->status = 'active';
         }
+
+        $this->showTutorial = auth()->user()->service_request_tutorial_seen_at === null;
+    }
+
+    public function markTutorialSeen(): void
+    {
+        $user = auth()->user();
+
+        if ($user->service_request_tutorial_seen_at === null) {
+            $user->forceFill(['service_request_tutorial_seen_at' => now()])->save();
+        }
+
+        $this->showTutorial = false;
     }
 
     public function setStatus(string $status): void

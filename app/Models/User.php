@@ -52,6 +52,7 @@ class User extends Authenticatable implements FilamentUser
     protected $casts = [
         'email_verified_at' => 'datetime',
         'package_reception_tutorial_seen_at' => 'datetime',
+        'service_request_tutorial_seen_at' => 'datetime',
     ];
 
     protected $with = ['owner'];
