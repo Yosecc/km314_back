@@ -96,6 +96,11 @@ class PackageReceptionResource extends Resource implements HasShieldPermissions
                     ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])->maxSize(10240),
                 Forms\Components\Textarea::make('observations')->label('Observaciones')->rows(4)->columnSpanFull(),
             ])->columns(2)->collapsible(),
+            Forms\Components\Placeholder::make('service_notice')
+                ->label('Información importante')
+                ->content('La recepción de paquetes es un servicio adicional no incluido en la cuota de mantenimiento. Actualmente se brinda sin costo. El personal de Acceso no se responsabiliza por daños, pérdidas ni por el estado del contenido o del embalaje.')
+                ->columnSpanFull()
+                ->visibleOn('create'),
         ]);
     }
 

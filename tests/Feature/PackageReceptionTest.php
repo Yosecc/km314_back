@@ -122,9 +122,7 @@ class PackageReceptionTest extends TestCase
         Livewire::test(ListPackageReceptions::class)
             ->assertSuccessful()
             ->assertSee('Mercado Libre')
-            ->assertSee('La recepción de paquetes es un servicio adicional no incluido en la cuota de mantenimiento.')
-            ->assertSee('Actualmente se brinda sin costo.')
-            ->assertSee('El personal de Acceso no se responsabiliza por daños, pérdidas ni por el estado del contenido o del embalaje.');
+            ->assertDontSee('La recepción de paquetes es un servicio adicional no incluido en la cuota de mantenimiento.');
         Livewire::test(PackageReceptionMonitor::class)->assertSuccessful()->assertSee('Seguimiento de paquetes')->assertSee('Mercado Libre')
             ->assertSee('Nueva recepción')->assertSee('Gestionar recepciones');
         Livewire::test(ViewPackageReception::class, ['record'=>$record->getRouteKey()])->assertSuccessful()->assertSee('PUERTA-9')->assertSee('comprobante.jpg');
@@ -271,7 +269,12 @@ class PackageReceptionTest extends TestCase
         [$owner, $lote, $user] = $this->context();
         $user->givePermissionTo(Permission::whereIn('name', ['view_any_package::reception','create_package::reception'])->get());
         $this->actingAs($user);
-        Livewire::test(CreatePackageReception::class)->fillForm([
+        Livewire::test(CreatePackageReception::class)
+            ->assertSee('Información importante')
+            ->assertSee('La recepción de paquetes es un servicio adicional no incluido en la cuota de mantenimiento.')
+            ->assertSee('Actualmente se brinda sin costo.')
+            ->assertSee('El personal de Acceso no se responsabiliza por daños, pérdidas ni por el estado del contenido o del embalaje.')
+            ->fillForm([
             'owner_id'=>$owner->id, 'lote_id'=>$lote->id, 'courier_name'=>'OCA',
             'expected_date'=>'2026-09-08', 'expected_from_time'=>'09:15', 'expected_until_time'=>'13:45',
             'carrier_access_code'=>'CLAVE VISIBLE',
