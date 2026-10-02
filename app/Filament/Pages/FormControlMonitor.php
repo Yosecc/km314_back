@@ -196,11 +196,10 @@ class FormControlMonitor extends Page
 
     private function baseQuery(): Builder
     {
-        $query = FormControl::query();
+        $query = FormControl::query()->visibleTo(auth()->user());
         [$monthStart, $monthEnd] = $this->monthRange();
-        $query->whereBetween('created_at', [$monthStart, $monthEnd]);
 
-        return auth()->user()->hasRole('owner') ? $query->where('owner_id', auth()->user()->owner_id) : $query->where('status', '!=', 'OwnerPending');
+        return $query->whereBetween('created_at', [$monthStart, $monthEnd]);
     }
 
     private function monthRange(): array

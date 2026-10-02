@@ -10,6 +10,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\FormControlResource;
 use App\Services\ApplicationNotificationService;
+use Illuminate\Support\Facades\Auth;
 
 
 class CreateFormControl extends CreateRecord
@@ -53,6 +54,8 @@ class CreateFormControl extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $data['user_id'] = Auth::id();
+
         // Las relaciones (peoples, autos, mascotas, files) se guardan automáticamente
         // después del create cuando usas ->relationship() en los Repeaters
         

@@ -5,8 +5,10 @@ namespace App\Models;
 use App\Traits\HasQuickAccessCode;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Services\ApplicationNotificationService;
 class FormControl extends Model
@@ -22,6 +24,54 @@ class FormControl extends Model
         'income_type' => 'array',
         'owner_approved_at' => 'datetime',
     ];
+
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if (! $user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->hasRole('owner')) {
+            return $user->owner_id
+                ? $query->where('owner_id', $user->owner_id)
+                : $query->whereRaw('1 = 0');
+        }
+
+        // Shield assigns every generated permission to super_admin. This
+        // permission is restrictive, so it must not reduce that role's scope.
+        if ($user->hasRole(config('filament-shield.super_admin.name', 'super_admin'))) {
+            return $query->where('status', '!=', 'OwnerPending');
+        }
+
+        if ($user->can('view_own_form::control')) {
+            return $query->where('user_id', $user->id);
+        }
+
+        return $query->where('status', '!=', 'OwnerPending');
+    }
+
+    public function isVisibleTo(User $user): bool
+    {
+        if ($user->hasRole('owner')) {
+            return $user->owner_id !== null
+                && (int) $this->owner_id === (int) $user->owner_id;
+        }
+
+        if ($user->hasRole(config('filament-shield.super_admin.name', 'super_admin'))) {
+            return $this->status !== 'OwnerPending';
+        }
+
+        if ($user->can('view_own_form::control')) {
+            return (int) $this->user_id === (int) $user->id;
+        }
+
+        return $this->status !== 'OwnerPending';
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     public function aprobar()
     {

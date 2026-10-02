@@ -63,6 +63,40 @@ class FormControlMonitorTest extends TestCase
         $this->assertFalse(FormControlResource::getEloquentQuery()->exists());
     }
 
+    public function test_user_with_view_own_permission_only_sees_forms_they_created(): void
+    {
+        [$owner, $lote] = $this->context('owner');
+        $salesUser = User::factory()->create();
+        $otherUser = User::factory()->create();
+        DB::table('roles')->insertOrIgnore(['name' => 'Ventas', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()]);
+        $salesUser->assignRole('Ventas');
+
+        $mine = $this->form($owner, $lote, $salesUser, 'Pending');
+        $other = $this->form($owner, $lote, $otherUser, 'Pending');
+
+        foreach (['view_any_form::control', 'view_form::control', 'view_own_form::control', 'page_FormControlMonitor', 'widget_FormControlStats'] as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+            $salesUser->givePermissionTo($permission);
+        }
+
+        $this->actingAs($salesUser);
+
+        $ids = FormControlResource::getEloquentQuery()->pluck('id');
+        $this->assertTrue($ids->contains($mine->id));
+        $this->assertFalse($ids->contains($other->id));
+        $this->assertTrue($salesUser->can('view', $mine));
+        $this->assertFalse($salesUser->can('view', $other));
+
+        Livewire::test(FormControlMonitor::class)
+            ->assertSuccessful()
+            ->assertSee('FORMULARIO #'.$mine->id)
+            ->assertDontSee('FORMULARIO #'.$other->id);
+
+        Livewire::test(FormControlStats::class)
+            ->assertSuccessful()
+            ->assertViewHas('cards', fn (array $cards) => collect($cards)->firstWhere('status', 'Pending')['value'] === 1);
+    }
+
     public function test_custom_pages_respect_their_individual_shield_permissions(): void
     {
         [, , $user] = $this->context('owner');
@@ -123,7 +157,7 @@ class FormControlMonitorTest extends TestCase
         $admin = User::factory()->create();
         DB::table('roles')->insertOrIgnore(['name' => 'super_admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()]);
         $admin->assignRole('super_admin');
-        $permissions = collect(['aprobar_form::control', 'rechazar_form::control', 'update_form::control', 'delete_form::control'])->map(fn ($name) => Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']));
+        $permissions = collect(['aprobar_form::control', 'rechazar_form::control', 'update_form::control', 'delete_form::control', 'view_own_form::control'])->map(fn ($name) => Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']));
         $admin->givePermissionTo($permissions);
         $this->actingAs($admin);
         $component = Livewire::test(FormControlMonitor::class)->assertSuccessful()

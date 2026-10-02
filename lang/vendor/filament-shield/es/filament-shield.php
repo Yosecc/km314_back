@@ -66,6 +66,7 @@ return [
     'resource_permission_prefixes_labels' => [
         'view' => 'Ver un registro en particular',
         'view_any' => 'Ver el listado de registros',
+        'view_own' => 'Solo ver formularios propios',
         'create' => 'Crear',
         'update' => 'Actualizar',
         'delete' => 'Eliminar un registro en particular',

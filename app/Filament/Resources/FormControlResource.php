@@ -119,19 +119,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
-
-        $user = Auth::user();
-
-        if ($user?->hasRole('owner')) {
-            if (! $user->owner_id) {
-                return $query->whereRaw('1 = 0');
-            }
-
-            return $query->where('owner_id', $user->owner_id);
-        }
-
-        return $query->where('status', '!=', 'OwnerPending');
+        return parent::getEloquentQuery()->visibleTo(Auth::user());
     }
 
     public static function getPermissionPrefixes(): array
@@ -139,6 +127,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
         return [
             'view',
             'view_any',
+            'view_own',
             'create',
             'update',
             'delete',
@@ -1278,11 +1267,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
         return $table
             ->modifyQueryUsing(function (Builder $query) {
-                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                    $query->where('owner_id', Auth::user()->owner_id);
-                } else {
-                    $query->where('status', '!=', 'OwnerPending');
-                }
                 return $query->orderBy('created_at', 'desc');
             })
             ->columns([

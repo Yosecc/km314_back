@@ -73,6 +73,18 @@ class FormControlTest extends TestCase
             ->assertSee('Crear formulario');
     }
 
+    public function test_create_page_forces_the_authenticated_user_as_creator(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $this->actingAs($user);
+
+        $method = new ReflectionMethod(CreateFormControl::class, 'mutateFormDataBeforeCreate');
+        $data = $method->invoke(new CreateFormControl(), ['user_id' => $otherUser->id]);
+
+        $this->assertSame($user->id, $data['user_id']);
+    }
+
     public function test_it_is_active_only_when_authorized_and_inside_a_date_range(): void
     {
         Carbon::setTestNow('2026-09-10 12:00:00');

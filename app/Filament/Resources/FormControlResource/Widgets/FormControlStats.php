@@ -28,9 +28,8 @@ class FormControlStats extends Widget
         $monthStart = now('America/Argentina/Buenos_Aires')->startOfMonth();
         $monthEnd = now('America/Argentina/Buenos_Aires')->endOfMonth();
         $forms = FormControl::query()
+            ->visibleTo($user)
             ->whereBetween('created_at', [$monthStart, $monthEnd])
-            ->when($user->hasRole('owner'), fn ($query) => $query->where('owner_id', $user->owner_id))
-            ->when(! $user->hasRole('owner'), fn ($query) => $query->where('status', '!=', 'OwnerPending'))
             ->get()
             ->map(fn (FormControl $form) => $form->statusComputed());
 
