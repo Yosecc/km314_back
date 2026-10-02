@@ -114,7 +114,7 @@ class PublicFormControlInvitationTest extends TestCase
         Livewire::test(ListFormControls::class)
             ->callAction('sharePublicForm',[
                 'lote_id'=>$lote->id,
-                'income_type'=>[FormControlPublicInvitation::TENANT_VISITOR],
+                'income_type'=>FormControlPublicInvitation::TENANT_VISITOR,
             ])
             ->assertHasNoActionErrors()
             ->assertSet('mountedActions',['generatedPublicLink'])
