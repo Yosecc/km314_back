@@ -14,7 +14,9 @@ use App\Models\ActivitiesPeople;
 use App\Models\FormControlPeople;
 use App\Models\ProveedorEmpleado;
 use App\Services\ProveedorAccessService;
+use App\Services\ActivityOwnerNotificationService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Widgets\StatsOverviewWidget;
@@ -526,6 +528,15 @@ class ActivitiesPage extends CreateRecord
                     });
 
         ActivitiesAuto::insert($autos->toArray());
+
+        try {
+            app(ActivityOwnerNotificationService::class)->send($record);
+        } catch (\Throwable $exception) {
+            Log::warning('No se pudo notificar al propietario sobre la actividad de acceso.', [
+                'activity_id' => $record->id,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
 
     }
 
