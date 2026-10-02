@@ -94,6 +94,17 @@ class ServiceResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nombre')
                     ->searchable(),
+                Tables\Columns\ToggleColumn::make('status')
+                    ->label('Activo')
+                    ->disabled(fn (Service $record): bool => ! static::canEdit($record))
+                    ->updateStateUsing(function (Service $record, mixed $state): bool {
+                        abort_unless(static::canEdit($record), 403);
+
+                        $status = (bool) $state;
+                        $record->update(['status' => $status]);
+
+                        return $status;
+                    }),
                 // Tables\Columns\TextColumn::make('amount')->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
