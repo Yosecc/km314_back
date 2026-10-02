@@ -13,7 +13,7 @@ class EmployeeTutorialTest extends TestCase
 {
     use DatabaseTransactions;
 
-    public function test_employee_tutorial_is_shown_once_and_can_be_reopened(): void
+    public function test_employee_tutorial_uses_browser_storage_and_can_always_be_reopened(): void
     {
         $user = User::factory()->create();
 
@@ -27,23 +27,15 @@ class EmployeeTutorialTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(ManageEmployees::class)
-            ->assertSet('showTutorial', true)
             ->assertActionVisible('employeeTutorial')
             ->assertSee('Tus trabajadores, listos para cada ingreso')
             ->assertSee('Información clara para un acceso seguro')
             ->assertSee('La aprobación mantiene el acceso protegido')
             ->assertSee('Actualización cada 6 meses.')
+            ->assertSee('km314.employee-tutorial.seen.user-'.$user->id, escape: false)
+            ->assertSee('open-employee-tutorial', escape: false)
             ->assertSee('images/employee-tutorial/preload-worker.webp', escape: false)
             ->assertSee('images/employee-tutorial/personal-and-vehicle-documents.webp', escape: false)
-            ->assertSee('images/employee-tutorial/review-and-renewal.webp', escape: false)
-            ->call('markTutorialSeen')
-            ->assertSet('showTutorial', false);
-
-        $this->assertNotNull($user->fresh()->employee_tutorial_seen_at);
-
-        Livewire::test(ManageEmployees::class)
-            ->assertSet('showTutorial', false)
-            ->callAction('employeeTutorial')
-            ->assertSet('showTutorial', true);
+            ->assertSee('images/employee-tutorial/review-and-renewal.webp', escape: false);
     }
 }

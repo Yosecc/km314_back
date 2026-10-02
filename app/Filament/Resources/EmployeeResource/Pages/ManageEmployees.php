@@ -15,37 +15,6 @@ class ManageEmployees extends ManageRecords
     protected static string $resource = EmployeeResource::class;
     protected static string $view = 'filament.resources.employee-resource.pages.manage-employees';
 
-    public bool $showTutorial = false;
-
-    public function mount(): void
-    {
-        parent::mount();
-
-        $this->showTutorial = auth()->user()->employee_tutorial_seen_at === null;
-    }
-
-    public function openTutorial(): void
-    {
-        $this->showTutorial = true;
-    }
-
-    public function markTutorialSeen(): void
-    {
-        $user = auth()->user();
-
-        if ($user->employee_tutorial_seen_at === null) {
-            $user->forceFill(['employee_tutorial_seen_at' => now()])->save();
-        }
-
-        $this->showTutorial = false;
-    }
-
-    public function finishTutorial(): void
-    {
-        $this->markTutorialSeen();
-        $this->redirect(EmployeeResource::getUrl('create'), navigate: true);
-    }
-
     protected function getHeaderActions(): array
     {
         return [
@@ -53,7 +22,10 @@ class ManageEmployees extends ManageRecords
                 ->label('Cómo funciona')
                 ->icon('heroicon-o-question-mark-circle')
                 ->color('gray')
-                ->action(fn () => $this->openTutorial()),
+                ->url('#')
+                ->extraAttributes([
+                    'x-on:click.prevent' => "window.dispatchEvent(new CustomEvent('open-employee-tutorial'))",
+                ]),
             Actions\CreateAction::make()
                 ->mutateFormDataUsing(function (array $data): array {
                     // Siempre establecer fecha_vencimiento_seguro
