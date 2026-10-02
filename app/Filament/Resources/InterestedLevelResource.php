@@ -36,6 +36,11 @@ class InterestedLevelResource extends Resource implements HasShieldPermissions
         ];
     }
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('view_any_interested::level') ?? false;
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([

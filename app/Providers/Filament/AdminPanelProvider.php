@@ -13,6 +13,7 @@ use App\Filament\Widgets\AccessControlStats;
 use App\Filament\Widgets\RecurrentVisitorApprovalStats;
 use App\Filament\Widgets\EmployeeApprovalStats;
 use App\Filament\Widgets\QuickAccessWidget;
+use App\Filament\Resources\InterestedLevelResource;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
 use Filament\Navigation\NavigationGroup;
@@ -55,6 +56,9 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Blue,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->resources([
+                InterestedLevelResource::class,
+            ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,

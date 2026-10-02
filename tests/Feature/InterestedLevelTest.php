@@ -7,6 +7,7 @@ use App\Filament\Resources\InterestedLevelResource\Pages\ManageInterestedLevels;
 use App\Models\InterestedLevel;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Filament\Facades\Filament;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -37,6 +38,10 @@ class InterestedLevelTest extends TestCase
         $user->givePermissionTo($permission);
 
         $this->assertTrue(InterestedLevelResource::canViewAny());
+        $this->assertContains(
+            InterestedLevelResource::class,
+            Filament::getPanel('admin')->getResources(),
+        );
 
         Livewire::test(ManageInterestedLevels::class)
             ->assertSuccessful()
