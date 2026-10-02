@@ -319,7 +319,7 @@ class CalendarWidget extends FullCalendarWidget
                     } elseif ((is_array($incomeType) && in_array('Inquilino', $incomeType)) || $incomeType == 'Inquilino') {
                         $colorFondo = '#0288d1'; // azul
                         $colorBorde = '#0277bd';
-                    } elseif ((is_array($incomeType) && in_array('Visita', $incomeType)) || $incomeType == 'Visita') {
+                    } elseif ((is_array($incomeType) && (in_array('Visita', $incomeType) || in_array('Visitante de Inquilino', $incomeType))) || $incomeType == 'Visita' || $incomeType == 'Visitante de Inquilino') {
                         $colorFondo = '#8e24aa'; // violeta
                         $colorBorde = '#6a1b9a';
                     }
@@ -349,7 +349,7 @@ class CalendarWidget extends FullCalendarWidget
                             ]);
                             $current->addDay();
                         }
-                    } elseif ((is_array($incomeType) && (in_array('Inquilino', $incomeType) || in_array('Visita', $incomeType))) || $incomeType == 'Inquilino' || $incomeType == 'Visita') {
+                    } elseif ((is_array($incomeType) && (in_array('Inquilino', $incomeType) || in_array('Visita', $incomeType) || in_array('Visitante de Inquilino', $incomeType))) || $incomeType == 'Inquilino' || $incomeType == 'Visita' || $incomeType == 'Visitante de Inquilino') {
                         // Mostrar solo el primer día
                         $start = $startDate->format('Y-m-d');
                         $end = $startDate->format('Y-m-d');

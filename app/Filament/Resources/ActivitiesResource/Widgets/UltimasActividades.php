@@ -72,13 +72,17 @@ class UltimasActividades extends BaseWidget
                     ->label(__('general.TypeIncome'))
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'Inquilino' => 'Inquilino',
+                        'Visitante de Inquilino' => 'Visitante de inquilino',
                         'Trabajador' => 'Trabajador',
-                        'Visita' => 'Visita'
+                        'Visita' => 'Visita',
+                        default => $state,
                     })
                     ->color(fn (string $state): string => match ($state) {
                         'Inquilino' => 'success',
+                        'Visitante de Inquilino' => 'warning',
                         'Trabajador' => 'gray',
-                        'Visita' => 'warning'
+                        'Visita' => 'warning',
+                        default => 'gray',
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')

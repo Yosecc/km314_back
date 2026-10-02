@@ -7,15 +7,29 @@ use Illuminate\Support\Str;
 
 class FormControlPublicInvitation extends Model
 {
-    protected $fillable = ['token_hash','owner_id','lote_id','created_by_user_id','expires_at','used_at','used_form_control_id','revoked_at'];
+    public const TENANT = 'Inquilino';
+
+    public const TENANT_VISITOR = 'Visitante de Inquilino';
+
+    protected $fillable = ['token_hash','owner_id','lote_id','income_type','created_by_user_id','expires_at','used_at','used_form_control_id','revoked_at'];
     protected $casts = ['expires_at'=>'datetime','used_at'=>'datetime','revoked_at'=>'datetime'];
 
-    public static function issue(Owner $owner, Lote $lote, User $creator): array
+    public static function publicIncomeTypes(): array
     {
+        return [
+            self::TENANT => self::TENANT,
+            self::TENANT_VISITOR => self::TENANT_VISITOR,
+        ];
+    }
+
+    public static function issue(Owner $owner, Lote $lote, User $creator, string $incomeType = self::TENANT): array
+    {
+        abort_unless(array_key_exists($incomeType, self::publicIncomeTypes()), 422);
+
         $plain = Str::random(64);
         $record = self::create([
             'token_hash'=>hash('sha256',$plain), 'owner_id'=>$owner->id, 'lote_id'=>$lote->id,
-            'created_by_user_id'=>$creator->id, 'expires_at'=>now()->addDays(7),
+            'income_type'=>$incomeType, 'created_by_user_id'=>$creator->id, 'expires_at'=>now()->addDays(7),
         ]);
         return [$record, $plain];
     }

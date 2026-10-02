@@ -19,9 +19,11 @@ class PublicFormControlController extends Controller
     {
         $invitation = FormControlPublicInvitation::resolveToken($token);
         abort_unless($invitation, 404);
+        $incomeType = $invitation->income_type ?: FormControlPublicInvitation::TENANT;
         return view('public-form-control', [
             'invitation'=>$invitation, 'token'=>$token,
-            'personDocuments'=>$this->documentsFor('Inquilino'),
+            'incomeType'=>$incomeType,
+            'personDocuments'=>$this->documentsFor($incomeType),
             'vehicleDocuments'=>$this->documentsFor('car'),
         ]);
     }
@@ -31,6 +33,7 @@ class PublicFormControlController extends Controller
         $invitation = FormControlPublicInvitation::resolveToken($token);
         abort_unless($invitation, 404);
         if (! $invitation->isAvailable()) return redirect()->route('form-control-public.show',$token);
+        $incomeType = $invitation->income_type ?: FormControlPublicInvitation::TENANT;
 
         $rules = [
             'start_date'=>['required','date','after_or_equal:today'], 'start_time'=>['required','date_format:H:i'],
@@ -55,7 +58,7 @@ class PublicFormControlController extends Controller
             'pets.*.name'=>['nullable','string','max:100'], 'pets.*.vaccinated'=>['nullable','boolean'],
             'observations'=>['nullable','string','max:2000'], 'accept_terms'=>['accepted'],
         ];
-        foreach ($this->documentsFor('Inquilino') as $index=>$document) {
+        foreach ($this->documentsFor($incomeType) as $index=>$document) {
             if ($document['required']) $rules["people.*.documents.{$index}.file"] = ['required','file','mimes:jpg,jpeg,png,webp,pdf','max:10240'];
             if ($document['date_required']) $rules["people.*.documents.{$index}.expires_at"] = ['required','date'];
         }
@@ -69,15 +72,16 @@ class PublicFormControlController extends Controller
             throw ValidationException::withMessages(['end_time'=>'La hora de finalización debe ser posterior a la hora de inicio.']);
         }
 
-        $personDocuments = $this->documentsFor('Inquilino');
+        $personDocuments = $this->documentsFor($incomeType);
         $vehicleDocuments = $this->documentsFor('car');
         $form = DB::transaction(function () use ($validated, $token, $personDocuments, $vehicleDocuments) {
             $invitation = FormControlPublicInvitation::query()->where('token_hash',hash('sha256',$token))->lockForUpdate()->firstOrFail();
             if (! $invitation->isAvailable()) throw ValidationException::withMessages(['link'=>'Este enlace ya fue utilizado o venció.']);
             $lote = $invitation->lote;
+            $incomeType = $invitation->income_type ?: FormControlPublicInvitation::TENANT;
             $form = FormControl::create([
                 'owner_id'=>$invitation->owner_id, 'user_id'=>$invitation->created_by_user_id,
-                'access_type'=>['lote'], 'lote_ids'=>[$lote->getNombre()], 'income_type'=>['Inquilino'],
+                'access_type'=>['lote'], 'lote_ids'=>[$lote->getNombre()], 'income_type'=>[$incomeType],
                 'status'=>'OwnerPending', 'start_date_range'=>$validated['start_date'], 'start_time_range'=>$validated['start_time'],
                 'end_date_range'=>$validated['end_date'], 'end_time_range'=>$validated['end_time'],
                 'date_unilimited'=>false, 'observations'=>$validated['observations'] ?? null,
@@ -125,7 +129,13 @@ class PublicFormControlController extends Controller
 
     private function documentsFor(string $type): array
     {
-        return collect(FilesRequired::where('type',$type)->first()?->required ?? [])->map(fn ($item) => [
+        $configuration = FilesRequired::where('type', $type)->first();
+
+        if (! $configuration && $type === FormControlPublicInvitation::TENANT_VISITOR) {
+            $configuration = FilesRequired::whereIn('type', [FormControlPublicInvitation::TENANT, 'inquilino'])->first();
+        }
+
+        return collect($configuration?->required ?? [])->map(fn ($item) => [
             'name'=>$item['document'],'required'=>(bool)($item['is_required']??false),'date_required'=>(bool)($item['date_is_required']??false),
         ])->values()->all();
     }

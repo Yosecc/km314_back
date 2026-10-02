@@ -74,6 +74,36 @@ class PublicFormControlInvitationTest extends TestCase
         $this->assertSame('Pending',$form->fresh()->statusComputed());
     }
 
+    public function test_public_link_can_create_a_tenant_visitor_form(): void
+    {
+        FilesRequired::updateOrCreate(
+            ['type'=>FormControlPublicInvitation::TENANT_VISITOR],
+            ['name'=>'Documentos para visitante de inquilino','required'=>[],'no_required'=>[]],
+        );
+        [$owner,$lote,$ownerUser] = $this->context();
+        [, $token] = FormControlPublicInvitation::issue(
+            $owner,
+            $lote,
+            $ownerUser,
+            FormControlPublicInvitation::TENANT_VISITOR,
+        );
+
+        $this->get(route('form-control-public.show',$token))
+            ->assertOk()
+            ->assertSee(FormControlPublicInvitation::TENANT_VISITOR);
+
+        $this->post(route('form-control-public.store',$token),[
+            'start_date'=>now()->addDay()->format('Y-m-d'),'start_time'=>'09:00',
+            'end_date'=>now()->addDay()->format('Y-m-d'),'end_time'=>'18:00',
+            'people'=>[['dni'=>'30111222','first_name'=>'Visitante','last_name'=>'Ejemplo']],
+            'observations'=>'Visita de inquilino','accept_terms'=>'1',
+        ])->assertRedirect();
+
+        $form = FormControl::where('observations','Visita de inquilino')->firstOrFail();
+        $this->assertSame([FormControlPublicInvitation::TENANT_VISITOR],$form->income_type);
+        $this->assertSame('OwnerPending',$form->status);
+    }
+
     public function test_owner_can_generate_the_single_use_link_from_the_form_list(): void
     {
         [$owner,$lote,$ownerUser] = $this->context();
@@ -82,7 +112,10 @@ class PublicFormControlInvitationTest extends TestCase
         $ownerUser->givePermissionTo('create_form::control');
         $this->actingAs($ownerUser);
         Livewire::test(ListFormControls::class)
-            ->callAction('sharePublicForm',['lote_id'=>$lote->id])
+            ->callAction('sharePublicForm',[
+                'lote_id'=>$lote->id,
+                'income_type'=>[FormControlPublicInvitation::TENANT_VISITOR],
+            ])
             ->assertHasNoActionErrors()
             ->assertSet('mountedActions',['generatedPublicLink'])
             ->assertSee('Tu enlace está listo')
@@ -91,6 +124,7 @@ class PublicFormControlInvitationTest extends TestCase
             ->assertSee('dura 7 días');
         $invitation = FormControlPublicInvitation::where('owner_id',$owner->id)->latest()->firstOrFail();
         $this->assertSame($lote->id,(int)$invitation->lote_id);
+        $this->assertSame(FormControlPublicInvitation::TENANT_VISITOR,$invitation->income_type);
         $this->assertTrue($invitation->isAvailable());
     }
 

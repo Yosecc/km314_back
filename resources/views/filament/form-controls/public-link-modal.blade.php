@@ -15,9 +15,9 @@
     <div class="plm-intro">
         <div class="plm-intro-icon"><x-heroicon-o-link /></div>
         <div>
-            <span>Formulario público · {{ $lot }}</span>
+            <span>{{ $incomeType }} · {{ $lot }}</span>
             <h3>Compartí este enlace con tu invitado</h3>
-            <p>La persona podrá completar el formulario para este lote.</p>
+            <p>La persona completará el formulario de {{ mb_strtolower($incomeType) }} para este lote.</p>
         </div>
     </div>
 
