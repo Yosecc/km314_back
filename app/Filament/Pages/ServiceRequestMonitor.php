@@ -172,9 +172,11 @@ class ServiceRequestMonitor extends Page
             'scheduled' => $request->starts_at?->format('d/m/Y H:i') ?? 'Sin fecha programada',
             'assigned' => $request->userAsignado?->name,
             'is_assigned' => (bool) $request->asignado_status_id,
+            'can_view' => ServiceRequestResource::canView($request),
             'can_edit' => ServiceRequestResource::canEdit($request),
             'can_change_status' => ! ServiceRequestResource::isOwnerContext() && Auth::user()->can('update', $request),
-            'url' => ServiceRequestResource::getUrl('edit', ['record' => $request]),
+            'view_url' => ServiceRequestResource::getUrl('view', ['record' => $request]),
+            'edit_url' => ServiceRequestResource::getUrl('edit', ['record' => $request]),
             'search_text' => Str::lower(Str::ascii(implode(' ', [$request->id, $request->name, $request->service?->name, $lot, $owner, $status]))),
         ];
     }

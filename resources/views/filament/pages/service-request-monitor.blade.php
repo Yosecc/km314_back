@@ -29,7 +29,7 @@
                 <p class="srm-title">{{ $request['title'] }}</p><p class="srm-owner">{{ $request['owner'] }}</p>
                 <div class="srm-meta"><div><span>Servicio</span><strong>{{ $request['service'] }}</strong></div><div><span>Programada</span><strong>{{ $request['scheduled'] }}</strong></div></div>
                 @if($request['assigned'])<p class="srm-assigned">Asignada a {{ $request['assigned'] }}</p>@endif
-                <div class="srm-actions"><a href="{{ $request['url'] }}">Ver detalle</a>@if($request['can_edit'])<a class="edit" href="{{ $request['url'] }}">Editar</a>@endif @if($request['can_change_status']){{ ($this->changeStatusAction)(['request' => $request['id']]) }}@endif</div>
+                <div class="srm-actions">@if($request['can_view'])<a href="{{ $request['view_url'] }}">Ver detalle</a>@endif @if($request['can_edit'])<a class="edit" href="{{ $request['edit_url'] }}">Editar</a>@endif @if($request['can_change_status']){{ ($this->changeStatusAction)(['request' => $request['id']]) }}@endif</div>
             </article>
         @empty
             <div class="srm-empty"><span>◇</span><h3>No hay solicitudes para mostrar</h3><p>Probá otro estado, mes o búsqueda.</p></div>
