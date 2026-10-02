@@ -22,10 +22,7 @@ class ManageEmployees extends ManageRecords
                 ->label('Cómo funciona')
                 ->icon('heroicon-o-question-mark-circle')
                 ->color('gray')
-                ->url('#')
-                ->extraAttributes([
-                    'x-on:click.prevent' => "window.dispatchEvent(new CustomEvent('open-employee-tutorial'))",
-                ]),
+                ->action(fn () => $this->dispatch('open-employee-tutorial')),
             Actions\CreateAction::make()
                 ->mutateFormDataUsing(function (array $data): array {
                     // Siempre establecer fecha_vencimiento_seguro

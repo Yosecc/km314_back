@@ -33,9 +33,10 @@ class EmployeeTutorialTest extends TestCase
             ->assertSee('La aprobación mantiene el acceso protegido')
             ->assertSee('Actualización cada 6 meses.')
             ->assertSee('km314.employee-tutorial.seen.user-'.$user->id, escape: false)
-            ->assertSee('open-employee-tutorial', escape: false)
             ->assertSee('images/employee-tutorial/preload-worker.webp', escape: false)
             ->assertSee('images/employee-tutorial/personal-and-vehicle-documents.webp', escape: false)
-            ->assertSee('images/employee-tutorial/review-and-renewal.webp', escape: false);
+            ->assertSee('images/employee-tutorial/review-and-renewal.webp', escape: false)
+            ->callAction('employeeTutorial')
+            ->assertDispatched('open-employee-tutorial');
     }
 }
