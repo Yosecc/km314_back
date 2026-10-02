@@ -30,7 +30,7 @@ class CreateEmployee extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Siempre establecer fecha_vencimiento_seguro
-        $data['fecha_vencimiento_seguro'] = Carbon::now()->addMonths(3)->toDateString();
+        $data['fecha_vencimiento_seguro'] = Carbon::now()->addMonths(6)->toDateString();
         
         return $data;
     }

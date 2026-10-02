@@ -185,7 +185,7 @@ class EmployeeResource extends Resource
             //     ->label('Fecha de vencimiento del seguro personal')
             //     ->displayFormat('d/m/Y')
             //     ->required()
-            //     ->default(Carbon::now()->addMonths(3))
+            //     ->default(Carbon::now()->addMonths(6))
             //     ->hidden(true)
             //     ->dehydrated()
             //     ->live()
