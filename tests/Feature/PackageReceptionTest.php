@@ -119,7 +119,12 @@ class PackageReceptionTest extends TestCase
             'view_sensitive_package::reception', 'create_package::reception',
         ])->get());
         $this->actingAs($user);
-        Livewire::test(ListPackageReceptions::class)->assertSuccessful()->assertSee('Mercado Libre');
+        Livewire::test(ListPackageReceptions::class)
+            ->assertSuccessful()
+            ->assertSee('Mercado Libre')
+            ->assertSee('La recepción de paquetes es un servicio adicional no incluido en la cuota de mantenimiento.')
+            ->assertSee('Actualmente se brinda sin costo.')
+            ->assertSee('El personal de Acceso no se responsabiliza por daños, pérdidas ni por el estado del contenido o del embalaje.');
         Livewire::test(PackageReceptionMonitor::class)->assertSuccessful()->assertSee('Seguimiento de paquetes')->assertSee('Mercado Libre')
             ->assertSee('Nueva recepción')->assertSee('Gestionar recepciones');
         Livewire::test(ViewPackageReception::class, ['record'=>$record->getRouteKey()])->assertSuccessful()->assertSee('PUERTA-9')->assertSee('comprobante.jpg');
