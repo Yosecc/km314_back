@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Pages\FormControlMonitor;
 use App\Filament\Pages\MonitorAccesos;
 use App\Filament\Pages\ProfileOwner;
+use App\Filament\Resources\FormControlResource;
 use App\Filament\Resources\FormControlResource\Widgets\FormControlStats;
 use App\Models\FormControl;
 use App\Models\Lote;
@@ -36,6 +37,30 @@ class FormControlMonitorTest extends TestCase
             ->assertSee('Monitor de Formularios')->assertSee('FORMULARIO #'.$mine->id)
             ->assertDontSee('FORMULARIO #'.$other->id)->assertSee('Aprobar solicitud')->assertSee('Ver QR')
             ->assertSee('Form. Públicos')->assertSee('Nuevo formulario')->assertActionVisible('sharePublicForm');
+    }
+
+    public function test_owner_resource_query_only_returns_its_own_forms(): void
+    {
+        [$owner, $lote, $user] = $this->context('owner');
+        $mine = $this->form($owner, $lote, $user, 'Pending');
+        [$otherOwner, $otherLote, $otherUser] = $this->context('owner');
+        $other = $this->form($otherOwner, $otherLote, $otherUser, 'Pending');
+        $this->actingAs($user);
+
+        $ids = FormControlResource::getEloquentQuery()->pluck('id');
+
+        $this->assertTrue($ids->contains($mine->id));
+        $this->assertFalse($ids->contains($other->id));
+    }
+
+    public function test_owner_without_owner_id_cannot_see_any_form_in_the_resource(): void
+    {
+        [$owner, $lote, $user] = $this->context('owner');
+        $this->form($owner, $lote, $user, 'Pending');
+        $user->forceFill(['owner_id' => null])->save();
+        $this->actingAs($user->fresh());
+
+        $this->assertFalse(FormControlResource::getEloquentQuery()->exists());
     }
 
     public function test_custom_pages_respect_their_individual_shield_permissions(): void

@@ -120,9 +120,17 @@ class FormControlResource extends Resource implements HasShieldPermissions
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
-        if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-            return $query->where('owner_id', Auth::user()->owner_id);
+
+        $user = Auth::user();
+
+        if ($user?->hasRole('owner')) {
+            if (! $user->owner_id) {
+                return $query->whereRaw('1 = 0');
+            }
+
+            return $query->where('owner_id', $user->owner_id);
         }
+
         return $query->where('status', '!=', 'OwnerPending');
     }
 
