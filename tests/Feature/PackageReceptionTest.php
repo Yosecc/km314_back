@@ -109,7 +109,12 @@ class PackageReceptionTest extends TestCase
     public function test_operational_list_and_monitor_render_successfully(): void
     {
         [$owner, $lote, $user] = $this->context();
-        $record = $this->reception($owner, $lote, $user, ['carrier_access_code'=>'PUERTA-9']);
+        $record = $this->reception($owner, $lote, $user, [
+            'carrier_access_code'=>'PUERTA-9',
+            'recipient_dni'=>'30111222',
+            'recipient_phone'=>'3515551234',
+            'expected_packages_count'=>3,
+        ]);
         $record->files()->create(['category'=>'registration','path'=>'package-receptions/registration/comprobante.jpg','original_name'=>'comprobante.jpg','uploaded_by_user_id'=>$user->id]);
         Permission::firstOrCreate(['name'=>'page_PackageReceptionMonitor','guard_name'=>'web']);
         $user->givePermissionTo(Permission::whereIn('name', [
@@ -125,7 +130,13 @@ class PackageReceptionTest extends TestCase
             ->assertDontSee('La recepción de paquetes es un servicio adicional no incluido en la cuota de mantenimiento.');
         Livewire::test(PackageReceptionMonitor::class)->assertSuccessful()->assertSee('Seguimiento de paquetes')->assertSee('Mercado Libre')
             ->assertSee('Nueva recepción')->assertSee('Gestionar recepciones');
-        Livewire::test(ViewPackageReception::class, ['record'=>$record->getRouteKey()])->assertSuccessful()->assertSee('PUERTA-9')->assertSee('comprobante.jpg');
+        Livewire::test(ViewPackageReception::class, ['record'=>$record->getRouteKey()])
+            ->assertSuccessful()
+            ->assertSee('PUERTA-9')
+            ->assertSee('30111222')
+            ->assertSee('3515551234')
+            ->assertSee('3')
+            ->assertSee('comprobante.jpg');
         Livewire::test(PackageReceptionMonitor::class)
             ->mountAction('receive', ['reception'=>$record->id])
             ->setActionData(['received_packages_count'=>2, 'reception_notes'=>'Recibido desde el monitor'])

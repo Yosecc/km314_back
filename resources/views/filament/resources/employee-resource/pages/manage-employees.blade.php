@@ -106,7 +106,7 @@
                             <p>Cada alta o actualización pasa por una revisión de Administración. Cuando la ficha queda aprobada, el trabajador puede seleccionarse en un formulario de control para solicitar su acceso.</p>
                             <div class="et-warning">
                                 <x-heroicon-o-calendar-days />
-                                <p><strong>Actualización cada 6 meses.</strong> Si la documentación está vencida o pendiente de revisión, el trabajador no podrá agregarse a un formulario de control y, por lo tanto, no tendrá acceso al barrio.</p>
+                                <p><strong>Actualización cada {{ config('employees.documentation_renewal_months') }} meses.</strong> Si la documentación está vencida o pendiente de revisión, el trabajador no podrá agregarse a un formulario de control y, por lo tanto, no tendrá acceso al barrio.</p>
                             </div>
                         </div>
                     </div>

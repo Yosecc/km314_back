@@ -31,7 +31,7 @@ class EmployeeTutorialTest extends TestCase
             ->assertSee('Tus trabajadores, listos para cada ingreso')
             ->assertSee('Información clara para un acceso seguro')
             ->assertSee('La aprobación mantiene el acceso protegido')
-            ->assertSee('Actualización cada 6 meses.')
+            ->assertSee('Actualización cada '.config('employees.documentation_renewal_months').' meses.')
             ->assertSee('km314.employee-tutorial.seen.user-'.$user->id, escape: false)
             ->assertSee('images/employee-tutorial/preload-worker.webp', escape: false)
             ->assertSee('images/employee-tutorial/personal-and-vehicle-documents.webp', escape: false)
