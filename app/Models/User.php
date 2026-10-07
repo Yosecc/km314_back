@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Filament\Models\Contracts\FilamentUser;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -50,6 +51,8 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'package_reception_tutorial_seen_at' => 'datetime',
+        'service_request_tutorial_seen_at' => 'datetime',
     ];
 
     protected $with = ['owner'];
@@ -62,6 +65,16 @@ class User extends Authenticatable implements FilamentUser
     public function formIncidentRequirements()
     {
         return $this->hasMany(\App\Models\FormIncidentUserRequirement::class);
+    }
+
+    public function quickAccessLinks()
+    {
+        return $this->hasMany(QuickAccessLink::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function fcmDevices(): HasMany
+    {
+        return $this->hasMany(FcmDevice::class);
     }
 
     // public function roles()

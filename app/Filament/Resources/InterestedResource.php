@@ -74,6 +74,18 @@ class InterestedResource extends Resource
                     ->label(__("general.interested_origins_id"))
                     ->relationship(name: 'interestedOrigins', titleAttribute: 'name')
                     ->required(),
+                Forms\Components\Select::make('interested_type_id')
+                    ->label('Tipo de interés')
+                    ->relationship(name: 'interestedType', titleAttribute: 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+                Forms\Components\Select::make('interested_level_id')
+                    ->label('Nivel de interés')
+                    ->relationship(name: 'interestedLevel', titleAttribute: 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
 
                 Forms\Components\Select::make('lote_id')
                     ->options(function(){
@@ -120,6 +132,20 @@ class InterestedResource extends Resource
                     ->label(__("general.Phone"))
                     // ->numeric()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('interestedType.name')
+                    ->label('Tipo de interés')
+                    ->badge()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('interestedLevel.name')
+                    ->label('Nivel de interés')
+                    ->badge()
+                    ->color(fn (?string $state): string => match (mb_strtolower($state ?? '')) {
+                        'bajo' => 'gray',
+                        'medio' => 'warning',
+                        'alto' => 'success',
+                        default => 'primary',
+                    })
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('lote')
                     ->label(__("general.Lote"))
                     ->formatStateUsing(fn (Lote $state) => "{$state->sector->name}{$state->lote_id}" )
@@ -135,6 +161,9 @@ class InterestedResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('interested_level_id')
+                    ->label('Nivel de interés')
+                    ->relationship('interestedLevel', 'name'),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([

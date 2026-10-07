@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
+use App\Services\ApplicationNotificationService;
 
 class CreateEmployee extends CreateRecord
 {
@@ -29,7 +30,7 @@ class CreateEmployee extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Siempre establecer fecha_vencimiento_seguro
-        $data['fecha_vencimiento_seguro'] = Carbon::now()->addMonths(3)->toDateString();
+        $data['fecha_vencimiento_seguro'] = Carbon::now()->addMonths(6)->toDateString();
         
         return $data;
     }
@@ -41,6 +42,17 @@ class CreateEmployee extends CreateRecord
             if (!$this->record->owners()->where('owner_id', Auth::user()->owner_id)->exists()) {
                 $this->record->owners()->attach(Auth::user()->owner_id);
             }
+        }
+
+        if ($this->record->status === 'pendiente') {
+            app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
+                ['update_employee'],
+                'Nuevo trabajador pendiente de revisión',
+                ($this->record->nombres()).' fue registrado y espera la aprobación de administración.',
+                ['type' => 'employee', 'employee_id' => $this->record->id, 'status' => 'pendiente'],
+                EmployeeResource::getUrl('edit', ['record' => $this->record]),
+                'heroicon-o-user-plus',
+            );
         }
     }
 }

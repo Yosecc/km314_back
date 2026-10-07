@@ -25,6 +25,11 @@ class Owner extends Model
         return $this->hasMany(Employee::class,'owner_id');
     }
 
+    public function recurrentVisitors()
+    {
+        return $this->hasMany(RecurrentVisitor::class);
+    }
+
  // Nueva relación muchos-a-muchos
     public function empleados()
     {
@@ -73,6 +78,11 @@ public function getAllTrabajadores()
     public function formControls()
     {
         return $this->hasMany(FormControl::class,'owner_id');
+    }
+
+    public function packageReceptions()
+    {
+        return $this->hasMany(PackageReception::class);
     }
 
     public function nombres(): string{

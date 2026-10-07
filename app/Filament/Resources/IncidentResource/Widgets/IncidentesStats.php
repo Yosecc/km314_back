@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\IncidentResource\Widgets;
 
+use App\Filament\Concerns\HasStrictWidgetShield as HasWidgetShield;
+use App\Models\Incident;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use App\Models\Incident;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
+
 class IncidentesStats extends BaseWidget
 {
     use HasWidgetShield;
@@ -14,8 +15,9 @@ class IncidentesStats extends BaseWidget
 
     public static function isVisible(): bool
     {
-    return false;
+        return false;
     }
+
     public static function canView(): bool
     {
         return false;
@@ -30,6 +32,6 @@ class IncidentesStats extends BaseWidget
 
     public function incidentesHoy(): int
     {
-        return Incident::whereDate('date_incident',now())->count() ;
+        return Incident::whereDate('date_incident', now())->count();
     }
 }

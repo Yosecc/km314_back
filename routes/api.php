@@ -11,6 +11,11 @@ use App\Http\Controllers\Api\Servicios;
 use App\Http\Controllers\Api\FormControl;
 use App\Http\Controllers\Api\Solicitudes;
 use App\Http\Controllers\Api\Authentication;
+use App\Http\Controllers\Api\RecurrentVisitorController;
+use App\Http\Controllers\Api\MobileFormControlController;
+use App\Http\Controllers\Api\MobilePackageReceptionController;
+use App\Http\Controllers\Api\MobileTermsConditionsController;
+use App\Http\Controllers\Api\PushDeviceController;
 
 
 /*
@@ -55,6 +60,16 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::middleware('auth:sanctum')->prefix('terms-conditions')->group(function () {
+    Route::get('/', [MobileTermsConditionsController::class, 'show']);
+    Route::post('/accept', [MobileTermsConditionsController::class, 'accept']);
+});
+
+Route::middleware('auth:sanctum')->prefix('push/devices')->group(function () {
+    Route::post('/', [PushDeviceController::class, 'store']);
+    Route::delete('/', [PushDeviceController::class, 'destroy']);
+});
+
 Route::middleware('auth:sanctum')->get('/tipos_ingresos', [Main::class,'tipos_ingresos']);
 Route::middleware('auth:sanctum')->post('/resource_empleados', [Main::class,'resourceEmpleados']);
 Route::middleware('auth:sanctum')->post('/delete_empleados', [Main::class,'deleteEmpleados']);
@@ -62,6 +77,23 @@ Route::middleware('auth:sanctum')->post('/delete_empleados', [Main::class,'delet
 Route::middleware('auth:sanctum')->get('/empleados', [Main::class,'empleados']);
 Route::middleware('auth:sanctum')->post('/empleados/store', [Main::class,'empleadosStore']);
 Route::middleware('auth:sanctum')->post('/empleados/update/{id}', [Main::class,'empleadosUpdate']);
+Route::middleware('auth:sanctum')->get('/empleados/configuracion', [Main::class,'empleadosConfiguracion']);
+Route::middleware('auth:sanctum')->post('/empleados/movil', [Main::class,'empleadosMovilStore']);
+Route::middleware('auth:sanctum')->post('/empleados/movil/{id}', [Main::class,'empleadosMovilUpdate']);
+
+Route::middleware('auth:sanctum')->prefix('visitantes-recurrentes')->group(function () {
+    Route::get('/', [RecurrentVisitorController::class, 'index']);
+    Route::post('/', [RecurrentVisitorController::class, 'store']);
+    Route::post('/{recurrentVisitor}', [RecurrentVisitorController::class, 'update']);
+});
+
+Route::middleware('auth:sanctum')->prefix('recepciones-paquetes')->group(function () {
+    Route::get('/', [MobilePackageReceptionController::class, 'index']);
+    Route::get('/configuracion', [MobilePackageReceptionController::class, 'configuration']);
+    Route::post('/', [MobilePackageReceptionController::class, 'store']);
+    Route::post('/{packageReception}', [MobilePackageReceptionController::class, 'update']);
+    Route::post('/{packageReception}/cancelar', [MobilePackageReceptionController::class, 'cancel']);
+});
 
 
 
@@ -74,6 +106,8 @@ Route::middleware('auth:sanctum')->post('/spontaneous_visit_action', [Main::clas
 
 // middleware(['token_validate'])->
 Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
+    Route::get('mobile/configuration', [MobileFormControlController::class, 'configuration']);
+    Route::post('mobile', [MobileFormControlController::class, 'store']);
     Route::post('store',[FormControl::class,'store']);
     Route::post('index',[FormControl::class,'index']);
     Route::post('file',[FormControl::class,'file']);
@@ -110,5 +144,3 @@ Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
     Route::get('owner',[Main::class,'getOwner']);
 
 });
-
-

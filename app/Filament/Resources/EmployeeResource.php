@@ -185,7 +185,7 @@ class EmployeeResource extends Resource
             //     ->label('Fecha de vencimiento del seguro personal')
             //     ->displayFormat('d/m/Y')
             //     ->required()
-            //     ->default(Carbon::now()->addMonths(3))
+            //     ->default(Carbon::now()->addMonths(6))
             //     ->hidden(true)
             //     ->dehydrated()
             //     ->live()
@@ -442,6 +442,18 @@ class EmployeeResource extends Resource
                 ->columnSpanFull(),
         ];
     }
+
+    private static function vehicleDocumentDefaults(): array
+    {
+        $configured = self::getArchivos('car');
+
+        return !empty($configured) ? $configured : [
+            ['name' => 'Seguro del Vehículo'],
+            ['name' => 'VTV'],
+            ['name' => 'Cédula del Vehículo'],
+        ];
+    }
+
     private static function formAutos()
     {
         return [
@@ -474,6 +486,11 @@ class EmployeeResource extends Resource
                             ->relationship()
                             ->label('Documentos del vehículo')
                             ->schema(self::camposAutosFiles())
+                            ->afterStateHydrated(function (Repeater $component, $state) {
+                                if (empty($state)) {
+                                    $component->state(self::vehicleDocumentDefaults());
+                                }
+                            })
                             ->defaultItems(3)
                             ->minItems(3)
                             ->maxItems(3)
@@ -481,7 +498,7 @@ class EmployeeResource extends Resource
                             ->deletable(false)
                             ->grid(2)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->default(self::getArchivos('car'))
+                            ->default(self::vehicleDocumentDefaults())
                             ->columns(1)
                             ->columnSpanFull(),
                     ])

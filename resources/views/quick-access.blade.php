@@ -63,6 +63,20 @@
                             <p class="font-semibold text-gray-900">{{ $entity->dni }}</p>
                         </div>
                     </div>
+                @elseif($entity instanceof \App\Models\Proveedor)
+                    <div class="flex items-center space-x-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l8-4v18m6 0V11l-6-4M9 9h.01M9 13h.01M9 17h.01M17 15h.01M17 18h.01"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Empresa</p>
+                            <p class="font-semibold text-gray-900">{{ $entity->nombre_empresa }}</p>
+                        </div>
+                    </div>
                 @else
                     <div class="flex items-center space-x-3">
                         <div class="flex-shrink-0">

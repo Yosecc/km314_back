@@ -3,8 +3,12 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Resources\ActivitiesResource;
+use App\Filament\Resources\FormControlResource;
 use App\Models\Activities;
 use App\Models\ActivitiesPeople;
+use App\Services\AccessPeopleInsideService;
+use App\Services\CurrentPeopleInsideQuery;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -13,9 +17,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 
 class MonitorAccesos extends Page
 {
+    use HasPageShield;
+
     protected static ?string $navigationIcon = 'heroicon-o-signal';
 
     protected static string $view = 'filament.pages.monitor-accesos';
@@ -36,10 +43,10 @@ class MonitorAccesos extends Page
 
     public string $search = '';
 
-    public static function canAccess(): bool
-    {
-        return ActivitiesResource::canViewAny();
-    }
+    #[Url(as: 'inside', except: AccessPeopleInsideService::ALL)]
+    public string $insideCategory = AccessPeopleInsideService::ALL;
+
+    public string $insideSearch = '';
 
     public function setPeriod(string $period): void
     {
@@ -62,6 +69,19 @@ class MonitorAccesos extends Page
         unset($this->monitorData);
     }
 
+    public function setInsideCategory(string $category): void
+    {
+        if ($category === AccessPeopleInsideService::ALL || array_key_exists($category, AccessPeopleInsideService::categories())) {
+            $this->insideCategory = $category;
+            unset($this->monitorData);
+        }
+    }
+
+    public function updatedInsideSearch(): void
+    {
+        unset($this->monitorData);
+    }
+
     public function forceExit(string $model, int $modelId): void
     {
         $latestMovement = ActivitiesPeople::query()
@@ -70,7 +90,7 @@ class MonitorAccesos extends Page
             ->whereNull('activities_people.deleted_at')
             ->where('activities_people.model', $model)
             ->where('activities_people.model_id', $modelId)
-            ->with('activitie')
+            ->with(['activitie.formControls'])
             ->orderByDesc('latest_activity.created_at')
             ->orderByDesc('activities_people.id')
             ->first();
@@ -89,7 +109,7 @@ class MonitorAccesos extends Page
         $tipoEntrada = match ($model) {
             'Owner', 'OwnerFamily', 'OwnerSpontaneousVisit' => 1,
             'Employee' => 2,
-            'FormControl', 'FormControlPeople' => 3,
+            'FormControl', 'FormControlPeople', 'ProveedorEmpleado' => 3,
             default => 0,
         };
 
@@ -106,6 +126,7 @@ class MonitorAccesos extends Page
         $activity = Activities::create([
             'lote_ids' => $latestMovement->activitie->lote_ids,
             'form_control_id' => $latestMovement->activitie->form_control_id,
+            'proveedor_id' => $latestMovement->activitie->proveedor_id,
             'tipo_entrada' => $tipoEntrada,
             'type' => 'Exit',
             'observations' => 'Salida forzada desde Monitor de accesos por: '.$userName,
@@ -117,6 +138,10 @@ class MonitorAccesos extends Page
             'model_id' => $modelId,
             'type' => null,
         ]);
+
+        if ($model === 'ProveedorEmpleado') {
+            $activity->formControls()->sync($latestMovement->activitie->formControls->pluck('id'));
+        }
 
         unset($this->monitorData);
 
@@ -155,6 +180,19 @@ class MonitorAccesos extends Page
         $events = $this->buildTimeline($rows, $start);
         $inside = $this->currentPeopleInside();
         $insideIdentities = $inside->pluck('identity')->flip();
+        $insideCounts = collect(AccessPeopleInsideService::categories())
+            ->mapWithKeys(fn (array $definition, string $key) => [
+                $key => $inside->filter(
+                    fn (array $person) => in_array($key, $person['category_keys'], true)
+                )->count(),
+            ]);
+        $insideCategories = collect(AccessPeopleInsideService::categories())
+            ->map(fn (array $definition, string $key) => $definition + [
+                'key' => $key,
+                'count' => $insideCounts->get($key, 0),
+            ])
+            ->values();
+        $insideModal = $this->applyInsideModalFilters($inside);
 
         $events = $events->map(function (array $event) use ($insideIdentities) {
             $event['can_force_exit'] = $event['movement'] === 'Entry'
@@ -213,7 +251,12 @@ class MonitorAccesos extends Page
 
         return [
             'events' => $visibleEvents,
-            'inside' => $inside->take(80)->values(),
+            'inside' => $inside->values(),
+            'inside_modal' => $insideModal,
+            'inside_total' => $insideIdentities->count(),
+            'inside_categories' => $insideCategories,
+            'can_create_form' => FormControlResource::canCreate(),
+            'create_form_url' => FormControlResource::getUrl('create'),
             'alerts' => $allAlerts,
             'stats' => [
                 'inside' => $inside->count(),
@@ -295,32 +338,9 @@ class MonitorAccesos extends Page
 
     protected function currentPeopleInside(): Collection
     {
-        $latestTimes = DB::table('activities_people as latest_people')
-            ->join('activities as latest_activity', 'latest_activity.id', '=', 'latest_people.activities_id')
-            ->whereNull('latest_people.deleted_at')
-            ->groupBy('latest_people.model', 'latest_people.model_id')
-            ->select([
-                'latest_people.model',
-                'latest_people.model_id',
-                DB::raw('MAX(latest_activity.created_at) as latest_at'),
-            ]);
-
-        $latestRows = ActivitiesPeople::query()
-            ->select('activities_people.*')
-            ->join('activities as current_activity', 'current_activity.id', '=', 'activities_people.activities_id')
-            ->joinSub($latestTimes, 'latest', function ($join) {
-                $join
-                    ->on('latest.model', '=', 'activities_people.model')
-                    ->on('latest.model_id', '=', 'activities_people.model_id')
-                    ->on('latest.latest_at', '=', 'current_activity.created_at');
-            })
-            ->whereNull('activities_people.deleted_at')
+        $latestRows = CurrentPeopleInsideQuery::make()
             ->with($this->peopleRelations())
-            ->orderByDesc('current_activity.created_at')
-            ->orderByDesc('activities_people.id')
-            ->limit(800)
-            ->get()
-            ->unique(fn (ActivitiesPeople $row) => $this->identityFor($row));
+            ->get();
 
         return $latestRows
             ->filter(fn (ActivitiesPeople $row) => $row->activitie?->type === 'Entry')
@@ -329,6 +349,7 @@ class MonitorAccesos extends Page
                 $minutes = (int) $event['occurred_at']->diffInMinutes(now());
 
                 return $event + [
+                    'category_keys' => AccessPeopleInsideService::categoryKeys($row),
                     'minutes_inside' => $minutes,
                     'duration' => $this->formatDuration($minutes),
                 ];
@@ -341,12 +362,16 @@ class MonitorAccesos extends Page
     {
         $activity = $row->activitie;
         $person = $row->getPeople();
-        $firstName = trim((string) ($person?->first_name ?? ''));
-        $lastName = trim((string) ($person?->last_name ?? ''));
+        $rawModel = (string) $row->getRawOriginal('model');
+        $firstName = trim((string) ($rawModel === 'ProveedorEmpleado'
+            ? $person?->nombre
+            : $person?->first_name));
+        $lastName = trim((string) ($rawModel === 'ProveedorEmpleado'
+            ? $person?->apellido
+            : $person?->last_name));
         $name = trim($firstName.' '.$lastName);
         $name = $name !== '' ? $name : 'Persona sin datos';
         $occurredAt = Carbon::parse($activity->created_at);
-        $rawModel = (string) $row->getRawOriginal('model');
         $initials = Str::of($name)
             ->explode(' ')
             ->filter()
@@ -370,6 +395,9 @@ class MonitorAccesos extends Page
                 'Employee' => 'Empleado',
                 'OwnerSpontaneousVisit' => 'Visita espontánea',
                 'FormControl', 'FormControlPeople' => $this->formControlCategory($person),
+                'ProveedorEmpleado' => filled($person?->proveedor?->nombre_empresa)
+                    ? 'Proveedor · '.$person->proveedor->nombre_empresa
+                    : 'Proveedor',
                 default => 'Persona',
             },
             'lot' => $this->formatLot($activity, $person),
@@ -389,6 +417,7 @@ class MonitorAccesos extends Page
                 $name,
                 $person?->dni,
                 $this->formatLot($activity, $person),
+                $person?->proveedor?->nombre_empresa,
                 $rawModel,
             ])),
         ];
@@ -441,6 +470,26 @@ class MonitorAccesos extends Page
             ->values();
     }
 
+    protected function applyInsideModalFilters(Collection $items): Collection
+    {
+        $search = $this->normalizeSearch($this->insideSearch);
+
+        return $items
+            ->when(
+                $this->insideCategory !== AccessPeopleInsideService::ALL,
+                fn (Collection $people) => $people->filter(
+                    fn (array $person) => in_array($this->insideCategory, $person['category_keys'], true)
+                )
+            )
+            ->when(
+                $search !== '',
+                fn (Collection $people) => $people->filter(
+                    fn (array $person) => str_contains($person['search_text'], $search)
+                )
+            )
+            ->values();
+    }
+
     protected function identityFor(ActivitiesPeople $row): string
     {
         return $row->getRawOriginal('model').'-'.$row->model_id;
@@ -472,11 +521,14 @@ class MonitorAccesos extends Page
     {
         return [
             'activitie.formControl',
+            'activitie.formControls',
+            'activitie.proveedor',
             'owner',
             'ownerFamily.familiarPrincipal',
             'employee',
             'formControlPeople.formControl',
             'ownerSpontaneousVisit.owner',
+            'proveedorEmpleado.proveedor',
         ];
     }
 }

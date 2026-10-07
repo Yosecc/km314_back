@@ -2,26 +2,27 @@
 
 namespace App\Filament\Resources\OwnerResource\Widgets;
 
-use Filament\Widgets\Widget;
+use App\Filament\Concerns\HasStrictWidgetShield as HasWidgetShield;
 use App\Models\Owner;
-use Livewire\Component;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
+use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
 
 class OwnerQr extends Widget
 {
-    use HasWidgetShield;
+    use HasWidgetShield {
+        canView as protected shieldCanView;
+    }
 
     public ?Owner $record = null;
 
     protected static string $view = 'filament.widgets.owner-qr';
-    
+
     protected static ?string $heading = 'Código QR del Propietario';
 
     public bool $showModal = false;
-    
-    protected int | string | array $columnSpan = 'full';
-    
+
+    protected int|string|array $columnSpan = 'full';
+
     public function mount(?Owner $record = null): void
     {
         $this->record = auth()->user()->hasRole('owner') ? auth()->user()->owner : $record;
@@ -29,13 +30,10 @@ class OwnerQr extends Widget
 
     public static function canView(): bool
     {
-       // Si el usuario no ha aceptado los términos, no puede ver el recurso
-        if(Auth::user()->hasRole('owner')){
-            $user = auth()->user();
-            return $user && $user->is_terms_condition;
-        }
+        $user = Auth::user();
 
-        return auth()->user()->can('widget_OwnerQr');
+        return $user
+            && static::shieldCanView()
+            && (! $user->hasRole('owner') || $user->is_terms_condition);
     }
-    
 }

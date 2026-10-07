@@ -29,6 +29,7 @@ trait HasQuickAccessCode
                 'Employee' => 'E',
                 'Owner' => 'O',
                 'FormControl' => 'F',
+                'Proveedor' => 'P',
                 default => 'X'
             };
             

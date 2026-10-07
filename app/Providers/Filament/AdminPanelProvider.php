@@ -7,18 +7,19 @@ use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
 use App\Filament\Widgets\Entry;
-use App\Filament\Widgets\Personas;
+use App\Filament\Widgets\PackageReceptionStats;
+use App\Filament\Widgets\ServiceRequestStats;
+use App\Filament\Widgets\AccessControlStats;
+use App\Filament\Widgets\RecurrentVisitorApprovalStats;
+use App\Filament\Widgets\EmployeeApprovalStats;
+use App\Filament\Widgets\QuickAccessWidget;
+use App\Filament\Resources\InterestedLevelResource;
 use Filament\Support\Colors\Color;
-use App\Filament\Widgets\EnElBarrio;
 use Filament\Navigation\NavigationItem;
 use Filament\Navigation\NavigationGroup;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Navigation\NavigationBuilder;
-use App\Filament\Widgets\EmpleadosEnElBarrio;
-use App\Filament\Widgets\InquilinosEnElBarrio;
 use Illuminate\Session\Middleware\StartSession;
-use App\Filament\Widgets\PropietariosEnElBarrio;
-use App\Filament\Widgets\TrabajadoresEnElBarrio;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Filament\Widgets\FormIncidentStatsWidget;
 use App\Filament\Widgets\UserTermsConditionsCheck;
@@ -55,6 +56,9 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Blue,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->resources([
+                InterestedLevelResource::class,
+            ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
@@ -67,13 +71,18 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                QuickAccessWidget::class,
                 UserTermsConditionsCheck::class,
-                EnElBarrio::class,
+                AccessControlStats::class,
                 FormIncidentComplianceWidget::class,
                 FormIncidentStatsWidget::class,
                 //UltimasActividades::class,
                 // IncidentesStats::class,
                 FormControlStats::class,
+                PackageReceptionStats::class,
+                ServiceRequestStats::class,
+                RecurrentVisitorApprovalStats::class,
+                EmployeeApprovalStats::class,
                 Sliders::class,
                 OwnerQr::class
             ])
@@ -95,6 +104,10 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 'panels::body.end',
                 fn () => view('components.qr-scanner-modal')
+            )
+            ->renderHook(
+                'panels::body.end',
+                fn () => view('components.firebase-web-push')
             )
             ;
     }

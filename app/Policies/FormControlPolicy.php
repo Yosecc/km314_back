@@ -23,7 +23,7 @@ class FormControlPolicy
      */
     public function view(User $user, FormControl $formControl): bool
     {
-        return $user->can('view_form::control');
+        return $user->can('view_form::control') && $formControl->isVisibleTo($user);
     }
 
     /**
@@ -39,7 +39,7 @@ class FormControlPolicy
      */
     public function update(User $user, FormControl $formControl): bool
     {
-        return $user->can('update_form::control');
+        return $user->can('update_form::control') && $formControl->isVisibleTo($user);
     }
 
     /**
@@ -47,7 +47,7 @@ class FormControlPolicy
      */
     public function delete(User $user, FormControl $formControl): bool
     {
-        return $user->can('delete_form::control');
+        return $user->can('delete_form::control') && $formControl->isVisibleTo($user);
     }
 
     /**

@@ -40,6 +40,7 @@ class FilesRequiredResource extends Resource
                         'car' => 'Auto',
                         'employee' => 'Empleado',
                         'inquilino' => 'Inquilino',
+                        'Visitante de Inquilino' => 'Visitante de inquilino',
                         'Visita (+24hs)' => 'Visita (+24hs)',
                         'Visita Temporal (24hs)' => 'Visita Temporal (24hs)',
                     ]),

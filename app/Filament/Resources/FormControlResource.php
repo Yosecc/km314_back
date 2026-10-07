@@ -11,6 +11,8 @@ use App\Models\Owner;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use App\Models\Employee;
+use App\Models\RecurrentVisitor;
+use App\Models\Proveedor;
 use App\Models\Trabajos;
 use Carbon\CarbonPeriod;
 use Filament\Forms\Form;
@@ -53,7 +55,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = FormControl::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+        protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
 
     protected static ?string $navigationLabel = 'Formulario de control';
     protected static ?string $label = 'formulario';
@@ -63,9 +66,60 @@ class FormControlResource extends Resource implements HasShieldPermissions
     protected static string $workerStartTime = '07:00';
     protected static string $workerEndTime = '18:00';
 
+    private static function workerSelectionStatus(Employee $employee): array
+    {
+        if ($employee->status !== 'aprobado') {
+            return ['enabled' => false, 'description' => 'Estado: ' . ucfirst($employee->status) . '. Debe ser aprobado por administración.'];
+        }
+
+        if ($expired = $employee->vencidosFile()) {
+            return ['enabled' => false, 'description' => 'No disponible: documentos personales vencidos (' . implode(', ', $expired) . ').'];
+        }
+
+        if ($expired = $employee->vencidosAutosFile()) {
+            return ['enabled' => false, 'description' => 'No disponible: documentos de vehículo vencidos (' . implode(', ', $expired) . ').'];
+        }
+
+        if ($employee->isReverificacion()) {
+            return ['enabled' => false, 'description' => 'No disponible: requiere reverificación.'];
+        }
+
+        return ['enabled' => true, 'description' => 'Aprobado y documentación al día.'];
+    }
+
+    private static function recurrentVisitorSelectionStatus(RecurrentVisitor $visitor): array
+    {
+        if ($visitor->status !== 'aprobado') {
+            return ['enabled' => false, 'description' => 'Estado: ' . ucfirst($visitor->status) . '. Debe ser aprobado por administración.'];
+        }
+
+        if ($expired = $visitor->vencidosAutosFile()) {
+            return ['enabled' => false, 'description' => 'No disponible: documentos de vehículo vencidos (' . implode(', ', $expired) . ').'];
+        }
+
+        return ['enabled' => true, 'description' => 'Aprobado y documentación al día.'];
+    }
+
+    private static function ownerWorkersForSelection()
+    {
+        return Employee::query()
+            ->where(function (Builder $query) {
+                $query->whereHas('owners', fn (Builder $ownerQuery) => $ownerQuery->where('owner_id', Auth::user()->owner_id))
+                    ->orWhere('owner_id', Auth::user()->owner_id);
+            })
+            ->with(['files', 'autos.files'])
+            ->orderBy('first_name')
+            ->get();
+    }
+
     public static function getPluralModelLabel(): string
     {
         return 'formularios';
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->visibleTo(Auth::user());
     }
 
     public static function getPermissionPrefixes(): array
@@ -73,6 +127,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
         return [
             'view',
             'view_any',
+            'view_own',
             'create',
             'update',
             'delete',
@@ -109,6 +164,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
         }
 
         return $times;
+    }
+
+    private static function isProveedorIncome(mixed $incomeType): bool
+    {
+        return collect($incomeType)->contains('Proveedor');
     }
 
     public static function tiposFormulario()
@@ -205,7 +265,11 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->gridDirection('row')
                         ->columnSpan(2)
                         ->afterStateUpdated(function (Set $set, $state, Get $get) {
-                            $set('peoples', [[]]);
+                            $set('peoples', $state === 'Proveedor' ? [] : [[]]);
+                            $set('owners', []);
+                            $set('recurrent_visitors', []);
+                            $set('proveedor_id', null);
+                            $set('autos', []);
 
                             // ACTUALIZA archivos personales de cada persona
                             $peoples = $get('peoples') ?? [];
@@ -227,6 +291,18 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                     ->title('Este formulario será válido por 24 horas.')
                                     ->info()
                                     ->send();
+                                return;
+                            }
+
+                            if ($state === 'Proveedor') {
+                                $times = self::getWorkerTimeOptions();
+                                $set('dateRanges', [[
+                                    'start_date_range' => null,
+                                    'start_time_range' => $times[0],
+                                    'end_date_range' => null,
+                                    'end_time_range' => $times[array_key_last($times)],
+                                    'date_unilimited' => false,
+                                ]]);
                                 return;
                             }
 
@@ -297,6 +373,15 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->dehydrated()
                         ->live()
                         ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                            if (self::isProveedorIncome($get('../../income_type')) && $state) {
+                                $times = self::getWorkerTimeOptions();
+                                $set('start_time_range', $times[0]);
+                                $set('end_date_range', $state);
+                                $set('end_time_range', $times[array_key_last($times)]);
+                                $set('date_unilimited', false);
+                                return;
+                            }
+
                             // Si es Trabajador, la fecha de fin debe ser la misma que la de inicio
                             if (collect($get('../../income_type'))->contains('Trabajador') && $state) {
                                 // Validar que no sea domingo
@@ -318,7 +403,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.start_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('../../income_type') == 'Visita Temporal (24hs)';
+                            return $get('../../income_type') == 'Visita Temporal (24hs)'
+                                || self::isProveedorIncome($get('../../income_type'));
                         })
                         ->dehydrated()
                         ->seconds(false)
@@ -337,7 +423,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return !$get('date_unilimited') ? true : false;
                         })
                         ->disabled(function(Get $get){
-                            return $get('../../income_type') == 'Visita Temporal (24hs)' || collect($get('../../income_type'))->contains('Trabajador');
+                            return $get('../../income_type') == 'Visita Temporal (24hs)'
+                                || collect($get('../../income_type'))->contains('Trabajador')
+                                || self::isProveedorIncome($get('../../income_type'));
                         })
                         ->dehydrated()
                         ->live(),
@@ -345,7 +433,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.end_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('../../income_type') == 'Visita Temporal (24hs)';
+                            return $get('../../income_type') == 'Visita Temporal (24hs)'
+                                || self::isProveedorIncome($get('../../income_type'));
                         })
                         ->afterStateUpdated(function (Set $set, Get $get, $state) {
                             // Si es Trabajador, la hora de fin debe ser 18:00
@@ -370,7 +459,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     Forms\Components\Toggle::make('date_unilimited')
                         ->label(__('general.date_unilimited'))
                         ->live()
-                        ->visible(function(){
+                        ->visible(function(Get $get){
+                            if (self::isProveedorIncome($get('../../income_type'))) {
+                                return false;
+                            }
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
                                 return false;
                             }
@@ -382,9 +474,13 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->defaultItems(1)
                 ->collapsible()
                 ->addable(function(Get $get) {
+                    if (self::isProveedorIncome($get('income_type'))) {
+                        return true;
+                    }
                      return collect($get('income_type'))->contains('Trabajador') || (auth()->user()->hasRole(['super_admin','admin']) ? true : false);
                     //  && !auth()->user()->hasRole('owner')
                 })
+                ->deletable(true)
                 ->itemLabel(fn (array $state): ?string => isset($state['start_date_range']) && isset($state['end_date_range']) 
                     ? "Desde: {$state['start_date_range']} - Hasta: {$state['end_date_range']}" 
                     : 'Nuevo rango'),
@@ -452,23 +548,49 @@ class FormControlResource extends Resource implements HasShieldPermissions
     public static function personasFormulario()
     {
         return [
+            Forms\Components\Radio::make('proveedor_id')
+                ->label('Proveedor')
+                ->options(fn (): array => Proveedor::query()
+                    ->where('status', true)
+                    ->orderBy('nombre_empresa')
+                    ->pluck('nombre_empresa', 'id')
+                    ->all())
+                ->columns(2)
+                ->required(fn (Get $get): bool => self::isProveedorIncome($get('income_type')))
+                ->visible(fn (Get $get): bool => self::isProveedorIncome($get('income_type')))
+                ->live(),
+
             CheckboxList::make('owners')->label('Trabajadores')
                 ->options(function() {
                     if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                        $trabajadores = Auth::user()->owner->getAllTrabajadores();
+                        $trabajadores = self::ownerWorkersForSelection();
                         
                         // Verificar que no sea null y sea una colección
                         if ($trabajadores && $trabajadores->isNotEmpty()) {
                             return $trabajadores->map(function($trabajador) {
                                 return [
                                     'id' => $trabajador->id,
-                                    'name' => $trabajador->first_name . ' ' . $trabajador->last_name
+                                    'name' => $trabajador->nombres() . ' · DNI ' . $trabajador->dni
                                 ];
                             })->pluck('name', 'id')->toArray();
                         }
                     }
                     return [];
                 })
+                ->descriptions(function () {
+                    if (!Auth::user()->hasRole('owner') || !Auth::user()->owner_id) {
+                        return [];
+                    }
+
+                    return self::ownerWorkersForSelection()
+                        ->mapWithKeys(fn (Employee $employee) => [$employee->id => self::workerSelectionStatus($employee)['description']])
+                        ->all();
+                })
+                ->disableOptionWhen(function ($value) {
+                    $employee = self::ownerWorkersForSelection()->firstWhere('id', $value);
+                    return !$employee || !self::workerSelectionStatus($employee)['enabled'];
+                })
+                ->columns(2)
                 ->visible(function(Get $get){
                         // Solo visible si está seleccionado "Trabajador" Y el usuario es owner con trabajadores
                         $isWorkerSelected = collect($get('income_type'))->contains('Trabajador');
@@ -733,6 +855,95 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 }),
             
                 
+            CheckboxList::make('recurrent_visitors')
+                ->label('Visitantes recurrentes')
+                ->options(function () {
+                    if (!Auth::user()->hasRole('owner') || !Auth::user()->owner_id) {
+                        return [];
+                    }
+
+                    return RecurrentVisitor::query()
+                        ->where('owner_id', Auth::user()->owner_id)
+                        ->with('autos.files')
+                        ->orderBy('first_name')
+                        ->get()
+                        ->mapWithKeys(fn (RecurrentVisitor $visitor) => [$visitor->id => $visitor->nombres() . ' · DNI ' . $visitor->dni])
+                        ->all();
+                })
+                ->descriptions(fn () => RecurrentVisitor::query()
+                    ->where('owner_id', Auth::user()->owner_id)
+                    ->with('autos.files')
+                    ->get()
+                    ->mapWithKeys(fn (RecurrentVisitor $visitor) => [$visitor->id => self::recurrentVisitorSelectionStatus($visitor)['description']])
+                    ->all())
+                ->disableOptionWhen(function ($value) {
+                    $visitor = RecurrentVisitor::with('autos.files')->where('owner_id', Auth::user()->owner_id)->find($value);
+                    return !$visitor || !self::recurrentVisitorSelectionStatus($visitor)['enabled'];
+                })
+                ->columns(2)
+                ->visible(fn (Get $get) => Auth::user()->hasRole('owner')
+                    && collect($get('income_type'))->contains('Visita Recurrente')
+                    && RecurrentVisitor::where('owner_id', Auth::user()->owner_id)->exists())
+                ->live()
+                ->afterStateUpdated(function (Set $set, Get $get, $state) {
+                    // El formulario inicia el repetidor con un elemento vacío; no debe
+                    // mantenerse cuando las personas vienen del registro recurrente.
+                    $people = collect($get('peoples') ?? [])->filter(function ($person) {
+                        return filled($person['dni'] ?? null)
+                            || filled($person['first_name'] ?? null)
+                            || filled($person['last_name'] ?? null);
+                    });
+                    $autos = $get('autos') ?? [];
+                    $visitors = RecurrentVisitor::where('owner_id', Auth::user()->owner_id)
+                        ->where('status', 'aprobado')->whereIn('id', $state ?: [])->get();
+
+                    foreach ($visitors as $visitor) {
+                        if ($visitor->vencidosAutosFile()) {
+                            Notification::make()
+                                ->title("{$visitor->nombres()} tiene documentos de vehículo vencidos.")
+                                ->danger()->send();
+                            $set('recurrent_visitors', array_values(array_diff($state ?: [], [$visitor->id])));
+                            return;
+                        }
+
+                        if (!$people->contains('dni', $visitor->dni)) {
+                            $people->push([
+                                'dni' => $visitor->dni,
+                                'first_name' => $visitor->first_name,
+                                'last_name' => $visitor->last_name,
+                                'phone' => $visitor->phone,
+                                'is_responsable' => false,
+                                'is_acompanante' => false,
+                                'is_menor' => false,
+                            ]);
+                        }
+
+                        foreach ($visitor->autos as $auto) {
+                            if (!collect($autos)->contains('patente', $auto->patente)) {
+                                $autos[] = [
+                                    'marca' => $auto->marca,
+                                    'modelo' => $auto->modelo,
+                                    'patente' => $auto->patente,
+                                    'color' => $auto->color,
+                                    'isfiles' => false,
+                                    'model' => 'FormControl',
+                                    'user_id' => Auth::id(),
+                                ];
+                            }
+                        }
+                    }
+
+                    $selectedDnis = $visitors->pluck('dni');
+                    $people = $people->filter(function ($person) use ($selectedDnis) {
+                        $isVisitor = RecurrentVisitor::where('owner_id', Auth::user()->owner_id)
+                            ->where('dni', $person['dni'] ?? null)->exists();
+                        return !$isVisitor || $selectedDnis->contains($person['dni'] ?? null);
+                    });
+
+                    $set('peoples', $people->values()->all());
+                    $set('autos', $autos);
+                }),
+
             Forms\Components\Hidden::make('refresh_peoples'),
             Forms\Components\Repeater::make('peoples')
                 ->label('Cargue los datos de las personas que ingresarán al barrio')
@@ -740,26 +951,26 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->schema([
                     Forms\Components\TextInput::make('dni')
                         ->label(__("general.DNI"))
-                        ->required()
+                        ->required(fn (Get $get): bool => !self::isProveedorIncome($get('../../income_type')))
                         ->disabled(function(Get $get){
-                            return collect($get('../../income_type'))->contains('Trabajador') && auth()->user()->hasRole('owner');
+                            return collect($get('../../income_type'))->intersect(['Trabajador', 'Visita Recurrente'])->isNotEmpty() && auth()->user()->hasRole('owner');
                         })
                         ->dehydrated(true)
                         ->numeric(),
                     Forms\Components\TextInput::make('first_name')
                         ->label(__("general.FirstName"))
-                        ->required()
+                        ->required(fn (Get $get): bool => !self::isProveedorIncome($get('../../income_type')))
                         ->disabled(function(Get $get){
-                            return collect($get('../../income_type'))->contains('Trabajador') && auth()->user()->hasRole('owner');
+                            return collect($get('../../income_type'))->intersect(['Trabajador', 'Visita Recurrente'])->isNotEmpty() && auth()->user()->hasRole('owner');
                         })
                         ->dehydrated(true)
                         ->maxLength(255)
                         ,
                     Forms\Components\TextInput::make('last_name')
                         ->label(__("general.LastName"))
-                        ->required()
+                        ->required(fn (Get $get): bool => !self::isProveedorIncome($get('../../income_type')))
                         ->disabled(function(Get $get){
-                            return collect($get('../../income_type'))->contains('Trabajador') && auth()->user()->hasRole('owner');
+                            return collect($get('../../income_type'))->intersect(['Trabajador', 'Visita Recurrente'])->isNotEmpty() && auth()->user()->hasRole('owner');
                         })
                         ->dehydrated(true)
                         ->maxLength(255)
@@ -774,8 +985,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ...self::formArchivosPersonales(),
                 ])
                 ->addable(function(Get $get){
-                    return !collect($get('income_type'))->contains('Trabajador') || !auth()->user()->hasRole('owner');
+                    return collect($get('income_type'))->intersect(['Trabajador', 'Visita Recurrente'])->isEmpty() || !auth()->user()->hasRole('owner');
                 })
+                ->visible(fn (Get $get): bool => !self::isProveedorIncome($get('income_type')))
+                ->dehydrated(fn (Get $get): bool => !self::isProveedorIncome($get('income_type')))
                 ->itemLabel(fn (array $state): ?string => $state['first_name'] ?? null)
                 ->columns(4)
                 ->addActionLabel('Agregar persona')
@@ -808,6 +1021,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
         return [
             Forms\Components\Repeater::make('autos')
                 ->relationship()
+                ->visible(fn (Get $get): bool => !self::isProveedorIncome($get('income_type')))
+                ->dehydrated(fn (Get $get): bool => !self::isProveedorIncome($get('income_type')))
                 ->schema([
                     Forms\Components\TextInput::make('marca')
                         ->label(__("general.Marca"))
@@ -1052,9 +1267,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
         return $table
             ->modifyQueryUsing(function (Builder $query) {
-                if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                    $query->where('owner_id', Auth::user()->owner_id);
-                }
                 return $query->orderBy('created_at', 'desc');
             })
             ->columns([
@@ -1067,7 +1279,8 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->label(__("general.Status"))
                     ->formatStateUsing(function($state, FormControl $record){
                         return match($record->statusComputed()) {
-                                            'Pending' => 'Pendiente',
+                                            'OwnerPending' => 'Pendiente de tu aprobación',
+                                            'Pending' => $record->owner_approved_at ? 'Pendiente de administración' : 'Pendiente',
                                             'Denied' => 'Denegado',
                                             'Vencido' => 'Vencido',
                                             'Expirado' => 'Expirado',
@@ -1078,6 +1291,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     ->color(function($state, FormControl $record){
                         $state = $record->statusComputed();
                         $claves = [
+                            'OwnerPending' => 'info',
                             'Pending' => 'warning',
                             'Authorized' => 'success',
                             'Denied' => 'danger',
@@ -1089,6 +1303,10 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 Tables\Columns\TextColumn::make('lote_ids')->badge()->label(__('general.Lote'))->searchable(query: function (Builder $query, string $search): Builder {
                     return $query->orWhereRaw("JSON_SEARCH(lote_ids, 'one', ?) IS NOT NULL", ['%' . $search . '%']);
                 }),
+                Tables\Columns\TextColumn::make('proveedor.nombre_empresa')
+                    ->label('Proveedor')
+                    ->placeholder('-')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('access_type')
                     ->badge()
                     ->label(__("general.TypeActivitie"))
@@ -1247,6 +1465,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 SelectFilter::make('status')
                     ->label(__('general.Status'))
                     ->options([
+                        'OwnerPending' => 'Pendiente del propietario',
                         'Authorized' => 'Autorizado',
                         'Denied' => 'Denegado',
                         'Pending' => 'Pendiente',
@@ -1267,6 +1486,17 @@ class FormControlResource extends Resource implements HasShieldPermissions
             ])
             ->filtersFormColumns(3)
             ->actions([
+                Action::make('ownerApprove')
+                    ->label('Aprobar solicitud')
+                    ->icon('heroicon-m-hand-thumb-up')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalDescription('Al aprobarlo, el formulario será enviado a administración para su revisión final.')
+                    ->visible(fn (FormControl $record) => Auth::user()->hasRole('owner') && $record->status === 'OwnerPending' && (int) $record->owner_id === (int) Auth::user()->owner_id)
+                    ->action(function (FormControl $record): void {
+                        $record->approveByOwner(Auth::user());
+                        Notification::make()->title('Formulario enviado a administración')->success()->send();
+                    }),
                 Action::make('show_qr')
                     ->label('Ver QR')
                     ->icon('heroicon-o-qr-code')
@@ -1289,17 +1519,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->success()
                             ->send();
 
-                            if($record->owner && $record->owner->user){
-                                Notification::make()
-                                ->title('Formulario aprobado')
-                                ->body('Ahora las personas confioguradas en el formulario podrán acceder al barrio según los horarios establecidos')
-                                    ->actions([
-                                        NotificationAction::make('Ver Formulario')
-                                            ->button()
-                                            ->url(route('filament.admin.resources.form-controls.view', $record), shouldOpenInNewTab: true)
-                                    ])
-                                ->sendToDatabase($record->owner->user);
-                            }
                     })
                     ->button()
                     ->requiresConfirmation()
@@ -1319,11 +1538,6 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             ->success()
                             ->send();
 
-                            if($record->owner && $record->owner->user){
-                                Notification::make()
-                                ->title('Formulario rechazado')
-                                ->sendToDatabase($record->owner->user);
-                            }
                     })
                     ->button()
                     ->requiresConfirmation()

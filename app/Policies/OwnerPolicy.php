@@ -105,10 +105,4 @@ class OwnerPolicy
     {
         return $user->can('{{ Reorder }}');
     }
-
-    public function viewProfileOwner(User $user)
-    {
-        return $user->can('viewProfileOwner');
-    }
-
 }

@@ -5,21 +5,73 @@ namespace App\Models;
 use App\Traits\HasQuickAccessCode;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\ApplicationNotificationService;
 class FormControl extends Model
 {
     use HasFactory, SoftDeletes, HasQuickAccessCode;
 
 
-    protected $fillable = ['owner_id','access_type','income_type','tipo_trabajo','is_moroso', 'lote_ids','start_date_range', 'start_time_range', 'end_date_range', 'end_time_range', 'status', 'category', 'authorized_user_id','denied_user_id','user_id','date_unilimited','observations','construction_companie_id', 'quick_access_code'];
+    protected $fillable = ['owner_id','proveedor_id','access_type','income_type','tipo_trabajo','is_moroso', 'lote_ids','start_date_range', 'start_time_range', 'end_date_range', 'end_time_range', 'status', 'category', 'authorized_user_id','denied_user_id','user_id','date_unilimited','observations','construction_companie_id', 'quick_access_code', 'owner_approved_at', 'owner_approved_by_user_id'];
 
     protected $casts = [
         'lote_ids' => 'array',
         'access_type' => 'array',
-        'income_type' => 'array'
+        'income_type' => 'array',
+        'owner_approved_at' => 'datetime',
     ];
+
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if (! $user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->hasRole('owner')) {
+            return $user->owner_id
+                ? $query->where('owner_id', $user->owner_id)
+                : $query->whereRaw('1 = 0');
+        }
+
+        // Shield assigns every generated permission to super_admin. This
+        // permission is restrictive, so it must not reduce that role's scope.
+        if ($user->hasRole(config('filament-shield.super_admin.name', 'super_admin'))) {
+            return $query->where('status', '!=', 'OwnerPending');
+        }
+
+        if ($user->can('view_own_form::control')) {
+            return $query->where('user_id', $user->id);
+        }
+
+        return $query->where('status', '!=', 'OwnerPending');
+    }
+
+    public function isVisibleTo(User $user): bool
+    {
+        if ($user->hasRole('owner')) {
+            return $user->owner_id !== null
+                && (int) $this->owner_id === (int) $user->owner_id;
+        }
+
+        if ($user->hasRole(config('filament-shield.super_admin.name', 'super_admin'))) {
+            return $this->status !== 'OwnerPending';
+        }
+
+        if ($user->can('view_own_form::control')) {
+            return (int) $this->user_id === (int) $user->id;
+        }
+
+        return $this->status !== 'OwnerPending';
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     public function aprobar()
     {
@@ -27,6 +79,11 @@ class FormControl extends Model
             $this->status = 'Authorized';
             $this->authorized_user_id = Auth::user()->id;
             $this->save();
+            $this->notifyOwnerStatus(
+                'Formulario aprobado',
+                'Las personas configuradas ya pueden acceder según los horarios establecidos.',
+                'Authorized',
+            );
         }
 
     }
@@ -37,7 +94,33 @@ class FormControl extends Model
             $this->status = 'Denied';
             $this->denied_user_id = Auth::user()->id;
             $this->save();
+            $this->notifyOwnerStatus(
+                'Formulario rechazado',
+                'Administración rechazó el formulario. Revisá los datos y, si corresponde, creá uno nuevo.',
+                'Denied',
+            );
         }
+    }
+
+    public function approveByOwner(User $user): void
+    {
+        abort_unless($user->hasRole('owner') && (int) $user->owner_id === (int) $this->owner_id, 403);
+        if ($this->status !== 'OwnerPending') return;
+        $this->update(['status'=>'Pending','owner_approved_at'=>now(),'owner_approved_by_user_id'=>$user->id]);
+
+        app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
+            ['aprobar_form::control', 'rechazar_form::control'],
+            'Formulario pendiente de aprobación administrativa',
+            'El propietario aprobó el formulario #'.$this->id.'.',
+            ['type' => 'form_control', 'form_control_id' => $this->id, 'status' => 'Pending'],
+            \App\Filament\Resources\FormControlResource::getUrl('view', ['record' => $this]),
+            'heroicon-o-document-check',
+        );
+    }
+
+    public function ownerApprovedBy()
+    {
+        return $this->belongsTo(User::class, 'owner_approved_by_user_id');
     }
 
     public function statusComputed(): string
@@ -62,7 +145,10 @@ class FormControl extends Model
 
         // Verificar si la fecha de inicio ya pasó
         if ($fechaStart && $fechaStart->lessThan($today)) {
-            if ($status === 'Pending') {
+            // Los formularios públicos ya pasaron por la aprobación del propietario.
+            // Mientras su fecha final siga vigente deben continuar disponibles para
+            // la revisión administrativa, aunque la hora inicial haya comenzado.
+            if ($status === 'Pending' && !$this->owner_approved_at) {
                 return 'Vencido';
             }
         }
@@ -187,9 +273,38 @@ class FormControl extends Model
         return $this->belongsTo(Owner::class);
     }
 
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedor::class);
+    }
+
+    public function activities()
+    {
+        return $this->belongsToMany(Activities::class, 'activity_form_control', 'form_control_id', 'activity_id')
+            ->withTimestamps();
+    }
+
     public function dateRanges()
     {
         return $this->hasMany(FormControlDateRange::class);
+    }
+
+    private function notifyOwnerStatus(string $title, string $body, string $status): void
+    {
+        $ownerUser = $this->owner?->user;
+
+        if (! $ownerUser) {
+            return;
+        }
+
+        app(ApplicationNotificationService::class)->send(
+            $ownerUser,
+            $title,
+            $body,
+            ['type' => 'form_control', 'form_control_id' => $this->id, 'status' => $status],
+            \App\Filament\Resources\FormControlResource::getUrl('view', ['record' => $this]),
+            $status === 'Authorized' ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle',
+        );
     }
     
 

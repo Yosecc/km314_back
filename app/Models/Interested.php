@@ -10,7 +10,7 @@ class Interested extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['first_name','observations','dni','last_name', 'email', 'phone', 'address', 'city', 'state', 'zip_code', 'country','interested_origins_id','lote_id','propertie_id'];
+    protected $fillable = ['first_name','observations','dni','last_name', 'email', 'phone', 'address', 'city', 'state', 'zip_code', 'country','interested_origins_id','interested_type_id','interested_level_id','lote_id','propertie_id'];
     
     public function booking()
     {
@@ -25,6 +25,16 @@ class Interested extends Model
     public function interestedOrigins()
     {
         return $this->belongsTo(InterestedOrigin::class);
+    }
+
+    public function interestedType()
+    {
+        return $this->belongsTo(InterestedType::class);
+    }
+
+    public function interestedLevel()
+    {
+        return $this->belongsTo(InterestedLevel::class);
     }
 
     public function propertie()

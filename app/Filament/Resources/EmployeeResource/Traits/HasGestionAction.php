@@ -16,10 +16,20 @@ use Filament\Actions\Action as PageAction;
 use Filament\Forms\Components\Placeholder;
 use Filament\Tables\Actions\Action as TableAction;
 use Filament\Notifications\Actions\Action as NotificationAction;
+use App\Services\ApplicationNotificationService;
 
 
 trait HasGestionAction
 {
+    private static function vehicleDocumentDefaults(): array
+    {
+        return [
+            ['name' => 'Seguro del Vehículo'],
+            ['name' => 'VTV'],
+            ['name' => 'Cédula del Vehículo'],
+        ];
+    }
+
     /**
      * Action para gestionar autos en TABLA
      */
@@ -104,6 +114,11 @@ trait HasGestionAction
                                         return $file ? $file->getClientOriginalName() : ($record ? $record->file : null);
                                     })
                             ])
+                            ->afterStateHydrated(function (Repeater $component, $state) {
+                                if (empty($state)) {
+                                    $component->state(self::vehicleDocumentDefaults());
+                                }
+                            })
                             ->defaultItems(3)
                             ->minItems(3)
                             ->maxItems(3)
@@ -111,17 +126,7 @@ trait HasGestionAction
                             ->deletable(false)
                             ->grid(2)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->default([
-                                [
-                                    'name' => 'Seguro del Vehículo',
-                                ],
-                                [
-                                    'name' => 'VTV',
-                                ],
-                                [
-                                    'name' => 'Cédula del Vehículo',
-                                ],
-                            ])
+                            ->default(self::vehicleDocumentDefaults())
                             ->columns(1)
                             ->columnSpanFull(),
                     ])
@@ -316,6 +321,11 @@ trait HasGestionAction
                                         return $file ? $file->getClientOriginalName() : ($record ? $record->file : null);
                                     })
                             ])
+                            ->afterStateHydrated(function (Repeater $component, $state) {
+                                if (empty($state)) {
+                                    $component->state(self::vehicleDocumentDefaults());
+                                }
+                            })
                             ->defaultItems(3)
                             ->minItems(3)
                             ->maxItems(3)
@@ -323,17 +333,7 @@ trait HasGestionAction
                             ->deletable(false)
                             ->grid(2)
                             ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->default([
-                                [
-                                    'name' => 'Seguro del Vehículo',
-                                ],
-                                [
-                                    'name' => 'VTV',
-                                ],
-                                [
-                                    'name' => 'Cédula del Vehículo',
-                                ],
-                            ])
+                            ->default(self::vehicleDocumentDefaults())
                             ->columns(1)
                             ->columnSpanFull(),
                     ])
@@ -714,18 +714,31 @@ trait HasGestionAction
                     ->success()
                     ->send();
 
-                $recipient = User::whereHas("roles", function($q){ 
-                    $q->whereIn("name", ["super_admin","admin"]); 
-                })->get();
+                if (auth()->user()->hasRole('owner')) {
+                    app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
+                        ['update_employee'],
+                        'Solicitud de verificación de trabajador',
+                        auth()->user()->name.' solicitó verificar nuevamente a '.$record->nombres().'.',
+                        ['type' => 'employee', 'employee_id' => $record->id, 'status' => 'pendiente', 'verification_requested' => true],
+                        \App\Filament\Resources\EmployeeResource::getUrl('view', ['record' => $record]),
+                        'heroicon-o-shield-exclamation',
+                    );
+                } else {
+                    $owners = ($record->owner_id
+                        ? User::query()->where('owner_id', $record->owner_id)->get()
+                        : collect())
+                        ->merge($record->owners()->with('user')->get()->pluck('user')->filter())
+                        ->unique('id')->values();
 
-                Notification::make()
-                    ->title('Un propietario ha solicitado la reverificación de un trabajador aprobado.')
-                    ->actions([
-                            NotificationAction::make('Ver trabajador')
-                                ->button()
-                                ->url(route('filament.admin.resources.employees.view', $record), shouldOpenInNewTab: true)
-                        ])
-                    ->sendToDatabase($recipient);
+                    app(ApplicationNotificationService::class)->send(
+                        $owners,
+                        'Administración solicitó una verificación',
+                        'Revisá y actualizá la documentación de '.$record->nombres().'.',
+                        ['type' => 'employee', 'employee_id' => $record->id, 'status' => 'pendiente', 'verification_requested' => true],
+                        \App\Filament\Resources\EmployeeResource::getUrl('view', ['record' => $record]),
+                        'heroicon-o-shield-exclamation',
+                    );
+                }
             });
     }
 
@@ -839,6 +852,7 @@ trait HasGestionAction
 
                             $record->status = 'pendiente';
                             $record->save();
+                            self::notifyDocumentRenewalReview($record);
 
                     } elseif ($actualizados > 0 && $noActualizados > 0) {
                         Notification::make()
@@ -848,6 +862,7 @@ trait HasGestionAction
                             ->send();
                             $record->status = 'pendiente';
                             $record->save();
+                            self::notifyDocumentRenewalReview($record);
                     } else {
                         Notification::make()
                             ->title('No se actualizó ningún documento')
@@ -973,6 +988,7 @@ trait HasGestionAction
 
                             $record->status = 'pendiente';
                             $record->save();
+                            self::notifyDocumentRenewalReview($record);
 
                     } elseif ($actualizados > 0 && $noActualizados > 0) {
                         Notification::make()
@@ -982,6 +998,7 @@ trait HasGestionAction
                             ->send();
                             $record->status = 'pendiente';
                             $record->save();
+                            self::notifyDocumentRenewalReview($record);
                     } else {
                         Notification::make()
                             ->title('No se actualizó ningún documento')
@@ -995,5 +1012,20 @@ trait HasGestionAction
                     // $vencimientos = self::isVencimientos($record);
                     // return $vencimientos['isVencido'];
                 });
+    }
+    private static function notifyDocumentRenewalReview(Employee $record): void
+    {
+        if (! auth()->user()?->hasRole('owner')) {
+            return;
+        }
+
+        app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
+            ['update_employee'],
+            'Documentación de trabajador renovada',
+            auth()->user()->name.' renovó documentos de '.$record->nombres().'. Requiere revisión.',
+            ['type' => 'employee', 'employee_id' => $record->id, 'status' => 'pendiente', 'documents_renewed' => true],
+            \App\Filament\Resources\EmployeeResource::getUrl('view', ['record' => $record]),
+            'heroicon-o-document-arrow-up',
+        );
     }
 }

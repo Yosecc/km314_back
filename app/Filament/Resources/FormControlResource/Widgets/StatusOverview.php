@@ -3,37 +3,36 @@
 namespace App\Filament\Resources\FormControlResource\Widgets;
 
 use App\Models\FormControl;
-use Filament\Widgets\StatsOverviewWidget\Stat;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class StatusOverview extends BaseWidget
 {
-     public ?FormControl $record = null;
+    public ?FormControl $record = null;
 
     protected ?string $heading = 'Estado del Formulario de Control';
 
-     
     protected function getStats(): array
     {
-        if (!$this->record) {
+        if (! $this->record) {
             return [];
         }
 
-        $estadoTexto = match($this->record->status) {
+        $estadoTexto = match ($this->record->status) {
             'Authorized' => 'Autorizado',
-            'Pending' => 'Pendiente',
+            'Pending' => $this->record->owner_approved_at ? 'Pendiente de administración' : 'Pendiente',
             'Denied' => 'Denegado',
             default => $this->record->status
         };
 
-        $color = match($this->record->status) {
+        $color = match ($this->record->status) {
             'Authorized' => 'success',
             'Pending' => 'warning',
             'Denied' => 'danger',
             default => 'gray'
         };
 
-        $icon = match($this->record->status) {
+        $icon = match ($this->record->status) {
             'Authorized' => 'heroicon-o-check-circle',
             'Pending' => 'heroicon-o-clock',
             'Denied' => 'heroicon-o-x-circle',

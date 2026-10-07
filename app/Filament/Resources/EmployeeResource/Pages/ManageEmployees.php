@@ -13,14 +13,20 @@ use Illuminate\Support\Facades\Auth;
 class ManageEmployees extends ManageRecords
 {
     protected static string $resource = EmployeeResource::class;
+    protected static string $view = 'filament.resources.employee-resource.pages.manage-employees';
 
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('employeeTutorial')
+                ->label('Cómo funciona')
+                ->icon('heroicon-o-question-mark-circle')
+                ->color('gray')
+                ->action(fn () => $this->dispatch('open-employee-tutorial')),
             Actions\CreateAction::make()
                 ->mutateFormDataUsing(function (array $data): array {
                     // Siempre establecer fecha_vencimiento_seguro
-                    $data['fecha_vencimiento_seguro'] = Carbon::now()->addMonths(3)->toDateString();
+                    $data['fecha_vencimiento_seguro'] = Carbon::now()->addMonths(6)->toDateString();
                     return $data;
                 })
                 ->after(function ($record) {

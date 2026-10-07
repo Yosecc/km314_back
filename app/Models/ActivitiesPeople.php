@@ -53,6 +53,10 @@ class ActivitiesPeople extends Model
             return $this->ownerSpontaneousVisit;
         }
 
+        if($this->model == 'ProveedorEmpleado'){
+            return $this->proveedorEmpleado;
+        }
+
 
      }
 
@@ -75,6 +79,11 @@ class ActivitiesPeople extends Model
      public function ownerFamily()
      {
         return $this->belongsTo(OwnerFamily::class,'model_id');
+     }
+
+     public function proveedorEmpleado()
+     {
+        return $this->belongsTo(ProveedorEmpleado::class,'model_id');
      }
 
 }

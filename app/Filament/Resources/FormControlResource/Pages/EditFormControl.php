@@ -5,7 +5,6 @@ namespace App\Filament\Resources\FormControlResource\Pages;
 use Filament\Actions;
 use App\Models\FormControl;
 use Filament\Notifications\Notification;
-use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Resources\Pages\EditRecord;
 use App\Filament\Resources\FormControlResource;
 use App\Traits\HasQrCodeAction;
@@ -36,17 +35,6 @@ class EditFormControl extends EditRecord
                                 ->send();
 
 
-                                if($record->owner && $record->owner->user){
-                                    Notification::make()
-                                    ->title('Formulario aprobado')
-                                    ->body('Ahora las personas confioguradas en el formulario podrán acceder al barrio según los horarios establecidos')
-                                    ->actions([
-                                        NotificationAction::make('Ver Formulario')
-                                            ->button()
-                                            ->url(route('filament.admin.resources.form-controls.view', $record), shouldOpenInNewTab: true)
-                                    ])
-                                    ->sendToDatabase($record->owner->user);
-                                }
                         })
                         ->hidden(function(FormControl $record){
                             return $record->isActive() || $record->isExpirado() || $record->isVencido() ? true : false;
@@ -61,11 +49,6 @@ class EditFormControl extends EditRecord
                                 ->success()
                                 ->send();
 
-                                if($record->owner && $record->owner->user){
-                                    Notification::make()
-                                    ->title('Formulario rechazado')
-                                    ->sendToDatabase($record->owner->user);
-                                }
                         })
                         ->requiresConfirmation()
                         ->icon('heroicon-m-hand-thumb-down')

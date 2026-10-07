@@ -9,7 +9,11 @@ use App\Models\ServiceRequestFile;
 use App\Models\ServiceRequestNote;
 use App\Models\ServiceRequestResponsiblePeople;
 use App\Models\ServiceRequestType;
+use App\Models\ServiceRequestStatus;
+use App\Models\Lote;
+use App\Models\Owner;
 use App\Models\User;
+use App\Services\ApplicationNotificationService;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use function Livewire\store;
@@ -20,12 +24,37 @@ use Illuminate\Support\Facades\Validator;
 use Filament\Notifications\Actions\Action;
 class Solicitudes extends Controller
 {
+    /**
+     * Obtiene el propietario del usuario autenticado.
+     *
+     * Algunos usuarios históricos están vinculados desde owners.user_id pero
+     * todavía no tienen users.owner_id. Ambas referencias representan el mismo
+     * vínculo y se aceptan para no dejar sus solicitudes inaccesibles.
+     */
+    private function owner(Request $request): Owner
+    {
+        $user = $request->user();
+        $owner = $user?->owner
+            ?? Owner::query()->where('user_id', $user?->id)->first();
+
+        abort_unless(
+            $owner instanceof Owner,
+            403,
+            'Esta sección está disponible para propietarios.'
+        );
+
+        return $owner;
+    }
 
     private function _getSolicitudes($solicitudes)
     {
         $solicitudes = $solicitudes->map(function($solicitud){
-            $solicitud['starts_at'] = Carbon::parse($solicitud['starts_at'])->format('Y-m-d H:m:s');
-            $solicitud['ends_at'] = Carbon::parse($solicitud['ends_at'])->format('Y-m-d H:m:s');
+            $solicitud['starts_at'] = $solicitud['starts_at']
+                ? Carbon::parse($solicitud['starts_at'])->format('Y-m-d H:i:s')
+                : null;
+            $solicitud['ends_at'] = $solicitud['ends_at']
+                ? Carbon::parse($solicitud['ends_at'])->format('Y-m-d H:i:s')
+                : null;
 
             if($solicitud->responsible){
                 $solicitud->responsible->makeHidden(['created_at','updated_at']);
@@ -33,7 +62,7 @@ class Solicitudes extends Controller
             if($solicitud->serviceRequestFile){
                 $solicitud->serviceRequestFile->map(function($archivo){
                     // $archivo['file'] = config('app.url').Storage::url($archivo['file']);
-                    $archivo['path'] = config('app.url').Storage::url($archivo['file']);
+                    $archivo['path'] = request()->getSchemeAndHttpHost().Storage::url($archivo['file']);
                     $archivo['description'] = $archivo['description'] ?? '';
                     $archivo['name'] = $archivo['description'];
 					$archivo['fileName'] = $archivo['attachment_file_names'];
@@ -50,7 +79,9 @@ class Solicitudes extends Controller
 
     public function index(Request $request)
     {
-        $solicitudes = ServiceRequest::where('owner_id',$request->user()->owner->id)
+        $owner = $this->owner($request);
+
+        $solicitudes = ServiceRequest::where('owner_id', $owner->id)
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestFile','serviceRequestNote'])
                             ->orderBy('created_at','desc')
                             ->get();
@@ -62,7 +93,9 @@ class Solicitudes extends Controller
 
     public function getProximasSolicitudes(Request $request)
     {
-        $solicitudes = ServiceRequest::where('owner_id', $request->user()->owner->id)
+        $owner = $this->owner($request);
+
+        $solicitudes = ServiceRequest::where('owner_id', $owner->id)
         ->with(['serviceRequestStatus', 'serviceRequestType', 'service', 'lote', 'responsible', 'serviceRequestFile', 'serviceRequestNote'])
         ->orderBy('created_at', 'desc')
         ->orderBy('ends_at', 'desc')
@@ -74,9 +107,9 @@ class Solicitudes extends Controller
         $tiposSolicitudes = ServiceRequestType::all();
 
         $solicitudes = $solicitudes->map(function ($item) use ($now) {
-            $item->starts_at_date = Carbon::createFromFormat('Y/m/d H:i:s', $item->starts_at);
+            $item->starts_at_date = Carbon::parse($item->starts_at);
 
-            $item->ends_at_date = $item->ends_at ? Carbon::createFromFormat('Y/m/d H:i:s', $item->ends_at) : $item->starts_at_date;
+            $item->ends_at_date = $item->ends_at ? Carbon::parse($item->ends_at) : $item->starts_at_date;
 
             $item->is_active = $now->between($item->starts_at_date, $item->ends_at_date);
             $item->is_future = $item->starts_at_date->isFuture();
@@ -119,6 +152,7 @@ class Solicitudes extends Controller
 
     public function store(Request $request)
     {
+        $owner = $this->owner($request);
 
         $data = $request->data;
         $data = json_decode($request->data, true);
@@ -131,7 +165,7 @@ class Solicitudes extends Controller
             "service_id" => 'required',
             "model" => 'nullable',
             "model_id" => 'nullable',
-            //"options" => 'nullable',
+            "options" => 'nullable|array',
             "name" => 'required',
             "starts_at" => 'required',
             "ends_at" => 'nullable',
@@ -152,24 +186,41 @@ class Solicitudes extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        if (! Lote::query()
+            ->whereKey($data['lote_id'])
+            ->where('owner_id', $owner->id)
+            ->exists()) {
+            return response()->json([
+                'lote_id' => ['El lote seleccionado no pertenece a tu perfil.'],
+            ], 422);
+        }
+
         $datos = function($request){
 
             $service = Service::find($request['service_id']);
+            $startsAt = Carbon::parse($request['starts_at']);
+            $endsAt = !empty($request['ends_at'])
+                ? Carbon::parse($request['ends_at'])
+                : null;
+
+            if (! $endsAt && $service?->serviceRequestType?->isCalendar) {
+                $endsAt = $startsAt->copy()->addHour();
+            }
 
             return [
                 //'alias' => $request['alias'],
                 'name' => $request['name'],
-                'starts_at' => Carbon::parse($request['starts_at'])->format('Y-m-d H:m:s'),
-                'ends_at' => $request['ends_at'] ? Carbon::parse($request['ends_at'])->format('Y-m-d H:m:s') : null,
+                'starts_at' => $startsAt->format('Y-m-d H:i:s'),
+                'ends_at' => $endsAt?->format('Y-m-d H:i:s'),
                 'service_request_responsible_people_id' => isset($request['service_request_responsible_people_id']) ? $request['service_request_responsible_people_id'] : null,
                 'service_request_status_id' => isset($request['service_request_status_id']) ? $request['service_request_status_id'] : 1,
                 'service_request_type_id' => $service && $service->service_request_type_id ? $service->service_request_type_id : (isset($request['service_request_type_id']) ? $request['service_request_type_id'] : 1),
                 'service_id' => $request['service_id'],
                 'lote_id' => $request['lote_id'],
                 'owner_id' => $request['owner_id'],
-                'model' => $request['model'],
+                'model' => $service?->model ?? $request['model'],
                 'model_id' => $request['model_id'],
-               // 'options' => json_encode($request['options']),
+                'options' => $request['options'] ?? [],
                 'observations' => $request['observations']
             ];
         };
@@ -182,18 +233,19 @@ class Solicitudes extends Controller
             $id = $data['id'];
             $d = $datos($data);
 
+            $solicitud = ServiceRequest::query()->visibleTo($request->user())->findOrFail($id);
+            $d['owner_id'] = $solicitud->owner_id;
+            $d['service_request_status_id'] = $solicitud->service_request_status_id;
             $d['user_id'] = $request->user()->id;
-            $d['updated_at'] = Carbon::now();
-
-            $solicitud = ServiceRequest::where('id', $id)->update($d);
+            $solicitud->update($d);
 
         }else{
             $d = $datos($data);
-            $d['owner_id'] = $request->user()->owner->id;
+            $d['owner_id'] = $owner->id;
             $d['user_id'] = $request->user()->id;
-            $d['created_at'] = Carbon::now();
-            $d['updated_at'] = Carbon::now();
-            $id = ServiceRequest::insertGetId($d);
+            $d['service_request_status_id'] = ServiceRequestStatus::defaultPending()->id;
+            $solicitud = ServiceRequest::create($d);
+            $id = $solicitud->id;
         }
 
         $solicitud = ServiceRequest::find($id);
@@ -253,28 +305,7 @@ class Solicitudes extends Controller
         ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
         ->get();
 
-       try {
-
-            $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
-
-            if(isset($request['id']) && $request['id']!= null){
-
-                Notification::make()
-                    ->title('Solicitud Actualizada #SOL_'.$solicitud->first()->id)
-                    ->sendToDatabase($recipient);
-            }else{
-
-                Notification::make()
-                    ->title('Nueva solicitud #SOL_'.$solicitud->first()->id)
-                    ->sendToDatabase($recipient);
-            }
-
-
-       } catch (\Throwable $th) {
-        //throw $th;
-       }
-
-        $solicitud = $this->_getSolicitudes($solicitud);
+       $solicitud = $this->_getSolicitudes($solicitud);
 
 
         return response()->json($solicitud->first());
@@ -296,14 +327,17 @@ class Solicitudes extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $solicitud = ServiceRequest::where('id',$request->id)->first();
+        $solicitud = ServiceRequest::query()->visibleTo($request->user())->find($request->id);
 
         if (!$solicitud) {
             return response()->json(['No existe la socitud'], 422);
         }
 
+        abort_unless(! $request->user()->hasRole('owner') || $solicitud->isEditableByOwner(), 403);
+
         if(isset($request->file_id) && $request->file_id){
-            $file = ServiceRequestFile::where('id',$request->file_id)->update([
+            $file = ServiceRequestFile::query()->whereKey($request->file_id)
+                ->where('service_request_id', $solicitud->id)->update([
                 'description' => $request->description,
                 'updated_at' => Carbon::now()
             ]);
@@ -330,7 +364,7 @@ class Solicitudes extends Controller
             }
         }
 
-        $solicitud = ServiceRequest::where('id',$request->id)
+        $solicitud = ServiceRequest::query()->visibleTo($request->user())->where('id',$request->id)
                             ->with(['serviceRequestStatus','serviceRequestType','service','lote','responsible','serviceRequestNote','serviceRequestFile'])
                             ->get();
 
@@ -350,11 +384,15 @@ class Solicitudes extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $file = ServiceRequestFile::where('id', $request->id)->first();
+        $file = ServiceRequestFile::query()->whereKey($request->id)
+            ->whereHas('serviceRequest', fn ($query) => $query->visibleTo($request->user()))
+            ->first();
 
         if(!$file){
             return response()->json(['No existe archivo'], 422);
         }
+
+        abort_unless(! $request->user()->hasRole('owner') || $file->serviceRequest?->isEditableByOwner(), 403);
 
         if(Storage::disk('public')->exists($file->file)){
             Storage::disk('public')->delete($file->file);
@@ -373,6 +411,8 @@ class Solicitudes extends Controller
             'nota' => 'required|max:250'
         ]);
 
+        $serviceRequest = ServiceRequest::query()->visibleTo($request->user())->findOrFail($request->service_request_id);
+
         $nota = new ServiceRequestNote();
         $nota->service_request_id = $request->service_request_id;
         $nota->user_id = $request->user()->id;
@@ -383,20 +423,14 @@ class Solicitudes extends Controller
                     ->with('user')
                     ->get();
 
-        $recipient = User::whereHas("roles", function($q){ $q->where("name", "super_admin"); })->get();
-
-        Notification::make()
-            ->title('Nueva nota en la solicitud: #'.$request->service_request_id)
-            ->body($request->nota)
-            ->warning()
-            ->duration(5000)
-            ->actions([
-                Action::make('view')
-                    ->label('Ver solicitud')
-                    ->button()
-                    // ->url(route('posts.show', $request->service_request_id), shouldOpenInNewTab: true),
-            ])
-            ->sendToDatabase($recipient);
+        app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
+            ['view_any_service::request', 'update_service::request'],
+            'Nueva nota en una solicitud',
+            sprintf('#%d · %s', $serviceRequest->id, $request->nota),
+            ['type' => 'service_request', 'service_request_id' => $serviceRequest->id, 'event' => 'note_created'],
+            \App\Filament\Resources\ServiceRequestResource::getUrl('edit', ['record' => $serviceRequest]),
+            'heroicon-o-wrench-screwdriver',
+        );
 
         return response()->json($notas);
     }
