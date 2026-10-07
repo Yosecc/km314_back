@@ -52,9 +52,6 @@
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row flex-wrap gap-2 w-full justify-center md:justify-start">
-                    <button type="button" @click="copy(@js($record->quick_access_code), 'Código copiado')" class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
-                        Copiar código
-                    </button>
                     <button type="button" @click="copy(@js($quickAccessUrl), 'Enlace copiado')" class="px-3 py-2 rounded-lg bg-primary-600 text-sm font-medium text-white hover:bg-primary-700">
                         Copiar enlace
                     </button>
