@@ -118,6 +118,9 @@ class PackageReceptionResource extends Resource implements HasShieldPermissions
                 Infolists\Components\TextEntry::make('carrier_access_code')->label('Código o palabra clave')->placeholder('Sin código')->copyable()
                     ->visible(fn (PackageReception $record) => Auth::user()->can('viewSensitive', $record)),
                 Infolists\Components\TextEntry::make('recipient_name')->label('Destinatario')->placeholder('Sin datos'),
+                Infolists\Components\TextEntry::make('recipient_dni')->label('DNI del destinatario')->placeholder('Sin datos')->copyable(),
+                Infolists\Components\TextEntry::make('recipient_phone')->label('Teléfono del destinatario')->placeholder('Sin datos')->copyable(),
+                Infolists\Components\TextEntry::make('expected_packages_count')->label('Bultos esperados')->placeholder('Sin datos'),
                 Infolists\Components\TextEntry::make('observations')->label('Observaciones')->placeholder('Sin observaciones')->columnSpanFull(),
             ])->columns(2),
             Infolists\Components\Section::make('Archivos privados')->schema([

@@ -29,8 +29,10 @@ class CreateEmployee extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Siempre establecer fecha_vencimiento_seguro
-        $data['fecha_vencimiento_seguro'] = Carbon::now()->addMonths(6)->toDateString();
+        // Siempre establecer la fecha de renovación de documentación.
+        $data['fecha_vencimiento_seguro'] = Carbon::now()
+            ->addMonths(config('employees.documentation_renewal_months'))
+            ->toDateString();
         
         return $data;
     }

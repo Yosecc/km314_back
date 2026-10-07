@@ -185,7 +185,7 @@ class EmployeeResource extends Resource
             //     ->label('Fecha de vencimiento del seguro personal')
             //     ->displayFormat('d/m/Y')
             //     ->required()
-            //     ->default(Carbon::now()->addMonths(6))
+            //     ->default(Carbon::now()->addMonths(config('employees.documentation_renewal_months')))
             //     ->hidden(true)
             //     ->dehydrated()
             //     ->live()
@@ -708,7 +708,8 @@ class EmployeeResource extends Resource
                     ->color('success')
                     ->action(function (Employee $record): void {
                        
-                        $record->fecha_vencimiento_seguro = Carbon::now()->addMonths(6);
+                        $record->fecha_vencimiento_seguro = Carbon::now()
+                            ->addMonths(config('employees.documentation_renewal_months'));
                         $record->save();
 
                         Notification::make()
