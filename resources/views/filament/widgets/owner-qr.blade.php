@@ -52,10 +52,10 @@
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row flex-wrap gap-2 w-full justify-center md:justify-start">
-                    <button type="button" @click="copy(@js($quickAccessUrl), 'Enlace copiado')" class="px-3 py-2 rounded-lg bg-primary-600 text-sm font-medium text-white hover:bg-primary-700">
+                    <button type="button" @click="copy(@js($quickAccessUrl), 'Enlace copiado')" class="px-3 py-2 rounded-lg text-sm font-medium shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" style="background-color: #2563eb; color: #ffffff;">
                         Copiar enlace
                     </button>
-                    <button type="button" @click="shareWhatsApp(@js($quickAccessUrl), @js($record->quick_access_code))" class="px-3 py-2 rounded-lg bg-green-600 text-sm font-medium text-white hover:bg-green-700">
+                    <button type="button" @click="shareWhatsApp(@js($quickAccessUrl), @js($record->quick_access_code))" class="px-3 py-2 rounded-lg text-sm font-medium shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" style="background-color: #16a34a; color: #ffffff;">
                         Compartir por WhatsApp
                     </button>
                 </div>
