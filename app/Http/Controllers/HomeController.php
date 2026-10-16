@@ -14,4 +14,11 @@ class HomeController extends Controller
         $terminosCondiciones = \App\Models\TerminosCondiciones::find($formControl);
         return view('terminos-condiciones-form-control', compact('terminosCondiciones'));
     }
+
+    public function getPoliticaPrivacidad()
+    {
+        $terminosCondiciones = \App\Models\TerminosCondiciones::findOrFail(2);
+
+        return view('terminos-condiciones-form-control', compact('terminosCondiciones'));
+    }
 }
