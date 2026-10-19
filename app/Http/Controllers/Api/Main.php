@@ -812,13 +812,32 @@ class Main extends Controller
 
         abort_unless($owner instanceof Owner, 403, 'Esta secciÃ³n estÃ¡ disponible para propietarios.');
 
-        // Convert all null values (including nested arrays/objects) to empty strings
+        // The mobile client expects strings instead of null for optional text
+        // fields. Preserve that legacy contract without changing the database.
         $ownerData = $owner->toArray();
         array_walk_recursive($ownerData, function (&$value) {
             if (is_null($value)) {
-              $value = '';
+                $value = '';
             }
         });
+
+        $ownerData['owner_status_id'] = (int) ($owner->owner_status_id ?? 0);
+
+        // owner_status_id is nullable in the database, while the current mobile
+        // contract requires an integer and a status object. A synthetic status
+        // keeps the response parseable without assigning a real status on GET.
+        if ($owner->status === null) {
+            $fallbackDate = ($owner->updated_at ?? $owner->created_at ?? now())->toISOString();
+
+            $ownerData['owner_status_id'] = 0;
+            $ownerData['status'] = [
+                'id' => 0,
+                'name' => 'Sin estado',
+                'color' => '#64748B',
+                'created_at' => $fallbackDate,
+                'updated_at' => $fallbackDate,
+            ];
+        }
 
         return response()->json($ownerData, 200);
     }
