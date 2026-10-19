@@ -141,6 +141,7 @@ class OwnerResource extends Resource implements HasShieldPermissions
                     Forms\Components\Select::make('owner_status_id')
                         ->label('Estatus')
                         ->options(OwnerStatus::get()->pluck('name','id')->toArray())
+                        ->default(1)
                         // ->relationship(name: 'status', titleAttribute: 'name')
                         ->nullable()
 
