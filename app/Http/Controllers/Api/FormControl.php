@@ -20,6 +20,8 @@ class FormControl extends Controller
     {
         $formControl = FormControlDB::where('owner_id', $request->user()->owner->id)->with(['peoples','autos','files'])->orderBy('created_at','desc')->get();
 
+        $mobileForms = $formControl->map(fn (FormControlDB $form) => $this->formForMobile($form));
+
         $misLotes = Lote::where('owner_id', $request->user()->owner->id)->with(['sector','loteStatus','loteType'])->get();
 
         $families = OwnerFamily::where('owner_id', $request->user()->owner->id)->get();
@@ -27,34 +29,48 @@ class FormControl extends Controller
         $autos = Auto::where('model','Owner')->where('model_id',$request->user()->owner->id)->get();
 
         return response()->json([
-            'misForms' => $formControl->map(function($form){
-                $form->status = $form->statusComputed();
-                $form['files'] = $form->files->map(function($file){
-					//dd($file);
-					$file['name'] =   $file['file'];
-					$file['path'] = request()->getSchemeAndHttpHost().Storage::url($file['file']);
-
-					return $file;
-
-                });
-                return $form;
-            })->where('status','Pending')->values(),
-            'historicoForms' => $formControl->map(function($form){
-                $form->status = $form->statusComputed();
-                $form['files'] = $form->files->map(function($file){
-					//dd($file);
-					$file['name'] =   $file['file'];
-					$file['path'] = request()->getSchemeAndHttpHost().Storage::url($file['file']);
-
-					return $file;
-
-                });
-                return $form;
-            })->where('status','!=','Pending')->values(),
+            'misForms' => $mobileForms->where('status', 'Pending')->values(),
+            'historicoForms' => $mobileForms->where('status', '!=', 'Pending')->values(),
             'misLotes' => $misLotes,
             'families' => $families,
             'autos' => $autos
         ]);
+    }
+
+    private function formForMobile(FormControlDB $form): array
+    {
+        $data = $form->toArray();
+        $data['status'] = $form->statusComputed();
+
+        foreach (['lote_ids', 'access_type', 'income_type'] as $field) {
+            $data[$field] = $this->normalizeStringList($data[$field] ?? null);
+        }
+
+        $data['files'] = $form->files->map(function ($file) {
+            $data = $file->toArray();
+            $data['name'] = $file->file;
+            $data['path'] = request()->getSchemeAndHttpHost().Storage::url($file->file);
+
+            return $data;
+        })->values()->all();
+
+        return $data;
+    }
+
+    private function normalizeStringList(mixed $value): array
+    {
+        if ($value === null || $value === '') {
+            return [];
+        }
+
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = is_array($decoded) ? $decoded : [$value];
+        } elseif (! is_array($value)) {
+            $value = [$value];
+        }
+
+        return array_values(array_map(static fn ($item) => (string) $item, $value));
     }
 
     public function store(Request $request)
