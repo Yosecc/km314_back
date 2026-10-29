@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\PushDeviceController;
 
 
 Route::post('/sanctum/login',[Authentication::class,'login']);
+Route::middleware('auth:sanctum')->post('/sanctum/logout', [Authentication::class, 'logout']);
 Route::post('/contact',[Main::class,'contact']);
 Route::post('/newsletter',[Main::class,'newsletter']);
 Route::get('/messenger',[Main::class,'messenger']);

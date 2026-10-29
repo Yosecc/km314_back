@@ -1097,6 +1097,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->grid(3)
                         ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
                         ->default( self::getArchivos('car') )
+                        ->afterStateHydrated(function (Repeater $component, $state) {
+                            // Los autos agregados automaticamente pueden no tener todavia
+                            // registros en auto_files. Al editar, la relacion vacia
+                            // reemplaza el estado por defecto y oculta los campos.
+                            if (empty($state)) {
+                                $component->state(self::getArchivos('car'));
+                            }
+                        })
                         ->columns(1)
                         ->columnSpanFull(),
                 ])

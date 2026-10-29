@@ -34,4 +34,13 @@ class Authentication extends Controller
     
         return response()->json(['token'=>$user->createToken($request->device_name)->plainTextToken]);
     }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()?->delete();
+
+        return response()->json([
+            'message' => 'SesiÃ³n cerrada correctamente.',
+        ]);
+    }
 }

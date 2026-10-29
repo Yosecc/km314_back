@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\FormControlResource\Pages\CreateFormControl;
+use App\Filament\Resources\FormControlResource\Pages\EditFormControl;
+use App\Models\FilesRequired;
 use App\Models\FormControl;
 use App\Models\Proveedor;
 use App\Models\User;
@@ -83,6 +85,52 @@ class FormControlTest extends TestCase
         $data = $method->invoke(new CreateFormControl(), ['user_id' => $otherUser->id]);
 
         $this->assertSame($user->id, $data['user_id']);
+    }
+
+    public function test_edit_page_hydrates_vehicle_document_fields_when_the_auto_has_no_files(): void
+    {
+        $permission = Permission::firstOrCreate([
+            'name' => 'update_form::control',
+            'guard_name' => 'web',
+        ]);
+        $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $user = User::factory()->create(['is_terms_condition' => true]);
+        $user->assignRole($role);
+        $user->givePermissionTo($permission);
+        $this->actingAs($user);
+
+        FilesRequired::updateOrCreate(
+            ['type' => 'car'],
+            [
+                'name' => 'Documentos del vehiculo',
+                'required' => [
+                    ['document' => 'Seguro', 'is_required' => false, 'date_is_required' => false],
+                    ['document' => 'VTV', 'is_required' => false, 'date_is_required' => false],
+                    ['document' => 'Cedula', 'is_required' => false, 'date_is_required' => false],
+                ],
+                'no_required' => [],
+            ],
+        );
+
+        $formControl = $this->createFormControl(['user_id' => $user->id]);
+        $formControl->autos()->create([
+            'marca' => 'Ford',
+            'modelo' => 'Focus',
+            'patente' => 'AA123BB',
+            'color' => 'Gris',
+            'user_id' => $user->id,
+            'model' => 'FormControl',
+        ]);
+
+        $component = Livewire::test(EditFormControl::class, ['record' => $formControl->getRouteKey()])
+            ->assertSuccessful();
+        $autos = array_values($component->get('data')['autos']);
+
+        $this->assertCount(3, $autos[0]['files']);
+        $this->assertSame(
+            ['Seguro', 'VTV', 'Cedula'],
+            array_column(array_values($autos[0]['files']), 'name'),
+        );
     }
 
     public function test_it_is_active_only_when_authorized_and_inside_a_date_range(): void
