@@ -3,24 +3,23 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Filament\Models\Contracts\FilamentUser;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     public function canAccessPanel(Panel $panel): bool
     {
         return true;
     }
-
 
     /**
      * The attributes that are mass assignable.
@@ -31,7 +30,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
-        'owner_id'
+        'owner_id',
     ];
 
     /**
@@ -75,6 +74,16 @@ class User extends Authenticatable implements FilamentUser
     public function fcmDevices(): HasMany
     {
         return $this->hasMany(FcmDevice::class);
+    }
+
+    public function assignedInteresteds(): HasMany
+    {
+        return $this->hasMany(Interested::class, 'assigned_user_id');
+    }
+
+    public function interestedFollowUps(): HasMany
+    {
+        return $this->hasMany(InterestedFollowUp::class, 'assigned_user_id');
     }
 
     // public function roles()
