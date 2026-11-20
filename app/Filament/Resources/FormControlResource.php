@@ -978,7 +978,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                     Forms\Components\TextInput::make('phone')
                         ->label(__("general.Phone"))
                         ->tel()
-                        ->numeric(),
+                        ->maxLength(50),
                     Forms\Components\Toggle::make('is_responsable')->default(false)->label(__("general.Responsable")),
                     Forms\Components\Toggle::make('is_acompanante')->default(false)->label(__("general.Acompanante")),
                     Forms\Components\Toggle::make('is_menor')->default(false)->label(__("general.Minor")),

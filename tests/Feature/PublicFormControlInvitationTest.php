@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\FormControl;
+use App\Models\FormControlPeople;
 use App\Models\FormControlPublicInvitation;
 use App\Models\Lote;
 use App\Models\Owner;
@@ -16,6 +17,7 @@ use Tests\TestCase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use App\Filament\Resources\FormControlResource\Pages\ListFormControls;
+use RuntimeException;
 
 class PublicFormControlInvitationTest extends TestCase
 {
@@ -34,7 +36,7 @@ class PublicFormControlInvitationTest extends TestCase
         $payload = [
             'start_date'=>now()->addDay()->format('Y-m-d'),'start_time'=>'09:00',
             'end_date'=>now()->addDay()->format('Y-m-d'),'end_time'=>'18:00',
-            'people'=>[['dni'=>'30111222','first_name'=>'Invitada','last_name'=>'Ejemplo','phone'=>'1','documents'=>[
+            'people'=>[['dni'=>'30111222','first_name'=>'Invitada','last_name'=>'Ejemplo','phone'=>'2215 70-8176','documents'=>[
                 ['name'=>'DNI manipulado','file'=>UploadedFile::fake()->create('dni.pdf',10,'application/pdf')],
             ]]],
             'observations'=>'Creado desde enlace público','accept_terms'=>'1',
@@ -51,6 +53,7 @@ class PublicFormControlInvitationTest extends TestCase
         $this->assertSame(['Inquilino'],$form->income_type);
         $this->assertSame([$lote->getNombre()],$form->lote_ids);
         $this->assertCount(1,$form->peoples);
+        $this->assertSame('2215 70-8176',$form->peoples->first()->phone);
         $this->assertSame('DNI (Frente)',$form->peoples->first()->files->first()->name);
         $this->assertNotNull($invitation->fresh()->used_at);
 
@@ -126,6 +129,102 @@ class PublicFormControlInvitationTest extends TestCase
         $this->assertSame($lote->id,(int)$invitation->lote_id);
         $this->assertSame(FormControlPublicInvitation::TENANT_VISITOR,$invitation->income_type);
         $this->assertTrue($invitation->isAvailable());
+    }
+
+    public function test_public_link_rejects_an_invalid_phone_with_a_friendly_message(): void
+    {
+        FilesRequired::updateOrCreate(
+            ['type' => 'Inquilino'],
+            ['name' => 'Documentos de inquilino', 'required' => [], 'no_required' => []],
+        );
+        [$owner, $lote, $ownerUser] = $this->context();
+        [, $token] = FormControlPublicInvitation::issue($owner, $lote, $ownerUser);
+
+        $this->from(route('form-control-public.show', $token))
+            ->post(route('form-control-public.store', $token), [
+                'start_date' => now()->addDay()->format('Y-m-d'),
+                'start_time' => '09:00',
+                'end_date' => now()->addDay()->format('Y-m-d'),
+                'end_time' => '18:00',
+                'people' => [[
+                    'dni' => '30111222',
+                    'first_name' => 'Invitada',
+                    'last_name' => 'Ejemplo',
+                    'phone' => '2215 / dato inválido',
+                ]],
+                'accept_terms' => '1',
+            ])
+            ->assertRedirect(route('form-control-public.show', $token))
+            ->assertSessionHasErrors([
+                'people.0.phone' => 'Ingrese un teléfono válido. Puede usar números, espacios, +, -, puntos y paréntesis.',
+            ])
+            ->assertSessionHasInput('people.0.phone', '2215 / dato inválido');
+
+        $this->assertDatabaseMissing('form_controls', [
+            'owner_id' => $owner->id,
+            'status' => 'OwnerPending',
+        ]);
+
+        $this->get(route('form-control-public.show', $token))
+            ->assertOk()
+            ->assertSee('No pudimos enviar el formulario.')
+            ->assertSee('Ingrese un teléfono válido.')
+            ->assertDontSee('Stack trace');
+    }
+
+    public function test_public_link_hides_unexpected_errors_and_preserves_the_form_data(): void
+    {
+        FilesRequired::updateOrCreate(
+            ['type' => 'Inquilino'],
+            ['name' => 'Documentos de inquilino', 'required' => [], 'no_required' => []],
+        );
+        [$owner, $lote, $ownerUser] = $this->context();
+        [, $token] = FormControlPublicInvitation::issue($owner, $lote, $ownerUser);
+
+        $originalDispatcher = clone FormControlPeople::getEventDispatcher();
+        FormControlPeople::creating(function (): void {
+            throw new RuntimeException('Detalle interno que nunca debe mostrarse al usuario.');
+        });
+
+        try {
+            $response = $this->from(route('form-control-public.show', $token))
+                ->post(route('form-control-public.store', $token), [
+                    'start_date' => now()->addDay()->format('Y-m-d'),
+                    'start_time' => '09:00',
+                    'end_date' => now()->addDay()->format('Y-m-d'),
+                    'end_time' => '18:00',
+                    'people' => [[
+                        'dni' => '30111222',
+                        'first_name' => 'Invitada',
+                        'last_name' => 'Ejemplo',
+                        'phone' => '+54 (221) 570-8176',
+                    ]],
+                    'observations' => 'Debe conservarse al volver',
+                    'accept_terms' => '1',
+                ]);
+        } finally {
+            FormControlPeople::setEventDispatcher($originalDispatcher);
+        }
+
+        $response
+            ->assertRedirect(route('form-control-public.show', $token))
+            ->assertSessionHasErrors([
+                'submission' => 'No pudimos guardar el formulario. Revise los datos e intente nuevamente en unos minutos.',
+            ])
+            ->assertSessionHasInput('observations', 'Debe conservarse al volver');
+
+        $this->assertDatabaseMissing('form_controls', [
+            'owner_id' => $owner->id,
+            'status' => 'OwnerPending',
+            'observations' => 'Debe conservarse al volver',
+        ]);
+
+        $this->get(route('form-control-public.show', $token))
+            ->assertOk()
+            ->assertSee('No pudimos enviar el formulario.')
+            ->assertSee('No pudimos guardar el formulario.')
+            ->assertDontSee('Detalle interno que nunca debe mostrarse al usuario.')
+            ->assertDontSee('Stack trace');
     }
 
     private function context(): array
