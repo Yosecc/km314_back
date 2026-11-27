@@ -10,11 +10,12 @@ class FormControlPublicInvitation extends Model
     public const TENANT = 'Inquilino';
 
     public const TENANT_VISITOR = 'Visitante de Inquilino';
+    public const EXTENDED_VISIT = 'Visita (+24hs)';
 
     protected $fillable = ['token_hash','owner_id','lote_id','income_type','created_by_user_id','expires_at','used_at','used_form_control_id','revoked_at'];
     protected $casts = ['expires_at'=>'datetime','used_at'=>'datetime','revoked_at'=>'datetime'];
 
-    public static function publicIncomeTypes(): array
+    public static function tenantIncomeTypes(): array
     {
         return [
             self::TENANT => self::TENANT,
@@ -24,7 +25,7 @@ class FormControlPublicInvitation extends Model
 
     public static function issue(Owner $owner, Lote $lote, User $creator, string $incomeType = self::TENANT): array
     {
-        abort_unless(array_key_exists($incomeType, self::publicIncomeTypes()), 422);
+        abort_unless($incomeType === self::EXTENDED_VISIT || array_key_exists($incomeType, self::tenantIncomeTypes()), 422);
 
         $plain = Str::random(64);
         $record = self::create([

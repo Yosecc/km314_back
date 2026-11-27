@@ -23,6 +23,7 @@ class CreateFormControl extends CreateRecord
     {
         return [
             $this->sharePublicFormAction(),
+            $this->shareExtendedVisitFormAction(),
         ];
     }
 
