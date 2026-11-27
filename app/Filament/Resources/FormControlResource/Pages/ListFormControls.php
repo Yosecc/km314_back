@@ -23,6 +23,7 @@ class ListFormControls extends ListRecords
                 ->color('gray')
                 ->action(fn () => $this->dispatch('open-form-control-tutorial')),
             $this->sharePublicFormAction(),
+            $this->shareExtendedVisitFormAction(),
             Actions\CreateAction::make(),
         ];
     }

@@ -19,7 +19,6 @@ use App\Services\ApplicationNotificationService;
 
 class MobileFormControlController extends Controller
 {
-    private const TEMPORARY_VISIT = 'Visita Temporal (24hs)';
     private const WORKER = 'Trabajador';
     private const RECURRENT_VISIT = 'Visita Recurrente';
     private const PROVIDER = 'Proveedor';
@@ -93,7 +92,7 @@ class MobileFormControlController extends Controller
                 'end_time_range' => $firstRange['end_time'],
                 'date_unilimited' => false,
                 'observations' => $data['observations'],
-                'status' => $data['income_type'] === self::TEMPORARY_VISIT ? 'Authorized' : 'Pending',
+                'status' => $data['income_type'] === FormControlTypeIncome::TEMPORARY_VISIT ? 'Authorized' : 'Pending',
             ]);
 
             $form->dateRanges()->createMany(array_map(fn ($range) => [
@@ -115,7 +114,7 @@ class MobileFormControlController extends Controller
             ['aprobar_form::control', 'rechazar_form::control'],
             $isAutomatic ? 'Nuevo formulario autorizado automáticamente' : 'Nuevo formulario pendiente de aprobación',
             $isAutomatic
-                ? 'El formulario #'.$form->id.' corresponde a una visita temporal de 24 horas.'
+                ? 'El formulario #'.$form->id.' corresponde a una visita temporal de 12 horas.'
                 : 'El formulario #'.$form->id.' espera la revisión de administración.',
             ['type' => 'form_control', 'form_control_id' => $form->id, 'status' => $form->status],
             \App\Filament\Resources\FormControlResource::getUrl('view', ['record' => $form]),
@@ -125,7 +124,7 @@ class MobileFormControlController extends Controller
         return response()->json([
             'status' => true,
             'message' => $form->status === 'Authorized'
-                ? 'Formulario creado y autorizado por 24 horas.'
+                ? 'Formulario creado y autorizado por 12 horas.'
                 : 'Formulario enviado para aprobación de administración.',
             'formulario' => $form->load(['dateRanges', 'peoples.files', 'autos.files', 'files', 'mascotas']),
         ], 201);
@@ -133,7 +132,13 @@ class MobileFormControlController extends Controller
 
     private function validatedData(Request $request): array
     {
-        $validator = Validator::make($request->all(), [
+        $incomeType = $request->input('income_type');
+        if ($incomeType === FormControlTypeIncome::LEGACY_TEMPORARY_VISIT) {
+            $incomeType = FormControlTypeIncome::TEMPORARY_VISIT;
+        }
+
+        $input = array_replace($request->all(), ['income_type' => $incomeType]);
+        $validator = Validator::make($input, [
             'lote' => ['required', 'string', 'max:255'],
             'income_type' => ['required', 'string', 'exists:form_control_type_incomes,name'],
             'provider_id' => ['nullable', 'integer'],
@@ -146,7 +151,7 @@ class MobileFormControlController extends Controller
         if ($validator->fails()) throw new ValidationException($validator);
 
         $data = [
-            'lote' => $request->input('lote'), 'income_type' => $request->input('income_type'),
+            'lote' => $request->input('lote'), 'income_type' => $incomeType,
             'provider_id' => $request->input('provider_id'), 'ranges' => $this->decode($request->input('ranges'), 'ranges'),
             'people' => $this->decode($request->input('people'), 'people'),
             'worker_ids' => $this->decode($request->input('worker_ids'), 'worker_ids'),
@@ -196,7 +201,7 @@ class MobileFormControlController extends Controller
                 if (($range['end_date'] ?? null) !== $range['start_date']) $errors->add("ranges.$index.end_date", 'La salida del trabajador debe ser el mismo día.');
                 if (($range['end_time'] ?? null) !== '18:00') $errors->add("ranges.$index.end_time", 'La salida de trabajadores es a las 18:00.');
                 if (!$this->workerTime($range['start_time'])) $errors->add("ranges.$index.start_time", 'El horario de entrada debe ser entre 07:00 y 18:00 cada 30 minutos.');
-            } elseif (!in_array($data['income_type'], [self::TEMPORARY_VISIT, self::PROVIDER], true)) {
+            } elseif (!in_array($data['income_type'], [FormControlTypeIncome::TEMPORARY_VISIT, self::PROVIDER], true)) {
                 if (empty($range['end_date']) || empty($range['end_time'])) $errors->add("ranges.$index", 'Completá fecha y hora de salida.');
                 elseif (Carbon::parse("{$range['end_date']} {$range['end_time']}")->lte(Carbon::parse("{$range['start_date']} {$range['start_time']}"))) $errors->add("ranges.$index.end_time", 'La salida debe ser posterior a la entrada.');
             }
@@ -298,9 +303,16 @@ class MobileFormControlController extends Controller
 
     private function normalisedRanges(string $type, array $ranges): array
     {
-        if ($type === self::TEMPORARY_VISIT) {
-            $now = now('America/Argentina/Buenos_Aires');
-            return [['start_date' => $now->format('Y-m-d'), 'start_time' => $now->format('H:i'), 'end_date' => $now->copy()->addDay()->format('Y-m-d'), 'end_time' => $now->format('H:i')]];
+        if ($type === FormControlTypeIncome::TEMPORARY_VISIT) {
+            $start = now('America/Argentina/Buenos_Aires');
+            $end = $start->copy()->addHours(FormControlTypeIncome::TEMPORARY_VISIT_HOURS);
+
+            return [[
+                'start_date' => $start->format('Y-m-d'),
+                'start_time' => $start->format('H:i'),
+                'end_date' => $end->format('Y-m-d'),
+                'end_time' => $end->format('H:i'),
+            ]];
         }
         return array_map(function ($range) use ($type) {
             if ($type === self::WORKER) { $range['end_date'] = $range['start_date']; $range['end_time'] = '18:00'; }

@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\FormControlResource;
+use App\Models\FormControlTypeIncome;
 use App\Services\ApplicationNotificationService;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,6 +24,7 @@ class CreateFormControl extends CreateRecord
     {
         return [
             $this->sharePublicFormAction(),
+            $this->shareExtendedVisitFormAction(),
         ];
     }
 
@@ -68,7 +70,7 @@ class CreateFormControl extends CreateRecord
         try {
             $formControl = $this->record;
 
-            if (collect($formControl->income_type)->contains('Visita Temporal (24hs)')) {
+            if (collect($formControl->income_type)->contains(FormControlTypeIncome::TEMPORARY_VISIT)) {
                 $formControl->update(['status' => 'Authorized']);
 
                 Notification::make()
@@ -82,7 +84,7 @@ class CreateFormControl extends CreateRecord
                 ['aprobar_form::control', 'rechazar_form::control'],
                 $isAutomatic ? 'Nuevo formulario autorizado automáticamente' : 'Nuevo formulario pendiente de aprobación',
                 $isAutomatic
-                    ? 'El formulario #'.$formControl->id.' corresponde a una visita temporal de 24 horas.'
+                    ? 'El formulario #'.$formControl->id.' corresponde a una visita temporal de 12 horas.'
                     : 'El formulario #'.$formControl->id.' espera la revisión de administración.',
                 ['type' => 'form_control', 'form_control_id' => $formControl->id, 'status' => $formControl->status],
                 FormControlResource::getUrl('view', ['record' => $formControl]),

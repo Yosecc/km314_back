@@ -2,47 +2,42 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\ActivitiesResource\Widgets\UltimasActividades;
+use App\Filament\Resources\FormControlResource\Widgets\FormControlStats;
+use App\Filament\Resources\IncidentResource\Widgets\IncidentesStats;
+use App\Filament\Resources\InterestedLevelResource;
+use App\Filament\Resources\OwnerResource\Widgets\OwnerQr;
+use App\Filament\Resources\SlidersResource\Widgets\Sliders;
+use App\Filament\Widgets\AccessControlStats;
+use App\Filament\Widgets\EmployeeApprovalStats;
+use App\Filament\Widgets\FormIncidentComplianceWidget;
+use App\Filament\Widgets\FormIncidentStatsWidget;
+use App\Filament\Widgets\InterestedFollowUpStats;
+use App\Filament\Widgets\PackageReceptionStats;
+use App\Filament\Widgets\QuickAccessWidget;
+use App\Filament\Widgets\RecurrentVisitorApprovalStats;
+use App\Filament\Widgets\ServiceRequestStats;
+use App\Filament\Widgets\UserTermsConditionsCheck;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
-use Filament\Widgets;
 use Filament\PanelProvider;
-use App\Filament\Widgets\Entry;
-use App\Filament\Widgets\PackageReceptionStats;
-use App\Filament\Widgets\ServiceRequestStats;
-use App\Filament\Widgets\AccessControlStats;
-use App\Filament\Widgets\RecurrentVisitorApprovalStats;
-use App\Filament\Widgets\EmployeeApprovalStats;
-use App\Filament\Widgets\QuickAccessWidget;
-use App\Filament\Resources\InterestedLevelResource;
 use Filament\Support\Colors\Color;
-use Filament\Navigation\NavigationItem;
-use Filament\Navigation\NavigationGroup;
-use Filament\Http\Middleware\Authenticate;
-use Filament\Navigation\NavigationBuilder;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Cookie\Middleware\EncryptCookies;
-use App\Filament\Widgets\FormIncidentStatsWidget;
-use App\Filament\Widgets\UserTermsConditionsCheck;
-use Illuminate\Routing\Middleware\SubstituteBindings;
-use App\Filament\Widgets\FormIncidentComplianceWidget;
-use Illuminate\Session\Middleware\AuthenticateSession;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use App\Filament\Resources\OwnerResource\Widgets\OwnerQr;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
-use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
-use App\Filament\Resources\SlidersResource\Widgets\Sliders;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
-use  App\Filament\Resources\IncidentResource\Widgets\IncidentesStats;
-use App\Filament\Resources\FormControlResource\Widgets\FormControlStats;
-use App\Filament\Resources\ActivitiesResource\Widgets\UltimasActividades;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\AuthenticateSession;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-
 
         return $panel
             ->default()
@@ -66,12 +61,13 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 FilamentFullCalendarPlugin::make()
-                ->selectable()
-                ->editable()
+                    ->selectable()
+                    ->editable(),
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 QuickAccessWidget::class,
+                InterestedFollowUpStats::class,
                 UserTermsConditionsCheck::class,
                 AccessControlStats::class,
                 FormIncidentComplianceWidget::class,
@@ -84,7 +80,7 @@ class AdminPanelProvider extends PanelProvider
                 RecurrentVisitorApprovalStats::class,
                 EmployeeApprovalStats::class,
                 Sliders::class,
-                OwnerQr::class
+                OwnerQr::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -108,7 +104,6 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 'panels::body.end',
                 fn () => view('components.firebase-web-push')
-            )
-            ;
+            );
     }
 }

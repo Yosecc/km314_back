@@ -6,7 +6,10 @@
             <div class="fcm-hero-actions">
                 <button type="button" class="fcm-help" @click="$dispatch('open-form-control-tutorial')"><x-heroicon-o-question-mark-circle class="h-5 w-5" /> Cómo funciona</button>
                 @if($data['can_create'])<a class="fcm-create" href="{{ $data['create_url'] }}"><x-heroicon-o-plus class="h-5 w-5" /> Nuevo formulario</a>@endif
-                @if(auth()->user()->hasRole('owner') && $data['can_create']){{ ($this->sharePublicFormAction) }}@endif
+                @if(auth()->user()->hasRole('owner') && $data['can_create'])
+                    {{ ($this->sharePublicFormAction) }}
+                    {{ ($this->shareExtendedVisitFormAction) }}
+                @endif
                 <a class="fcm-list" href="{{ $data['list_url'] }}">Abrir listado completo</a>
             </div>
         </header>

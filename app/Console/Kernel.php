@@ -2,17 +2,17 @@
 
 namespace App\Console;
 
-use Illuminate\Console\Scheduling\Schedule;
 use App\Console\Commands\RecoverMessagesEmails;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-
     protected $commands = [
         RecoverMessagesEmails::class,
         \App\Console\Commands\ImportAccountingCsv::class,
         \App\Console\Commands\ProcessPackageReceptionAlerts::class,
+        \App\Console\Commands\ProcessInterestedFollowUpReminders::class,
     ];
 
     /**
@@ -23,6 +23,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('app:recover-messages-emails')->everyThirtyMinutes();
         $schedule->command('package-receptions:process-alerts')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('interesteds:process-reminders')->everyFiveMinutes()->withoutOverlapping();
     }
 
     /**

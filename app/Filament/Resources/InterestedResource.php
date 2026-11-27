@@ -2,33 +2,56 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
-use App\Models\Lote;
-use Filament\Tables;
-use App\Models\Property;
-use Filament\Forms\Form;
-use App\Models\Interested;
-use Filament\Tables\Table;
-use Filament\Resources\Resource;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\InterestedResource\Pages;
 use App\Filament\Resources\InterestedResource\RelationManagers;
+use App\Models\Interested;
+use App\Models\InterestedStatus;
+use App\Models\Lote;
+use App\Models\Property;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class InterestedResource extends Resource
+class InterestedResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Interested::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $navigationLabel = 'Interesados';
-    protected static ?string $label = 'interesado';
-    // protected static ?string $navigationGroup = 'Configuración';
 
+    protected static ?string $label = 'interesado';
+
+    protected static ?string $navigationGroup = 'Interesados';
 
     public static function getPluralModelLabel(): string
     {
         return 'interesados';
+    }
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+            'export',
+            'import',
+        ];
     }
 
     public static function form(Form $form): Form
@@ -36,42 +59,42 @@ class InterestedResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('dni')
-                    ->label(__("general.DNI"))
+                    ->label(__('general.DNI'))
                     ->numeric(),
                 Forms\Components\TextInput::make('first_name')
-                    ->label(__("general.FirstName"))
+                    ->label(__('general.FirstName'))
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('last_name')
-                    ->label(__("general.LastName"))
+                    ->label(__('general.LastName'))
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
-                    ->label(__("general.Email"))
+                    ->label(__('general.Email'))
                     ->email()
-
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->unique(ignoreRecord: true),
                 Forms\Components\TextInput::make('phone')
-                    ->label(__("general.Phone"))
+                    ->label(__('general.Phone'))
                     ->tel()
-                    ->numeric(),
+                    ->maxLength(30),
                 Forms\Components\TextInput::make('address')
-                    ->label(__("general.Address"))
+                    ->label(__('general.Address'))
                     ->maxLength(255),
                 Forms\Components\TextInput::make('city')
-                    ->label(__("general.City"))
+                    ->label(__('general.City'))
                     ->maxLength(255),
                 Forms\Components\TextInput::make('state')
-                    ->label(__("general.State"))
+                    ->label(__('general.State'))
                     ->maxLength(255),
                 Forms\Components\TextInput::make('zip_code')
-                    ->label(__("general.ZipCode"))
+                    ->label(__('general.ZipCode'))
                     ->maxLength(255),
                 Forms\Components\TextInput::make('country')
-                    ->label(__("general.Country"))
+                    ->label(__('general.Country'))
                     ->maxLength(255),
                 Forms\Components\Select::make('interested_origins_id')
-                    ->label(__("general.interested_origins_id"))
+                    ->label(__('general.interested_origins_id'))
                     ->relationship(name: 'interestedOrigins', titleAttribute: 'name')
                     ->required(),
                 Forms\Components\Select::make('interested_type_id')
@@ -86,28 +109,47 @@ class InterestedResource extends Resource
                     ->searchable()
                     ->preload()
                     ->required(),
+                Forms\Components\Select::make('interested_status_id')
+                    ->label('Estado comercial')
+                    ->relationship(name: 'interestedStatus', titleAttribute: 'name', modifyQueryUsing: fn (Builder $query) => $query->orderBy('sort_order'))
+                    ->default(fn () => InterestedStatus::query()->where('name', 'Nuevo')->value('id'))
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+                Forms\Components\Select::make('assigned_user_id')
+                    ->label('Responsable')
+                    ->relationship(name: 'assignedUser', titleAttribute: 'name')
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn () => auth()->user()?->can('assign_interested')),
+                Forms\Components\DateTimePicker::make('last_contacted_at')
+                    ->label('Último contacto')
+                    ->disabled()
+                    ->dehydrated(false),
+                Forms\Components\DateTimePicker::make('next_contact_at')
+                    ->label('Próximo contacto')
+                    ->disabled()
+                    ->dehydrated(false),
 
                 Forms\Components\Select::make('lote_id')
-                    ->options(function(){
-                        return Lote::get()->map(function($lote){
-                            $lote['lote_name'] = $lote->getNombre();
-                            return $lote;
-                        })->pluck('lote_name', 'id')->toArray();
-                    })
-
+                    ->relationship(
+                        name: 'lote',
+                        titleAttribute: 'lote_id',
+                        modifyQueryUsing: fn (Builder $query) => $query->with('sector'),
+                    )
+                    ->getOptionLabelFromRecordUsing(fn (Lote $record): string => $record->getNombre())
                     ->searchable()
-                    ->label(__("general.Lote")),
-
+                    ->label(__('general.Lote')),
 
                 Forms\Components\Select::make('propertie_id')
-                    ->label(__("general.Propertie"))
+                    ->label(__('general.Propertie'))
                     ->searchable()
                     ->relationship(name: 'propertie', titleAttribute: 'identificador'),
 
                 Forms\Components\Textarea::make('observations')
                     ->columnSpanFull()
                     ->label(__('general.Observations')),
-                    // ->getOptionLabelFromRecordUsing(fn (Property $record) => "{$record->propertyType->name} - {$record->owner->first_name} {$record->owner->last_name}"),
+                // ->getOptionLabelFromRecordUsing(fn (Property $record) => "{$record->propertyType->name} - {$record->owner->first_name} {$record->owner->last_name}"),
             ]);
     }
 
@@ -116,20 +158,20 @@ class InterestedResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('dni')
-                    ->label(__("general.DNI"))
+                    ->label(__('general.DNI'))
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('first_name')
-                    ->label(__("general.FirstName"))
+                    ->label(__('general.FirstName'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('last_name')
-                    ->label(__("general.LastName"))
+                    ->label(__('general.LastName'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
-                    ->label(__("general.Email"))
+                    ->label(__('general.Email'))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('phone')
-                    ->label(__("general.Phone"))
+                    ->label(__('general.Phone'))
                     // ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('interestedType.name')
@@ -146,16 +188,38 @@ class InterestedResource extends Resource
                         default => 'primary',
                     })
                     ->sortable(),
+                Tables\Columns\TextColumn::make('interestedStatus.name')
+                    ->label('Estado')
+                    ->badge()
+                    ->color(fn (Interested $record) => $record->interestedStatus?->color ?? 'gray')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('assignedUser.name')
+                    ->label('Responsable')
+                    ->placeholder('Sin asignar')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('last_contacted_at')
+                    ->label('Último contacto')
+                    ->dateTime('d/m/Y H:i')
+                    ->placeholder('Sin contacto')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('next_contact_at')
+                    ->label('Próximo contacto')
+                    ->dateTime('d/m/Y H:i')
+                    ->placeholder('Sin seguimiento')
+                    ->color(fn (Interested $record) => $record->next_contact_at?->isPast() ? 'danger' : null)
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('lote')
-                    ->label(__("general.Lote"))
-                    ->formatStateUsing(fn (Lote $state) => "{$state->sector->name}{$state->lote_id}" )
+                    ->label(__('general.Lote'))
+                    ->formatStateUsing(fn (?Lote $state): string => $state
+                        ? "{$state->sector->name} {$state->lote_id}"
+                        : '-')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('propertie.identificador')
-                    ->label(__("general.Propertie"))
+                    ->label(__('general.Propertie'))
                     // ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label(__("general.created_at"))
+                    ->label(__('general.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -164,6 +228,10 @@ class InterestedResource extends Resource
                 Tables\Filters\SelectFilter::make('interested_level_id')
                     ->label('Nivel de interés')
                     ->relationship('interestedLevel', 'name'),
+                Tables\Filters\SelectFilter::make('interested_status_id')->label('Estado comercial')->relationship('interestedStatus', 'name'),
+                Tables\Filters\SelectFilter::make('interested_origins_id')->label('Origen')->relationship('interestedOrigins', 'name'),
+                Tables\Filters\SelectFilter::make('interested_type_id')->label('Tipo')->relationship('interestedType', 'name'),
+                Tables\Filters\SelectFilter::make('assigned_user_id')->label('Responsable')->relationship('assignedUser', 'name'),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
@@ -200,8 +268,10 @@ class InterestedResource extends Resource
 
     public static function getRelations(): array
     {
-       return [
-           RelationManagers\BookingRelationManager::class,
-       ];
+        return [
+            RelationManagers\ContactsRelationManager::class,
+            RelationManagers\FollowUpsRelationManager::class,
+            RelationManagers\BookingRelationManager::class,
+        ];
     }
 }

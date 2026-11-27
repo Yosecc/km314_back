@@ -2,15 +2,25 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Booking extends Model
 {
     use HasFactory,SoftDeletes;
 
-    protected $fillable = ['booking_status_id','lote_id','interested_id','propertie_id','interested_type_operation_id','operation_detail','amount','date_end'];
+    protected $fillable = ['booking_status_id', 'lote_id', 'interested_id', 'propertie_id', 'interested_type_operation_id', 'operation_detail', 'amount', 'date_end'];
+
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'date_end' => 'date',
+    ];
+
+    public function interested()
+    {
+        return $this->belongsTo(Interested::class);
+    }
 
     public function bookingStatus()
     {

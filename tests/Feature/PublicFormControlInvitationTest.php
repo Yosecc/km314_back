@@ -124,11 +124,63 @@ class PublicFormControlInvitationTest extends TestCase
             ->assertSee('Tu enlace está listo')
             ->assertSee('Compartir por WhatsApp')
             ->assertSee('Abrir enlace')
-            ->assertSee('dura 7 días');
+            ->assertSee('Dura 7 días');
         $invitation = FormControlPublicInvitation::where('owner_id',$owner->id)->latest()->firstOrFail();
         $this->assertSame($lote->id,(int)$invitation->lote_id);
         $this->assertSame(FormControlPublicInvitation::TENANT_VISITOR,$invitation->income_type);
         $this->assertTrue($invitation->isAvailable());
+    }
+
+    public function test_owner_can_generate_and_receive_an_extended_visit_form_from_its_own_link(): void
+    {
+        FilesRequired::updateOrCreate(
+            ['type' => FormControlPublicInvitation::EXTENDED_VISIT],
+            ['name' => 'Documentos de visita', 'required' => [
+                ['document' => 'Documento de visita', 'is_required' => false, 'date_is_required' => false],
+            ], 'no_required' => []],
+        );
+        [$owner, $lote, $ownerUser] = $this->context();
+        $ownerUser->forceFill(['is_terms_condition' => true])->save();
+        Permission::firstOrCreate(['name' => 'create_form::control', 'guard_name' => 'web']);
+        $ownerUser->givePermissionTo('create_form::control');
+        $this->actingAs($ownerUser);
+
+        Livewire::test(ListFormControls::class)
+            ->callAction('sharePublicForm', [
+                'lote_id' => $lote->id,
+                'income_type' => FormControlPublicInvitation::EXTENDED_VISIT,
+            ])
+            ->assertHasActionErrors(['income_type' => 'in']);
+        $this->assertDatabaseMissing('form_control_public_invitations', ['owner_id' => $owner->id]);
+
+        $action = Livewire::test(ListFormControls::class)
+            ->callAction('shareExtendedVisitForm', ['lote_id' => $lote->id])
+            ->assertHasNoActionErrors()
+            ->assertSet('mountedActions', ['generatedPublicLink'])
+            ->assertSee('Compartir por WhatsApp');
+        $url = $action->get('mountedActionsArguments')[0]['url'];
+        $invitation = FormControlPublicInvitation::resolveToken(basename($url));
+        $this->assertSame(FormControlPublicInvitation::EXTENDED_VISIT, $invitation->income_type);
+
+        $this->app['auth']->forgetGuards();
+        $this->get($url)->assertOk()
+            ->assertSee($lote->getNombre())
+            ->assertSee(FormControlPublicInvitation::EXTENDED_VISIT)
+            ->assertSee('Documento de visita');
+
+        $this->post($url, [
+            'start_date' => now()->addDay()->format('Y-m-d'),
+            'start_time' => '09:00',
+            'end_date' => now()->addDays(2)->format('Y-m-d'),
+            'end_time' => '18:00',
+            'people' => [['dni' => '30111222', 'first_name' => 'Visitante', 'last_name' => 'Ejemplo']],
+            'accept_terms' => '1',
+        ])->assertRedirect($url)->assertSessionHas('submitted', true);
+
+        $form = $invitation->fresh()->usedFormControl;
+        $this->assertSame([FormControlPublicInvitation::EXTENDED_VISIT], $form->income_type);
+        $this->assertSame([$lote->getNombre()], $form->lote_ids);
+        $this->assertSame('OwnerPending', $form->status);
     }
 
     public function test_public_link_rejects_an_invalid_phone_with_a_friendly_message(): void
