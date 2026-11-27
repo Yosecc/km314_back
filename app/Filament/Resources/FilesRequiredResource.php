@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FilesRequiredResource\Pages;
 use App\Filament\Resources\FilesRequiredResource\RelationManagers;
 use App\Models\FilesRequired;
+use App\Models\FormControlTypeIncome;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -42,7 +43,7 @@ class FilesRequiredResource extends Resource
                         'inquilino' => 'Inquilino',
                         'Visitante de Inquilino' => 'Visitante de inquilino',
                         'Visita (+24hs)' => 'Visita (+24hs)',
-                        'Visita Temporal (24hs)' => 'Visita Temporal (24hs)',
+                        FormControlTypeIncome::TEMPORARY_VISIT => FormControlTypeIncome::TEMPORARY_VISIT,
                     ]),
                     Repeater::make('required')
                         ->schema([

@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\FormControlResource\Pages\CreateFormControl;
 use App\Filament\Resources\FormControlResource\Pages\EditFormControl;
+use App\Http\Controllers\Api\MobileFormControlController;
 use App\Models\FilesRequired;
 use App\Models\FormControl;
+use App\Models\FormControlTypeIncome;
 use App\Models\Proveedor;
 use App\Models\User;
 use App\Services\ProveedorAccessService;
@@ -44,6 +46,7 @@ class FormControlTest extends TestCase
         $role = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $admin = User::factory()->create();
         $admin->assignRole($role);
+        $admin->givePermissionTo(Permission::firstOrCreate(['name' => 'aprobar_form::control', 'guard_name' => 'web']));
         $formControl = $this->createFormControl();
         $notificationsBefore = DB::table('notifications')->where('notifiable_id', $admin->id)->count();
 
@@ -85,6 +88,35 @@ class FormControlTest extends TestCase
         $data = $method->invoke(new CreateFormControl(), ['user_id' => $otherUser->id]);
 
         $this->assertSame($user->id, $data['user_id']);
+    }
+
+    public function test_temporary_visits_use_a_twelve_hour_range_across_midnight(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-26 18:30:00', config('app.timezone')));
+        $migration = require database_path('migrations/2026_11_26_000002_change_temporary_visit_to_twelve_hours.php');
+        $migration->up();
+
+        $user = User::factory()->create(['is_terms_condition' => true]);
+        $user->assignRole(Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']));
+        $user->givePermissionTo(Permission::firstOrCreate(['name' => 'create_form::control', 'guard_name' => 'web']));
+        $this->actingAs($user);
+
+        Livewire::test(CreateFormControl::class)
+            ->set('data.access_type', ['lote'])
+            ->assertSee('Visita Temporal (12hs)')
+            ->set('data.income_type', FormControlTypeIncome::TEMPORARY_VISIT)
+            ->assertSet('data.dateRanges.0.start_date_range', '2026-11-26')
+            ->assertSet('data.dateRanges.0.start_time_range', '18:30')
+            ->assertSet('data.dateRanges.0.end_date_range', '2026-11-27')
+            ->assertSet('data.dateRanges.0.end_time_range', '06:30');
+
+        $normalisedRanges = new ReflectionMethod(MobileFormControlController::class, 'normalisedRanges');
+        $this->assertSame([[
+            'start_date' => '2026-11-26',
+            'start_time' => '18:30',
+            'end_date' => '2026-11-27',
+            'end_time' => '06:30',
+        ]], $normalisedRanges->invoke(new MobileFormControlController(), FormControlTypeIncome::TEMPORARY_VISIT, []));
     }
 
     public function test_edit_page_hydrates_vehicle_document_fields_when_the_auto_has_no_files(): void

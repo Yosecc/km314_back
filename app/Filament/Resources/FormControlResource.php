@@ -171,6 +171,14 @@ class FormControlResource extends Resource implements HasShieldPermissions
         return collect($incomeType)->contains('Proveedor');
     }
 
+    private static function isTemporaryVisitIncome(mixed $incomeType): bool
+    {
+        return collect($incomeType)->intersect([
+            FormControlTypeIncome::TEMPORARY_VISIT,
+            FormControlTypeIncome::LEGACY_TEMPORARY_VISIT,
+        ])->isNotEmpty();
+    }
+
     public static function tiposFormulario()
     {
         return [
@@ -253,13 +261,12 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
                     Forms\Components\Radio::make('income_type')
                         ->label(__("general.TypeIncome"))
-                        ->options(function(){
-                            if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
-                                return FormControlTypeIncome::where('status',1)
-                                ->get()->pluck('name','name')->toArray();
-                            } else {
-                                return FormControlTypeIncome::where('status',1)->get()->pluck('name','name')->toArray();
+                        ->options(function (?FormControl $record): array {
+                            $options = FormControlTypeIncome::where('status', true)->pluck('name', 'name')->all();
+                            if (collect($record?->income_type)->contains(FormControlTypeIncome::LEGACY_TEMPORARY_VISIT)) {
+                                $options[FormControlTypeIncome::LEGACY_TEMPORARY_VISIT] = FormControlTypeIncome::LEGACY_TEMPORARY_VISIT;
                             }
+                            return $options;
                         })
                         ->columns(3)
                         ->gridDirection('row')
@@ -278,17 +285,19 @@ class FormControlResource extends Resource implements HasShieldPermissions
                                 $set("peoples.{$index}.files", self::getArchivos($state));
                             }
 
-                            if($state == 'Visita Temporal (24hs)'){
+                            if ($state === FormControlTypeIncome::TEMPORARY_VISIT) {
+                                $start = now();
+                                $end = $start->copy()->addHours(FormControlTypeIncome::TEMPORARY_VISIT_HOURS);
                                 $set('dateRanges', [[
-                                    'start_date_range' => Carbon::now()->format('Y-m-d'),
-                                    'start_time_range' => Carbon::now()->format('H:i'),
-                                    'end_date_range' => Carbon::now()->addDay()->format('Y-m-d'),
-                                    'end_time_range' => Carbon::now()->format('H:i'),
+                                    'start_date_range' => $start->format('Y-m-d'),
+                                    'start_time_range' => $start->format('H:i'),
+                                    'end_date_range' => $end->format('Y-m-d'),
+                                    'end_time_range' => $end->format('H:i'),
                                     'date_unilimited' => false,
                                 ]]);
 
                                 Notification::make()
-                                    ->title('Este formulario será válido por 24 horas.')
+                                    ->title('Este formulario será válido por 12 horas.')
                                     ->info()
                                     ->send();
                                 return;
@@ -368,7 +377,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         })
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('../../income_type') == 'Visita Temporal (24hs)';
+                            return self::isTemporaryVisitIncome($get('../../income_type'));
                         })
                         ->dehydrated()
                         ->live()
@@ -403,7 +412,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.start_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('../../income_type') == 'Visita Temporal (24hs)'
+                            return self::isTemporaryVisitIncome($get('../../income_type'))
                                 || self::isProveedorIncome($get('../../income_type'));
                         })
                         ->dehydrated()
@@ -423,7 +432,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                             return !$get('date_unilimited') ? true : false;
                         })
                         ->disabled(function(Get $get){
-                            return $get('../../income_type') == 'Visita Temporal (24hs)'
+                            return self::isTemporaryVisitIncome($get('../../income_type'))
                                 || collect($get('../../income_type'))->contains('Trabajador')
                                 || self::isProveedorIncome($get('../../income_type'));
                         })
@@ -433,7 +442,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.end_time_range'))
                         ->required()
                         ->disabled(function(Get $get){
-                            return $get('../../income_type') == 'Visita Temporal (24hs)'
+                            return self::isTemporaryVisitIncome($get('../../income_type'))
                                 || self::isProveedorIncome($get('../../income_type'));
                         })
                         ->afterStateUpdated(function (Set $set, Get $get, $state) {
@@ -460,7 +469,7 @@ class FormControlResource extends Resource implements HasShieldPermissions
                         ->label(__('general.date_unilimited'))
                         ->live()
                         ->visible(function(Get $get){
-                            if (self::isProveedorIncome($get('../../income_type'))) {
+                            if (self::isTemporaryVisitIncome($get('../../income_type')) || self::isProveedorIncome($get('../../income_type'))) {
                                 return false;
                             }
                             if (Auth::user()->hasRole('owner') && Auth::user()->owner_id) {
@@ -474,6 +483,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
                 ->defaultItems(1)
                 ->collapsible()
                 ->addable(function(Get $get) {
+                    if (self::isTemporaryVisitIncome($get('income_type'))) {
+                        return false;
+                    }
                     if (self::isProveedorIncome($get('income_type'))) {
                         return true;
                     }
@@ -1119,6 +1131,9 @@ class FormControlResource extends Resource implements HasShieldPermissions
 
         
         $filesRequired = FilesRequired::where('type', $type)->first();
+        if (! $filesRequired && $type === FormControlTypeIncome::LEGACY_TEMPORARY_VISIT) {
+            $filesRequired = FilesRequired::where('type', FormControlTypeIncome::TEMPORARY_VISIT)->first();
+        }
 
         $archivos = collect();
 
