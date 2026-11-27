@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Auto;
 use App\Models\FormControl as FormControlDB;
 use App\Models\FormControlPeople;
+use App\Models\FormControlPublicInvitation;
+use App\Models\User;
 use App\Models\Lote;
 use App\Models\FormControlFile;
 use App\Models\OwnerFamily;
@@ -14,13 +16,17 @@ use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use App\Services\ApplicationNotificationService;
+use Illuminate\Validation\Rule;
 class FormControl extends Controller
 {
     public function index(Request $request)
     {
-        $formControl = FormControlDB::where('owner_id', $request->user()->owner->id)->with(['peoples','autos','files'])->orderBy('created_at','desc')->get();
+        $user = $request->user();
+        abort_unless($user->owner, 403);
+        $formControl = FormControlDB::where('owner_id', $user->owner_id)
+            ->with(['peoples.files', 'autos.files', 'files'])->latest()->get();
 
-        $mobileForms = $formControl->map(fn (FormControlDB $form) => $this->formForMobile($form));
+        $mobileForms = $formControl->map(fn (FormControlDB $form) => $this->formForMobile($form, $user));
 
         $misLotes = Lote::where('owner_id', $request->user()->owner->id)->with(['sector','loteStatus','loteType'])->get();
 
@@ -29,18 +35,63 @@ class FormControl extends Controller
         $autos = Auto::where('model','Owner')->where('model_id',$request->user()->owner->id)->get();
 
         return response()->json([
-            'misForms' => $mobileForms->where('status', 'Pending')->values(),
-            'historicoForms' => $mobileForms->where('status', '!=', 'Pending')->values(),
+            'misForms' => $mobileForms->whereIn('status', ['OwnerPending', 'Pending'])->values(),
+            'historicoForms' => $mobileForms->whereNotIn('status', ['OwnerPending', 'Pending'])->values(),
+            'publicInvitationLots' => $this->canIssuePublicInvitation($user)
+                ? $misLotes->map(fn (Lote $lote) => ['id' => $lote->id, 'name' => $lote->getNombre()])->values()
+                : [],
             'misLotes' => $misLotes,
             'families' => $families,
             'autos' => $autos
         ]);
     }
 
-    private function formForMobile(FormControlDB $form): array
+    public function issuePublicInvitation(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($this->canIssuePublicInvitation($user), 403);
+
+        $data = $request->validate([
+            'lote_id' => ['required', 'integer'],
+            'income_type' => ['required', Rule::in([
+                ...array_keys(FormControlPublicInvitation::tenantIncomeTypes()),
+                FormControlPublicInvitation::EXTENDED_VISIT,
+            ])],
+        ]);
+        $lote = $user->owner->lotes()->findOrFail($data['lote_id']);
+        [$invitation, $token] = FormControlPublicInvitation::issue($user->owner, $lote, $user, $data['income_type']);
+
+        return response()->json([
+            'url' => route('form-control-public.show', $token),
+            'expires_at' => $invitation->expires_at->toISOString(),
+        ]);
+    }
+
+    public function approveByOwner(Request $request, FormControlDB $formControl)
+    {
+        $user = $request->user();
+        abort_unless($this->canReviewPublicForm($user, $formControl), 403);
+        abort_unless($formControl->status === 'OwnerPending' || $formControl->owner_approved_at, 409);
+        $formControl->approveByOwner($user);
+
+        return response()->json(['status' => $formControl->statusComputed()]);
+    }
+
+    private function canIssuePublicInvitation(User $user): bool
+    {
+        return $user->hasRole('owner') && $user->owner !== null && $user->can('create', FormControlDB::class);
+    }
+
+    private function canReviewPublicForm(User $user, FormControlDB $form): bool
+    {
+        return $user->hasRole('owner') && $user->can('view', $form) && $user->can('update', $form);
+    }
+
+    private function formForMobile(FormControlDB $form, User $user): array
     {
         $data = $form->toArray();
         $data['status'] = $form->statusComputed();
+        $data['can_approve_by_owner'] = $form->status === 'OwnerPending' && $this->canReviewPublicForm($user, $form);
 
         foreach (['lote_ids', 'access_type', 'income_type'] as $field) {
             $data[$field] = $this->normalizeStringList($data[$field] ?? null);
@@ -53,6 +104,20 @@ class FormControl extends Controller
 
             return $data;
         })->values()->all();
+
+        $document = static fn ($file, string $group) => [
+            'label' => $group.' · '.($file->name ?: $file->description ?: 'Documento'),
+            'url' => url(Storage::disk('public')->url($file->file)),
+        ];
+        $data['review_documents'] = $form->peoples->flatMap(fn ($person) => $person->files
+            ->filter(fn ($file) => filled($file->file))
+            ->map(fn ($file) => $document($file, trim($person->first_name.' '.$person->last_name))))
+            ->concat($form->autos->flatMap(fn ($auto) => $auto->files
+                ->filter(fn ($file) => filled($file->file))
+                ->map(fn ($file) => $document($file, $auto->patente))))
+            ->concat($form->files->filter(fn ($file) => filled($file->file))
+                ->map(fn ($file) => $document($file, 'Adjunto')))
+            ->values()->all();
 
         return $data;
     }

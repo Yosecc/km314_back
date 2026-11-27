@@ -109,6 +109,8 @@ Route::middleware('auth:sanctum')->post('/spontaneous_visit_action', [Main::clas
 Route::middleware('auth:sanctum')->prefix('form_control')->group(function () {
     Route::get('mobile/configuration', [MobileFormControlController::class, 'configuration']);
     Route::post('mobile', [MobileFormControlController::class, 'store']);
+    Route::post('mobile/public-invitations', [FormControl::class, 'issuePublicInvitation']);
+    Route::post('mobile/{formControl}/approve-by-owner', [FormControl::class, 'approveByOwner']);
     Route::post('store',[FormControl::class,'store']);
     Route::post('index',[FormControl::class,'index']);
     Route::post('file',[FormControl::class,'file']);
