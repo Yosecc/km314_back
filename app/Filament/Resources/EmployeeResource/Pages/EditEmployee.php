@@ -11,10 +11,11 @@ use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use App\Services\ApplicationNotificationService;
+use App\Filament\Resources\EmployeeResource\Pages\Concerns\HasFriendlyEmployeeValidation;
 
 class EditEmployee extends EditRecord
 {
-    use HasNotesAction;
+    use HasNotesAction, HasFriendlyEmployeeValidation;
     
     protected static string $resource = EmployeeResource::class;
 

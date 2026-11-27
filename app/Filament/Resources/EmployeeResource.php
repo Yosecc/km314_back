@@ -113,6 +113,10 @@ class EmployeeResource extends Resource implements HasShieldPermissions
             Forms\Components\Select::make('work_id')
                 ->label(__("general.Work"))
                 ->required()
+                ->validationAttribute('obra')
+                ->validationMessages([
+                    'required' => 'Seleccione la obra del trabajador.',
+                ])
                 ->default(37)
                 ->visible(function(){
                     if (Auth::user()->hasRole('super_admin')) {
@@ -125,23 +129,45 @@ class EmployeeResource extends Resource implements HasShieldPermissions
             Forms\Components\TextInput::make('dni')
                 ->label(__("general.DNI"))
                 ->required()
-                ->numeric(),
+                ->numeric()
+                ->rules(['digits_between:6,12'])
+                ->validationAttribute('DNI')
+                ->validationMessages([
+                    'required' => 'Ingrese el DNI del trabajador.',
+                    'numeric' => 'El DNI solo puede contener números.',
+                    'digits_between' => 'El DNI debe contener entre 6 y 12 dígitos.',
+                ]),
 
             Forms\Components\TextInput::make('first_name')
                 ->label(__("general.FirstName"))
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->validationAttribute('nombre')
+                ->validationMessages([
+                    'required' => 'Ingrese el nombre del trabajador.',
+                    'max' => 'El nombre no puede superar los 255 caracteres.',
+                ]),
 
             Forms\Components\TextInput::make('last_name')
                 ->label(__("general.LastName"))
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->validationAttribute('apellido')
+                ->validationMessages([
+                    'required' => 'Ingrese el apellido del trabajador.',
+                    'max' => 'El apellido no puede superar los 255 caracteres.',
+                ]),
 
             Forms\Components\TextInput::make('phone')
                 ->label(__("general.Phone"))
                 ->tel()
                 ->required()
-                ->numeric(),
+                ->numeric()
+                ->validationAttribute('teléfono')
+                ->validationMessages([
+                    'required' => 'Ingrese el teléfono del trabajador.',
+                    'numeric' => 'El teléfono solo puede contener números.',
+                ]),
 
             Forms\Components\Hidden::make('user_id')->disabled(fn($context)=> $context == 'edit')->default(Auth::user()->id),
 
@@ -157,6 +183,10 @@ class EmployeeResource extends Resource implements HasShieldPermissions
                             'Employee' => 'KM314',
                         ])
                         ->required()
+                        ->validationAttribute('tipo de origen')
+                        ->validationMessages([
+                            'required' => 'Seleccione el tipo de origen.',
+                        ])
                         ->live()
                         ->afterStateUpdated(function(Set $set){
                             $set('model_id', null);
@@ -187,6 +217,10 @@ class EmployeeResource extends Resource implements HasShieldPermissions
                             $model = $get('model');
                             return $model === 'ConstructionCompanie';
                         })
+                        ->validationAttribute('compañía de origen')
+                        ->validationMessages([
+                            'required' => 'Seleccione la compañía de origen.',
+                        ])
                         ->live(),
                 ])
                 ->addActionLabel('Agregar origen')
@@ -440,6 +474,11 @@ class EmployeeResource extends Resource implements HasShieldPermissions
                         Forms\Components\Hidden::make('is_historical'),
                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento del documento (dd-mm-aaaa)')
+                            ->validationAttribute(fn (Get $get): string => 'fecha de vencimiento de '.($get('name') ?: 'documento'))
+                            ->validationMessages([
+                                'required' => 'Ingrese la :attribute.',
+                                'date' => 'La :attribute no es una fecha válida.',
+                            ])
                             ->extraAttributes(function(Get $get, $state){
                                         if($state  && Carbon::parse($state)->isPast()){
                                             return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
@@ -464,6 +503,15 @@ class EmployeeResource extends Resource implements HasShieldPermissions
                             ->disabled(fn (Get $get): bool => (bool) $get('is_historical')),
                         Forms\Components\FileUpload::make('file')
                             ->label('Archivo')
+                            ->validationAttribute(fn (Get $get): string => 'archivo de '.($get('name') ?: 'documento'))
+                            ->validationMessages([
+                                'required' => 'Debe cargar el :attribute.',
+                                'uploaded' => 'No se pudo subir el :attribute. Intente nuevamente.',
+                                'max' => 'El :attribute no puede superar los 10 MB.',
+                                'mimetypes' => 'El :attribute debe ser una imagen JPG, PNG o WEBP, o un archivo PDF.',
+                            ])
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+                            ->maxSize(10240)
                             ->required(function(Get $get, Set $set, $context){
                                 if ($get('is_historical') || self::documentsAreOptionalForCurrentUser()) {
                                     return false;
@@ -504,6 +552,11 @@ class EmployeeResource extends Resource implements HasShieldPermissions
             Forms\Components\Hidden::make('is_historical'),
             DatePicker::make('fecha_vencimiento')
                 ->label('Fecha de vencimiento del documento (dd-mm-aaaa)')
+                ->validationAttribute(fn (Get $get): string => 'fecha de vencimiento de '.($get('name') ?: 'documento del vehículo'))
+                ->validationMessages([
+                    'required' => 'Ingrese la :attribute.',
+                    'date' => 'La :attribute no es una fecha válida.',
+                ])
                 ->extraAttributes(function(Get $get, $state){
                     if(Carbon::parse($state)->isPast()){
                         return ['style' => 'border-color: crimson;border-width: 1px;border-radius: 8px;padding: 10px;'];
@@ -521,6 +574,15 @@ class EmployeeResource extends Resource implements HasShieldPermissions
                 ->disabled(fn (Get $get): bool => (bool) $get('is_historical')),
             Forms\Components\FileUpload::make('file')
                 ->label('Archivo')
+                ->validationAttribute(fn (Get $get): string => 'archivo de '.($get('name') ?: 'documento del vehículo'))
+                ->validationMessages([
+                    'required' => 'Debe cargar el :attribute.',
+                    'uploaded' => 'No se pudo subir el :attribute. Intente nuevamente.',
+                    'max' => 'El :attribute no puede superar los 10 MB.',
+                    'mimetypes' => 'El :attribute debe ser una imagen JPG, PNG o WEBP, o un archivo PDF.',
+                ])
+                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+                ->maxSize(10240)
                 ->required(function(Get $get, Set $set, $context){
                                 if ($get('is_historical') || self::documentsAreOptionalForCurrentUser()) {
                                     return false;

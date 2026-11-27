@@ -9,9 +9,12 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 use Illuminate\Support\Facades\Auth;
+use App\Filament\Resources\EmployeeResource\Pages\Concerns\HasFriendlyEmployeeValidation;
 
 class ManageEmployees extends ManageRecords
 {
+    use HasFriendlyEmployeeValidation;
+
     protected static string $resource = EmployeeResource::class;
     protected static string $view = 'filament.resources.employee-resource.pages.manage-employees';
 

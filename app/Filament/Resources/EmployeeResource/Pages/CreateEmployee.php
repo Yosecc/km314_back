@@ -8,9 +8,12 @@ use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ApplicationNotificationService;
+use App\Filament\Resources\EmployeeResource\Pages\Concerns\HasFriendlyEmployeeValidation;
 
 class CreateEmployee extends CreateRecord
 {
+    use HasFriendlyEmployeeValidation;
+
     protected static string $resource = EmployeeResource::class;
 
     public function mount(): void
