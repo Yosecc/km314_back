@@ -77,5 +77,6 @@ return [
         'reorder' => 'Reordenar',
         'restore_any' => 'Restaurar varios registros',
         'replicate' => 'Replicar',
+        'make_documents_optional' => 'Hacer opcionales todos los documentos',
     ],
 ];

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use App\Services\ApplicationNotificationService;
+use Throwable;
 
 class PublicFormControlController extends Controller
 {
@@ -38,23 +39,25 @@ class PublicFormControlController extends Controller
         $rules = [
             'start_date'=>['required','date','after_or_equal:today'], 'start_time'=>['required','date_format:H:i'],
             'end_date'=>['required','date','after_or_equal:start_date'], 'end_time'=>['required','date_format:H:i'],
-            'people'=>['required','array','min:1'], 'people.*.dni'=>['required','digits_between:6,12'],
+            'people'=>['required','array','min:1','max:20'], 'people.*.dni'=>['required','digits_between:6,12'],
             'people.*.first_name'=>['required','string','max:255'], 'people.*.last_name'=>['required','string','max:255'],
-            'people.*.phone'=>['nullable','string','max:15'], 'people.*.is_responsable'=>['nullable','boolean'],
+            'people.*.phone'=>['nullable','string','max:50','regex:/^[0-9+().\-\s]{3,50}$/'], 'people.*.is_responsable'=>['nullable','boolean'],
             'people.*.is_acompanante'=>['nullable','boolean'], 'people.*.is_menor'=>['nullable','boolean'],
+            'people.*.documents'=>['nullable','array','max:20'],
             'people.*.documents.*.file'=>['nullable','file','mimes:jpg,jpeg,png,webp,pdf','max:10240'],
             'people.*.documents.*.name'=>['nullable','string','max:255'],
             'people.*.documents.*.expires_at'=>['nullable','date'],
-            'vehicles'=>['nullable','array'], 'vehicles.*.marca'=>['required_with:vehicles.*.patente','nullable','string','max:255'],
+            'vehicles'=>['nullable','array','max:10'], 'vehicles.*.marca'=>['required_with:vehicles.*.patente','nullable','string','max:255'],
             'vehicles.*.modelo'=>['required_with:vehicles.*.patente','nullable','string','max:255'],
             'vehicles.*.patente'=>['required_with:vehicles.*.marca','nullable','string','max:20'],
             'vehicles.*.color'=>['required_with:vehicles.*.patente','nullable','string','max:100'],
+            'vehicles.*.documents'=>['nullable','array','max:20'],
             'vehicles.*.documents.*.file'=>['nullable','file','mimes:jpg,jpeg,png,webp,pdf','max:10240'],
             'vehicles.*.documents.*.name'=>['nullable','string','max:255'],
             'vehicles.*.documents.*.expires_at'=>['nullable','date'],
-            'extra_documents'=>['nullable','array'], 'extra_documents.*.description'=>['nullable','string','max:255'],
+            'extra_documents'=>['nullable','array','max:10'], 'extra_documents.*.description'=>['nullable','string','max:255'],
             'extra_documents.*.file'=>['nullable','file','mimes:jpg,jpeg,png,webp,pdf','max:10240'],
-            'pets'=>['nullable','array'], 'pets.*.type'=>['nullable','string','max:100'], 'pets.*.breed'=>['nullable','string','max:100'],
+            'pets'=>['nullable','array','max:10'], 'pets.*.type'=>['nullable','string','max:100'], 'pets.*.breed'=>['nullable','string','max:100'],
             'pets.*.name'=>['nullable','string','max:100'], 'pets.*.vaccinated'=>['nullable','boolean'],
             'observations'=>['nullable','string','max:2000'], 'accept_terms'=>['accepted'],
         ];
@@ -66,7 +69,40 @@ class PublicFormControlController extends Controller
             if ($document['required']) $rules["vehicles.*.documents.{$index}.file"] = ['required_with:vehicles.*.patente','file','mimes:jpg,jpeg,png,webp,pdf','max:10240'];
             if ($document['date_required']) $rules["vehicles.*.documents.{$index}.expires_at"] = ['required_with:vehicles.*.patente','date'];
         }
-        $validated = $request->validate($rules, [], ['people'=>'personas','accept_terms'=>'términos y condiciones']);
+        $validated = $request->validate($rules, [
+            'people.*.phone.regex' => 'Ingrese un teléfono válido. Puede usar números, espacios, +, -, puntos y paréntesis.',
+            'people.*.phone.max' => 'El teléfono no puede superar los 50 caracteres.',
+            'people.*.dni.digits_between' => 'El DNI debe contener entre 6 y 12 dígitos.',
+            'people.max' => 'Puede cargar hasta 20 personas por formulario.',
+            'vehicles.max' => 'Puede cargar hasta 10 vehículos por formulario.',
+            'extra_documents.max' => 'Puede cargar hasta 10 documentos adicionales.',
+            'pets.max' => 'Puede cargar hasta 10 mascotas por formulario.',
+            'people.*.documents.*.file.mimes' => 'Los documentos personales deben ser imágenes JPG, PNG o WEBP, o archivos PDF.',
+            'vehicles.*.documents.*.file.mimes' => 'Los documentos de vehículos deben ser imágenes JPG, PNG o WEBP, o archivos PDF.',
+            'extra_documents.*.file.mimes' => 'Los documentos adicionales deben ser imágenes JPG, PNG o WEBP, o archivos PDF.',
+            'people.*.documents.*.file.uploaded' => 'No se pudo subir un documento personal. Intente nuevamente.',
+            'vehicles.*.documents.*.file.uploaded' => 'No se pudo subir un documento del vehículo. Intente nuevamente.',
+            'extra_documents.*.file.uploaded' => 'No se pudo subir un documento adicional. Intente nuevamente.',
+        ], [
+            'start_date' => 'fecha desde',
+            'start_time' => 'hora desde',
+            'end_date' => 'fecha hasta',
+            'end_time' => 'hora hasta',
+            'people' => 'personas',
+            'people.*.dni' => 'DNI de la persona',
+            'people.*.first_name' => 'nombre de la persona',
+            'people.*.last_name' => 'apellido de la persona',
+            'people.*.phone' => 'teléfono de la persona',
+            'people.*.documents.*.file' => 'documento de la persona',
+            'people.*.documents.*.expires_at' => 'vencimiento del documento personal',
+            'vehicles.*.marca' => 'marca del vehículo',
+            'vehicles.*.modelo' => 'modelo del vehículo',
+            'vehicles.*.patente' => 'patente del vehículo',
+            'vehicles.*.color' => 'color del vehículo',
+            'vehicles.*.documents.*.file' => 'documento del vehículo',
+            'vehicles.*.documents.*.expires_at' => 'vencimiento del documento del vehículo',
+            'accept_terms' => 'términos y condiciones',
+        ]);
 
         if ($validated['start_date'] === $validated['end_date'] && $validated['end_time'] <= $validated['start_time']) {
             throw ValidationException::withMessages(['end_time'=>'La hora de finalización debe ser posterior a la hora de inicio.']);
@@ -74,56 +110,72 @@ class PublicFormControlController extends Controller
 
         $personDocuments = $this->documentsFor($incomeType);
         $vehicleDocuments = $this->documentsFor('car');
-        $form = DB::transaction(function () use ($validated, $token, $personDocuments, $vehicleDocuments) {
-            $invitation = FormControlPublicInvitation::query()->where('token_hash',hash('sha256',$token))->lockForUpdate()->firstOrFail();
-            if (! $invitation->isAvailable()) throw ValidationException::withMessages(['link'=>'Este enlace ya fue utilizado o venció.']);
-            $lote = $invitation->lote;
-            $incomeType = $invitation->income_type ?: FormControlPublicInvitation::TENANT;
-            $form = FormControl::create([
-                'owner_id'=>$invitation->owner_id, 'user_id'=>$invitation->created_by_user_id,
-                'access_type'=>['lote'], 'lote_ids'=>[$lote->getNombre()], 'income_type'=>[$incomeType],
-                'status'=>'OwnerPending', 'start_date_range'=>$validated['start_date'], 'start_time_range'=>$validated['start_time'],
-                'end_date_range'=>$validated['end_date'], 'end_time_range'=>$validated['end_time'],
-                'date_unilimited'=>false, 'observations'=>$validated['observations'] ?? null,
-            ]);
-            $form->dateRanges()->create(['start_date_range'=>$validated['start_date'],'start_time_range'=>$validated['start_time'],'end_date_range'=>$validated['end_date'],'end_time_range'=>$validated['end_time'],'date_unilimited'=>false]);
-
-            foreach ($validated['people'] as $personData) {
-                $person = $form->peoples()->create([
-                    'dni'=>$personData['dni'],'first_name'=>$personData['first_name'],'last_name'=>$personData['last_name'],
-                    'phone'=>$personData['phone'] ?? null,'is_responsable'=>(bool)($personData['is_responsable']??false),
-                    'is_acompanante'=>(bool)($personData['is_acompanante']??false),'is_menor'=>(bool)($personData['is_menor']??false),
+        try {
+            $form = DB::transaction(function () use ($validated, $token, $personDocuments, $vehicleDocuments) {
+                $invitation = FormControlPublicInvitation::query()->where('token_hash',hash('sha256',$token))->lockForUpdate()->firstOrFail();
+                if (! $invitation->isAvailable()) throw ValidationException::withMessages(['link'=>'Este enlace ya fue utilizado o venció.']);
+                $lote = $invitation->lote;
+                $incomeType = $invitation->income_type ?: FormControlPublicInvitation::TENANT;
+                $form = FormControl::create([
+                    'owner_id'=>$invitation->owner_id, 'user_id'=>$invitation->created_by_user_id,
+                    'access_type'=>['lote'], 'lote_ids'=>[$lote->getNombre()], 'income_type'=>[$incomeType],
+                    'status'=>'OwnerPending', 'start_date_range'=>$validated['start_date'], 'start_time_range'=>$validated['start_time'],
+                    'end_date_range'=>$validated['end_date'], 'end_time_range'=>$validated['end_time'],
+                    'date_unilimited'=>false, 'observations'=>$validated['observations'] ?? null,
                 ]);
-                foreach ($personData['documents'] ?? [] as $documentIndex=>$document) if (! empty($document['file'])) {
-                    $person->files()->create(['name'=>$personDocuments[$documentIndex]['name'] ?? $document['name'] ?? 'Documento personal','file'=>$document['file']->store('form-controls/people','public'),'fecha_vencimiento'=>$document['expires_at']??null]);
+                $form->dateRanges()->create(['start_date_range'=>$validated['start_date'],'start_time_range'=>$validated['start_time'],'end_date_range'=>$validated['end_date'],'end_time_range'=>$validated['end_time'],'date_unilimited'=>false]);
+
+                foreach ($validated['people'] as $personData) {
+                    $person = $form->peoples()->create([
+                        'dni'=>$personData['dni'],'first_name'=>$personData['first_name'],'last_name'=>$personData['last_name'],
+                        'phone'=>$personData['phone'] ?? null,'is_responsable'=>(bool)($personData['is_responsable']??false),
+                        'is_acompanante'=>(bool)($personData['is_acompanante']??false),'is_menor'=>(bool)($personData['is_menor']??false),
+                    ]);
+                    foreach ($personData['documents'] ?? [] as $documentIndex=>$document) if (! empty($document['file'])) {
+                        $person->files()->create(['name'=>$personDocuments[$documentIndex]['name'] ?? $document['name'] ?? 'Documento personal','file'=>$document['file']->store('form-controls/people','public'),'fecha_vencimiento'=>$document['expires_at']??null]);
+                    }
                 }
-            }
-            foreach ($validated['vehicles'] ?? [] as $vehicleData) {
-                if (blank($vehicleData['patente'] ?? null)) continue;
-                $auto = $form->autos()->create(['marca'=>$vehicleData['marca'],'modelo'=>$vehicleData['modelo'],'patente'=>strtoupper($vehicleData['patente']),'color'=>$vehicleData['color'],'user_id'=>$invitation->created_by_user_id,'model'=>'FormControl']);
-                foreach ($vehicleData['documents'] ?? [] as $documentIndex=>$document) if (! empty($document['file'])) {
-                    $auto->files()->create(['name'=>$vehicleDocuments[$documentIndex]['name'] ?? $document['name'] ?? 'Documento del vehículo','file'=>$document['file']->store('form-controls/vehicles','public'),'fecha_vencimiento'=>$document['expires_at']??null]);
+                foreach ($validated['vehicles'] ?? [] as $vehicleData) {
+                    if (blank($vehicleData['patente'] ?? null)) continue;
+                    $auto = $form->autos()->create(['marca'=>$vehicleData['marca'],'modelo'=>$vehicleData['modelo'],'patente'=>strtoupper($vehicleData['patente']),'color'=>$vehicleData['color'],'user_id'=>$invitation->created_by_user_id,'model'=>'FormControl']);
+                    foreach ($vehicleData['documents'] ?? [] as $documentIndex=>$document) if (! empty($document['file'])) {
+                        $auto->files()->create(['name'=>$vehicleDocuments[$documentIndex]['name'] ?? $document['name'] ?? 'Documento del vehículo','file'=>$document['file']->store('form-controls/vehicles','public'),'fecha_vencimiento'=>$document['expires_at']??null]);
+                    }
                 }
-            }
-            foreach ($validated['extra_documents'] ?? [] as $document) if (! empty($document['file'])) {
-                $form->files()->create(['user_id'=>$invitation->created_by_user_id,'description'=>$document['description']??null,'file'=>$document['file']->store('form-controls/extra','public')]);
-            }
-            foreach ($validated['pets'] ?? [] as $pet) if (filled($pet['name']??null) || filled($pet['type']??null)) {
-                $form->mascotas()->create(['tipo_mascota'=>$pet['type']??null,'raza'=>$pet['breed']??null,'nombre'=>$pet['name']??null,'is_vacunado'=>(bool)($pet['vaccinated']??false)]);
-            }
-            $invitation->update(['used_at'=>now(),'used_form_control_id'=>$form->id]);
-            return $form;
-        });
+                foreach ($validated['extra_documents'] ?? [] as $document) if (! empty($document['file'])) {
+                    $form->files()->create(['user_id'=>$invitation->created_by_user_id,'description'=>$document['description']??null,'file'=>$document['file']->store('form-controls/extra','public')]);
+                }
+                foreach ($validated['pets'] ?? [] as $pet) if (filled($pet['name']??null) || filled($pet['type']??null)) {
+                    $form->mascotas()->create(['tipo_mascota'=>$pet['type']??null,'raza'=>$pet['breed']??null,'nombre'=>$pet['name']??null,'is_vacunado'=>(bool)($pet['vaccinated']??false)]);
+                }
+                $invitation->update(['used_at'=>now(),'used_form_control_id'=>$form->id]);
+                return $form;
+            });
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->withErrors(['submission' => 'No pudimos guardar el formulario. Revise los datos e intente nuevamente en unos minutos.']);
+        }
 
         $ownerUser = $form->owner?->user;
-        if ($ownerUser) app(ApplicationNotificationService::class)->send(
-            $ownerUser,
-            'Formulario completado por un invitado',
-            'Revisá y aprobá el formulario #'.$form->id.' para enviarlo a administración.',
-            ['type' => 'form_control', 'form_control_id' => $form->id, 'status' => 'OwnerPending', 'public_submission' => true],
-            FormControlResource::getUrl('view', ['record' => $form]),
-            'heroicon-o-document-text',
-        );
+        if ($ownerUser) {
+            try {
+                app(ApplicationNotificationService::class)->send(
+                    $ownerUser,
+                    'Formulario completado por un invitado',
+                    'Revisá y aprobá el formulario #'.$form->id.' para enviarlo a administración.',
+                    ['type' => 'form_control', 'form_control_id' => $form->id, 'status' => 'OwnerPending', 'public_submission' => true],
+                    FormControlResource::getUrl('view', ['record' => $form]),
+                    'heroicon-o-document-text',
+                );
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
         return redirect()->route('form-control-public.show',$token)->with('submitted',true);
     }
 

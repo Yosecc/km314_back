@@ -38,12 +38,15 @@ use App\Filament\Resources\EmployeeResource\RelationManagers;
 use Filament\Notifications\Actions\Action as NotificationAction;
 use App\Filament\Resources\EmployeeResource\Traits\HasNotesAction;
 use App\Filament\Resources\EmployeeResource\Traits\HasGestionAction;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 
 
 
-class EmployeeResource extends Resource
+class EmployeeResource extends Resource implements HasShieldPermissions
 {
     use HasNotesAction, HasGestionAction;
+
+    private const OPTIONAL_DOCUMENTS_PERMISSION = 'make_documents_optional_employee';
 
     protected static ?string $model = Employee::class;
 
@@ -71,6 +74,30 @@ class EmployeeResource extends Resource
     public static function getPluralModelLabel(): string
     {
         return 'trabajadores';
+    }
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+            'make_documents_optional',
+        ];
+    }
+
+    private static function documentsAreOptionalForCurrentUser(): bool
+    {
+        return Auth::user()?->can(self::OPTIONAL_DOCUMENTS_PERMISSION) ?? false;
     }
 
     private static function formDatosPersonales()
@@ -300,6 +327,87 @@ class EmployeeResource extends Resource
         return $archivos->toArray();
     }
 
+    private static function orderConfiguredFiles(array $state, array $configured): array
+    {
+        $configuredByName = collect($configured)->keyBy('name');
+        $configuredOrder = $configuredByName->keys()->flip();
+
+        foreach ($state as $key => $file) {
+            $configuration = $configuredByName->get($file['name'] ?? null);
+
+            if ($configuration) {
+                $state[$key] = array_merge($file, $configuration, [
+                    'is_historical' => false,
+                ]);
+
+                continue;
+            }
+
+            $state[$key] = array_merge($file, [
+                'is_required' => false,
+                'is_required_fecha_vencimiento' => false,
+                'is_historical' => true,
+            ]);
+        }
+
+        $existingNames = collect($state)->pluck('name')->filter();
+
+        foreach ($configured as $file) {
+            if (! $existingNames->contains($file['name'] ?? null)) {
+                $state[] = array_merge($file, [
+                    'is_historical' => false,
+                ]);
+            }
+        }
+
+        uasort($state, function (array $first, array $second) use ($configuredOrder): int {
+            $fallbackPosition = $configuredOrder->count();
+            $firstPosition = $configuredOrder->get($first['name'] ?? '', $fallbackPosition);
+            $secondPosition = $configuredOrder->get($second['name'] ?? '', $fallbackPosition);
+
+            return $firstPosition <=> $secondPosition;
+        });
+
+        return $state;
+    }
+
+    private static function prepareFileForCreate(array $data): ?array
+    {
+        unset(
+            $data['is_required'],
+            $data['is_required_fecha_vencimiento'],
+            $data['is_historical'],
+        );
+
+        return filled($data['file'] ?? null) ? $data : null;
+    }
+
+    private static function prepareFileForSave(array $data): ?array
+    {
+        $isHistorical = (bool) ($data['is_historical'] ?? false);
+
+        unset(
+            $data['is_required'],
+            $data['is_required_fecha_vencimiento'],
+            $data['is_historical'],
+        );
+
+        return $isHistorical ? null : $data;
+    }
+
+    private static function configureHistoricalFileDeleteAction(Action $action): Action
+    {
+        return $action
+            ->requiresConfirmation()
+            ->modalHeading('Eliminar documento histórico')
+            ->modalDescription('El documento se eliminará definitivamente al guardar los cambios del trabajador.')
+            ->visible(function (array $arguments, Repeater $component): bool {
+                $state = $component->getRawItemState($arguments['item']);
+
+                return (bool) ($state['is_historical'] ?? false);
+            });
+    }
+
     private static function formArchivosPersonales()
     {
 
@@ -309,28 +417,27 @@ class EmployeeResource extends Resource
             Repeater::make('files')
                     ->relationship()
                     ->label('Documentos')
+                    ->mutateRelationshipDataBeforeCreateUsing(function (array $data): ?array {
+                        return self::prepareFileForCreate($data);
+                    })
+                    ->mutateRelationshipDataBeforeSaveUsing(function (array $data): ?array {
+                        return self::prepareFileForSave($data);
+                    })
                     ->mutateRelationshipDataBeforeFillUsing(function (array $data) {
                         return $data;
                     })
                     ->afterStateHydrated(function ($component, $state) {
-                        $required = self::getArchivos('employee');
-                        if (empty($state)) {
-                            $component->state($required);
-                        } else {
-                            // Obtener los nombres de los archivos ya guardados
-                            $existingNames = collect($state)->pluck('name')->filter()->values()->toArray();
-                            // Agregar los documentos requeridos que faltan
-                            $missing = collect($required)->filter(function ($item) use ($existingNames) {
-                                return !in_array($item['name'], $existingNames);
-                            })->values()->toArray();
-                            if (!empty($missing)) {
-                                $component->state(array_merge($state, $missing));
-                            }
-                        }
+                        $component->state(self::orderConfiguredFiles(
+                            $state ?? [],
+                            self::getArchivos('employee'),
+                        ));
                     })
                     ->schema([
                         // TextEntry::make('name'),
                         Forms\Components\Hidden::make('name')->dehydrated(),
+                        Forms\Components\Hidden::make('is_required')->dehydrated(false),
+                        Forms\Components\Hidden::make('is_required_fecha_vencimiento')->dehydrated(false),
+                        Forms\Components\Hidden::make('is_historical'),
                         DatePicker::make('fecha_vencimiento')
                             ->label('Fecha de vencimiento del documento (dd-mm-aaaa)')
                             ->extraAttributes(function(Get $get, $state){
@@ -347,12 +454,21 @@ class EmployeeResource extends Resource
                                 return !$is_required;
                             })
                             ->required(function(Get $get, Set $set, $context){
+                                if ($get('is_historical') || self::documentsAreOptionalForCurrentUser()) {
+                                    return false;
+                                }
+
                                 $is_required = $get('is_required_fecha_vencimiento') ?? false;
                                 return $is_required;
-                            }),
+                            })
+                            ->disabled(fn (Get $get): bool => (bool) $get('is_historical')),
                         Forms\Components\FileUpload::make('file')
                             ->label('Archivo')
                             ->required(function(Get $get, Set $set, $context){
+                                if ($get('is_historical') || self::documentsAreOptionalForCurrentUser()) {
+                                    return false;
+                                }
+
                                 $is_required = $get('is_required') ?? false;
                                 return $is_required;
                             })
@@ -361,14 +477,18 @@ class EmployeeResource extends Resource
                             ->getUploadedFileNameForStorageUsing(function ($file, $record) {
                                 return $file ? $file->getClientOriginalName() : $record->file;
                             })
+                            ->disabled(fn (Get $get): bool => (bool) $get('is_historical'))
                             ->dehydrated(fn ($state) => filled($state)),
                     ])
                     ->defaultItems(1)
                     ->minItems(1)
                     // ->maxItems(5)
                     ->addable(false)
-                    ->deletable(false)
-                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                    ->deletable()
+                    ->deleteAction(fn (Action $action): Action => self::configureHistoricalFileDeleteAction($action))
+                    ->itemLabel(fn (array $state): ?string => isset($state['name'])
+                        ? $state['name'] . (($state['is_historical'] ?? false) ? ' (Histórico)' : '')
+                        : null)
                     ->default(self::getArchivos('employee'))
                     ->grid(2)
                     ->columns(1)
@@ -379,6 +499,9 @@ class EmployeeResource extends Resource
     {
         return [
             Forms\Components\Hidden::make('name')->dehydrated(),
+            Forms\Components\Hidden::make('is_required')->dehydrated(false),
+            Forms\Components\Hidden::make('is_required_fecha_vencimiento')->dehydrated(false),
+            Forms\Components\Hidden::make('is_historical'),
             DatePicker::make('fecha_vencimiento')
                 ->label('Fecha de vencimiento del documento (dd-mm-aaaa)')
                 ->extraAttributes(function(Get $get, $state){
@@ -388,12 +511,21 @@ class EmployeeResource extends Resource
                     return [];
                 })
                 ->required(function(Get $get, Set $set, $context){
+                                if ($get('is_historical') || self::documentsAreOptionalForCurrentUser()) {
+                                    return false;
+                                }
+
                                 $is_required = $get('is_required_fecha_vencimiento') ?? false;
                                 return $is_required;
-                            }),
+                            })
+                ->disabled(fn (Get $get): bool => (bool) $get('is_historical')),
             Forms\Components\FileUpload::make('file')
                 ->label('Archivo')
                 ->required(function(Get $get, Set $set, $context){
+                                if ($get('is_historical') || self::documentsAreOptionalForCurrentUser()) {
+                                    return false;
+                                }
+
                                 $is_required = $get('is_required') ?? false;
                                 return $is_required;
                             })
@@ -402,6 +534,7 @@ class EmployeeResource extends Resource
                 ->getUploadedFileNameForStorageUsing(function ($file, $record) {
                     return $file ? $file->getClientOriginalName() : $record->file;
                 })
+                ->disabled(fn (Get $get): bool => (bool) $get('is_historical'))
                 ->dehydrated(fn ($state) => filled($state))
         ];
     }
@@ -429,14 +562,29 @@ class EmployeeResource extends Resource
             Repeater::make('files')
                 ->relationship()
                 ->label('Documentos del vehículo')
+                ->mutateRelationshipDataBeforeCreateUsing(function (array $data): ?array {
+                    return self::prepareFileForCreate($data);
+                })
+                ->mutateRelationshipDataBeforeSaveUsing(function (array $data): ?array {
+                    return self::prepareFileForSave($data);
+                })
                 ->schema(self::camposAutosFiles())
+                ->afterStateHydrated(function (Repeater $component, $state) {
+                    $component->state(self::orderConfiguredFiles(
+                        $state ?? [],
+                        self::vehicleDocumentDefaults(),
+                    ));
+                })
                 ->defaultItems(3)
                 ->minItems(3)
                 ->maxItems(3)
                 ->addable(false)
-                ->deletable(false)
+                ->deletable()
+                ->deleteAction(fn (Action $action): Action => self::configureHistoricalFileDeleteAction($action))
                 ->grid(2)
-                ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                ->itemLabel(fn (array $state): ?string => isset($state['name'])
+                    ? $state['name'] . (($state['is_historical'] ?? false) ? ' (Histórico)' : '')
+                    : null)
                 ->default(self::getArchivos('car'))
                 ->columns(1)
                 ->columnSpanFull(),
@@ -485,19 +633,29 @@ class EmployeeResource extends Resource
                         Repeater::make('files')
                             ->relationship()
                             ->label('Documentos del vehículo')
+                            ->mutateRelationshipDataBeforeCreateUsing(function (array $data): ?array {
+                                return self::prepareFileForCreate($data);
+                            })
+                            ->mutateRelationshipDataBeforeSaveUsing(function (array $data): ?array {
+                                return self::prepareFileForSave($data);
+                            })
                             ->schema(self::camposAutosFiles())
                             ->afterStateHydrated(function (Repeater $component, $state) {
-                                if (empty($state)) {
-                                    $component->state(self::vehicleDocumentDefaults());
-                                }
+                                $component->state(self::orderConfiguredFiles(
+                                    $state ?? [],
+                                    self::vehicleDocumentDefaults(),
+                                ));
                             })
                             ->defaultItems(3)
                             ->minItems(3)
                             ->maxItems(3)
                             ->addable(false)
-                            ->deletable(false)
+                            ->deletable()
+                            ->deleteAction(fn (Action $action): Action => self::configureHistoricalFileDeleteAction($action))
                             ->grid(2)
-                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
+                            ->itemLabel(fn (array $state): ?string => isset($state['name'])
+                                ? $state['name'] . (($state['is_historical'] ?? false) ? ' (Histórico)' : '')
+                                : null)
                             ->default(self::vehicleDocumentDefaults())
                             ->columns(1)
                             ->columnSpanFull(),
@@ -685,22 +843,22 @@ class EmployeeResource extends Resource
                 // Botón de notificaciones en la tabla
                 self::getNotesTableAction(),
 
-                Tables\Actions\Action::make('show_qr')
-                    ->label('Ver QR')
-                    ->icon('heroicon-o-qr-code')
-                    ->color('info')
-                    ->modalHeading('Código de Acceso Rápido')
-                    ->modalDescription(fn ($record) => $record->first_name . ' ' . $record->last_name)
-                    ->modalContent(fn ($record) => view('components.qr-modal', [
-                        'record' => $record,
-                        'qrCode' => $record->generateQrCode(),
-                        'entityType' => 'Empleado'
-                    ]))
-                    ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Cerrar')
-                    ->visible(function ($record) {
-                        return Auth::user()->hasRole('super_admin') || Auth::user()->hasRole('admin');
-                    }),
+                // Tables\Actions\Action::make('show_qr')
+                //     ->label('Ver QR')
+                //     ->icon('heroicon-o-qr-code')
+                //     ->color('info')
+                //     ->modalHeading('Código de Acceso Rápido')
+                //     ->modalDescription(fn ($record) => $record->first_name . ' ' . $record->last_name)
+                //     ->modalContent(fn ($record) => view('components.qr-modal', [
+                //         'record' => $record,
+                //         'qrCode' => $record->generateQrCode(),
+                //         'entityType' => 'Empleado'
+                //     ]))
+                //     ->modalSubmitAction(false)
+                //     ->modalCancelActionLabel('Cerrar')
+                //     ->visible(function ($record) {
+                //         return Auth::user()->hasRole('super_admin') || Auth::user()->hasRole('admin');
+                //     }),
 
                 Tables\Actions\Action::make('verificar_seguro')
                     ->label('Verificar trabajador')
