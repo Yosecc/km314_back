@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 use Livewire\Livewire;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
 use App\Filament\Resources\FormControlResource\Pages\ListFormControls;
 use RuntimeException;
@@ -181,6 +182,46 @@ class PublicFormControlInvitationTest extends TestCase
         $this->assertSame([FormControlPublicInvitation::EXTENDED_VISIT], $form->income_type);
         $this->assertSame([$lote->getNombre()], $form->lote_ids);
         $this->assertSame('OwnerPending', $form->status);
+    }
+
+    public function test_mobile_owner_can_issue_links_and_send_a_public_request_to_administration(): void
+    {
+        [$owner, $lote, $ownerUser] = $this->context();
+        [, $otherLote, $otherUser] = $this->context();
+        foreach ([$ownerUser, $otherUser] as $user) {
+            foreach (['create_form::control', 'view_form::control', 'update_form::control'] as $name) {
+                $user->givePermissionTo(Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']));
+            }
+        }
+        Sanctum::actingAs($ownerUser);
+
+        $endpoint = '/api/form_control/mobile/public-invitations';
+        $this->postJson($endpoint, ['lote_id' => $otherLote->id, 'income_type' => 'Inquilino'])->assertNotFound();
+        $this->postJson($endpoint, ['lote_id' => $lote->id, 'income_type' => 'Trabajador'])->assertUnprocessable();
+
+        foreach (['Inquilino', 'Visitante de Inquilino', 'Visita (+24hs)'] as $type) {
+            $url = $this->postJson($endpoint, ['lote_id' => $lote->id, 'income_type' => $type])
+                ->assertOk()->json('url');
+            $this->assertSame($type, FormControlPublicInvitation::resolveToken(basename($url))->income_type);
+        }
+
+        $form = FormControl::create([
+            'owner_id' => $owner->id, 'user_id' => $ownerUser->id, 'status' => 'OwnerPending',
+            'income_type' => ['Visita (+24hs)'], 'lote_ids' => [$lote->getNombre()],
+        ]);
+        $this->postJson('/api/form_control/index')->assertOk()
+            ->assertJsonPath('publicInvitationLots.0.id', $lote->id)
+            ->assertJsonPath('misForms.0.id', $form->id)
+            ->assertJsonPath('misForms.0.can_approve_by_owner', true)
+            ->assertJsonCount(0, 'historicoForms');
+
+        $approve = "/api/form_control/mobile/{$form->id}/approve-by-owner";
+        Sanctum::actingAs($otherUser);
+        $this->postJson($approve)->assertForbidden();
+        Sanctum::actingAs($ownerUser);
+        $this->postJson($approve)->assertOk()->assertJsonPath('status', 'Pending');
+        $this->postJson($approve)->assertOk()->assertJsonPath('status', 'Pending');
+        $this->assertSame($ownerUser->id, (int) $form->fresh()->owner_approved_by_user_id);
     }
 
     public function test_public_link_rejects_an_invalid_phone_with_a_friendly_message(): void

@@ -105,8 +105,13 @@ class FormControl extends Model
     public function approveByOwner(User $user): void
     {
         abort_unless($user->hasRole('owner') && (int) $user->owner_id === (int) $this->owner_id, 403);
-        if ($this->status !== 'OwnerPending') return;
-        $this->update(['status'=>'Pending','owner_approved_at'=>now(),'owner_approved_by_user_id'=>$user->id]);
+        $updated = self::query()->whereKey($this->id)->where('status', 'OwnerPending')->update([
+            'status' => 'Pending',
+            'owner_approved_at' => now(),
+            'owner_approved_by_user_id' => $user->id,
+        ]);
+        $this->refresh();
+        if (! $updated) return;
 
         app(ApplicationNotificationService::class)->sendToAdministrativePermissionHolders(
             ['aprobar_form::control', 'rechazar_form::control'],
